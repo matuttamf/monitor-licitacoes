@@ -17,7 +17,7 @@ export async function coletarComprasNet(dataInicio: string): Promise<LicitacaoRa
 
   const url = `${BASE_URL}/licitacoes/v1/licitacoes.json?data_abertura_proposta=${dataInicio}&_page=1&_pageSize=50`
 
-  const res = await fetch(url, { next: { revalidate: 0 } })
+  const res = await fetch(url, { next: { revalidate: 0 } } as any)
   if (!res.ok) return licitacoes
 
   const json = await res.json()
