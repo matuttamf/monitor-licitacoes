@@ -13,6 +13,7 @@ type Usuario = {
   trial_expirado: boolean
   nome?: string
   telefone?: string
+  whatsapp?: string
   empresa?: string
 }
 
@@ -58,6 +59,7 @@ export default function AdminPage() {
         id: editando.id,
         nome: editando.nome,
         telefone: editando.telefone,
+        whatsapp: editando.whatsapp,
         empresa: editando.empresa,
         plano: editando.plano,
         status: editando.status,
@@ -171,6 +173,7 @@ export default function AdminPage() {
                 { label: 'Nome', key: 'nome', placeholder: 'Nome completo' },
                 { label: 'Empresa', key: 'empresa', placeholder: 'Nome da empresa' },
                 { label: 'Telefone', key: 'telefone', placeholder: '(31) 99999-9999' },
+                { label: 'WhatsApp', key: 'whatsapp', placeholder: '(31) 99999-9999' },
               ].map(({ label, key, placeholder }) => (
                 <div key={key}>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>{label}</label>

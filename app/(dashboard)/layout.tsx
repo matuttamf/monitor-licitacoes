@@ -11,6 +11,7 @@ const navItems = [
   { href: '/busca',          label: 'Busca',             icon: '⊕' },
   { href: '/palavras-chave', label: 'Palavras-chave',    icon: '◎' },
   { href: '/alertas',        label: 'Alertas',           icon: '◉' },
+  { href: '/perfil',         label: 'Meu Perfil',        icon: '◑' },
 ]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
