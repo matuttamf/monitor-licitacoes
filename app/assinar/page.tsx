@@ -18,7 +18,7 @@ const PLANOS = [
   {
     id: 'profissional',
     nome: 'Profissional',
-    preco: '97',
+    preco: '97,90',
     destaque: false,
     cor: '#6B0F1A',
     descricao: 'Para vendedores ativos',
@@ -29,7 +29,7 @@ const PLANOS = [
   {
     id: 'pro',
     nome: 'Pro',
-    preco: '197',
+    preco: '197,90',
     destaque: true,
     cor: '#6B0F1A',
     descricao: 'Para equipes comerciais',

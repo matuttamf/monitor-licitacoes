@@ -247,7 +247,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Investimento mínimo. Retorno ilimitado.</div>
             <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#1A1A1C' }}>
-              R$ 49,90 por mês. Um contrato público paga anos de assinatura.
+              A partir de R$1,66 por dia — menos que um café — para nunca mais perder um contrato.
             </h2>
             <p style={{ fontSize: '17px', color: '#9AA0A6', maxWidth: '560px', margin: '0 auto' }}>
               Escolha o plano ideal para o tamanho da sua operação. Sete dias grátis em todos. Sem cartão de crédito agora.
@@ -256,10 +256,10 @@ export default function LandingPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
             {[
-              { nome: 'Basic', preco: '49,90', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
-              { nome: 'Profissional', preco: '97', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
-              { nome: 'Pro', preco: '197', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
-              { nome: 'Empresarial', preco: '497', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Usuários ilimitados', destaque: false, id: 'empresarial', tag: null },
+              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um café', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
+              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que um almoço', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
+              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um jantar', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
+              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: 'usuários ilimitados', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Usuários ilimitados', destaque: false, id: 'empresarial', tag: null },
             ].map(p => (
               <div key={p.id} style={{
                 background: p.destaque ? '#6B0F1A' : '#FAF6F0',
@@ -273,9 +273,12 @@ export default function LandingPage() {
                   <div style={{ position: 'absolute', top: '-13px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '10px', fontWeight: 800, padding: '4px 14px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{p.tag.toUpperCase()}</div>
                 )}
                 <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '4px' }}>{p.nome}</div>
-                <div style={{ fontSize: '12px', color: p.destaque ? 'rgba(255,255,255,0.45)' : '#9AA0A6', marginBottom: '20px', lineHeight: 1.4 }}>{p.desc}</div>
-                <div style={{ fontSize: '38px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '2px' }}>R${p.preco}</div>
-                <div style={{ fontSize: '12px', color: p.destaque ? 'rgba(255,255,255,0.35)' : '#9AA0A6', marginBottom: '24px' }}>/mês · cobrado mensalmente</div>
+                <div style={{ fontSize: '12px', color: p.destaque ? 'rgba(255,255,255,0.45)' : '#9AA0A6', marginBottom: '16px', lineHeight: 1.4 }}>{p.desc}</div>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '2px' }}>R${p.preco}</div>
+                <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.35)' : '#9AA0A6', marginBottom: '6px' }}>/mês · cobrado mensalmente</div>
+                <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(201,166,90,0.7)' : '#6B0F1A', fontWeight: 600, marginBottom: '20px', padding: '4px 10px', background: p.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(107,15,26,0.06)', borderRadius: '6px', display: 'inline-block' }}>
+                  {p.porDia} — {p.ancora}
+                </div>
                 {[p.keywords, p.usuarios, 'Alertas por e-mail e Telegram', 'Busca manual no painel'].map(item => (
                   <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
                     <span style={{ color: p.destaque ? '#C9A65A' : '#6B0F1A', fontWeight: 700, fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>

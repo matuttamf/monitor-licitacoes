@@ -1,7 +1,7 @@
 export const PLANOS = {
   basic:        { nome: 'Basic',        preco: 49.90,  max_keywords: 10,     max_usuarios: 1 },
-  profissional: { nome: 'Profissional', preco: 97.00,  max_keywords: 999999, max_usuarios: 1 },
-  pro:          { nome: 'Pro',          preco: 197.00, max_keywords: 999999, max_usuarios: 5 },
+  profissional: { nome: 'Profissional', preco: 97.90,  max_keywords: 999999, max_usuarios: 1 },
+  pro:          { nome: 'Pro',          preco: 197.90, max_keywords: 999999, max_usuarios: 5 },
   empresarial:  { nome: 'Empresarial',  preco: 497.00, max_keywords: 999999, max_usuarios: 999999 },
 }
 
