@@ -89,18 +89,21 @@ export default function CadastroPage() {
 
         {/* Headline e benefícios */}
         <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '16px' }}>7 dias grátis · sem cartão</div>
-          <h2 style={{ fontSize: '38px', fontWeight: 400, color: 'white', lineHeight: 1.25, margin: '0 0 32px', fontFamily: 'Georgia, serif' }}>
-            Comece a receber<br />
-            <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>alertas amanhã.</span>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '16px' }}>Sete dias grátis · sem cartão de crédito</div>
+          <h2 style={{ fontSize: '38px', fontWeight: 400, color: 'white', lineHeight: 1.25, margin: '0 0 8px', fontFamily: 'Georgia, serif' }}>
+            O governo compra o que você vende.
+            <br /><span style={{ color: '#C9A65A', fontStyle: 'italic' }}>Saiba quando, antes de todos.</span>
           </h2>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', margin: '0 0 28px', lineHeight: 1.6 }}>
+            Cadastre-se agora e amanhã já recebe as primeiras oportunidades cruzadas com o perfil da sua empresa.
+          </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {[
-              { icon: '🎯', titulo: 'Match por IA', desc: 'Nossa IA encontra licitações mesmo sem a palavra exata — por sinônimos e contexto.' },
-              { icon: '📬', titulo: 'Alertas diários', desc: 'Receba no e-mail e Telegram todo dia com os editais que combinam com o que você vende.' },
-              { icon: '🏛️', titulo: '5.500+ municípios', desc: 'Cobertura nacional — prefeituras, estados, governo federal e autarquias.' },
-              { icon: '⚡', titulo: 'Ative em 2 minutos', desc: 'Cadastre-se, configure suas palavras-chave e já está monitorando.' },
+              { icon: '🔀', titulo: 'Cruzamento inteligente de dados', desc: 'Cruzamos automaticamente o que o governo publica em todos os portais com o perfil de produtos da sua empresa — e entregamos só as oportunidades que fazem sentido para o seu negócio.' },
+              { icon: '📬', titulo: 'Alertas todos os dias úteis', desc: 'Sua equipe recebe por e-mail e Telegram as oportunidades filtradas — dentro do horário comercial, sem ruído, sem irrelevância.' },
+              { icon: '🏛️', titulo: 'Cobertura nacional completa', desc: 'Prefeituras, estados, governo federal, autarquias e empresas públicas — mais de 5.500 municípios rastreados diariamente.' },
+              { icon: '⚡', titulo: 'Pronto em dois minutos', desc: 'Cadastre-se, informe o que sua empresa vende e o monitoramento começa imediatamente.' },
             ].map(b => (
               <div key={b.titulo} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(201,166,90,0.1)', border: '1px solid rgba(201,166,90,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>{b.icon}</div>
@@ -116,7 +119,7 @@ export default function CadastroPage() {
         {/* Social proof */}
         <div style={{ position: 'relative', padding: '20px', background: 'rgba(201,166,90,0.06)', border: '1px solid rgba(201,166,90,0.15)', borderRadius: '14px' }}>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px' }}>
-            "Encontrei uma licitação de R$ 85.000 em notebooks logo na primeira semana. O plano pagou-se 400 vezes."
+            "O sistema cruzou nosso catálogo com os editais do estado e encontrou uma licitação de R$85.000 em notebooks que nunca teríamos visto. Fechamos o contrato em oito dias."
           </p>
           <span style={{ color: '#C9A65A', fontSize: '12px', fontWeight: 600 }}>Distribuidora de TI — Belo Horizonte, MG</span>
         </div>
@@ -128,9 +131,9 @@ export default function CadastroPage() {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 40px', background: '#FAF6F0' }}>
         <div style={{ width: '100%', maxWidth: '400px' }}>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Criar sua conta</h1>
-            <p style={{ fontSize: '15px', color: '#9AA0A6', margin: 0 }}>7 dias grátis · sem cartão de crédito</p>
+          <div style={{ marginBottom: '28px' }}>
+            <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#1A1A1C', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Comece a monitorar agora</h1>
+            <p style={{ fontSize: '14px', color: '#9AA0A6', margin: 0, lineHeight: 1.5 }}>Sete dias grátis · sem cartão · cancele quando quiser</p>
           </div>
 
           <form onSubmit={handleCadastro}>
@@ -207,7 +210,7 @@ export default function CadastroPage() {
 
           <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(107,15,26,0.04)', borderRadius: '12px', border: '1px solid rgba(107,15,26,0.08)' }}>
             <p style={{ fontSize: '12px', color: '#9AA0A6', margin: 0, textAlign: 'center', lineHeight: 1.6 }}>
-              Ao criar sua conta, você concorda com nossos termos de uso. Após 7 dias, assine por R$ 49,90/mês ou cancele sem custo.
+              Ao criar sua conta, você concorda com nossos termos de uso. Após os sete dias de teste, assine a partir de R$49,90/mês ou cancele sem nenhum custo.
             </p>
           </div>
         </div>
