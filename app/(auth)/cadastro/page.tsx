@@ -228,7 +228,11 @@ export default function CadastroPage() {
 
           <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(107,15,26,0.04)', borderRadius: '12px', border: '1px solid rgba(107,15,26,0.08)' }}>
             <p style={{ fontSize: '12px', color: '#9AA0A6', margin: 0, textAlign: 'center', lineHeight: 1.6 }}>
-              Ao criar sua conta, você concorda com nossos termos de uso. Após os sete dias de teste, assine a partir de R$49,90/mês ou cancele sem nenhum custo.
+              Ao criar sua conta, você concorda com nossos{' '}
+              <Link href="/termos" style={{ color: '#6B0F1A', fontWeight: 600 }}>Termos de Uso</Link>
+              {' '}e{' '}
+              <Link href="/privacidade" style={{ color: '#6B0F1A', fontWeight: 600 }}>Política de Privacidade</Link>.
+              {' '}Após os sete dias de teste, assine a partir de R$49,90/mês ou cancele sem nenhum custo.
             </p>
           </div>
         </div>
