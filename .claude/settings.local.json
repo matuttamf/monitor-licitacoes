@@ -11,7 +11,20 @@
       "Bash(npm run *)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(copy .env.local .env.local.example)",
+      "Bash(git check-ignore *)",
+      "Bash(git restore *)",
+      "Bash(Get-ChildItem -Path . -Name)",
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Claude Code Folder\\\\Projeto Licitações\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(New-Item -ItemType Directory -Path \"C:\\\\Claude Code Folder\\\\Projeto Licita��es\\\\app\\\\api\\\\auth\\\\logout\" -Force)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Claude Code Folder\\\\Projeto Licitações\\\\app\" -Recurse | Where-Object { $_.FullName -match \"\\(dashboard|api\\)\" })",
+      "Bash(git config *)",
+      "Bash(\\\\.ts\")",
+      "Bash(cd \"/c/Claude Code Folder/Projeto Licitações\" && cat lib/scrapers/bll.ts lib/scrapers/licitacoes-e.ts lib/scrapers/types.ts | grep -E \"^\\(import|export|interface\\)\" | head -20)",
+      "Bash(node -c lib/scrapers/bll.ts)"
     ]
   }
 }

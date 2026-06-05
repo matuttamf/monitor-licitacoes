@@ -1,7 +1,5 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
-
 interface LicitacaoAlerta {
   id: string
   orgao: string
@@ -15,6 +13,7 @@ interface LicitacaoAlerta {
 }
 
 export async function enviarAlertaEmail(licitacoes: LicitacaoAlerta[]): Promise<boolean> {
+  const resend = new Resend(process.env.RESEND_API_KEY!)
   const destinatarios = process.env.EMAIL_DESTINATARIOS!.split(',').map(e => e.trim())
 
   const linhasTabela = licitacoes.map(l => `
