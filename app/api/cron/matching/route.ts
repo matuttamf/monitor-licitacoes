@@ -26,10 +26,13 @@ export async function GET(request: Request) {
   const termos = keywords.map(k => k.termo.toLowerCase())
   const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
 
+  const hoje = new Date().toISOString().substring(0, 10) // yyyy-MM-dd
+
   const { data: candidatos } = await supabase
     .from('licitacoes')
-    .select('id, objeto')
+    .select('id, objeto, data_abertura')
     .gte('coletado_em', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`) // apenas abertas hoje ou futuras
     .or(filtroOr)
     .limit(200)
 

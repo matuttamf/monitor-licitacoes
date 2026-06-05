@@ -31,15 +31,26 @@ export async function encontrarMatchesDetalhado(
   for (let i = 0; i < licitacoes.length; i += 10) {
     const lote = licitacoes.slice(i, i + 10)
 
-    const prompt = `Analise cada licitação abaixo e identifique quais palavras-chave têm relação semântica com o objeto da licitação.
-Considere sinônimos, categorias relacionadas e contexto. Só marque como match se houver relação real.
+    const prompt = `Você é um especialista em licitações públicas brasileiras. Analise cada licitação e identifique quais palavras-chave correspondem ao que está sendo COMPRADO/ADQUIRIDO pela licitação.
+
+REGRA PRINCIPAL: A palavra-chave deve ser o OBJETO PRINCIPAL da compra — o item que o órgão público quer adquirir ou contratar.
+
+INCLUA quando:
+- O órgão está comprando/adquirindo o produto diretamente (ex: "aquisição de ar condicionado", "compra de bebedouros")
+- Registro de preços para fornecimento do produto
+- Locação do equipamento
+
+EXCLUA quando:
+- O produto aparece apenas como ferramenta de um SERVIÇO (ex: "prestação de serviço de TI que utiliza videomonitoramento", "manutenção de sistema que usa catracas")
+- O objeto principal é um serviço de engenharia, TI, limpeza, vigilância, consultoria etc.
+- O produto é apenas mencionado no contexto, mas não é o que está sendo comprado
 
 Palavras-chave: ${termosTexto}
 
 Licitações:
 ${lote.map((l, idx) => `[${idx}] ${l.objeto}`).join('\n')}
 
-Responda APENAS com JSON:
+Responda APENAS com JSON válido (sem markdown, sem explicações):
 [{"index": 0, "keywords": ["termo1"]}, {"index": 1, "keywords": []}, ...]`
 
     try {

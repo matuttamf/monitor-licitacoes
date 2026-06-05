@@ -27,6 +27,8 @@ export async function GET(request: Request) {
 
   // Buscar alertas pendentes (canais vazio) criados nas últimas 48h
   // Inclui keyword (com user_id) e dados da licitação
+  const hoje = new Date().toISOString().substring(0, 10)
+
   const { data: alertasPendentes, error } = await supabase
     .from('alertas')
     .select(`
@@ -35,11 +37,12 @@ export async function GET(request: Request) {
       keyword_id,
       canais,
       criado_em,
-      licitacoes (id, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
+      licitacoes!inner (id, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
       keywords (id, termo, user_id)
     `)
     .eq('canais', '{}')
     .gte('criado_em', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('criado_em', { ascending: true })
     .limit(200)
 
