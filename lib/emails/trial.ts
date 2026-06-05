@@ -1,11 +1,15 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://monitor-licitacoes-two.vercel.app'
 const FROM = process.env.EMAIL_REMETENTE || 'onboarding@resend.dev'
 
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY!)
+}
+
 // E-mail Dia 1: Boas-vindas
 export async function enviarEmailBoasVindas(email: string, nome: string): Promise<void> {
+  const resend = getResend()
   await resend.emails.send({
     from: FROM,
     to: email,
@@ -52,6 +56,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
 
 // E-mail Dia 3: Engajamento
 export async function enviarEmailDia3(email: string, totalLicitacoes: number): Promise<void> {
+  const resend = getResend()
   await resend.emails.send({
     from: FROM,
     to: email,
@@ -96,6 +101,7 @@ export async function enviarEmailDia3(email: string, totalLicitacoes: number): P
 
 // E-mail Dia 6: Urgência (trial expira amanhã)
 export async function enviarEmailUrgencia(email: string): Promise<void> {
+  const resend = getResend()
   await resend.emails.send({
     from: FROM,
     to: email,
