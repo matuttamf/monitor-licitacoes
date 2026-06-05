@@ -53,9 +53,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Autenticado em página de auth → redirecionar para dashboard
-  if (isAuthPage) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // Autenticado em página de auth ou landing → redirecionar para dashboard
+  if (isAuthPage || pathname === '/') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return supabaseResponse

@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic'
 const ADMIN_EMAIL = 'matuttamaquinaseferramentas@gmail.com'
 
 const navItems = [
-  { href: '/',              label: 'Dashboard',         icon: '◈' },
-  { href: '/busca',         label: 'Busca',             icon: '⊕' },
-  { href: '/palavras-chave', label: 'Palavras-chave',   icon: '◎' },
-  { href: '/alertas',       label: 'Alertas',           icon: '◉' },
+  { href: '/dashboard',      label: 'Dashboard',         icon: '◈' },
+  { href: '/busca',          label: 'Busca',             icon: '⊕' },
+  { href: '/palavras-chave', label: 'Palavras-chave',    icon: '◎' },
+  { href: '/alertas',        label: 'Alertas',           icon: '◉' },
 ]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
