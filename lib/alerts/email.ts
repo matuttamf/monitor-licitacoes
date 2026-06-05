@@ -10,6 +10,7 @@ interface LicitacaoAlerta {
   estado?: string
   cidade?: string
   keyword: string
+  reenvio?: boolean
 }
 
 function formatarValor(v?: number) {
@@ -29,13 +30,22 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[]): string {
   const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const total = licitacoes.length
 
-  const cards = licitacoes.map(l => {
+  const temReenvios = licitacoes.some(l => l.reenvio)
+  const temNovos = licitacoes.some(l => !l.reenvio)
+
+  const cards = licitacoes.map((l, idx) => {
+    // Inserir separador quando a seção mudar de novos → lembretes
+    const separador = temNovos && temReenvios && l.reenvio && (idx === 0 || !licitacoes[idx - 1].reenvio)
+      ? `<div style="margin:24px 0 20px;padding:12px 16px;background:#EEF2FF;border-radius:10px;text-align:center">
+           <span style="font-size:12px;font-weight:700;color:#4338CA;letter-spacing:0.5px">🔁 LEMBRETES — licitações enviadas anteriormente ainda dentro do prazo</span>
+         </div>`
+      : ''
     const valor = formatarValor(l.valor_estimado)
     const abertura = formatarData(l.data_abertura)
     const localidade = [l.cidade, l.estado].filter(Boolean).join(' — ')
     const objeto = l.objeto.length > 200 ? l.objeto.substring(0, 200) + '…' : l.objeto
 
-    return `
+    return `${separador}
     <!-- Card -->
     <div style="background:#FFFFFF;border:1px solid #E8E0D5;border-radius:12px;margin-bottom:16px;overflow:hidden">
       <!-- Barra lateral colorida via borda esquerda -->
@@ -44,11 +54,12 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[]): string {
           <td width="4" style="background:linear-gradient(180deg,#6B0F1A,#8B1520);border-radius:12px 0 0 12px">&nbsp;</td>
           <td style="padding:20px 24px">
 
-            <!-- Topo: keyword + localidade -->
+            <!-- Topo: keyword + lembrete + localidade -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
               <tr>
                 <td>
                   <span style="display:inline-block;background:#FDF5E6;border:1px solid #C9A65A;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#8B6914;text-transform:uppercase;letter-spacing:0.5px">${l.keyword}</span>
+                  ${l.reenvio ? `<span style="display:inline-block;margin-left:8px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#4338CA;text-transform:uppercase;letter-spacing:0.5px">🔁 Lembrete</span>` : ''}
                 </td>
                 ${localidade ? `<td align="right" style="font-size:12px;color:#9AA0A6">${localidade}</td>` : '<td></td>'}
               </tr>

@@ -28,23 +28,44 @@ export async function GET(request: Request) {
   // Buscar alertas pendentes (canais vazio) criados nas últimas 48h
   // Inclui keyword (com user_id) e dados da licitação
   const hoje = new Date().toISOString().substring(0, 10)
+  const umaSemanAAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: alertasPendentes, error } = await supabase
+  const SELECT_ALERTAS = `
+    id,
+    licitacao_id,
+    keyword_id,
+    canais,
+    criado_em,
+    enviado_em,
+    licitacoes!inner (id, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
+    keywords (id, termo, user_id)
+  `
+  const FILTRO_DATA = { referencedTable: 'licitacoes' }
+
+  // 1. Novos alertas ainda não enviados (últimas 48h)
+  const { data: novos, error } = await supabase
     .from('alertas')
-    .select(`
-      id,
-      licitacao_id,
-      keyword_id,
-      canais,
-      criado_em,
-      licitacoes!inner (id, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
-      keywords (id, termo, user_id)
-    `)
+    .select(SELECT_ALERTAS)
     .eq('canais', '{}')
     .gte('criado_em', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
     .order('criado_em', { ascending: true })
-    .limit(200)
+    .limit(150)
+
+  // 2. Alertas já enviados há mais de 7 dias, mas licitação ainda aberta → reenvio
+  const { data: reenvios } = await supabase
+    .from('alertas')
+    .select(SELECT_ALERTAS)
+    .neq('canais', '{}')
+    .lte('enviado_em', umaSemanAAtras)
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
+    .order('enviado_em', { ascending: true })
+    .limit(50)
+
+  const alertasPendentes = [
+    ...(novos ?? []),
+    ...(reenvios ?? []).map(a => ({ ...a, _reenvio: true })),
+  ]
 
   if (error) {
     console.error('Erro ao buscar alertas:', error.message)
@@ -100,6 +121,7 @@ export async function GET(request: Request) {
       estado: (a.licitacoes as any).estado,
       cidade: (a.licitacoes as any).cidade,
       keyword: (a.keywords as any).termo,
+      reenvio: !!(a as any)._reenvio,
     }))
 
     const canaisEnviados: string[] = []
