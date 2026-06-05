@@ -303,12 +303,12 @@ export default function LandingPage() {
       </section>
 
       {/* ──────────────── FOOTER ──────────────── */}
-      <footer style={{ background: '#111113', padding: '32px 60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <footer style={{ background: '#111113', padding: '28px 40px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: '#6B0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, color: '#C9A65A' }}>ML</div>
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© 2025 Monitor de Licitações · Matutta Máquinas e Ferramentas</span>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© 2025 Monitor de Licitações · Matutta</span>
         </div>
-        <div style={{ display: 'flex', gap: '28px' }}>
+        <div style={{ display: 'flex', gap: '28px', justifyContent: 'center' }}>
           {[['Início', '/'], ['Planos', '/assinar'], ['Entrar', '/login'], ['Cadastrar', '/cadastro']].map(([label, href]) => (
             <Link key={label} href={href} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>{label}</Link>
           ))}

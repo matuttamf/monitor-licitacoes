@@ -47,7 +47,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
         </div>
 
         <div style="background:#1A1A1C;padding:16px;text-align:center">
-          <p style="color:rgba(255,255,255,0.3);font-size:12px;margin:0">Monitor de Licitações · Matutta Máquinas e Ferramentas</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:12px;margin:0">Monitor de Licitações · Matutta</p>
         </div>
       </div>
     `,

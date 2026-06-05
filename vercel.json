@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/coletar",
-      "schedule": "0 10,17 * * 1-5"
+      "schedule": "0 5,14 * * 1-5"
     },
     {
       "path": "/api/cron/alertar",
