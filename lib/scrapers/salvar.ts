@@ -6,10 +6,10 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
 
   const supabase = await createServiceClient()
 
-  // upsert com ignorar conflitos (fonte + numero_edital são unique)
+  // upsert: atualiza url, valor, datas se já existir (fonte + numero_edital são unique)
   const { data, error } = await supabase
     .from('licitacoes')
-    .upsert(licitacoes, { onConflict: 'fonte,numero_edital', ignoreDuplicates: true })
+    .upsert(licitacoes, { onConflict: 'fonte,numero_edital', ignoreDuplicates: false })
     .select('id')
 
   if (error) {
