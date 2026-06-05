@@ -1,6 +1,6 @@
 import { LicitacaoRaw } from './types'
 
-const BASE_URL = 'https://pncp.gov.br/api/pncp/v1'
+const BASE_URL = 'https://pncp.gov.br/api/consulta/v1'
 
 interface PncpContrato {
   numeroControlePNCP: string
