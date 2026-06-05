@@ -31,8 +31,7 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
 
       {/* Painel esquerdo */}
-      <div style={{ display: 'none', width: '50%', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', background: '#1A1A1C', position: 'relative', overflow: 'hidden' }}
-        className="left-panel">
+      <div style={{ display: 'flex', width: '50%', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', background: '#1A1A1C', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '20%', left: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #6B0F1A 0%, transparent 70%)', filter: 'blur(60px)', opacity: 0.25 }} />
         <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '40%', height: '40%', background: 'radial-gradient(circle, #C9A65A 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.1 }} />
 
