@@ -1,18 +1,21 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-const ADMIN_EMAIL = 'matuttamaquinaseferramentas@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'matuttamaquinaseferramentas@gmail.com'
 
-async function verificarAdmin(supabase: Awaited<ReturnType<typeof createServiceClient>>) {
+async function verificarAdmin() {
+  // Usa o client com cookies para verificar quem está logado
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.email !== ADMIN_EMAIL) return null
   return user
 }
 
 export async function GET() {
-  const supabase = await createServiceClient()
-  const admin = await verificarAdmin(supabase)
+  const admin = await verificarAdmin()
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+  const supabase = await createServiceClient()
 
   const { data, error } = await supabase
     .from('profiles')
@@ -37,9 +40,10 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const supabase = await createServiceClient()
-  const admin = await verificarAdmin(supabase)
+  const admin = await verificarAdmin()
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+
+  const supabase = await createServiceClient()
 
   const { id, status, nome, telefone, whatsapp, empresa, plano } = await request.json()
 
