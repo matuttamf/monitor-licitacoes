@@ -15,16 +15,29 @@ type Licitacao = {
   alertas: { keywords: { termo: string } }[]
 }
 
+const fonteConfig: Record<string, { cor: string; bg: string }> = {
+  'PNCP':           { cor: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
+  'ComprasNet':     { cor: '#10b981', bg: 'rgba(16,185,129,0.08)' },
+  'Querido Diário': { cor: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+  'BLL':            { cor: '#8b5cf6', bg: 'rgba(139,92,246,0.08)' },
+}
+
+function formatarValor(valor?: number) {
+  if (!valor) return null
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+}
+
 export default function DashboardPage() {
   const [licitacoes, setLicitacoes] = useState<Licitacao[]>([])
   const [carregando, setCarregando] = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('')
 
+  const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+
   async function carregar() {
     setCarregando(true)
     const params = new URLSearchParams()
     if (filtroEstado) params.set('estado', filtroEstado)
-
     const res = await fetch(`/api/licitacoes?${params}`)
     setLicitacoes(await res.json())
     setCarregando(false)
@@ -32,68 +45,116 @@ export default function DashboardPage() {
 
   useEffect(() => { carregar() }, [filtroEstado])
 
-  const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+  const totalValor = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+    <div className="max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text-1)' }}>
+            Dashboard
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+            Licitações com match nas suas palavras-chave
+          </p>
+        </div>
         <select
           value={filtroEstado}
           onChange={e => setFiltroEstado(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          className="text-sm rounded-xl px-4 py-2.5 outline-none"
+          style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
         >
           <option value="">Todos os estados</option>
           {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
         </select>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {[
+          { label: 'Licitações encontradas', valor: carregando ? '—' : licitacoes.length.toString(), cor: 'var(--accent)' },
+          { label: 'Volume estimado', valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'), cor: 'var(--green)' },
+          { label: 'Fontes ativas', valor: '3', cor: 'var(--amber)' },
+        ].map(stat => (
+          <div key={stat.label} className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>
+              {stat.label}
+            </p>
+            <p className="text-2xl font-semibold" style={{ color: stat.cor }}>
+              {stat.valor}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Lista */}
       {carregando ? (
-        <p className="text-gray-500">Carregando licitações...</p>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="rounded-2xl animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', height: '110px' }} />
+          ))}
+        </div>
       ) : licitacoes.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <p className="text-gray-500">Nenhuma licitação encontrada com match nas palavras-chave.</p>
-          <p className="text-gray-400 text-sm mt-2">Cadastre palavras-chave na tela de Palavras-chave para começar.</p>
+        <div className="rounded-2xl p-16 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-1)' }}>Nenhuma licitação encontrada</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            Acesse Busca para buscar agora nas fontes disponíveis.
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {licitacoes.map(l => (
-            <div key={l.id} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    {l.alertas?.map((a, i) => (
-                      <span key={i} className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                        {a.keywords?.termo}
+        <div className="space-y-3">
+          {licitacoes.map(l => {
+            const cfg = fonteConfig[l.fonte] ?? { cor: '#64748b', bg: 'rgba(100,116,139,0.08)' }
+            return (
+              <div
+                key={l.id}
+                className="rounded-2xl p-5"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${cfg.cor}` }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
+                        {l.fonte}
                       </span>
-                    ))}
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{l.fonte}</span>
-                    {l.estado && <span className="text-xs text-gray-400">{l.cidade ? `${l.cidade}/${l.estado}` : l.estado}</span>}
-                  </div>
-                  <p className="font-medium text-gray-900 text-sm">{l.orgao}</p>
-                  <p className="text-gray-600 text-sm mt-1">{l.objeto}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  {l.valor_estimado && (
-                    <p className="font-semibold text-gray-900 text-sm">
-                      R$ {l.valor_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {l.alertas?.map((a, i) => (
+                        <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(59,130,246,0.08)', color: 'var(--accent)' }}>
+                          {a.keywords?.termo}
+                        </span>
+                      ))}
+                      {l.cidade && (
+                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                          {l.cidade}{l.estado ? `/${l.estado}` : ''}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
+                      {l.objeto.length > 160 ? l.objeto.substring(0, 160) + '...' : l.objeto}
                     </p>
-                  )}
-                  {l.data_abertura && (
-                    <p className="text-xs text-gray-500 mt-1">Abertura: {l.data_abertura}</p>
-                  )}
-                  <a
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:underline mt-2 block"
-                  >
-                    Ver edital →
-                  </a>
+                  </div>
+                  <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                    {l.valor_estimado && (
+                      <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatarValor(l.valor_estimado)}</p>
+                    )}
+                    {l.data_abertura && (
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>Abertura: {l.data_abertura}</p>
+                    )}
+                    <a
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ background: 'var(--accent)', color: 'white', textDecoration: 'none' }}
+                    >
+                      Ver edital →
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
