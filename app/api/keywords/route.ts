@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { getLimites } from '@/lib/planos'
 
@@ -34,10 +34,11 @@ export async function POST(request: Request) {
     .eq('id', user.id)
     .single()
 
-  // Sub-usuário herda o plano do owner
+  // Sub-usuário herda o plano do owner — usa service client para bypassa RLS
   let plano = profile?.plano ?? 'basic'
   if (profile?.owner_id) {
-    const { data: ownerProfile } = await supabase
+    const service = await createServiceClient()
+    const { data: ownerProfile } = await service
       .from('profiles')
       .select('plano')
       .eq('id', profile.owner_id)

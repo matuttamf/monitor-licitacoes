@@ -36,9 +36,5 @@ CREATE POLICY "owner gerencia seus convites"
 CREATE POLICY "service role gerencia convites"
   ON invites FOR ALL TO service_role USING (true);
 
--- 4. Permitir que sub-usuários leiam o perfil do seu owner (para herdar plano)
-CREATE POLICY "sub-usuarios leem perfil do owner"
-  ON profiles FOR SELECT TO authenticated
-  USING (id = (
-    SELECT owner_id FROM profiles WHERE id = auth.uid()
-  ));
+-- Nota: leitura do perfil do owner por sub-usuários é feita via service_role
+-- no código da aplicação (app/api/keywords/route.ts) para evitar recursão RLS.
