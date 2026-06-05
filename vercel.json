@@ -2,11 +2,15 @@
   "crons": [
     {
       "path": "/api/cron/coletar",
-      "schedule": "0 2 * * *"
+      "schedule": "0 5 * * 1-5"
+    },
+    {
+      "path": "/api/cron/alertar",
+      "schedule": "0 10,13,16,19 * * 1-5"
     },
     {
       "path": "/api/cron/emails-trial",
-      "schedule": "0 10 * * *"
+      "schedule": "0 12 * * 1-5"
     }
   ]
 }

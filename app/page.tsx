@@ -115,9 +115,9 @@ export default function LandingPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
-                { n: '01', title: 'Editais publicados e fechados em 5 dias', desc: 'Sem um sistema de monitoramento, você descobre tarde demais para participar.' },
+                { n: '01', title: 'Editais publicados e fechados em cinco dias', desc: 'Sem um sistema de monitoramento, você descobre tarde demais para participar.' },
                 { n: '02', title: 'Centenas de portais diferentes', desc: 'PNCP, ComprasNet, portais municipais, diários oficiais — impossível acompanhar tudo manualmente.' },
-                { n: '03', title: 'Concorrentes já estão recebendo alertas', desc: 'As empresas que monitoram sistematicamente chegam primeiro e ganham os contratos.' },
+                { n: '03', title: 'Concorrentes já recebem alertas automáticos', desc: 'As empresas que monitoram sistematicamente chegam primeiro e ganham os contratos.' },
               ].map(c => (
                 <div key={c.n} style={{ display: 'flex', gap: '16px', padding: '20px', background: 'white', borderRadius: '14px', border: '1px solid #D5D2C8', alignItems: 'flex-start' }}>
                   <div style={{ fontSize: '11px', fontWeight: 800, color: '#6B0F1A', opacity: 0.4, letterSpacing: '0.05em', paddingTop: '2px', flexShrink: 0 }}>{c.n}</div>
@@ -147,9 +147,9 @@ export default function LandingPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '64px' }}>
             {[
-              { n: '1', icon: '⚡', title: 'Cadastre-se em 2 minutos', desc: 'Crie sua conta gratuitamente, sem cartão de crédito. Você tem 7 dias para explorar tudo.' },
-              { n: '2', icon: '🎯', title: 'Defina o que você vende', desc: 'Informe suas palavras-chave: notebook, cadeira, ar condicionado, retroescavadeira — qualquer produto.' },
-              { n: '3', icon: '📬', title: 'Receba alertas toda manhã', desc: 'Todo dia útil você recebe no e-mail e Telegram os editais que combinam com o que você vende.' },
+              { n: '1', icon: '⚡', title: 'Cadastre-se em dois minutos', desc: 'Crie sua conta gratuitamente, sem cartão de crédito. Você tem sete dias para explorar tudo.' },
+              { n: '2', icon: '🎯', title: 'Defina o que você vende', desc: 'Informe suas palavras-chave: notebook, cadeira, ar condicionado, retroescavadeira — qualquer produto ou categoria.' },
+              { n: '3', icon: '📬', title: 'Receba alertas toda manhã', desc: 'Todos os dias úteis você recebe no e-mail e no Telegram os editais que combinam com o que você vende.' },
             ].map((step, i) => (
               <div key={step.n} style={{ padding: '32px', background: '#FAF6F0', borderRadius: '16px', border: '1px solid #D5D2C8', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '11px', fontWeight: 800, color: '#6B0F1A', opacity: 0.2, letterSpacing: '0.05em' }}>0{step.n}</div>
@@ -218,7 +218,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Preços transparentes</div>
             <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: '#1A1A1C' }}>Escolha seu plano</h2>
-            <p style={{ fontSize: '17px', color: '#9AA0A6' }}>7 dias grátis em qualquer plano. Sem cartão de crédito. Cancele quando quiser.</p>
+            <p style={{ fontSize: '17px', color: '#9AA0A6' }}>Sete dias grátis em qualquer plano. Sem cartão de crédito. Cancele quando quiser.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
@@ -271,11 +271,11 @@ export default function LandingPage() {
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em', textAlign: 'center', marginBottom: '48px', color: '#1A1A1C' }}>Perguntas frequentes</h2>
           {[
-            ['Preciso de cartão de crédito para o teste?', 'Não. Os 7 dias são 100% gratuitos, sem qualquer dado de pagamento. Você só configura a forma de pagamento se decidir continuar.'],
-            ['Como funciona o match por inteligência artificial?', 'Nosso sistema lê o objeto da licitação e identifica relação com suas palavras-chave por contexto e significado — não apenas texto exato. "Equipamentos de informática" encontra quem monitora "notebook" ou "computador".'],
-            ['Que tipos de empresa podem participar de licitações?', 'Qualquer empresa formal, independente do tamanho. MEI, ME, EPP, todas podem participar. O segredo é ser notificado a tempo e apresentar a proposta dentro do prazo.'],
-            ['Posso cancelar quando quiser?', 'Sim. Cancele a qualquer momento pelo painel, sem burocracia, sem multa. Sem letras pequenas.'],
-            ['E se eu não encontrar nenhuma licitação para o que vendo?', 'É raro, mas se acontecer nos primeiros 7 dias, sua conta continua ativa gratuitamente enquanto ajustamos as palavras-chave com você.'],
+            ['Preciso de cartão de crédito para o teste?', 'Não. Os sete dias de teste são completamente gratuitos, sem qualquer dado de pagamento. Você só configura a forma de pagamento se decidir continuar.'],
+            ['Como funciona a busca por contexto?', 'Nosso sistema lê o objeto da licitação e identifica relação com suas palavras-chave por contexto e significado — não apenas texto exato. "Equipamentos de informática" encontra quem monitora "notebook" ou "computador".'],
+            ['Qualquer empresa pode participar de licitações?', 'Sim. Qualquer empresa formal pode participar, independentemente do porte — MEI, ME, EPP e grandes empresas. O segredo está em ser notificado a tempo e apresentar a proposta dentro do prazo.'],
+            ['Posso cancelar quando quiser?', 'Sim. Cancele a qualquer momento pelo painel, sem burocracia e sem multa. Nenhuma letra pequena.'],
+            ['E se eu não encontrar licitações para o que eu vendo?', 'É raro, mas se acontecer nos primeiros sete dias, sua conta continua ativa gratuitamente enquanto ajustamos as palavras-chave com você.'],
           ].map(([q, a], i) => (
             <details key={i} style={{ borderBottom: '1px solid #D5D2C8' }}>
               <summary style={{ padding: '22px 0', cursor: 'pointer', fontWeight: 600, fontSize: '15px', color: '#1A1A1C', display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
@@ -306,7 +306,7 @@ export default function LandingPage() {
             textDecoration: 'none', letterSpacing: '-0.01em',
             boxShadow: '0 12px 40px rgba(107,15,26,0.5)',
           }}>
-            Criar conta gratuita — 7 dias grátis
+            Criar conta gratuita — sete dias grátis
           </Link>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)', marginTop: '20px' }}>
             Sem cartão de crédito · Ativação imediata · Cancele quando quiser
