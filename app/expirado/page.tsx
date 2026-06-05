@@ -51,11 +51,19 @@ export default function ExpiradoPage() {
         </div>
 
         <a
-          href="mailto:matuttamaquinaseferramentas@gmail.com?subject=Quero assinar o Monitor de Licitações&body=Olá, gostaria de assinar o Monitor de Licitações por R$ 49,90/mês. Meu e-mail de cadastro é: "
+          href="/assinar"
           className="block w-full py-3 rounded-xl text-sm font-semibold text-white text-center mb-3 transition-all"
           style={{ background: 'var(--vinho)', textDecoration: 'none' }}
         >
-          Quero assinar → matuttamaquinaseferramentas@gmail.com
+          Ver planos e assinar →
+        </a>
+
+        <a
+          href="mailto:matuttamaquinaseferramentas@gmail.com?subject=Quero assinar o Monitor de Licitações&body=Olá, gostaria de assinar o Monitor de Licitações. Meu e-mail de cadastro é: "
+          className="block w-full py-2.5 rounded-xl text-sm font-medium text-center mb-3 transition-all"
+          style={{ color: 'var(--vinho)', border: '1.5px solid rgba(107,15,26,0.2)', textDecoration: 'none', background: 'transparent' }}
+        >
+          Falar por e-mail
         </a>
 
         <form action="/api/auth/logout" method="POST">
