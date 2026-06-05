@@ -97,7 +97,7 @@ export default function CadastroPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {[
-              { icon: '🎯', titulo: 'Match por IA', desc: 'Gemini encontra licitações mesmo sem a palavra exata — por sinônimos e contexto.' },
+              { icon: '🎯', titulo: 'Match por IA', desc: 'Nossa IA encontra licitações mesmo sem a palavra exata — por sinônimos e contexto.' },
               { icon: '📬', titulo: 'Alertas diários', desc: 'Receba no e-mail e Telegram todo dia com os editais que combinam com o que você vende.' },
               { icon: '🏛️', titulo: '5.500+ municípios', desc: 'Cobertura nacional — prefeituras, estados, governo federal e autarquias.' },
               { icon: '⚡', titulo: 'Ative em 2 minutos', desc: 'Cadastre-se, configure suas palavras-chave e já está monitorando.' },

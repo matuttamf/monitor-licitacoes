@@ -87,18 +87,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ──────────────── BARRA DE CREDIBILIDADE ──────────────── */}
-      <section style={{ background: '#F3EDE4', borderTop: '1px solid rgba(201,166,90,0.15)', borderBottom: '1px solid rgba(201,166,90,0.15)', padding: '20px 60px' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '48px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#9AA0A6', letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Fontes oficiais:</span>
-          {['PNCP · Portal Nacional', 'ComprasNet · Gov. Federal', 'Querido Diário · Municípios', 'Google · Portais Estaduais'].map(f => (
-            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6B0F1A', opacity: 0.5 }} />
-              <span style={{ fontSize: '14px', color: '#4a4a4d', fontWeight: 500 }}>{f}</span>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ──────────────── PROBLEMA ──────────────── */}
       <section style={{ padding: '100px 60px', background: '#FAF6F0' }}>
@@ -260,8 +248,8 @@ export default function LandingPage() {
           </div>
 
           <p style={{ textAlign: 'center', fontSize: '13px', color: '#9AA0A6', marginTop: '24px' }}>
-            Todos os planos incluem busca manual, histórico de alertas e suporte via WhatsApp.{' '}
-            <Link href="/assinar" style={{ color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Ver comparação completa →</Link>
+            Todos os planos incluem busca manual, histórico de alertas e suporte via WhatsApp. Assine a partir de R$ 49,90/mês.{' '}
+            <Link href="/assinar" style={{ color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Ver todos os planos →</Link>
           </p>
         </div>
       </section>

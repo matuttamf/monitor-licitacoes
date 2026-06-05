@@ -3,25 +3,31 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { enviarAlertaEmail } from '@/lib/alerts/email'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
 
-const BATCH_SIZE = 20
+const BATCH_SIZE = 50       // Máximo de itens por e-mail
+const MAX_EMAILS_DIA = 4    // Máximo de e-mails por dia
 
 /**
  * Verifica se o momento atual está dentro do horário comercial.
- * Horário comercial: segunda a sexta, das 07h às 17h (horário de Brasília, UTC-3).
+ * Segunda a sexta, das 7h às 17h (horário de Brasília, UTC-3).
  */
 function dentroDoHorarioComercial(): boolean {
   const agora = new Date()
+  const brasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000)
+  const dia = brasilia.getUTCDay()   // 0 = domingo, 6 = sábado
+  const hora = brasilia.getUTCHours()
+  return dia >= 1 && dia <= 5 && hora >= 7 && hora < 17
+}
 
-  // Brasília = UTC-3
-  const horarioBrasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000)
-
-  const diaDaSemana = horarioBrasilia.getUTCDay() // 0 = domingo, 6 = sábado
-  const hora = horarioBrasilia.getUTCHours()
-
-  const ehDiaUtil = diaDaSemana >= 1 && diaDaSemana <= 5
-  const ehHoraUtil = hora >= 7 && hora < 17
-
-  return ehDiaUtil && ehHoraUtil
+/**
+ * Retorna o início do dia atual em horário de Brasília como string ISO UTC.
+ */
+function inicioDoDiaHoje(): string {
+  const agora = new Date()
+  const brasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000)
+  // Zera hora, minuto, segundo e milissegundo no horário de Brasília
+  brasilia.setUTCHours(0, 0, 0, 0)
+  // Converte de volta para UTC
+  return new Date(brasilia.getTime() + 3 * 60 * 60 * 1000).toISOString()
 }
 
 export async function GET(request: Request) {
@@ -30,14 +36,37 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  // Só envia em horário comercial (seg–sex, 07h–17h, horário de Brasília)
+  // Só envia em horário comercial (segunda a sexta, 7h–17h, horário de Brasília)
   if (!dentroDoHorarioComercial()) {
-    return NextResponse.json({ ok: true, motivo: 'Fora do horário comercial. Envio suspenso.', enviados: 0 })
+    return NextResponse.json({
+      ok: true,
+      motivo: 'Fora do horário comercial. Envios suspensos.',
+      enviados: 0,
+    })
   }
 
   const supabase = await createServiceClient()
 
-  // Busca os alertas pendentes (sem canais enviados), ordenados do mais antigo para o mais novo
+  // Verifica quantos lotes já foram enviados hoje
+  const inicioHoje = inicioDoDiaHoje()
+  const { count: enviadosHoje } = await supabase
+    .from('alertas')
+    .select('id', { count: 'exact', head: true })
+    .contains('canais', ['email'])
+    .gte('enviado_em', inicioHoje)
+
+  const lotesEnviadosHoje = Math.ceil((enviadosHoje ?? 0) / BATCH_SIZE)
+
+  if (lotesEnviadosHoje >= MAX_EMAILS_DIA) {
+    return NextResponse.json({
+      ok: true,
+      motivo: `Limite diário de ${MAX_EMAILS_DIA} e-mails atingido.`,
+      enviados: 0,
+      lotesHoje: lotesEnviadosHoje,
+    })
+  }
+
+  // Busca alertas pendentes, do mais antigo para o mais novo
   const { data: alertasPendentes } = await supabase
     .from('alertas')
     .select(`
@@ -56,7 +85,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, enviados: 0, pendentes: 0 })
   }
 
-  // Processa apenas o primeiro lote de até 20 alertas
+  // Processa apenas o primeiro lote de até 50 alertas
   const lote = alertasPendentes.slice(0, BATCH_SIZE)
   const pendentesRestantes = alertasPendentes.length - lote.length
 
@@ -87,11 +116,17 @@ export async function GET(request: Request) {
       .in('id', ids)
   }
 
+  const lotesRestantesPermitidos = MAX_EMAILS_DIA - lotesEnviadosHoje - 1
+
   return NextResponse.json({
     ok: true,
     enviados: lote.length,
     pendentes: pendentesRestantes,
     canais: canaisEnviados,
-    proximo_envio: pendentesRestantes > 0 ? 'Em até 3 horas (próximo ciclo do cron)' : null,
+    lotesEnviadosHoje: lotesEnviadosHoje + 1,
+    lotesRestantesPermitidos,
+    proximo_envio: pendentesRestantes > 0 && lotesRestantesPermitidos > 0
+      ? 'No próximo ciclo do cron'
+      : null,
   })
 }
