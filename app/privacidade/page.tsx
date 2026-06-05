@@ -114,7 +114,7 @@ export default function PrivacidadePage() {
               </Tabela>
 
               <SubTitulo>2.3 Dados de pagamento</SubTitulo>
-              <p>Não coletamos nem armazenamos dados de cartão de crédito. O processamento é realizado integralmente pelo <strong>Mercado Pago</strong>, certificado PCI DSS. Armazenamos apenas o identificador da assinatura para controle de acesso.</p>
+              <p>Não coletamos nem armazenamos dados de cartão de crédito ou informações bancárias. O processamento financeiro é realizado integralmente por nossa plataforma de pagamentos parceira, certificada pelos padrões de segurança do setor. Armazenamos apenas o identificador da assinatura para controle de acesso ao serviço.</p>
             </Section>
 
             <Section titulo="3. Finalidade do tratamento">
@@ -140,24 +140,28 @@ export default function PrivacidadePage() {
             </Section>
 
             <Section titulo="5. Compartilhamento de dados">
-              <p>Não comercializamos, alugamos nem vendemos seus dados pessoais. O compartilhamento ocorre exclusivamente com os fornecedores de infraestrutura necessários à operação do serviço, todos vinculados contratualmente a obrigações de proteção de dados:</p>
-              <Tabela colunas={['Fornecedor', 'Papel', 'Dados compartilhados', 'País']}>
-                <tr><Td>Supabase</Td><Td>Banco de dados e autenticação</Td><Td>Todos os dados de conta e uso</Td><Td>EUA (SCCs)</Td></tr>
-                <tr><Td>Vercel</Td><Td>Hospedagem da aplicação</Td><Td>Logs de acesso, IP</Td><Td>EUA (SCCs)</Td></tr>
-                <tr><Td>Resend</Td><Td>Envio de e-mails</Td><Td>Nome, e-mail, conteúdo dos alertas</Td><Td>EUA (SCCs)</Td></tr>
-                <tr><Td>Mercado Pago</Td><Td>Processamento de pagamentos</Td><Td>E-mail, dados da assinatura</Td><Td>Brasil</Td></tr>
-                <tr><Td>Google (Gemini)</Td><Td>Análise semântica de editais</Td><Td>Apenas texto público de licitações</Td><Td>EUA (SCCs)</Td></tr>
+              <p>Não comercializamos, alugamos nem vendemos seus dados pessoais a terceiros, em nenhuma hipótese.</p>
+              <p>O compartilhamento ocorre exclusivamente com fornecedores de infraestrutura tecnológica indispensáveis à operação do serviço, nas categorias abaixo. Todos estão vinculados contratualmente a obrigações de proteção de dados compatíveis com a LGPD:</p>
+              <Tabela colunas={['Categoria do fornecedor', 'Finalidade', 'Dados envolvidos']}>
+                <tr><Td>Infraestrutura de banco de dados e autenticação</Td><Td>Armazenamento seguro dos dados da conta e controle de acesso</Td><Td>Dados de cadastro, preferências, histórico de uso</Td></tr>
+                <tr><Td>Hospedagem e entrega da aplicação</Td><Td>Disponibilização da plataforma web ao usuário</Td><Td>Dados de acesso, endereço IP</Td></tr>
+                <tr><Td>Envio de comunicações eletrônicas</Td><Td>Entrega de alertas de licitações e notificações do serviço</Td><Td>Nome, e-mail, conteúdo dos alertas</Td></tr>
+                <tr><Td>Processamento de pagamentos</Td><Td>Cobrança e gestão de assinaturas recorrentes</Td><Td>E-mail, identificador da assinatura</Td></tr>
+                <tr><Td>Processamento de linguagem natural</Td><Td>Análise semântica de textos públicos de licitações para identificar correspondências com as palavras-chave do usuário</Td><Td>Exclusivamente texto público de editais governamentais — nenhum dado pessoal</Td></tr>
               </Tabela>
-              <p style={{ marginTop: '12px', fontSize: '13px', color: '#6B7280' }}>SCCs = Cláusulas Contratuais Padrão da Comissão Europeia, mecanismo de adequação reconhecido internacionalmente.</p>
+              <p style={{ marginTop: '12px', fontSize: '13px', color: '#6B7280' }}>
+                Não autorizamos nenhum fornecedor a utilizar os dados compartilhados para finalidades próprias, comercialização ou treinamento de modelos de inteligência artificial.
+              </p>
             </Section>
 
             <Section titulo="6. Transferência internacional de dados">
-              <p>Alguns de nossos fornecedores processam dados fora do Brasil (principalmente nos EUA). Garantimos que essas transferências observam salvaguardas adequadas, conforme o art. 33 da LGPD, por meio de:</p>
+              <p>Parte de nossa infraestrutura tecnológica opera fora do território brasileiro. Quando isso ocorre, asseguramos que a transferência de dados observa as salvaguardas exigidas pelo art. 33 da LGPD, mediante:</p>
               <ul>
-                <li>Cláusulas Contratuais Padrão (Standard Contractual Clauses)</li>
-                <li>Certificações de adequação reconhecidas (GDPR compliance, SOC 2)</li>
-                <li>Termos de proteção de dados dos fornecedores</li>
+                <li>Contratação de fornecedores que adotam cláusulas contratuais de proteção de dados internacionalmente reconhecidas</li>
+                <li>Verificação de certificações de segurança e conformidade dos parceiros tecnológicos</li>
+                <li>Aplicação de instrumentos jurídicos adequados a cada transferência</li>
               </ul>
+              <p>O usuário pode solicitar informações sobre as salvaguardas adotadas pelo canal de contato indicado na seção 13.</p>
             </Section>
 
             <Section titulo="7. Retenção e exclusão de dados">
@@ -197,12 +201,12 @@ export default function PrivacidadePage() {
               <p>Implementamos medidas técnicas e organizacionais proporcionais ao risco, em conformidade com o art. 46 da LGPD:</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '16px' }}>
                 {[
-                  { label: 'Criptografia em trânsito', desc: 'TLS 1.3 em todas as comunicações' },
-                  { label: 'Senhas protegidas', desc: 'Hash bcrypt com salt único' },
-                  { label: 'Isolamento de dados', desc: 'Separação multi-tenant entre contas' },
-                  { label: 'Controle de acesso', desc: 'Autenticação obrigatória com token JWT' },
-                  { label: 'Backups', desc: 'Cópias regulares em infraestrutura segura' },
-                  { label: 'Monitoramento', desc: 'Logs de acesso e detecção de anomalias' },
+                  { label: 'Criptografia em trânsito', desc: 'Todas as comunicações protegidas por protocolo seguro' },
+                  { label: 'Senhas protegidas', desc: 'Armazenadas com algoritmo de hash criptográfico irreversível' },
+                  { label: 'Isolamento de dados', desc: 'Separação lógica entre contas de diferentes usuários' },
+                  { label: 'Controle de acesso', desc: 'Autenticação obrigatória para acesso ao painel' },
+                  { label: 'Cópias de segurança', desc: 'Backups regulares em infraestrutura redundante' },
+                  { label: 'Monitoramento', desc: 'Registros de acesso e detecção de comportamentos anômalos' },
                 ].map(({ label, desc }) => (
                   <div key={label} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                     <span style={{ color: '#10b981', marginTop: '2px', flexShrink: 0 }}>✓</span>
@@ -218,9 +222,9 @@ export default function PrivacidadePage() {
 
             <Section titulo="10. Cookies e tecnologias de rastreamento">
               <p>Utilizamos apenas cookies <strong>estritamente necessários</strong> ao funcionamento do serviço. Não utilizamos cookies de publicidade, rastreamento comportamental ou análise de terceiros.</p>
-              <Tabela colunas={['Cookie', 'Finalidade', 'Duração']}>
-                <tr><Td>sb-access-token</Td><Td>Autenticação — mantém sua sessão ativa</Td><Td>Sessão / 1 hora</Td></tr>
-                <tr><Td>sb-refresh-token</Td><Td>Renovação automática de sessão</Td><Td>60 dias</Td></tr>
+              <Tabela colunas={['Tipo', 'Finalidade', 'Duração']}>
+                <tr><Td>Cookie de sessão</Td><Td>Autenticação — mantém o usuário conectado durante o uso</Td><Td>Duração da sessão</Td></tr>
+                <tr><Td>Cookie de renovação</Td><Td>Renovação automática da autenticação sem necessidade de novo login</Td><Td>Até 60 dias</Td></tr>
               </Tabela>
               <p>Por serem tecnicamente necessários, esses cookies não requerem consentimento prévio (art. 7º, V da LGPD).</p>
             </Section>
