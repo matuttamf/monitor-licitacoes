@@ -115,11 +115,10 @@ export default function AdminPage() {
         <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         <div className="flex gap-3 flex-wrap">
           {[
-            { acao: 'coletar',        label: '🔍 Coletar licitações', desc: 'Busca novos editais em todas as fontes' },
-            { acao: 'matching',       label: '🤖 Processar matches',  desc: 'Gemini analisa candidatos e gera alertas' },
-            { acao: 'alertar',        label: '📧 Enviar alertas',     desc: 'Dispara e-mails e Telegram' },
-            { acao: 'emails',         label: '📩 E-mails de trial',   desc: 'Envia sequência de trial' },
-            { acao: 'expirar-trials', label: '⏱ Expirar trials',      desc: 'Marca trials vencidos como expirado' },
+            { acao: 'coletar',  label: '🔍 Coletar licitações', desc: 'Busca novos editais em todas as fontes' },
+            { acao: 'matching', label: '🤖 Processar matches',  desc: 'Gemini analisa candidatos e gera alertas' },
+            { acao: 'alertar',  label: '📧 Enviar alertas',     desc: 'Dispara e-mails e Telegram' },
+            { acao: 'emails',   label: '📩 E-mails de trial',   desc: 'Envia sequência de trial' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
               className="flex-1 min-w-[160px] px-4 py-3 rounded-xl text-left transition-all"
