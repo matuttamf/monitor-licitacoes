@@ -15,10 +15,11 @@ export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET
 
   const rotas: Record<string, string> = {
-    coletar:  `${baseUrl}/api/cron/coletar`,
-    matching: `${baseUrl}/api/cron/matching`,
-    alertar:  `${baseUrl}/api/cron/alertar`,
-    emails:   `${baseUrl}/api/cron/emails-trial`,
+    coletar:          `${baseUrl}/api/cron/coletar`,
+    matching:         `${baseUrl}/api/cron/matching`,
+    alertar:          `${baseUrl}/api/cron/alertar`,
+    emails:           `${baseUrl}/api/cron/emails-trial`,
+    'expirar-trials': `${baseUrl}/api/cron/expirar-trials`,
   }
 
   const url = rotas[acao]

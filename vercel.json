@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/expirar-trials",
+      "schedule": "0 3 * * *"
+    },
+    {
       "path": "/api/cron/coletar",
       "schedule": "0 5 * * 1-5"
     },
