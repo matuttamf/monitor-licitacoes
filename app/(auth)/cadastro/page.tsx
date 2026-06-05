@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 type ConviteInfo = { email: string; owner: string } | null
 
-export default function CadastroPage() {
+function CadastroConteudo() {
   const searchParams = useSearchParams()
   const conviteToken = searchParams.get('convite')
 
@@ -322,5 +322,17 @@ export default function CadastroPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#9AA0A6', fontSize: '14px' }}>Carregando…</div>
+      </div>
+    }>
+      <CadastroConteudo />
+    </Suspense>
   )
 }
