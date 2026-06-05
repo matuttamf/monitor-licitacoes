@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -10,7 +9,6 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
-  const router = useRouter()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -19,12 +17,18 @@ export default function LoginPage() {
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
     if (error) {
-      setErro('E-mail ou senha incorretos.')
+      if (error.message.includes('Email not confirmed')) {
+        setErro('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.')
+      } else if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_credentials')) {
+        setErro('E-mail ou senha incorretos.')
+      } else {
+        setErro('Erro ao entrar: ' + error.message)
+      }
       setCarregando(false)
       return
     }
-    router.push('/dashboard')
-    router.refresh()
+    // Hard redirect para garantir que os cookies de sessão sejam enviados ao servidor
+    window.location.href = '/dashboard'
   }
 
   return (
@@ -52,7 +56,7 @@ export default function LoginPage() {
         </div>
 
         <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
-          {[['5.500+', 'Municípios'], ['Diário', 'Atualização'], ['Gemini', 'Match por IA']].map(([num, label]) => (
+          {[['5.500+', 'Municípios'], ['Diário', 'Atualização'], ['IA', 'Cruzamento']].map(([num, label]) => (
             <div key={label}>
               <div style={{ fontWeight: 700, fontSize: '18px', color: '#C9A65A' }}>{num}</div>
               <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{label}</div>
