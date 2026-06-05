@@ -4,6 +4,8 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+const ADMIN_EMAIL = 'matuttamaquinaseferramentas@gmail.com'
+
 const navItems = [
   { href: '/',              label: 'Dashboard',         icon: '◈' },
   { href: '/busca',         label: 'Busca',             icon: '⊕' },
@@ -62,6 +64,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {navItems.map(item => (
             <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))}
+          {user.email === ADMIN_EMAIL && (
+            <NavItem href="/admin" label="Admin" icon="⚙" />
+          )}
         </nav>
 
         {/* Usuário */}
