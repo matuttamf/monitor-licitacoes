@@ -16,75 +16,55 @@ export default function CadastroPage() {
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault()
-    if (senha !== confirmarSenha) {
-      setErro('As senhas não coincidem.')
-      return
-    }
-    if (senha.length < 8) {
-      setErro('A senha deve ter pelo menos 8 caracteres.')
-      return
-    }
+    if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
+    if (senha.length < 8) { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     setCarregando(true)
     setErro('')
-
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` }
     })
-
     if (error) {
-      setErro(
-        error.message === 'User already registered'
-          ? 'Este e-mail já está cadastrado.'
-          : 'Erro ao criar conta. Tente novamente.'
-      )
+      setErro(error.message === 'User already registered' ? 'Este e-mail já está cadastrado.' : 'Erro ao criar conta. Tente novamente.')
       setCarregando(false)
       return
     }
-
     setSucesso(true)
     setCarregando(false)
   }
 
+  const inputStyle = {
+    width: '100%',
+    padding: '13px 16px',
+    borderRadius: '12px',
+    border: '1.5px solid #D5D2C8',
+    background: 'white',
+    fontSize: '14px',
+    color: '#1A1A1C',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    fontFamily: 'system-ui, sans-serif',
+  }
+
   if (sucesso) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8" style={{ background: 'var(--creme)' }}>
-        <div className="w-full max-w-sm text-center">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"
-            style={{ background: 'rgba(107,15,26,0.08)', border: '1.5px solid rgba(107,15,26,0.15)' }}
-          >
-            ✉
-          </div>
-          <h2 className="text-2xl font-semibold mb-3" style={{ color: 'var(--preto)' }}>
-            Verifique seu e-mail
-          </h2>
-          <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--cinza)' }}>
-            Enviamos um link de confirmação para{' '}
-            <strong style={{ color: 'var(--preto)' }}>{email}</strong>.
-            Clique no link para ativar sua conta e acessar o monitor.
+      <div style={{ minHeight: '100vh', background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ maxWidth: '480px', width: '100%', background: 'white', borderRadius: '24px', padding: '48px 40px', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.08)', border: '1px solid #D5D2C8' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(107,15,26,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '28px' }}>✉</div>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 12px' }}>Verifique seu e-mail</h2>
+          <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: 1.7, margin: '0 0 8px' }}>
+            Enviamos um link de confirmação para <strong style={{ color: '#1A1A1C' }}>{email}</strong>
           </p>
-          <div
-            className="rounded-xl px-5 py-4 mb-6 text-left"
-            style={{ background: 'rgba(201,166,90,0.08)', border: '1px solid rgba(201,166,90,0.2)' }}
-          >
-            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--dourado)' }}>
-              Não recebeu o e-mail?
-            </p>
-            <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-              Verifique a caixa de spam. O e-mail pode levar até 2 minutos para chegar.
+          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Clique no link para ativar sua conta e começar os 7 dias grátis.</p>
+          <div style={{ background: '#FAF6F0', borderRadius: '14px', padding: '20px', border: '1px solid #D5D2C8', marginBottom: '24px' }}>
+            <p style={{ fontSize: '13px', color: '#4a4a4d', margin: 0, lineHeight: 1.6 }}>
+              💡 <strong>Não encontrou o e-mail?</strong> Verifique a pasta de spam ou lixo eletrônico.
             </p>
           </div>
-          <Link
-            href="/login"
-            className="block w-full py-3 rounded-xl text-sm font-semibold text-center"
-            style={{ background: 'var(--vinho)', color: 'white' }}
-          >
-            Ir para o login
+          <Link href="/login" style={{ display: 'block', padding: '13px', borderRadius: '12px', background: '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, textDecoration: 'none', textAlign: 'center' }}>
+            Ir para o login →
           </Link>
         </div>
       </div>
@@ -92,206 +72,144 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--creme)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Painel esquerdo — identidade Matutta */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: 'var(--preto)' }}
-      >
-        {/* Textura grain */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat',
-          }}
-        />
-        {/* Glow vinho */}
-        <div
-          className="absolute opacity-20"
-          style={{
-            top: '20%', left: '-10%', width: '60%', height: '60%',
-            background: 'radial-gradient(circle, var(--vinho) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-          }}
-        />
-        {/* Glow dourado */}
-        <div
-          className="absolute opacity-10"
-          style={{
-            bottom: '10%', right: '5%', width: '40%', height: '40%',
-            background: 'radial-gradient(circle, var(--dourado) 0%, transparent 70%)',
-            filter: 'blur(60px)',
-          }}
-        />
+      {/* Painel esquerdo - benefícios */}
+      <div style={{ width: '45%', background: '#1A1A1C', padding: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #6B0F1A 0%, transparent 70%)', opacity: 0.2, filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', bottom: '0%', left: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, #C9A65A 0%, transparent 70%)', opacity: 0.08, filter: 'blur(80px)' }} />
 
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
-            style={{ background: 'var(--vinho)', color: 'var(--dourado)', border: '1px solid rgba(201,166,90,0.3)' }}
-          >
-            ML
-          </div>
-          <span className="font-semibold tracking-wide" style={{ color: 'white' }}>Matutta</span>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px', border: '1px solid rgba(201,166,90,0.3)' }}>ML</div>
+            <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>Monitor de Licitações</span>
+          </Link>
         </div>
 
-        {/* Headline */}
-        <div className="relative z-10">
-          <div
-            className="text-xs font-medium tracking-widest uppercase mb-6"
-            style={{ color: 'var(--dourado)' }}
-          >
-            Monitor de Licitações
+        {/* Headline e benefícios */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '16px' }}>7 dias grátis · sem cartão</div>
+          <h2 style={{ fontSize: '38px', fontWeight: 400, color: 'white', lineHeight: 1.25, margin: '0 0 32px', fontFamily: 'Georgia, serif' }}>
+            Comece a receber<br />
+            <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>alertas amanhã.</span>
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {[
+              { icon: '🎯', titulo: 'Match por IA', desc: 'Gemini encontra licitações mesmo sem a palavra exata — por sinônimos e contexto.' },
+              { icon: '📬', titulo: 'Alertas diários', desc: 'Receba no e-mail e Telegram todo dia com os editais que combinam com o que você vende.' },
+              { icon: '🏛️', titulo: '5.500+ municípios', desc: 'Cobertura nacional — prefeituras, estados, governo federal e autarquias.' },
+              { icon: '⚡', titulo: 'Ative em 2 minutos', desc: 'Cadastre-se, configure suas palavras-chave e já está monitorando.' },
+            ].map(b => (
+              <div key={b.titulo} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(201,166,90,0.1)', border: '1px solid rgba(201,166,90,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>{b.icon}</div>
+                <div>
+                  <div style={{ color: 'white', fontWeight: 600, fontSize: '14px', marginBottom: '2px' }}>{b.titulo}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', lineHeight: 1.5 }}>{b.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
-          <h1
-            className="text-5xl leading-tight mb-6"
-            style={{ fontFamily: 'var(--font-instrument)', color: 'white', fontWeight: 400 }}
-          >
-            7 dias grátis.<br />
-            <span style={{ color: 'var(--dourado)', fontStyle: 'italic' }}>Sem cartão.</span>
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: '1.7' }}>
-            Configure suas palavras-chave e receba alertas<br />
-            diários de licitações públicas que combinam<br />
-            com o que você vende.
+        </div>
+
+        {/* Social proof */}
+        <div style={{ position: 'relative', padding: '20px', background: 'rgba(201,166,90,0.06)', border: '1px solid rgba(201,166,90,0.15)', borderRadius: '14px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px' }}>
+            "Encontrei uma licitação de R$ 85.000 em notebooks logo na primeira semana. O plano pagou-se 400 vezes."
           </p>
+          <span style={{ color: '#C9A65A', fontSize: '12px', fontWeight: 600 }}>Distribuidora de TI — Belo Horizonte, MG</span>
         </div>
 
-        {/* Stats */}
-        <div className="relative z-10 grid grid-cols-3 gap-6">
-          {[
-            { num: '5.500+', label: 'Municípios' },
-            { num: 'Diário', label: 'Atualização' },
-            { num: 'R$49,90', label: 'por mês' },
-          ].map(s => (
-            <div key={s.label}>
-              <div className="font-bold text-lg" style={{ color: 'var(--dourado)' }}>{s.num}</div>
-              <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Linha dourada bottom */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{ background: 'linear-gradient(90deg, var(--vinho), var(--dourado), transparent)' }}
-        />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6B0F1A, #C9A65A, transparent)' }} />
       </div>
 
-      {/* Painel direito — formulário */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm">
+      {/* Painel direito - formulário */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 40px', background: '#FAF6F0' }}>
+        <div style={{ width: '100%', maxWidth: '400px' }}>
 
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs"
-              style={{ background: 'var(--vinho)', color: 'var(--dourado)' }}
-            >
-              ML
-            </div>
-            <span className="font-semibold" style={{ color: 'var(--preto)' }}>Monitor de Licitações</span>
+          <div style={{ marginBottom: '32px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Criar sua conta</h1>
+            <p style={{ fontSize: '15px', color: '#9AA0A6', margin: 0 }}>7 dias grátis · sem cartão de crédito</p>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>
-              Criar sua conta
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--cinza)' }}>
-              7 dias grátis · sem cartão de crédito
-            </p>
-          </div>
-
-          <form onSubmit={handleCadastro} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>
-                E-mail
-              </label>
+          <form onSubmit={handleCadastro}>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                required
                 placeholder="seu@email.com"
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                style={{ border: '1.5px solid rgba(154,160,166,0.3)', background: 'white', color: 'var(--preto)' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(154,160,166,0.3)'; e.target.style.boxShadow = 'none' }}
+                required
+                style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
+                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>
-                Senha
-              </label>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Senha</label>
               <input
                 type="password"
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
-                required
                 placeholder="Mínimo 8 caracteres"
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                style={{ border: '1.5px solid rgba(154,160,166,0.3)', background: 'white', color: 'var(--preto)' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(154,160,166,0.3)'; e.target.style.boxShadow = 'none' }}
+                required
+                style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
+                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>
-                Confirmar senha
-              </label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Confirmar senha</label>
               <input
                 type="password"
                 value={confirmarSenha}
                 onChange={e => setConfirmarSenha(e.target.value)}
-                required
                 placeholder="Repita a senha"
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                style={{ border: '1.5px solid rgba(154,160,166,0.3)', background: 'white', color: 'var(--preto)' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(154,160,166,0.3)'; e.target.style.boxShadow = 'none' }}
+                required
+                style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
+                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
             {erro && (
-              <div
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(185,28,28,0.06)', color: '#b91c1c', border: '1px solid rgba(185,28,28,0.15)' }}
-              >
+              <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
                 ⚠ {erro}
               </div>
             )}
 
+            {/* Garantias antes do botão */}
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {[['🔒', 'Dados seguros'], ['↩', 'Cancele sempre'], ['⚡', 'Ativação imediata']].map(([icon, text]) => (
+                <div key={text as string} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#9AA0A6' }}>
+                  <span>{icon}</span><span>{text}</span>
+                </div>
+              ))}
+            </div>
+
             <button
               type="submit"
               disabled={carregando}
-              className="w-full py-3 rounded-xl text-sm font-semibold transition-all mt-2"
-              style={{
-                background: carregando ? 'var(--cinza)' : 'var(--vinho)',
-                color: 'white',
-                cursor: carregando ? 'not-allowed' : 'pointer',
-                letterSpacing: '0.02em',
-              }}
+              style={{ width: '100%', padding: '15px', borderRadius: '12px', background: carregando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '16px', fontWeight: 700, border: 'none', cursor: carregando ? 'not-allowed' : 'pointer' }}
             >
-              {carregando ? 'Criando conta...' : 'Criar conta grátis →'}
+              {carregando ? 'Criando conta...' : 'Criar conta gratuita →'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm" style={{ color: 'var(--cinza)' }}>
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#9AA0A6', marginTop: '20px' }}>
             Já tem uma conta?{' '}
-            <Link href="/login" className="font-semibold" style={{ color: 'var(--vinho)' }}>
-              Entrar
-            </Link>
+            <Link href="/login" style={{ color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Entrar →</Link>
           </p>
 
-          {/* Linha dourada decorativa */}
-          <div
-            className="mt-8 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, var(--dourado), transparent)', opacity: 0.4 }}
-          />
+          <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(107,15,26,0.04)', borderRadius: '12px', border: '1px solid rgba(107,15,26,0.08)' }}>
+            <p style={{ fontSize: '12px', color: '#9AA0A6', margin: 0, textAlign: 'center', lineHeight: 1.6 }}>
+              Ao criar sua conta, você concorda com nossos termos de uso. Após 7 dias, assine por R$ 49,90/mês ou cancele sem custo.
+            </p>
+          </div>
         </div>
       </div>
     </div>
