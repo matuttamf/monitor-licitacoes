@@ -19,7 +19,7 @@ export default function LandingPage() {
         </div>
         <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link href="#como-funciona" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Como funciona</Link>
-          <Link href="#planos" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Planos</Link>
+          <Link href="/assinar" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Planos</Link>
           <Link href="/login" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
           <Link href="/cadastro" style={{ padding: '10px 22px', fontSize: '14px', fontWeight: 700, background: '#6B0F1A', color: 'white', textDecoration: 'none', borderRadius: '10px', letterSpacing: '-0.01em' }}>Começar grátis</Link>
         </nav>
