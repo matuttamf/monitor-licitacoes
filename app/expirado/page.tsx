@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LogoutButton from '@/app/(dashboard)/components/LogoutButton'
 
 export default function ExpiradoPage() {
   return (
@@ -66,15 +67,7 @@ export default function ExpiradoPage() {
           Falar por e-mail
         </a>
 
-        <form action="/api/auth/logout" method="POST">
-          <button
-            type="submit"
-            className="text-xs"
-            style={{ color: 'var(--cinza)' }}
-          >
-            Sair da conta
-          </button>
-        </form>
+        <LogoutButton />
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import LogoutButton from './components/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -89,15 +90,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>Matutta</div>
             </div>
           </div>
-          <form action="/api/auth/logout" method="POST">
-            <button
-              type="submit"
-              className="w-full text-xs py-2 rounded-lg px-3 text-left transition-colors"
-              style={{ color: 'rgba(255,255,255,0.35)', background: 'transparent' }}
-            >
-              Sair da conta
-            </button>
-          </form>
+          <LogoutButton />
         </div>
       </aside>
 
