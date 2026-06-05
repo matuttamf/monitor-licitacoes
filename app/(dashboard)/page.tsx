@@ -16,10 +16,10 @@ type Licitacao = {
 }
 
 const fonteConfig: Record<string, { cor: string; bg: string }> = {
-  'PNCP':           { cor: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
-  'ComprasNet':     { cor: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-  'Querido Diário': { cor: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
-  'BLL':            { cor: '#8b5cf6', bg: 'rgba(139,92,246,0.08)' },
+  'PNCP':           { cor: '#6B0F1A', bg: 'rgba(107,15,26,0.07)' },
+  'ComprasNet':     { cor: '#8B1E2D', bg: 'rgba(139,30,45,0.07)' },
+  'Querido Diário': { cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
+  'BLL':            { cor: '#4a4a4d', bg: 'rgba(74,74,77,0.07)'   },
 }
 
 function formatarValor(valor?: number) {
@@ -73,9 +73,9 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Licitações encontradas', valor: carregando ? '—' : licitacoes.length.toString(), cor: 'var(--accent)' },
-          { label: 'Volume estimado', valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'), cor: 'var(--green)' },
-          { label: 'Fontes ativas', valor: '3', cor: 'var(--amber)' },
+          { label: 'Licitações encontradas', valor: carregando ? '—' : licitacoes.length.toString(), cor: 'var(--vinho)' },
+          { label: 'Volume estimado', valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'), cor: 'var(--dourado)' },
+          { label: 'Fontes ativas', valor: '3', cor: 'var(--bordo)' },
         ].map(stat => (
           <div key={stat.label} className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                         {l.fonte}
                       </span>
                       {l.alertas?.map((a, i) => (
-                        <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(59,130,246,0.08)', color: 'var(--accent)' }}>
+                        <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
                           {a.keywords?.termo}
                         </span>
                       ))}
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                      style={{ background: 'var(--accent)', color: 'white', textDecoration: 'none' }}
+                      style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
                     >
                       Ver edital →
                     </a>
