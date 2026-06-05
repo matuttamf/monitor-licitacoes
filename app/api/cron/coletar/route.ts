@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import { coletarPNCP } from '@/lib/scrapers/pncp'
 import { coletarComprasNet } from '@/lib/scrapers/comprasnet'
 import { coletarQueridoDiario } from '@/lib/scrapers/querido-diario'
-import { coletarBLL } from '@/lib/scrapers/bll'
-import { coletarLicitacoesE } from '@/lib/scrapers/licitacoes-e'
 import { salvarLicitacoes } from '@/lib/scrapers/salvar'
 import { encontrarMatches } from '@/lib/matching/gemini'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -33,16 +31,10 @@ export async function GET(request: Request) {
     coletarQueridoDiario([]),
   ])
 
-  // Playwright sequencial para não sobrecarregar
-  const bll = await coletarBLL().catch(() => [])
-  const licitacoesE = await coletarLicitacoesE().catch(() => [])
-
   const todasLicitacoes = [
     ...(pncp.status === 'fulfilled' ? pncp.value : []),
     ...(comprasnet.status === 'fulfilled' ? comprasnet.value : []),
     ...(queridoDiario.status === 'fulfilled' ? queridoDiario.value : []),
-    ...bll,
-    ...licitacoesE,
   ]
 
   console.log(`Coletadas ${todasLicitacoes.length} licitações no total`)
