@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -22,167 +23,89 @@ export default function LoginPage() {
       setCarregando(false)
       return
     }
-    router.push('/')
+    router.push('/dashboard')
     router.refresh()
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--creme)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Painel esquerdo — identidade Matutta */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: 'var(--preto)' }}
-      >
-        {/* Textura grain */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat',
-          }}
-        />
-        {/* Glow vinho */}
-        <div
-          className="absolute opacity-20"
-          style={{
-            top: '20%',
-            left: '-10%',
-            width: '60%',
-            height: '60%',
-            background: 'radial-gradient(circle, var(--vinho) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-          }}
-        />
-        {/* Glow dourado */}
-        <div
-          className="absolute opacity-10"
-          style={{
-            bottom: '10%',
-            right: '5%',
-            width: '40%',
-            height: '40%',
-            background: 'radial-gradient(circle, var(--dourado) 0%, transparent 70%)',
-            filter: 'blur(60px)',
-          }}
-        />
+      {/* Painel esquerdo */}
+      <div style={{ display: 'none', width: '50%', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', background: '#1A1A1C', position: 'relative', overflow: 'hidden' }}
+        className="left-panel">
+        <div style={{ position: 'absolute', top: '20%', left: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #6B0F1A 0%, transparent 70%)', filter: 'blur(60px)', opacity: 0.25 }} />
+        <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '40%', height: '40%', background: 'radial-gradient(circle, #C9A65A 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.1 }} />
 
-        {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
-            style={{ background: 'var(--vinho)', color: 'var(--dourado)', border: '1px solid rgba(201,166,90,0.3)' }}
-          >
-            ML
-          </div>
-          <span className="font-semibold tracking-wide" style={{ color: 'white' }}>Matutta</span>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', border: '1px solid rgba(201,166,90,0.3)' }}>ML</div>
+          <span style={{ color: 'white', fontWeight: 600 }}>Matutta</span>
         </div>
 
-        {/* Headline */}
-        <div className="relative z-10">
-          <div
-            className="text-xs font-medium tracking-widest uppercase mb-6"
-            style={{ color: 'var(--dourado)' }}
-          >
-            Monitor de Licitações
-          </div>
-          <h1
-            className="text-5xl leading-tight mb-6"
-            style={{ fontFamily: 'var(--font-instrument)', color: 'white', fontWeight: 400 }}
-          >
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: '#C9A65A', textTransform: 'uppercase', marginBottom: '20px' }}>Monitor de Licitações</div>
+          <h1 style={{ fontSize: '46px', fontWeight: 400, color: 'white', lineHeight: 1.2, margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>
             Encontre editais<br />
-            <span style={{ color: 'var(--dourado)', fontStyle: 'italic' }}>antes de todos.</span>
+            <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>antes de todos.</span>
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: '1.7' }}>
-            Alertas diários de licitações públicas de prefeituras,<br />
-            estados e governo federal — filtrados por IA<br />
-            para o que a Matutta realmente pode vender.
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
+            Alertas diários de licitações públicas filtrados por IA para o que a Matutta pode vender.
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="relative z-10 grid grid-cols-3 gap-6">
-          {[
-            { num: '5.500+', label: 'Municípios' },
-            { num: 'Diário', label: 'Atualização' },
-            { num: 'Gemini', label: 'Match por IA' },
-          ].map(s => (
-            <div key={s.label}>
-              <div className="font-bold text-lg" style={{ color: 'var(--dourado)' }}>{s.num}</div>
-              <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</div>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          {[['5.500+', 'Municípios'], ['Diário', 'Atualização'], ['Gemini', 'Match por IA']].map(([num, label]) => (
+            <div key={label}>
+              <div style={{ fontWeight: 700, fontSize: '18px', color: '#C9A65A' }}>{num}</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{label}</div>
             </div>
           ))}
         </div>
 
-        {/* Linha dourada bottom */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-0.5"
-          style={{ background: 'linear-gradient(90deg, var(--vinho), var(--dourado), transparent)' }}
-        />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6B0F1A, #C9A65A, transparent)' }} />
       </div>
 
       {/* Painel direito — formulário */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm">
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', background: '#FAF6F0' }}>
+        <div style={{ width: '100%', maxWidth: '380px' }}>
 
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs"
-              style={{ background: 'var(--vinho)', color: 'var(--dourado)' }}
-            >
-              ML
-            </div>
-            <span className="font-semibold" style={{ color: 'var(--preto)' }}>Monitor de Licitações</span>
+          {/* Logo mobile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>ML</div>
+            <span style={{ fontWeight: 700, fontSize: '15px', color: '#1A1A1C' }}>Monitor de Licitações</span>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>
-              Bem-vindo de volta
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--cinza)' }}>
-              Acesso restrito à equipe Matutta
-            </p>
-          </div>
+          <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Bem-vindo de volta</h2>
+          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Acesso restrito à equipe Matutta</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-2)' }}>
-                E-mail
-              </label>
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = 'var(--cinza-light)'; e.target.style.boxShadow = 'none' }}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
+                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
+                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-2)' }}>
-                Senha
-              </label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Senha</label>
               <input
                 type="password"
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
                 required
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = 'var(--cinza-light)'; e.target.style.boxShadow = 'none' }}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
+                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
+                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
             {erro && (
-              <div
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(185,28,28,0.06)', color: 'var(--red)', border: '1px solid rgba(185,28,28,0.15)' }}
-              >
+              <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
                 ⚠ {erro}
               </div>
             )}
@@ -190,23 +113,18 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={carregando}
-              className="w-full py-3 rounded-xl text-sm font-semibold transition-all mt-2"
-              style={{
-                background: carregando ? 'var(--cinza)' : 'var(--vinho)',
-                color: 'white',
-                cursor: carregando ? 'not-allowed' : 'pointer',
-                letterSpacing: '0.02em',
-              }}
+              style={{ width: '100%', padding: '13px', borderRadius: '12px', background: carregando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, border: 'none', cursor: carregando ? 'not-allowed' : 'pointer', letterSpacing: '0.02em' }}
             >
               {carregando ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          {/* Linha dourada decorativa */}
-          <div
-            className="mt-10 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, var(--dourado), transparent)', opacity: 0.4 }}
-          />
+          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <span style={{ fontSize: '13px', color: '#9AA0A6' }}>Não tem conta? </span>
+            <Link href="/cadastro" style={{ fontSize: '13px', color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Começar grátis →</Link>
+          </div>
+
+          <div style={{ margin: '32px 0 0', height: '1px', background: 'linear-gradient(90deg, transparent, #C9A65A, transparent)', opacity: 0.4 }} />
         </div>
       </div>
     </div>
