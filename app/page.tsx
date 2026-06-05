@@ -293,7 +293,7 @@ export default function LandingPage() {
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '700px', height: '400px', background: 'radial-gradient(ellipse, rgba(107,15,26,0.4) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '680px', margin: '0 auto' }}>
           <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '20px' }}>Comece agora</div>
-          <h2 style={{ fontSize: '56px', fontWeight: 800, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 20px', fontFamily: 'Georgia, serif', fontWeight: 400 }}>
+          <h2 style={{ fontSize: '56px', fontWeight: 400, color: 'white', letterSpacing: '-0.02em', lineHeight: 1.05, margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>
             Seu próximo contrato<br />pode aparecer amanhã.
           </h2>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.45)', margin: '0 0 48px', lineHeight: 1.6 }}>
