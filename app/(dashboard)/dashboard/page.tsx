@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 type Licitacao = {
   id: string
@@ -15,6 +15,13 @@ type Licitacao = {
   alertas: { keywords: { termo: string } }[]
 }
 
+type Resposta = {
+  data: Licitacao[]
+  total: number
+  pagina: number
+  paginas: number
+}
+
 const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'PNCP':           { cor: '#6B0F1A', bg: 'rgba(107,15,26,0.07)' },
   'ComprasNet':     { cor: '#8B1E2D', bg: 'rgba(139,30,45,0.07)' },
@@ -23,29 +30,95 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'Google':         { cor: '#2d6a4f', bg: 'rgba(45,106,79,0.07)'  },
 }
 
+const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+
 function formatarValor(valor?: number) {
   if (!valor) return null
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 }
 
-export default function DashboardPage() {
-  const [licitacoes, setLicitacoes] = useState<Licitacao[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [filtroEstado, setFiltroEstado] = useState('')
+function Paginacao({ pagina, paginas, onChange }: { pagina: number; paginas: number; onChange: (p: number) => void }) {
+  if (paginas <= 1) return null
 
-  const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
-
-  async function carregar() {
-    setCarregando(true)
-    const params = new URLSearchParams()
-    if (filtroEstado) params.set('estado', filtroEstado)
-    const res = await fetch(`/api/licitacoes?${params}`)
-    setLicitacoes(await res.json())
-    setCarregando(false)
+  const pagNums: (number | '...')[] = []
+  if (paginas <= 7) {
+    for (let i = 1; i <= paginas; i++) pagNums.push(i)
+  } else {
+    pagNums.push(1)
+    if (pagina > 3) pagNums.push('...')
+    for (let i = Math.max(2, pagina - 1); i <= Math.min(paginas - 1, pagina + 1); i++) pagNums.push(i)
+    if (pagina < paginas - 2) pagNums.push('...')
+    pagNums.push(paginas)
   }
 
-  useEffect(() => { carregar() }, [filtroEstado])
+  return (
+    <div className="flex items-center justify-center gap-1 mt-6">
+      <button
+        onClick={() => onChange(pagina - 1)}
+        disabled={pagina === 1}
+        className="px-3 py-2 rounded-xl text-sm font-medium"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: pagina === 1 ? 'var(--text-3)' : 'var(--text-2)', cursor: pagina === 1 ? 'not-allowed' : 'pointer' }}
+      >
+        ← Anterior
+      </button>
 
+      {pagNums.map((p, i) =>
+        p === '...' ? (
+          <span key={`e${i}`} className="px-2 text-sm" style={{ color: 'var(--text-3)' }}>…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p as number)}
+            className="w-9 h-9 rounded-xl text-sm font-medium"
+            style={{
+              background: p === pagina ? 'var(--vinho)' : 'var(--surface)',
+              color:      p === pagina ? 'white' : 'var(--text-2)',
+              border:     `1px solid ${p === pagina ? 'var(--vinho)' : 'var(--border)'}`,
+              cursor: 'pointer',
+            }}
+          >
+            {p}
+          </button>
+        )
+      )}
+
+      <button
+        onClick={() => onChange(pagina + 1)}
+        disabled={pagina === paginas}
+        className="px-3 py-2 rounded-xl text-sm font-medium"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: pagina === paginas ? 'var(--text-3)' : 'var(--text-2)', cursor: pagina === paginas ? 'not-allowed' : 'pointer' }}
+      >
+        Próxima →
+      </button>
+    </div>
+  )
+}
+
+export default function DashboardPage() {
+  const [resposta, setResposta]     = useState<Resposta | null>(null)
+  const [carregando, setCarregando] = useState(true)
+  const [pagina, setPagina]         = useState(1)
+  const [filtroEstado, setFiltroEstado] = useState('')
+
+  const carregar = useCallback(async (p: number) => {
+    setCarregando(true)
+    const params = new URLSearchParams({ pagina: String(p) })
+    if (filtroEstado) params.set('estado', filtroEstado)
+    const res = await fetch(`/api/licitacoes?${params}`)
+    if (res.ok) setResposta(await res.json())
+    setCarregando(false)
+  }, [filtroEstado])
+
+  useEffect(() => {
+    setPagina(1)
+    carregar(1)
+  }, [filtroEstado]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    carregar(pagina)
+  }, [pagina, carregar])
+
+  const licitacoes = resposta?.data ?? []
   const totalValor = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
 
   return (
@@ -74,9 +147,21 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Licitações encontradas', valor: carregando ? '—' : licitacoes.length.toString(), cor: 'var(--vinho)' },
-          { label: 'Volume estimado', valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'), cor: 'var(--dourado)' },
-          { label: 'Fontes ativas', valor: '3', cor: 'var(--bordo)' },
+          {
+            label: 'Licitações encontradas',
+            valor: carregando ? '—' : (resposta?.total ?? 0).toString(),
+            cor: 'var(--vinho)',
+          },
+          {
+            label: 'Volume estimado (página)',
+            valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'),
+            cor: 'var(--dourado)',
+          },
+          {
+            label: 'Página atual',
+            valor: carregando ? '—' : `${resposta?.pagina ?? 1} / ${resposta?.paginas ?? 1}`,
+            cor: 'var(--bordo)',
+          },
         ].map(stat => (
           <div key={stat.label} className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>
@@ -92,7 +177,7 @@ export default function DashboardPage() {
       {/* Lista */}
       {carregando ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="rounded-2xl animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', height: '110px' }} />
           ))}
         </div>
@@ -104,59 +189,74 @@ export default function DashboardPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {licitacoes.map(l => {
-            const cfg = fonteConfig[l.fonte] ?? { cor: '#64748b', bg: 'rgba(100,116,139,0.08)' }
-            return (
-              <div
-                key={l.id}
-                className="rounded-2xl p-5"
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${cfg.cor}` }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
-                        {l.fonte}
-                      </span>
-                      {l.alertas?.map((a, i) => (
-                        <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
-                          {a.keywords?.termo}
+        <>
+          <div className="space-y-3">
+            {licitacoes.map(l => {
+              const cfg = fonteConfig[l.fonte] ?? { cor: '#64748b', bg: 'rgba(100,116,139,0.08)' }
+              return (
+                <div
+                  key={l.id}
+                  className="rounded-2xl p-5"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${cfg.cor}` }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
+                          {l.fonte}
                         </span>
-                      ))}
-                      {l.cidade && (
-                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                          {l.cidade}{l.estado ? `/${l.estado}` : ''}
-                        </span>
-                      )}
+                        {l.alertas?.map((a, i) => (
+                          <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
+                            {a.keywords?.termo}
+                          </span>
+                        ))}
+                        {l.cidade && (
+                          <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                            {l.cidade}{l.estado ? `/${l.estado}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
+                        {l.objeto.length > 160 ? l.objeto.substring(0, 160) + '…' : l.objeto}
+                      </p>
                     </div>
-                    <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
-                      {l.objeto.length > 160 ? l.objeto.substring(0, 160) + '...' : l.objeto}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                    {l.valor_estimado && (
-                      <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatarValor(l.valor_estimado)}</p>
-                    )}
-                    {l.data_abertura && (
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>Abertura: {l.data_abertura}</p>
-                    )}
-                    <a
-                      href={l.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                      style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
-                    >
-                      Ver edital →
-                    </a>
+                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                      {l.valor_estimado && (
+                        <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatarValor(l.valor_estimado)}</p>
+                      )}
+                      {l.data_abertura && (
+                        <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                          Abertura: {new Date(l.data_abertura).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
+                      >
+                        Ver edital →
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+
+          {/* Paginação */}
+          <Paginacao
+            pagina={resposta?.pagina ?? 1}
+            paginas={resposta?.paginas ?? 1}
+            onChange={p => { setPagina(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+          />
+
+          <p className="text-center text-xs mt-3" style={{ color: 'var(--text-3)' }}>
+            Mostrando {(pagina - 1) * 20 + 1}–{Math.min(pagina * 20, resposta?.total ?? 0)} de {resposta?.total ?? 0} licitações
+          </p>
+        </>
       )}
     </div>
   )

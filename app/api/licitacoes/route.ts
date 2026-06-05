@@ -1,12 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const POR_PAGINA = 20
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
+  const pagina = Math.max(1, Number(searchParams.get('pagina') ?? '1'))
+  const from   = (pagina - 1) * POR_PAGINA
+  const to     = from + POR_PAGINA - 1
 
   // Buscar IDs das keywords do usuário
   const { data: keywords } = await supabase
@@ -15,23 +21,22 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.id)
     .eq('ativo', true)
 
-  if (!keywords?.length) return NextResponse.json([])
+  if (!keywords?.length) return NextResponse.json({ data: [], total: 0, pagina: 1, paginas: 1 })
 
   const keywordIds = keywords.map(k => k.id)
 
-  // Buscar IDs de licitações que têm alertas com as keywords deste usuário
-  let alertasQuery = supabase
+  // Buscar alertas para obter licitacao_ids e keywords associadas
+  const { data: alertas } = await supabase
     .from('alertas')
     .select('licitacao_id, keywords(termo)')
     .in('keyword_id', keywordIds)
 
-  const { data: alertas } = await alertasQuery
-  if (!alertas?.length) return NextResponse.json([])
+  if (!alertas?.length) return NextResponse.json({ data: [], total: 0, pagina: 1, paginas: 1 })
 
   // Agrupar keywords por licitacao_id
   const keywordsPorLicitacao = new Map<string, string[]>()
   for (const a of alertas) {
-    const termo = (a.keywords as any)?.termo
+    const termo = (a.keywords as { termo: string } | null)?.termo
     if (!termo) continue
     const lista = keywordsPorLicitacao.get(a.licitacao_id) ?? []
     if (!lista.includes(termo)) lista.push(termo)
@@ -40,13 +45,13 @@ export async function GET(request: NextRequest) {
 
   const licitacaoIds = [...keywordsPorLicitacao.keys()]
 
-  // Buscar as licitações com filtros opcionais
+  // Buscar licitações com filtros opcionais + paginação
   let query = supabase
     .from('licitacoes')
-    .select('id, fonte, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, coletado_em')
+    .select('id, fonte, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, coletado_em', { count: 'exact' })
     .in('id', licitacaoIds)
     .order('coletado_em', { ascending: false })
-    .limit(100)
+    .range(from, to)
 
   if (searchParams.get('estado')) {
     query = query.eq('estado', searchParams.get('estado')!)
@@ -58,10 +63,12 @@ export async function GET(request: NextRequest) {
     query = query.gte('valor_estimado', Number(searchParams.get('valor_min')))
   }
 
-  const { data: licitacoes, error } = await query
+  const { data: licitacoes, count, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Montar resposta com keywords de cada licitação
+  const total   = count ?? 0
+  const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
+
   const resultado = (licitacoes ?? []).map(l => ({
     ...l,
     alertas: (keywordsPorLicitacao.get(l.id) ?? []).map(termo => ({
@@ -69,5 +76,5 @@ export async function GET(request: NextRequest) {
     }))
   }))
 
-  return NextResponse.json(resultado)
+  return NextResponse.json({ data: resultado, total, pagina, paginas })
 }
