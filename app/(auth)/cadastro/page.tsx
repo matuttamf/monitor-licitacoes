@@ -27,7 +27,18 @@ export default function CadastroPage() {
       options: { emailRedirectTo: `${window.location.origin}/dashboard` }
     })
     if (error) {
-      setErro(error.message === 'User already registered' ? 'Este e-mail já está cadastrado.' : 'Erro ao criar conta. Tente novamente.')
+      const msg = error.message ?? ''
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        setErro('Este e-mail já está cadastrado. Use "Entrar" para acessar sua conta.')
+      } else if (msg.includes('rate limit') || msg.includes('email_send_rate_limit') || msg.includes('over_email')) {
+        setErro('Muitos cadastros em pouco tempo. Aguarde alguns minutos e tente novamente.')
+      } else if (msg.includes('invalid') && msg.includes('email')) {
+        setErro('E-mail inválido. Verifique e tente novamente.')
+      } else if (msg.includes('Password')) {
+        setErro('Senha inválida. Use pelo menos 8 caracteres.')
+      } else {
+        setErro(`Erro ao criar conta: ${msg}`)
+      }
       setCarregando(false)
       return
     }
