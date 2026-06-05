@@ -100,7 +100,7 @@ export default function PrivacidadePage() {
 
               <SubTitulo>2.1 Dados fornecidos diretamente por você</SubTitulo>
               <Tabela colunas={['Categoria', 'Dados', 'Momento da coleta']}>
-                <tr><Td>Identificação</Td><Td>Nome completo, e-mail, senha (hash)</Td><Td>Cadastro</Td></tr>
+                <tr><Td>Identificação</Td><Td>Nome completo, e-mail, credencial de acesso</Td><Td>Cadastro</Td></tr>
                 <tr><Td>Contato</Td><Td>Telefone, WhatsApp</Td><Td>Perfil (opcional)</Td></tr>
                 <tr><Td>Empresa</Td><Td>Nome da empresa</Td><Td>Perfil (opcional)</Td></tr>
                 <tr><Td>Preferências</Td><Td>Palavras-chave de monitoramento</Td><Td>Uso do painel</Td></tr>
@@ -147,7 +147,7 @@ export default function PrivacidadePage() {
                 <tr><Td>Hospedagem e entrega da aplicação</Td><Td>Disponibilização da plataforma web ao usuário</Td><Td>Dados de acesso, endereço IP</Td></tr>
                 <tr><Td>Envio de comunicações eletrônicas</Td><Td>Entrega de alertas de licitações e notificações do serviço</Td><Td>Nome, e-mail, conteúdo dos alertas</Td></tr>
                 <tr><Td>Processamento de pagamentos</Td><Td>Cobrança e gestão de assinaturas recorrentes</Td><Td>E-mail, identificador da assinatura</Td></tr>
-                <tr><Td>Processamento de linguagem natural</Td><Td>Análise semântica de textos públicos de licitações para identificar correspondências com as palavras-chave do usuário</Td><Td>Exclusivamente texto público de editais governamentais — nenhum dado pessoal</Td></tr>
+                <tr><Td>Processamento automatizado de conteúdo</Td><Td>Análise automatizada de textos públicos de editais para identificar correspondências com as preferências do usuário</Td><Td>Exclusivamente texto público de editais governamentais — nenhum dado pessoal do usuário é compartilhado</Td></tr>
               </Tabela>
               <p style={{ marginTop: '12px', fontSize: '13px', color: '#6B7280' }}>
                 Não autorizamos nenhum fornecedor a utilizar os dados compartilhados para finalidades próprias, comercialização ou treinamento de modelos de inteligência artificial.
@@ -203,7 +203,7 @@ export default function PrivacidadePage() {
                 {[
                   { label: 'Criptografia em trânsito', desc: 'Todas as comunicações protegidas por protocolo seguro' },
                   { label: 'Senhas protegidas', desc: 'Armazenadas com algoritmo de hash criptográfico irreversível' },
-                  { label: 'Isolamento de dados', desc: 'Separação lógica entre contas de diferentes usuários' },
+                  { label: 'Isolamento de dados', desc: 'Segregação de dados entre contas de usuários distintos' },
                   { label: 'Controle de acesso', desc: 'Autenticação obrigatória para acesso ao painel' },
                   { label: 'Cópias de segurança', desc: 'Backups regulares em infraestrutura redundante' },
                   { label: 'Monitoramento', desc: 'Registros de acesso e detecção de comportamentos anômalos' },

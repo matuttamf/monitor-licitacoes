@@ -105,8 +105,8 @@ export default function TermosPage() {
               <p>O <strong>Monitor de Licitações</strong> é uma plataforma SaaS que oferece:</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px', marginBottom: '16px' }}>
                 {[
-                  { icon: '🔍', titulo: 'Coleta automatizada', desc: 'Editais coletados diariamente de fontes oficiais: PNCP, ComprasNet e outras' },
-                  { icon: '🤖', titulo: 'Matching por IA', desc: 'Análise semântica com inteligência artificial para identificar oportunidades relevantes' },
+                  { icon: '🔍', titulo: 'Coleta automatizada', desc: 'Editais coletados diariamente de portais e diários oficiais do governo federal, estados e municípios' },
+                  { icon: '🤖', titulo: 'Análise automatizada', desc: 'Identificação de oportunidades relevantes com base no perfil de monitoramento cadastrado pelo usuário' },
                   { icon: '📬', titulo: 'Alertas personalizados', desc: 'Notificações por e-mail e Telegram com as licitações que correspondem ao seu perfil' },
                   { icon: '🔎', titulo: 'Painel de gestão', desc: 'Dashboard completo para visualização, busca e acompanhamento de licitações' },
                 ].map(({ icon, titulo, desc }) => (
@@ -146,12 +146,12 @@ export default function TermosPage() {
             <Section titulo="6. Planos e pagamento">
               <p>Os planos disponíveis, com suas funcionalidades e preços, estão descritos na <Link href="/assinar" style={{ color: '#6B0F1A', fontWeight: 600 }}>página de planos</Link>.</p>
               <Tabela colunas={['Tema', 'Condição']}>
-                <tr><Td>Periodicidade</Td><Td>Cobrança mensal, processada automaticamente pelo Mercado Pago</Td></tr>
+                <tr><Td>Periodicidade</Td><Td>Cobrança mensal recorrente, processada automaticamente pela plataforma de pagamentos parceira</Td></tr>
                 <tr><Td>Renovação</Td><Td>Automática na mesma data do mês. Renova até cancelamento expresso</Td></tr>
                 <tr><Td>Alteração de plano</Td><Td>Possível a qualquer momento; o novo valor é aplicado no próximo ciclo</Td></tr>
                 <tr><Td>Reajuste de preços</Td><Td>Com aviso prévio de 30 dias por e-mail. Não se aplica ao ciclo em curso</Td></tr>
                 <tr><Td>Inadimplência</Td><Td>Após 3 tentativas de cobrança sem sucesso, o acesso é suspenso</Td></tr>
-                <tr><Td>Dados de pagamento</Td><Td>Processados exclusivamente pelo Mercado Pago (PCI DSS). Não armazenamos dados de cartão</Td></tr>
+                <tr><Td>Dados de pagamento</Td><Td>Processados exclusivamente pela plataforma de pagamentos parceira, certificada pelos padrões de segurança do setor. Não armazenamos dados de cartão</Td></tr>
               </Tabela>
             </Section>
 
@@ -208,7 +208,7 @@ export default function TermosPage() {
             <Section titulo="10. Propriedade intelectual">
               <p>Todo o conteúdo e tecnologia do Monitor de Licitações são de propriedade exclusiva de <strong>{EMPRESA_NOME}</strong>:</p>
               <ul>
-                <li>Código-fonte, algoritmos e metodologia de matching semântico</li>
+                <li>Código-fonte, algoritmos e metodologia de análise e correspondência</li>
                 <li>Design, interface e identidade visual</li>
                 <li>Marca "Monitor de Licitações" e seus elementos associados</li>
                 <li>Documentação, textos e materiais de suporte</li>
