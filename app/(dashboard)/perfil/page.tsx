@@ -19,7 +19,7 @@ export default function PerfilPage() {
   const [telegramMsg, setTelegramMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [salvandoTelegram, setSalvandoTelegram] = useState(false)
 
-  const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'seu_bot'
+  const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'monitorlic_bot'
 
   useEffect(() => {
     fetch('/api/perfil')
