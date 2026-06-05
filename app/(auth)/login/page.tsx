@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -9,6 +9,13 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const erroParam = params.get('erro')
+    if (erroParam === 'link_expirado') setErro('Link expirado ou já utilizado. Solicite um novo e-mail de recuperação.')
+    if (erroParam === 'link_invalido') setErro('Link inválido. Solicite um novo e-mail de recuperação.')
+  }, [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
