@@ -7,9 +7,12 @@ interface LicitacaoAlerta {
   keyword: string
 }
 
-export async function enviarAlertaTelegram(licitacoes: LicitacaoAlerta[]): Promise<boolean> {
-  const token = process.env.TELEGRAM_BOT_TOKEN!
-  const chatId = process.env.TELEGRAM_CHAT_ID!
+export async function enviarAlertaTelegram(
+  licitacoes: LicitacaoAlerta[],
+  chatId: string
+): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  if (!token || !chatId) return false
 
   const linhas = licitacoes.map(l =>
     `🔹 *${l.keyword.toUpperCase()}*\n` +
@@ -37,7 +40,7 @@ export async function enviarAlertaTelegram(licitacoes: LicitacaoAlerta[]): Promi
   })
 
   if (!res.ok) {
-    console.error('Erro ao enviar Telegram:', await res.text())
+    console.error(`Erro ao enviar Telegram para chat ${chatId}:`, await res.text())
     return false
   }
 

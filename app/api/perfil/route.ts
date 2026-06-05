@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from('profiles')
-    .select('nome, telefone, whatsapp, empresa')
+    .select('nome, telefone, whatsapp, empresa, telegram_chat_id')
     .eq('id', user.id)
     .single()
 
@@ -20,11 +20,11 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
-  const { nome, telefone, whatsapp, empresa } = await request.json()
+  const { nome, telefone, whatsapp, empresa, telegram_chat_id } = await request.json()
 
   const { error } = await supabase
     .from('profiles')
-    .update({ nome, telefone, whatsapp, empresa })
+    .update({ nome, telefone, whatsapp, empresa, telegram_chat_id })
     .eq('id', user.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -94,12 +94,17 @@ export async function GET(request: Request) {
       .map(u => [u.id, u.email!])
   )
 
-  // Buscar status dos usuários (só envia para trial/active)
+  // Buscar status e telegram_chat_id dos usuários (só envia para trial/active)
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, status')
+    .select('id, status, telegram_chat_id')
     .in('id', userIds)
   const statusMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.status]))
+  const telegramMap = Object.fromEntries(
+    (profiles ?? [])
+      .filter(p => p.telegram_chat_id)
+      .map(p => [p.id, p.telegram_chat_id as string])
+  )
 
   let totalEnviados = 0
   const resultadosPorUsuario: Record<string, { email: string; alertas: number; ok: boolean }> = {}
@@ -130,9 +135,10 @@ export async function GET(request: Request) {
     const emailOk = await enviarAlertaEmailUsuario(emailUsuario, licitacoesDoUsuario)
     if (emailOk) canaisEnviados.push('email')
 
-    // Telegram só para admin (por enquanto)
-    if (emailUsuario === process.env.ADMIN_EMAIL) {
-      const telegramOk = await enviarAlertaTelegram(licitacoesDoUsuario)
+    // Telegram — envia se o usuário tiver configurado o chat_id
+    const telegramChatId = telegramMap[userId]
+    if (telegramChatId) {
+      const telegramOk = await enviarAlertaTelegram(licitacoesDoUsuario, telegramChatId)
       if (telegramOk) canaisEnviados.push('telegram')
     }
 
