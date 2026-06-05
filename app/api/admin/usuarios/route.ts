@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, status, trial_inicio, trial_fim, criado_em')
+    .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, empresa, plano')
     .order('criado_em', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -41,15 +41,22 @@ export async function PATCH(request: Request) {
   const admin = await verificarAdmin(supabase)
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const { id, status } = await request.json()
+  const { id, status, nome, telefone, empresa, plano } = await request.json()
 
-  if (!['trial', 'active', 'expired'].includes(status)) {
-    return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
+  const atualizacao: Record<string, string> = {}
+  if (status) {
+    if (!['trial', 'active', 'expired'].includes(status))
+      return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
+    atualizacao.status = status
   }
+  if (nome !== undefined) atualizacao.nome = nome
+  if (telefone !== undefined) atualizacao.telefone = telefone
+  if (empresa !== undefined) atualizacao.empresa = empresa
+  if (plano !== undefined) atualizacao.plano = plano
 
   const { error } = await supabase
     .from('profiles')
-    .update({ status })
+    .update(atualizacao)
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
