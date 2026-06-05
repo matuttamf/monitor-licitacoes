@@ -64,11 +64,17 @@ async function coletarModalidade(
         const orgao = item.unidadeOrgao?.nomeUnidade || item.orgaoEntidade.razaoSocial
         const estado = item.unidadeOrgao?.ufSigla
         const cidade = item.unidadeOrgao?.municipioNome
+        // URL do edital no PNCP: formato correto é /app/editais/{cnpj}/{ano}/{sequencial}
+        const cnpj = item.orgaoEntidade.cnpj ?? ''
+        const ano = item.anoCompra ?? new Date().getFullYear()
+        const seq = String(item.sequencialCompra ?? 0).padStart(6, '0')
+        const urlPncp = cnpj
+          ? `https://pncp.gov.br/app/editais/${cnpj}/${ano}/${seq}`
+          : `https://pncp.gov.br/app/editais`
+
         const url_edital = item.linkSistemaOrigem
           || item.linkProcessoEletronico
-          || (item.numeroControlePNCP
-            ? `https://pncp.gov.br/app/editais/${item.numeroControlePNCP}`
-            : `https://pncp.gov.br/app/editais`)
+          || urlPncp
 
         licitacoes.push({
           fonte: 'PNCP',
