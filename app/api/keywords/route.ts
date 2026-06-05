@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getLimites } from '@/lib/planos'
 
 export async function GET() {
   const supabase = await createClient()
@@ -25,6 +26,40 @@ export async function POST(request: Request) {
   if (!termo?.trim()) {
     return NextResponse.json({ error: 'Termo obrigatório' }, { status: 400 })
   }
+
+  // --- Verificar limite de keywords pelo plano ---
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plano, owner_id')
+    .eq('id', user.id)
+    .single()
+
+  // Sub-usuário herda o plano do owner
+  let plano = profile?.plano ?? 'basic'
+  if (profile?.owner_id) {
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('plano')
+      .eq('id', profile.owner_id)
+      .single()
+    plano = ownerProfile?.plano ?? 'basic'
+  }
+
+  const { maxKeywords } = getLimites(plano)
+  if (maxKeywords < 99999) {
+    const { count } = await supabase
+      .from('keywords')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    if ((count ?? 0) >= maxKeywords) {
+      return NextResponse.json({
+        error: `Limite de ${maxKeywords} palavra(s)-chave atingido no plano ${plano}. Faça upgrade para adicionar mais.`,
+        codigo: 'LIMITE_KEYWORDS',
+      }, { status: 403 })
+    }
+  }
+  // --- Fim verificação ---
 
   const { data, error } = await supabase
     .from('keywords')

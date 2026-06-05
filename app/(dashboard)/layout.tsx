@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from './components/LogoutButton'
+import { temMultiUsuario } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
   const emailPrefix = user.email?.split('@')[0] ?? 'usuário'
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plano, owner_id')
+    .eq('id', user.id)
+    .single()
+
+  // Equipe visível apenas para owners de planos Pro/Empresarial
+  const exibirEquipe = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--surface-2)' }}>
@@ -66,6 +76,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {navItems.map(item => (
             <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))}
+          {exibirEquipe && (
+            <NavItem href="/equipe" label="Minha Equipe" icon="◫" />
+          )}
           {user.email === ADMIN_EMAIL && (
             <NavItem href="/admin" label="Admin" icon="⚙" />
           )}
