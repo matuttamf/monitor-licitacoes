@@ -34,7 +34,7 @@ export default function TermosPage() {
         <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #D5D2C8', padding: '40px', lineHeight: 1.8 }}>
           <Section titulo="1. Aceitação dos termos">
             <p>Ao criar uma conta ou utilizar o <strong>Monitor de Licitações</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer disposição, não utilize o serviço.</p>
-            <p>Estes termos constituem um contrato legal entre você e a <strong>Matutta Máquinas e Ferramentas</strong> (CNPJ em processo de registro), operadora do Monitor de Licitações.</p>
+            <p>Estes termos constituem um contrato legal entre você e a <strong>Monitor de Licitações - Matutta</strong> (CNPJ em processo de registro), operadora do Monitor de Licitações.</p>
           </Section>
 
           <Section titulo="2. Descrição do serviço">
@@ -100,7 +100,7 @@ export default function TermosPage() {
           </Section>
 
           <Section titulo="8. Propriedade intelectual">
-            <p>O Monitor de Licitações, incluindo seu código, design, marca, metodologia de matching e conteúdo próprio, são de propriedade exclusiva da Matutta Máquinas e Ferramentas.</p>
+            <p>O Monitor de Licitações, incluindo seu código, design, marca, metodologia de matching e conteúdo próprio, são de propriedade exclusiva da Monitor de Licitações - Matutta.</p>
             <p>Os dados de licitações são de domínio público, coletados de fontes governamentais oficiais.</p>
             <p>A assinatura não transfere qualquer direito de propriedade intelectual — concedemos apenas uma licença de uso não exclusiva, intransferível e revogável para acesso ao serviço.</p>
           </Section>
@@ -152,7 +152,7 @@ export default function TermosPage() {
       {/* Footer */}
       <footer style={{ background: '#1A1A1C', padding: '24px 40px', textAlign: 'center' }}>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', margin: 0 }}>
-          © {new Date().getFullYear()} Monitor de Licitações · Matutta Máquinas e Ferramentas ·{' '}
+          © {new Date().getFullYear()} Monitor de Licitações · Monitor de Licitações - Matutta ·{' '}
           <Link href="/privacidade" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacidade</Link>
           {' · '}
           <Link href="/termos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Termos</Link>

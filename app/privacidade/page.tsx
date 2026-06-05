@@ -33,7 +33,7 @@ export default function PrivacidadePage() {
 
         <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #D5D2C8', padding: '40px', lineHeight: 1.8 }}>
           <Section titulo="1. Quem somos">
-            <p>O <strong>Monitor de Licitações</strong> é um serviço de monitoramento de licitações públicas brasileiras, operado por <strong>Matutta Máquinas e Ferramentas</strong> (CNPJ em processo de registro), com sede no Brasil.</p>
+            <p>O <strong>Monitor de Licitações</strong> é um serviço de monitoramento de licitações públicas brasileiras, operado por <strong>Monitor de Licitações - Matutta</strong> (CNPJ em processo de registro), com sede no Brasil.</p>
             <p>Para dúvidas sobre esta política, entre em contato pelo e-mail: <a href={`mailto:${emailContato}`} style={{ color: '#6B0F1A' }}>{emailContato}</a></p>
           </Section>
 
@@ -134,7 +134,7 @@ export default function PrivacidadePage() {
       {/* Footer */}
       <footer style={{ background: '#1A1A1C', padding: '24px 40px', textAlign: 'center' }}>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', margin: 0 }}>
-          © {new Date().getFullYear()} Monitor de Licitações · Matutta Máquinas e Ferramentas ·{' '}
+          © {new Date().getFullYear()} Monitor de Licitações · Monitor de Licitações - Matutta ·{' '}
           <Link href="/privacidade" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacidade</Link>
           {' · '}
           <Link href="/termos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Termos</Link>

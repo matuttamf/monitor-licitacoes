@@ -364,7 +364,7 @@ export default function LandingPage() {
       <footer style={{ background: '#111113', padding: '28px 40px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: '#6B0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, color: '#C9A65A' }}>ML</div>
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© {new Date().getFullYear()} Monitor de Licitações · Matutta Máquinas e Ferramentas</span>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© {new Date().getFullYear()} Monitor de Licitações · Monitor de Licitações - Matutta</span>
         </div>
         <div style={{ display: 'flex', gap: '28px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {[['Início', '/'], ['Planos', '/assinar'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (
