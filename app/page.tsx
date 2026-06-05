@@ -259,7 +259,7 @@ export default function LandingPage() {
               { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um café', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
               { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que um almoço', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
               { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um jantar', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
-              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: 'usuários ilimitados', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Usuários ilimitados', destaque: false, id: 'empresarial', tag: null },
+              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: 'até 15 usuários', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null },
             ].map(p => (
               <div key={p.id} style={{
                 background: p.destaque ? '#6B0F1A' : '#FAF6F0',

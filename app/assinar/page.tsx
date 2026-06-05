@@ -45,8 +45,8 @@ const PLANOS = [
     cor: '#1A1A1C',
     descricao: 'Para grandes operações',
     keywords: 'Palavras-chave ilimitadas',
-    usuarios: 'Usuários ilimitados',
-    itens: ['Palavras-chave ilimitadas', 'Usuários ilimitados', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Relatório semanal detalhado', 'Suporte dedicado'],
+    usuarios: 'Até 15 usuários',
+    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Relatório semanal detalhado', 'Suporte dedicado'],
   },
 ]
 
