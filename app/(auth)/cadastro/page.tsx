@@ -21,7 +21,7 @@ export default function CadastroPage() {
     setCarregando(true)
     setErro('')
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
       options: { emailRedirectTo: `${window.location.origin}/dashboard` }
@@ -39,6 +39,13 @@ export default function CadastroPage() {
       } else {
         setErro(`Erro ao criar conta: ${msg}`)
       }
+      setCarregando(false)
+      return
+    }
+    // Supabase retorna sucesso silencioso para e-mails já cadastrados (proteção anti-enumeração).
+    // Detectamos pela identidade vazia: user existe mas sem identities = conta duplicada.
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setErro('Este e-mail já está cadastrado. Use "Entrar" para acessar sua conta.')
       setCarregando(false)
       return
     }

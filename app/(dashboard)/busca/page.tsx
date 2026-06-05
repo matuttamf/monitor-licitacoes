@@ -12,6 +12,7 @@ type Licitacao = {
   estado?: string
   cidade?: string
   fonte: string
+  _semantico?: boolean
 }
 
 export default function BuscaPage() {
@@ -144,6 +145,7 @@ export default function BuscaPage() {
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{l.fonte}</span>
                       {l.estado && <span className="text-xs text-gray-400">{l.cidade ? `${l.cidade}/${l.estado}` : l.estado}</span>}
+                      {l._semantico && <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(107,15,26,0.08)', color: '#6B0F1A' }}>🤖 Correspondência inteligente</span>}
                     </div>
                     <p className="font-medium text-gray-900 text-sm">{l.orgao}</p>
                     <p className="text-gray-600 text-sm mt-1">{l.objeto}</p>
