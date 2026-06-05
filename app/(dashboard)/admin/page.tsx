@@ -175,7 +175,7 @@ export default function AdminPage() {
                 <div key={key}>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>{label}</label>
                   <input
-                    value={(editando as Record<string, string>)[key] ?? ''}
+                    value={(editando as unknown as Record<string, string>)[key] ?? ''}
                     onChange={e => setEditando({ ...editando, [key]: e.target.value })}
                     placeholder={placeholder}
                     className="w-full px-4 py-2.5 rounded-xl text-sm"
