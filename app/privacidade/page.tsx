@@ -65,8 +65,8 @@ export default function PrivacidadePage() {
                 '3. Finalidade do tratamento',
                 '4. Bases legais',
                 '5. Compartilhamento',
-                '6. Transferência internacional',
-                '7. Retenção e exclusão',
+                '6. Proteção onde quer que estejam',
+                '7. Por quanto tempo guardamos',
                 '8. Seus direitos',
                 '9. Segurança da informação',
                 '10. Cookies',
@@ -107,11 +107,25 @@ export default function PrivacidadePage() {
               </Tabela>
 
               <SubTitulo>2.2 Dados coletados automaticamente</SubTitulo>
-              <Tabela colunas={['Categoria', 'Dados', 'Finalidade']}>
-                <tr><Td>Técnicos</Td><Td>Endereço IP, navegador, sistema operacional</Td><Td>Segurança e diagnóstico</Td></tr>
-                <tr><Td>Uso</Td><Td>Páginas acessadas, alertas visualizados</Td><Td>Melhoria do serviço</Td></tr>
-                <tr><Td>Autenticação</Td><Td>Tokens de sessão (cookies)</Td><Td>Manter login ativo</Td></tr>
+              <p>Todo site que você acessa registra algumas informações técnicas básicas — isso é necessário para que o serviço funcione com segurança e para identificar e corrigir problemas. Coletamos o mínimo possível, apenas o que tem finalidade clara:</p>
+              <Tabela colunas={['O que é', 'Para que serve', 'O que não fazemos']}>
+                <tr>
+                  <Td><strong>Endereço IP e dados do navegador</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Informação técnica gerada automaticamente ao acessar qualquer site</span></Td>
+                  <Td>Identificar tentativas de acesso não autorizado e resolver problemas técnicos</Td>
+                  <Td>Não usamos para rastrear sua localização nem para fins comerciais</Td>
+                </tr>
+                <tr>
+                  <Td><strong>Páginas e recursos acessados dentro da plataforma</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Ex.: qual seção do painel foi acessada</span></Td>
+                  <Td>Entender como o serviço é usado para melhorá-lo — de forma agregada, sem identificar pessoas individualmente</Td>
+                  <Td>Não monitoramos o que você faz fora da plataforma</Td>
+                </tr>
+                <tr>
+                  <Td><strong>Cookie de sessão</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Arquivo pequeno salvo no seu navegador</span></Td>
+                  <Td>Manter você conectado enquanto usa o painel, sem precisar digitar a senha a cada clique</Td>
+                  <Td>Não usamos cookies de publicidade nem de rastreamento entre sites</Td>
+                </tr>
               </Tabela>
+              <p style={{fontSize:'13px', color:'#6B7280', marginTop:'8px'}}>💡 Esses dados não são vinculados à sua identidade pessoal para fins de análise. São registros técnicos, tratados de forma automatizada e descartados conforme os prazos da seção 7.</p>
 
               <SubTitulo>2.3 Dados de pagamento</SubTitulo>
               <p>Não coletamos nem armazenamos dados de cartão de crédito ou informações bancárias. O processamento financeiro é realizado integralmente por nossa plataforma de pagamentos parceira, certificada pelos padrões de segurança do setor. Armazenamos apenas o identificador da assinatura para controle de acesso ao serviço.</p>
@@ -154,24 +168,56 @@ export default function PrivacidadePage() {
               </p>
             </Section>
 
-            <Section titulo="6. Transferência internacional de dados">
-              <p>Parte de nossa infraestrutura tecnológica opera fora do território brasileiro. Quando isso ocorre, asseguramos que a transferência de dados observa as salvaguardas exigidas pelo art. 33 da LGPD, mediante:</p>
-              <ul>
-                <li>Contratação de fornecedores que adotam cláusulas contratuais de proteção de dados internacionalmente reconhecidas</li>
-                <li>Verificação de certificações de segurança e conformidade dos parceiros tecnológicos</li>
-                <li>Aplicação de instrumentos jurídicos adequados a cada transferência</li>
-              </ul>
-              <p>O usuário pode solicitar informações sobre as salvaguardas adotadas pelo canal de contato indicado na seção 13.</p>
+            <Section titulo="6. Seus dados estão protegidos onde quer que estejam">
+              <p>Serviços digitais modernos — incluindo bancos, e-commerces e plataformas que você já usa no dia a dia — utilizam infraestrutura de tecnologia que pode estar fisicamente localizada fora do Brasil. Isso é uma realidade do setor, não um risco adicional.</p>
+              <p>O Monitor de Licitações adota a mesma prática com o mesmo cuidado: parte da infraestrutura que sustenta a plataforma opera fora do território brasileiro, mas <strong>seus dados permanecem igualmente protegidos</strong>. Garantimos isso através de:</p>
+              <div style={{display:'grid', gap:'10px', margin:'16px 0'}}>
+                {[
+                  { icon: '📋', titulo: 'Contratos de proteção', desc: 'Todos os parceiros tecnológicos assinam obrigações contratuais de proteção de dados equivalentes às exigidas no Brasil.' },
+                  { icon: '🔒', titulo: 'Certificações de segurança', desc: 'Selecionamos fornecedores com certificações reconhecidas internacionalmente em segurança da informação.' },
+                  { icon: '⚖️', titulo: 'Conformidade legal', desc: 'As transferências atendem às salvaguardas exigidas pelo art. 33 da LGPD — a mesma lei que protege seus dados no Brasil.' },
+                ].map(({icon, titulo, desc}) => (
+                  <div key={titulo} style={{display:'flex', gap:'12px', alignItems:'flex-start', background:'#FAF6F0', borderRadius:'10px', padding:'14px', border:'1px solid #EBE7E0'}}>
+                    <span style={{fontSize:'20px', flexShrink:0}}>{icon}</span>
+                    <div>
+                      <div style={{fontSize:'13px', fontWeight:700, color:'#1A1A1C', marginBottom:'3px'}}>{titulo}</div>
+                      <div style={{fontSize:'13px', color:'#6B7280', lineHeight:1.5}}>{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p style={{fontSize:'13px', color:'#6B7280'}}>Quer saber mais detalhes sobre como seus dados são protegidos? Entre em contato pelo canal indicado na seção 13 — responderemos em até 15 dias úteis.</p>
             </Section>
 
-            <Section titulo="7. Retenção e exclusão de dados">
-              <Tabela colunas={['Categoria', 'Prazo de retenção', 'Fundamento']}>
-                <tr><Td>Dados de conta</Td><Td>Enquanto a conta estiver ativa + 90 dias após cancelamento</Td><Td>Execução de contrato</Td></tr>
-                <tr><Td>Histórico de alertas</Td><Td>12 meses</Td><Td>Legítimo interesse</Td></tr>
-                <tr><Td>Logs de acesso</Td><Td>6 meses</Td><Td>Art. 15 do Marco Civil (Lei nº 12.965/2014)</Td></tr>
-                <tr><Td>Registros financeiros</Td><Td>5 anos</Td><Td>Art. 195 do CTN e legislação fiscal</Td></tr>
+            <Section titulo="7. Por quanto tempo guardamos seus dados — e o que acontece depois">
+              <p>Guardamos seus dados apenas pelo tempo necessário. Quando esse prazo termina, os dados são <strong>excluídos permanentemente</strong> ou convertidos em estatísticas que não identificam ninguém.</p>
+              <Tabela colunas={['O que guardamos', 'Por quanto tempo', 'Por que esse prazo']}>
+                <tr>
+                  <Td><strong>Dados da sua conta</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Nome, e-mail, preferências</span></Td>
+                  <Td>Enquanto sua conta estiver ativa. Se cancelar, excluímos em até <strong>90 dias</strong></Td>
+                  <Td>Necessário para prestar o serviço enquanto você for assinante</Td>
+                </tr>
+                <tr>
+                  <Td><strong>Histórico de alertas recebidos</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Licitações que foram enviadas para você</span></Td>
+                  <Td><strong>12 meses</strong> — para que você possa consultar o histórico no painel</Td>
+                  <Td>Utilidade direta para o usuário</Td>
+                </tr>
+                <tr>
+                  <Td><strong>Registros técnicos de acesso</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Logs de segurança</span></Td>
+                  <Td><strong>6 meses</strong> — depois são excluídos automaticamente</Td>
+                  <Td>Exigência legal do Marco Civil da Internet (Lei nº 12.965/2014), que vale para todos os sites brasileiros</Td>
+                </tr>
+                <tr>
+                  <Td><strong>Comprovantes de pagamento</strong><br/><span style={{fontSize:'12px',color:'#9AA0A6'}}>Registros financeiros da assinatura</span></Td>
+                  <Td><strong>5 anos</strong> após o pagamento</Td>
+                  <Td>Obrigação fiscal brasileira — necessário para emissão de notas fiscais e declarações (CTN, art. 195)</Td>
+                </tr>
               </Tabela>
-              <p>Após os prazos acima, os dados são excluídos de forma segura ou anonimizados de modo irreversível.</p>
+              <div style={{background:'rgba(16,185,129,0.06)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:'10px', padding:'14px 16px', marginTop:'12px'}}>
+                <p style={{fontSize:'13px', color:'#065f46', margin:0, lineHeight:1.6}}>
+                  ✓ <strong>Cancelou a conta?</strong> Seus dados pessoais são excluídos em até 90 dias. Apenas os registros que a lei exige manter (comprovantes financeiros e logs de segurança) são conservados pelo prazo legal — e somente esses.
+                </p>
+              </div>
             </Section>
 
             <Section titulo="8. Seus direitos como titular de dados (art. 18 LGPD)">
