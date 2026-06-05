@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isPublic = ['/', '/login', '/cadastro', '/expirado', '/assinar', '/assinatura/sucesso'].includes(pathname) || pathname.startsWith('/api/cron') || pathname.startsWith('/api/webhooks')
+  const isPublic = ['/', '/login', '/cadastro', '/expirado', '/assinar', '/assinatura/sucesso', '/auth/update-password'].includes(pathname) || pathname.startsWith('/api/cron') || pathname.startsWith('/api/webhooks') || pathname.startsWith('/auth/callback')
   const isApiRoute = pathname.startsWith('/api/')
   const isAuthPage = ['/login', '/cadastro'].includes(pathname)
 
