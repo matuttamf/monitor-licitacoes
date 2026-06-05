@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
   const admin = await verificarAdmin(supabase)
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const { id, status, nome, telefone, empresa, plano } = await request.json()
+  const { id, status, nome, telefone, whatsapp, empresa, plano } = await request.json()
 
   const atualizacao: Record<string, string> = {}
   if (status) {

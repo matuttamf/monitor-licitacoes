@@ -4,7 +4,7 @@ import { coletarComprasNet } from '@/lib/scrapers/comprasnet'
 import { coletarQueridoDiario } from '@/lib/scrapers/querido-diario'
 import { coletarGoogle } from '@/lib/scrapers/google'
 import { salvarLicitacoes } from '@/lib/scrapers/salvar'
-import { encontrarMatches } from '@/lib/matching/gemini'
+import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export const maxDuration = 300 // 5 minutos (máximo Vercel)
@@ -65,51 +65,50 @@ export async function GET(request: Request) {
   const salvas = await salvarLicitacoes(todasLicitacoes)
   console.log(`${salvas} licitações novas salvas`)
 
-  // 3. Buscar licitações de hoje para fazer matching
   const supabase = supabaseTemp
-  const { data: licitacoesHoje } = await supabase
-    .from('licitacoes')
-    .select('id, objeto')
-    .gte('coletado_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
 
-  // 4. Buscar palavras-chave ativas (com id para o matching)
+  // 3. Buscar palavras-chave ativas
   const { data: keywords } = await supabase
     .from('keywords')
     .select('id, termo')
     .eq('ativo', true)
 
-  if (!licitacoesHoje?.length || !keywords?.length) {
-    return NextResponse.json({ ok: true, salvas, matches: 0 })
+  if (!keywords?.length) {
+    console.log('Nenhuma keyword ativa encontrada')
+    return NextResponse.json({ ok: true, salvas, matches: 0, debug: 'sem keywords' })
   }
 
-  // 5. Encontrar matches com Gemini
-  const matches = await encontrarMatches(licitacoesHoje, keywords)
+  console.log(`${keywords.length} keywords ativas`)
 
-  // 6. Salvar alertas (evitar duplicatas)
-  if (matches.length > 0) {
-    const alertasParaSalvar = matches.flatMap(m =>
-      m.keyword_ids.map(kid => ({
-        licitacao_id: m.licitacao_id,
-        keyword_id: kid,
-        canais: [] as string[],
-      }))
-    )
+  // 4. Pré-filtro por texto — busca licitações das últimas 24h que contenham algum termo das keywords
+  //    Muito mais eficiente: evita enviar centenas de licitações ao Gemini
+  const termos = keywords.map(k => k.termo.toLowerCase())
+  const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
 
-    await supabase.from('alertas').upsert(alertasParaSalvar, {
-      onConflict: 'licitacao_id,keyword_id',
-      ignoreDuplicates: true,
-    })
+  const { data: candidatos } = await supabase
+    .from('licitacoes')
+    .select('id, objeto')
+    .gte('coletado_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+    .or(filtroOr)
+    .limit(200)
+
+  console.log(`${candidatos?.length ?? 0} candidatos após pré-filtro de texto (de ${todasLicitacoes.length} coletadas)`)
+
+  if (!candidatos?.length) {
+    return NextResponse.json({ ok: true, salvas, matches: 0, debug: 'sem candidatos no pré-filtro' })
   }
 
-  console.log(`${matches.length} matches encontrados`)
+  // 5. Disparar matching em endpoint separado (nova invocação Vercel — não bloqueia)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  fetch(`${appUrl}/api/cron/matching`, {
+    method: 'GET',
+    headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
+  }).catch(err => console.error('Erro ao disparar matching:', err))
 
-  // 7. Disparar alertas (rota separada)
-  if (matches.length > 0) {
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/cron/alertar`, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
-    }).catch(console.error)
-  }
-
-  return NextResponse.json({ ok: true, salvas, matches: matches.length })
+  return NextResponse.json({
+    ok: true,
+    salvas,
+    candidatos: candidatos.length,
+    matches: 'disparado em /api/cron/matching',
+  })
 }

@@ -23,12 +23,16 @@ const statusConfig = {
   expired: { label: 'Expirado', cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
 }
 
+type ResultadoTrigger = { ok: boolean; status: number; data: unknown }
+
 export default function AdminPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [editando, setEditando] = useState<Usuario | null>(null)
   const [salvando, setSalvando] = useState(false)
+  const [disparando, setDisparando] = useState<string | null>(null)
+  const [resultadoTrigger, setResultadoTrigger] = useState<ResultadoTrigger | null>(null)
 
   async function carregar() {
     setCarregando(true)
@@ -70,6 +74,19 @@ export default function AdminPage() {
     carregar()
   }
 
+  async function dispararAcao(acao: string) {
+    setDisparando(acao)
+    setResultadoTrigger(null)
+    const res = await fetch('/api/admin/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao }),
+    })
+    const data = await res.json()
+    setResultadoTrigger({ ok: res.ok, status: res.status, data })
+    setDisparando(null)
+  }
+
   const fmt = (d: string) => new Date(d).toLocaleDateString('pt-BR')
   const dias = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
 
@@ -92,6 +109,42 @@ export default function AdminPage() {
       </div>
 
       {erro && <div className="rounded-xl p-4 mb-6 text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>{erro}</div>}
+
+      {/* Painel de controle */}
+      <div className="rounded-2xl p-6 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
+        <div className="flex gap-3 flex-wrap">
+          {[
+            { acao: 'coletar',  label: '🔍 Coletar licitações', desc: 'Busca novos editais em todas as fontes' },
+            { acao: 'matching', label: '🤖 Processar matches',  desc: 'Gemini analisa candidatos e gera alertas' },
+            { acao: 'alertar',  label: '📧 Enviar alertas',     desc: 'Dispara e-mails e Telegram' },
+            { acao: 'emails',   label: '📩 E-mails de trial',   desc: 'Envia sequência de trial' },
+          ].map(({ acao, label, desc }) => (
+            <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
+              className="flex-1 min-w-[160px] px-4 py-3 rounded-xl text-left transition-all"
+              style={{ background: disparando === acao ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)', border: '1px solid var(--cinza-light)', cursor: disparando ? 'not-allowed' : 'pointer', opacity: disparando && disparando !== acao ? 0.5 : 1 }}>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--preto)' }}>
+                {disparando === acao ? '⏳ Executando...' : label}
+              </div>
+              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{desc}</div>
+            </button>
+          ))}
+        </div>
+
+        {resultadoTrigger && (
+          <div className="mt-4 rounded-xl p-4" style={{
+            background: resultadoTrigger.ok ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)',
+            border: `1px solid ${resultadoTrigger.ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+          }}>
+            <div className="text-xs font-semibold mb-1" style={{ color: resultadoTrigger.ok ? '#10b981' : '#ef4444' }}>
+              {resultadoTrigger.ok ? '✓ Executado com sucesso' : '⚠ Erro na execução'} — status {resultadoTrigger.status}
+            </div>
+            <pre className="text-xs overflow-auto" style={{ color: 'var(--cinza)', maxHeight: '120px' }}>
+              {JSON.stringify(resultadoTrigger.data, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
 
       {carregando ? (
         <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="rounded-2xl animate-pulse" style={{ background: 'white', border: '1px solid var(--cinza-light)', height: '72px' }} />)}</div>

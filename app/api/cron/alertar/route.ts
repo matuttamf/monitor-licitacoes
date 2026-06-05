@@ -1,33 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { enviarAlertaEmail } from '@/lib/alerts/email'
+import { enviarAlertaEmailUsuario } from '@/lib/alerts/email'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
 
-const BATCH_SIZE = 50       // Máximo de itens por e-mail
-const MAX_EMAILS_DIA = 4    // Máximo de e-mails por dia
+export const maxDuration = 300
 
-/**
- * Verifica se o momento atual está dentro do horário comercial.
- * Segunda a sexta, das 7h às 17h (horário de Brasília, UTC-3).
- */
 function dentroDoHorarioComercial(): boolean {
   const agora = new Date()
   const brasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000)
-  const dia = brasilia.getUTCDay()   // 0 = domingo, 6 = sábado
+  const dia = brasilia.getUTCDay()
   const hora = brasilia.getUTCHours()
   return dia >= 1 && dia <= 5 && hora >= 7 && hora < 17
-}
-
-/**
- * Retorna o início do dia atual em horário de Brasília como string ISO UTC.
- */
-function inicioDoDiaHoje(): string {
-  const agora = new Date()
-  const brasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000)
-  // Zera hora, minuto, segundo e milissegundo no horário de Brasília
-  brasilia.setUTCHours(0, 0, 0, 0)
-  // Converte de volta para UTC
-  return new Date(brasilia.getTime() + 3 * 60 * 60 * 1000).toISOString()
 }
 
 export async function GET(request: Request) {
@@ -36,97 +19,121 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  // Só envia em horário comercial (segunda a sexta, 7h–17h, horário de Brasília)
   if (!dentroDoHorarioComercial()) {
-    return NextResponse.json({
-      ok: true,
-      motivo: 'Fora do horário comercial. Envios suspensos.',
-      enviados: 0,
-    })
+    return NextResponse.json({ ok: true, motivo: 'Fora do horário comercial', enviados: 0 })
   }
 
   const supabase = await createServiceClient()
 
-  // Verifica quantos lotes já foram enviados hoje
-  const inicioHoje = inicioDoDiaHoje()
-  const { count: enviadosHoje } = await supabase
-    .from('alertas')
-    .select('id', { count: 'exact', head: true })
-    .contains('canais', ['email'])
-    .gte('enviado_em', inicioHoje)
-
-  const lotesEnviadosHoje = Math.ceil((enviadosHoje ?? 0) / BATCH_SIZE)
-
-  if (lotesEnviadosHoje >= MAX_EMAILS_DIA) {
-    return NextResponse.json({
-      ok: true,
-      motivo: `Limite diário de ${MAX_EMAILS_DIA} e-mails atingido.`,
-      enviados: 0,
-      lotesHoje: lotesEnviadosHoje,
-    })
-  }
-
-  // Busca alertas pendentes, do mais antigo para o mais novo
-  const { data: alertasPendentes } = await supabase
+  // Buscar alertas pendentes (canais vazio) criados nas últimas 48h
+  // Inclui keyword (com user_id) e dados da licitação
+  const { data: alertasPendentes, error } = await supabase
     .from('alertas')
     .select(`
       id,
       licitacao_id,
       keyword_id,
       canais,
-      licitacoes (id, orgao, objeto, valor_estimado, data_abertura, url),
-      keywords (termo)
+      criado_em,
+      licitacoes (id, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
+      keywords (id, termo, user_id)
     `)
     .eq('canais', '{}')
-    .gte('enviado_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-    .order('enviado_em', { ascending: true })
+    .gte('criado_em', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+    .order('criado_em', { ascending: true })
+    .limit(200)
+
+  if (error) {
+    console.error('Erro ao buscar alertas:', error.message)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   if (!alertasPendentes?.length) {
     return NextResponse.json({ ok: true, enviados: 0, pendentes: 0 })
   }
 
-  // Processa apenas o primeiro lote de até 50 alertas
-  const lote = alertasPendentes.slice(0, BATCH_SIZE)
-  const pendentesRestantes = alertasPendentes.length - lote.length
-
-  const licitacoesDoLote = lote.map(a => ({
-    id: a.licitacao_id,
-    orgao: (a.licitacoes as any).orgao,
-    objeto: (a.licitacoes as any).objeto,
-    valor_estimado: (a.licitacoes as any).valor_estimado,
-    data_abertura: (a.licitacoes as any).data_abertura,
-    url: (a.licitacoes as any).url,
-    keyword: (a.keywords as any).termo,
-  }))
-
-  const canaisEnviados: string[] = []
-
-  const emailOk = await enviarAlertaEmail(licitacoesDoLote)
-  if (emailOk) canaisEnviados.push('email')
-
-  const telegramOk = await enviarAlertaTelegram(licitacoesDoLote)
-  if (telegramOk) canaisEnviados.push('telegram')
-
-  // Marca o lote como enviado
-  if (canaisEnviados.length > 0) {
-    const ids = lote.map(a => a.id)
-    await supabase
-      .from('alertas')
-      .update({ canais: canaisEnviados })
-      .in('id', ids)
+  // Agrupar alertas por user_id (dono da keyword)
+  const alertasPorUsuario = new Map<string, typeof alertasPendentes>()
+  for (const alerta of alertasPendentes) {
+    const userId = (alerta.keywords as any)?.user_id
+    if (!userId) continue
+    if (!alertasPorUsuario.has(userId)) alertasPorUsuario.set(userId, [])
+    alertasPorUsuario.get(userId)!.push(alerta)
   }
 
-  const lotesRestantesPermitidos = MAX_EMAILS_DIA - lotesEnviadosHoje - 1
+  // Buscar emails de todos os usuários envolvidos
+  const userIds = [...alertasPorUsuario.keys()]
+  const { data: authUsers } = await supabase.auth.admin.listUsers()
+  const emailMap = Object.fromEntries(
+    (authUsers?.users ?? [])
+      .filter(u => userIds.includes(u.id))
+      .map(u => [u.id, u.email!])
+  )
+
+  // Buscar status dos usuários (só envia para trial/active)
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, status')
+    .in('id', userIds)
+  const statusMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.status]))
+
+  let totalEnviados = 0
+  const resultadosPorUsuario: Record<string, { email: string; alertas: number; ok: boolean }> = {}
+
+  for (const [userId, alertas] of alertasPorUsuario.entries()) {
+    const emailUsuario = emailMap[userId]
+    const statusUsuario = statusMap[userId]
+
+    // Pular usuários expirados ou sem email
+    if (!emailUsuario || statusUsuario === 'expired') continue
+
+    const licitacoesDoUsuario = alertas.map(a => ({
+      id: a.licitacao_id,
+      orgao: (a.licitacoes as any).orgao,
+      objeto: (a.licitacoes as any).objeto,
+      valor_estimado: (a.licitacoes as any).valor_estimado,
+      data_abertura: (a.licitacoes as any).data_abertura,
+      url: (a.licitacoes as any).url,
+      estado: (a.licitacoes as any).estado,
+      cidade: (a.licitacoes as any).cidade,
+      keyword: (a.keywords as any).termo,
+    }))
+
+    const canaisEnviados: string[] = []
+
+    // Enviar e-mail para este usuário
+    const emailOk = await enviarAlertaEmailUsuario(emailUsuario, licitacoesDoUsuario)
+    if (emailOk) canaisEnviados.push('email')
+
+    // Telegram só para admin (por enquanto)
+    if (emailUsuario === process.env.ADMIN_EMAIL) {
+      const telegramOk = await enviarAlertaTelegram(licitacoesDoUsuario)
+      if (telegramOk) canaisEnviados.push('telegram')
+    }
+
+    // Marcar alertas deste usuário como enviados
+    if (canaisEnviados.length > 0) {
+      const ids = alertas.map(a => a.id)
+      await supabase
+        .from('alertas')
+        .update({ canais: canaisEnviados, enviado_em: new Date().toISOString() })
+        .in('id', ids)
+      totalEnviados += alertas.length
+    }
+
+    resultadosPorUsuario[emailUsuario] = {
+      email: emailUsuario,
+      alertas: alertas.length,
+      ok: canaisEnviados.length > 0,
+    }
+  }
+
+  console.log(`Alertas enviados para ${Object.keys(resultadosPorUsuario).length} usuários, ${totalEnviados} alertas no total`)
 
   return NextResponse.json({
     ok: true,
-    enviados: lote.length,
-    pendentes: pendentesRestantes,
-    canais: canaisEnviados,
-    lotesEnviadosHoje: lotesEnviadosHoje + 1,
-    lotesRestantesPermitidos,
-    proximo_envio: pendentesRestantes > 0 && lotesRestantesPermitidos > 0
-      ? 'No próximo ciclo do cron'
-      : null,
+    enviados: totalEnviados,
+    usuarios: Object.keys(resultadosPorUsuario).length,
+    detalhes: resultadosPorUsuario,
   })
 }
