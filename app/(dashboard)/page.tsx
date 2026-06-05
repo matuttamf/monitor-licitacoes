@@ -20,6 +20,7 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'ComprasNet':     { cor: '#8B1E2D', bg: 'rgba(139,30,45,0.07)' },
   'Querido Diário': { cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
   'BLL':            { cor: '#4a4a4d', bg: 'rgba(74,74,77,0.07)'   },
+  'Google':         { cor: '#2d6a4f', bg: 'rgba(45,106,79,0.07)'  },
 }
 
 function formatarValor(valor?: number) {

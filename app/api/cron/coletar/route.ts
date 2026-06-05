@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { coletarPNCP } from '@/lib/scrapers/pncp'
 import { coletarComprasNet } from '@/lib/scrapers/comprasnet'
 import { coletarQueridoDiario } from '@/lib/scrapers/querido-diario'
+import { coletarGoogle } from '@/lib/scrapers/google'
 import { salvarLicitacoes } from '@/lib/scrapers/salvar'
 import { encontrarMatches } from '@/lib/matching/gemini'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -24,17 +25,27 @@ export async function GET(request: Request) {
 
   console.log(`Iniciando coleta para ${dataInicio} a ${dataFim}`)
 
-  // 1. Coletar de todas as fontes em paralelo (exceto Playwright que é sequencial)
-  const [pncp, comprasnet, queridoDiario] = await Promise.allSettled([
+  // 4a. Buscar keywords ativas antecipadamente para o Google
+  const supabaseTemp = await createServiceClient()
+  const { data: keywordsTemp } = await supabaseTemp
+    .from('keywords')
+    .select('termo')
+    .eq('ativo', true)
+  const termosAtivos = keywordsTemp?.map(k => k.termo) ?? []
+
+  // 1. Coletar de todas as fontes em paralelo
+  const [pncp, comprasnet, queridoDiario, google] = await Promise.allSettled([
     coletarPNCP(dataInicio, dataFim),
     coletarComprasNet(dataInicio),
-    coletarQueridoDiario([]),
+    coletarQueridoDiario(termosAtivos.slice(0, 5)),
+    coletarGoogle(termosAtivos),
   ])
 
   const todasLicitacoes = [
     ...(pncp.status === 'fulfilled' ? pncp.value : []),
     ...(comprasnet.status === 'fulfilled' ? comprasnet.value : []),
     ...(queridoDiario.status === 'fulfilled' ? queridoDiario.value : []),
+    ...(google.status === 'fulfilled' ? google.value : []),
   ]
 
   console.log(`Coletadas ${todasLicitacoes.length} licitações no total`)
@@ -44,13 +55,13 @@ export async function GET(request: Request) {
   console.log(`${salvas} licitações novas salvas`)
 
   // 3. Buscar licitações de hoje para fazer matching
-  const supabase = await createServiceClient()
+  const supabase = supabaseTemp
   const { data: licitacoesHoje } = await supabase
     .from('licitacoes')
     .select('id, objeto')
     .gte('coletado_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
 
-  // 4. Buscar palavras-chave ativas
+  // 4. Buscar palavras-chave ativas (com id para o matching)
   const { data: keywords } = await supabase
     .from('keywords')
     .select('id, termo')
