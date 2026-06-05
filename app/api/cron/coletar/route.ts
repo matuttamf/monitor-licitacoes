@@ -25,8 +25,19 @@ export async function GET(request: Request) {
 
   console.log(`Iniciando coleta para ${dataInicio} a ${dataFim}`)
 
+  // 0. Limpar licitações expiradas (mais de 1 dia após data de abertura)
+  const supabaseClean = await createServiceClient()
+  const ontemDate = new Date()
+  ontemDate.setDate(ontemDate.getDate() - 1)
+  const { count: removidas } = await supabaseClean
+    .from('licitacoes')
+    .delete({ count: 'exact' })
+    .lt('data_abertura', ontemDate.toISOString().substring(0, 10))
+    .not('data_abertura', 'is', null)
+  console.log(`${removidas ?? 0} licitações expiradas removidas`)
+
   // 4a. Buscar keywords ativas antecipadamente para o Google
-  const supabaseTemp = await createServiceClient()
+  const supabaseTemp = supabaseClean
   const { data: keywordsTemp } = await supabaseTemp
     .from('keywords')
     .select('termo')
