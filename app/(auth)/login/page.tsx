@@ -35,78 +35,87 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="min-h-screen flex font-sans">
 
-      {/* Painel esquerdo */}
-      <div style={{ display: 'flex', width: '50%', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', background: '#1A1A1C', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '20%', left: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #6B0F1A 0%, transparent 70%)', filter: 'blur(60px)', opacity: 0.25 }} />
-        <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '40%', height: '40%', background: 'radial-gradient(circle, #C9A65A 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.1 }} />
+      {/* Painel esquerdo — oculto em mobile */}
+      <div className="hidden lg:flex w-[50%] flex-col justify-between p-12 bg-[#1A1A1C] relative overflow-hidden">
+        <div className="absolute top-[20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#6B0F1A] opacity-25 blur-[60px]" />
+        <div className="absolute bottom-[10%] right-[5%] w-[40%] h-[40%] rounded-full bg-[#C9A65A] opacity-10 blur-[80px]" />
 
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', border: '1px solid rgba(201,166,90,0.3)' }}>ML</div>
-          <span style={{ color: 'white', fontWeight: 600 }}>Monitor de Licitações</span>
+        {/* Logo */}
+        <div className="relative flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-[13px] border border-[rgba(201,166,90,0.3)]">ML</div>
+          <span className="text-white font-semibold">Monitor de Licitações</span>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: '#C9A65A', textTransform: 'uppercase', marginBottom: '20px' }}>Monitor de Licitações</div>
-          <h1 style={{ fontSize: '46px', fontWeight: 400, color: 'white', lineHeight: 1.2, margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>
+        {/* Headline */}
+        <div className="relative">
+          <div className="text-[11px] font-bold tracking-[0.1em] text-[#C9A65A] uppercase mb-5">Monitor de Licitações</div>
+          <h1 className="text-[46px] font-normal text-white leading-snug mb-5" style={{ fontFamily: 'Georgia, serif' }}>
             Encontre editais<br />
-            <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>antes de todos.</span>
+            <span className="text-[#C9A65A] italic">antes de todos.</span>
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
+          <p className="text-[rgba(255,255,255,0.45)] text-[15px] leading-relaxed">
             Editais, dispensas e contratos públicos e privados de todo o Brasil — monitorados em tempo real.
           </p>
         </div>
 
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+        {/* Stats */}
+        <div className="relative grid grid-cols-3 gap-6">
           {[['346 fontes', 'Monitoradas'], ['Público + Privado', 'Setores'], ['IA', 'Cruzamento']].map(([num, label]) => (
             <div key={label}>
-              <div style={{ fontWeight: 700, fontSize: '18px', color: '#C9A65A' }}>{num}</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{label}</div>
+              <div className="font-bold text-lg text-[#C9A65A]">{num}</div>
+              <div className="text-xs text-[rgba(255,255,255,0.35)] mt-0.5">{label}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6B0F1A, #C9A65A, transparent)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6B0F1A] via-[#C9A65A] to-transparent" />
       </div>
 
-      {/* Painel direito */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', background: '#FAF6F0' }}>
-        <div style={{ width: '100%', maxWidth: '380px' }}>
+      {/* Painel direito — formulário */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-[#FAF6F0]">
+        <div className="w-full max-w-[380px]">
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>ML</div>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: '#1A1A1C' }}>Monitor de Licitações</span>
+          {/* Logo mobile */}
+          <div className="flex items-center gap-2.5 mb-10 lg:hidden">
+            <div className="w-9 h-9 rounded-[10px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-xs">ML</div>
+            <span className="font-bold text-[15px] text-[#1A1A1C]">Monitor de Licitações</span>
           </div>
 
-          <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Bem-vindo de volta</h2>
-          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Acesse sua conta para ver os alertas</p>
+          <h2 className="text-2xl sm:text-[26px] font-bold text-[#1A1A1C] mb-1.5">Bem-vindo de volta</h2>
+          <p className="text-sm text-[#9AA0A6] mb-8">Acesse sua conta para ver os alertas</p>
 
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>E-mail</label>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
+                className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
               />
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Senha</label>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d]">Senha</label>
+                <Link href="/auth/update-password" className="text-xs text-[#6B0F1A] font-medium no-underline">
+                  Esqueci minha senha
+                </Link>
+              </div>
               <input
                 type="password"
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
                 required
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
+                className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
               />
             </div>
 
             {erro && (
-              <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
+              <div className="bg-[rgba(185,28,28,0.06)] border border-[rgba(185,28,28,0.2)] rounded-xl px-4 py-3 text-sm text-[#b91c1c]">
                 ⚠ {erro}
               </div>
             )}
@@ -114,18 +123,19 @@ function LoginForm() {
             <button
               type="submit"
               disabled={carregando}
-              style={{ width: '100%', padding: '13px', borderRadius: '12px', background: carregando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, border: 'none', cursor: carregando ? 'not-allowed' : 'pointer', letterSpacing: '0.02em' }}
+              className="w-full py-3.5 rounded-xl text-white text-sm font-bold border-none cursor-pointer transition-opacity"
+              style={{ background: carregando ? '#9AA0A6' : '#6B0F1A', cursor: carregando ? 'not-allowed' : 'pointer' }}
             >
               {carregando ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          <div style={{ textAlign: 'center', marginTop: '24px' }}>
-            <span style={{ fontSize: '13px', color: '#9AA0A6' }}>Não tem conta? </span>
-            <Link href="/cadastro" style={{ fontSize: '13px', color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Começar grátis →</Link>
-          </div>
+          <p className="text-center mt-6 text-sm text-[#9AA0A6]">
+            Não tem conta?{' '}
+            <Link href="/cadastro" className="text-[#6B0F1A] font-semibold no-underline">Começar grátis →</Link>
+          </p>
 
-          <div style={{ margin: '32px 0 0', height: '1px', background: 'linear-gradient(90deg, transparent, #C9A65A, transparent)', opacity: 0.4 }} />
+          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-[#C9A65A] to-transparent opacity-40" />
         </div>
       </div>
     </div>
@@ -134,7 +144,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#FAF6F0' }} />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF6F0]" />}>
       <LoginForm />
     </Suspense>
   )
