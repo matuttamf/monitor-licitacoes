@@ -10,7 +10,7 @@ const PLANOS = [
     preco: '49,90',
     destaque: false,
     descricao: 'Ideal para começar',
-    itens: ['10 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
     id: 'profissional',
