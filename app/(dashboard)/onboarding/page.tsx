@@ -201,13 +201,13 @@ export default function OnboardingPage() {
               </label>
 
               <RegiaoSelector
-                selecionadas={regioes}
+                value={regioes}
                 onChange={setRegioes}
               />
 
               {regioes.length > 0 && (
                 <div style={{ marginTop: '10px' }}>
-                  <RegiaoChips selecionadas={regioes} onRemover={r => {
+                  <RegiaoChips regioes={regioes} onRemove={r => {
                     setRegioes(prev => prev.filter(x => x !== r))
                   }} />
                 </div>
