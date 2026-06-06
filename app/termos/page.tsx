@@ -8,7 +8,7 @@ export const metadata = {
 const EMPRESA_NOME        = 'Matutta Soluções Digitais'
 const EMPRESA_CNPJ        = '[CNPJ em processo de registro]'
 const EMPRESA_SEDE_CIDADE = 'Belo Horizonte/MG'
-const CONTATO_EMAIL       = 'contato@monitorlicitacoes.com.br'
+const CONTATO_EMAIL       = 'contato@monitordelicitacoes.com.br'
 
 export default function TermosPage() {
   const ultimaAtualizacao = '05 de junho de 2026'

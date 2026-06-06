@@ -8,8 +8,8 @@ export const metadata = {
 const EMPRESA_NOME  = 'Matutta Soluções Digitais'
 const EMPRESA_CNPJ  = '[CNPJ em processo de registro]'
 const EMPRESA_SEDE  = 'Brasil'
-const CONTATO_EMAIL = 'privacidade@monitorlicitacoes.com.br'
-const CONTATO_SITE  = 'https://monitorlicitacoes.com.br'
+const CONTATO_EMAIL = 'privacidade@monitordelicitacoes.com.br'
+const CONTATO_SITE  = 'https://monitordelicitacoes.com.br'
 
 export default function PrivacidadePage() {
   const ultimaAtualizacao = '05 de junho de 2026'
@@ -73,7 +73,7 @@ export default function PrivacidadePage() {
                 <InfoRow label="Empresa">{EMPRESA_NOME}</InfoRow>
                 <InfoRow label="CNPJ">{EMPRESA_CNPJ}</InfoRow>
                 <InfoRow label="Sede">{EMPRESA_SEDE}</InfoRow>
-                <InfoRow label="Serviço">Monitor de Licitações (monitorlicitacoes.com.br)</InfoRow>
+                <InfoRow label="Serviço">Monitor de Licitações (monitordelicitacoes.com.br)</InfoRow>
                 <InfoRow label="Contato DPO">{CONTATO_EMAIL}</InfoRow>
               </InfoBox>
               <p>O <strong>Monitor de Licitações</strong> é uma plataforma de monitoramento de editais públicos brasileiros. Na qualidade de controlador de dados, somos responsáveis pelas decisões sobre o tratamento das suas informações pessoais nos termos da Lei nº 13.709/2018 (LGPD).</p>
