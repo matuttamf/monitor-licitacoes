@@ -13,7 +13,7 @@ const PLANOS = [
     descricao: 'Ideal para começar',
     keywords: 'Até 10 palavras-chave',
     usuarios: '1 usuário',
-    itens: ['10 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['10 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
     id: 'profissional',
@@ -24,7 +24,7 @@ const PLANOS = [
     descricao: 'Para vendedores ativos',
     keywords: 'Palavras-chave ilimitadas',
     usuarios: '1 usuário',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
     id: 'pro',
@@ -35,7 +35,7 @@ const PLANOS = [
     descricao: 'Para equipes comerciais',
     keywords: 'Palavras-chave ilimitadas',
     usuarios: 'Até 5 usuários',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte prioritário via WhatsApp'],
   },
   {
     id: 'empresarial',
@@ -46,7 +46,7 @@ const PLANOS = [
     descricao: 'Para grandes operações',
     keywords: 'Palavras-chave ilimitadas',
     usuarios: 'Até 15 usuários',
-    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Relatório semanal detalhado', 'Suporte dedicado'],
+    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Relatório semanal detalhado', 'Suporte dedicado'],
   },
 ]
 

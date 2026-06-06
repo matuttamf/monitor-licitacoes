@@ -279,7 +279,7 @@ export default function LandingPage() {
                 <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(201,166,90,0.7)' : '#6B0F1A', fontWeight: 600, marginBottom: '20px', padding: '4px 10px', background: p.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(107,15,26,0.06)', borderRadius: '6px', display: 'inline-block' }}>
                   {p.porDia}{p.ancora ? ` — ${p.ancora}` : ''}
                 </div>
-                {[p.keywords, p.usuarios, 'Alertas por e-mail e Telegram', 'Busca manual no painel'].map(item => (
+                {[p.keywords, p.usuarios, 'Alertas por e-mail, Telegram e WhatsApp', 'Busca manual no painel'].map(item => (
                   <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
                     <span style={{ color: p.destaque ? '#C9A65A' : '#6B0F1A', fontWeight: 700, fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                     <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.8)' : '#4a4a4d', lineHeight: 1.4 }}>{item}</span>
