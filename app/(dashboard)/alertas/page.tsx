@@ -104,30 +104,25 @@ export default function AlertasPage() {
   const [busca,    setBusca]   = useState('')
   const [keyword,  setKeyword] = useState('')
 
-  // Lista de keywords do usuário para o dropdown
+  // Lista de keywords do usuário para o dropdown — carrega uma só vez
   const [keywords, setKeywords] = useState<string[]>([])
+  useEffect(() => {
+    fetch('/api/keywords')
+      .then(r => r.ok ? r.json() : [])
+      .then((kws: { termo: string }[]) => {
+        if (Array.isArray(kws)) setKeywords(kws.map(k => k.termo))
+      })
+  }, [])
 
-  // Carrega keywords e alertas em paralelo
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
-
     const params = new URLSearchParams({ pagina: String(p) })
     if (busca)   params.set('busca', busca)
     if (keyword) params.set('keyword', keyword)
-
-    const [resAlertas, resKeywords] = await Promise.all([
-      fetch(`/api/alertas?${params}`),
-      keywords.length === 0 ? fetch('/api/keywords') : Promise.resolve(null),
-    ])
-
-    if (resAlertas.ok) setResposta(await resAlertas.json())
-    if (resKeywords?.ok) {
-      const kws: { termo: string }[] = await resKeywords.json()
-      if (Array.isArray(kws)) setKeywords(kws.map(k => k.termo))
-    }
-
+    const res = await fetch(`/api/alertas?${params}`)
+    if (res.ok) setResposta(await res.json())
     setCarregando(false)
-  }, [busca, keyword, keywords.length])
+  }, [busca, keyword])
 
   // Re-busca quando filtros ou página mudam
   useEffect(() => {
