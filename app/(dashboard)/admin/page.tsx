@@ -234,7 +234,7 @@ export default function AdminPage() {
         {(['usuarios', 'cron'] as const).map(a => (
           <button key={a} onClick={() => setAba(a)}
             style={{
-              padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
+              padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
               background: aba === a ? 'var(--vinho)' : 'white',
               color: aba === a ? 'white' : 'var(--cinza)',
               border: aba === a ? 'none' : '1px solid var(--cinza-light)',
@@ -258,7 +258,7 @@ export default function AdminPage() {
               {(['todos', 'active', 'trial', 'expired'] as const).map(s => (
                 <button key={s} onClick={() => setFiltroStatus(s)}
                   style={{
-                    padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: 'pointer',
+                    padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                     background: filtroStatus === s ? (s === 'active' ? '#10b981' : s === 'trial' ? '#C9A65A' : s === 'expired' ? '#ef4444' : 'var(--vinho)') : 'white',
                     color: filtroStatus === s ? 'white' : 'var(--cinza)',
                     border: filtroStatus === s ? 'none' : '1px solid var(--cinza-light)',
