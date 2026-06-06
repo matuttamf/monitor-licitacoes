@@ -268,12 +268,14 @@ export default function AlertasPage() {
 
                     {/* Lado direito */}
                     <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                      <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-                        {new Date(a.enviado_em).toLocaleString('pt-BR', {
-                          day: '2-digit', month: '2-digit', year: 'numeric',
-                          hour: '2-digit', minute: '2-digit',
-                        })}
-                      </p>
+                      {a.enviado_em && (
+                        <p className="text-xs" style={{ color: 'var(--cinza)' }}>
+                          {new Date(a.enviado_em).toLocaleString('pt-BR', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit',
+                          })}
+                        </p>
+                      )}
                       {lic?.url && (
                         <a
                           href={lic.url}
