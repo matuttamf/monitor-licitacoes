@@ -66,7 +66,7 @@ function CheckoutConteudo() {
 
           <div className="flex flex-col gap-3">
             <Link
-              href={`/login?redirect=/checkout?plano=${plano}`}
+              href={`/login?redirect=${encodeURIComponent(`/checkout?plano=${plano}`)}`}
               className="block w-full py-4 rounded-xl bg-[#6B0F1A] text-white text-base font-bold no-underline text-center"
             >
               Entrar e assinar →

@@ -36,7 +36,7 @@ export default function LoginPage() {
     }
     // Hard redirect para garantir que os cookies de sessão sejam enviados ao servidor
     const params = new URLSearchParams(window.location.search)
-    const redirect = params.get('redirect')
+    const redirect = params.get('redirect') // já decodificado pelo URLSearchParams
     window.location.href = redirect ?? '/dashboard'
   }
 
