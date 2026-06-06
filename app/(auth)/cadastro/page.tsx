@@ -11,15 +11,18 @@ function CadastroConteudo() {
   const searchParams = useSearchParams()
   const conviteToken = searchParams.get('convite')
 
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
+  const [email, setEmail]               = useState('')
+  const [senha, setSenha]               = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
-  const [erro, setErro] = useState('')
-  const [sucesso, setSucesso] = useState(false)
-  const [carregando, setCarregando] = useState(false)
-  const [convite, setConvite] = useState<ConviteInfo>(null)
-  const [conviteErro, setConviteErro] = useState('')
+  const [estadoUF, setEstadoUF]         = useState('')
+  const [erro, setErro]                 = useState('')
+  const [sucesso, setSucesso]           = useState(false)
+  const [carregando, setCarregando]     = useState(false)
+  const [convite, setConvite]           = useState<ConviteInfo>(null)
+  const [conviteErro, setConviteErro]   = useState('')
   const [carregandoConvite, setCarregandoConvite] = useState(!!conviteToken)
+
+  const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
 
   // Carregar info do convite se houver token na URL
   useEffect(() => {
@@ -40,12 +43,31 @@ function CadastroConteudo() {
     if (senha.length < 8) { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     setCarregando(true)
     setErro('')
+
+    // Anti-abuso: verificar se e-mail normalizado já usou trial
+    if (!conviteToken) {
+      const verificacao = await fetch('/api/auth/verificar-trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }).then(r => r.json()).catch(() => ({ permitido: true }))
+
+      if (!verificacao.permitido) {
+        setErro(verificacao.mensagem ?? 'Este e-mail já utilizou o período de teste.')
+        setCarregando(false)
+        return
+      }
+    }
+
     const supabase = createClient()
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: { estado_uf: estadoUF || null },
+      },
     })
 
     if (error) {
@@ -263,7 +285,7 @@ function CadastroConteudo() {
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Confirmar senha</label>
                 <input
                   type="password"
@@ -276,6 +298,24 @@ function CadastroConteudo() {
                   onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
                 />
               </div>
+
+              {!conviteToken && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>
+                    Estado onde sua empresa opera
+                  </label>
+                  <select
+                    value={estadoUF}
+                    onChange={e => setEstadoUF(e.target.value)}
+                    style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}
+                    onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
+                    onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
+                  >
+                    <option value="">Selecione seu estado (opcional)</option>
+                    {UFS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+                  </select>
+                </div>
+              )}
 
               {erro && (
                 <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>

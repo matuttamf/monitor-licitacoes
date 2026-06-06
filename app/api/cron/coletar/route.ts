@@ -3,6 +3,9 @@ import { coletarPNCP } from '@/lib/scrapers/pncp'
 import { coletarComprasNet } from '@/lib/scrapers/comprasnet'
 import { coletarQueridoDiario } from '@/lib/scrapers/querido-diario'
 import { coletarGoogle } from '@/lib/scrapers/google'
+import { coletarBBMNET } from '@/lib/scrapers/bbmnet'
+import { coletarLicitanet } from '@/lib/scrapers/licitanet'
+import { coletarBECSP } from '@/lib/scrapers/bec-sp'
 import { salvarLicitacoes } from '@/lib/scrapers/salvar'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -46,18 +49,24 @@ export async function GET(request: Request) {
   const termosAtivos = keywordsTemp?.map(k => k.termo) ?? []
 
   // 1. Coletar de todas as fontes em paralelo
-  const [pncp, comprasnet, queridoDiario, google] = await Promise.allSettled([
+  const [pncp, comprasnet, queridoDiario, google, bbmnet, licitanet, becsp] = await Promise.allSettled([
     coletarPNCP(dataInicio, dataFim),
     coletarComprasNet(dataInicio),
     coletarQueridoDiario(termosAtivos.slice(0, 5)),
     coletarGoogle(termosAtivos),
+    coletarBBMNET(dataInicio),
+    coletarLicitanet(dataInicio),
+    coletarBECSP(dataInicio),
   ])
 
   const todasLicitacoes = [
-    ...(pncp.status === 'fulfilled' ? pncp.value : []),
-    ...(comprasnet.status === 'fulfilled' ? comprasnet.value : []),
+    ...(pncp.status        === 'fulfilled' ? pncp.value        : []),
+    ...(comprasnet.status  === 'fulfilled' ? comprasnet.value  : []),
     ...(queridoDiario.status === 'fulfilled' ? queridoDiario.value : []),
-    ...(google.status === 'fulfilled' ? google.value : []),
+    ...(google.status      === 'fulfilled' ? google.value      : []),
+    ...(bbmnet.status      === 'fulfilled' ? bbmnet.value      : []),
+    ...(licitanet.status   === 'fulfilled' ? licitanet.value   : []),
+    ...(becsp.status       === 'fulfilled' ? becsp.value       : []),
   ]
 
   console.log(`Coletadas ${todasLicitacoes.length} licitações no total`)
@@ -111,10 +120,13 @@ export async function GET(request: Request) {
     status:   'ok',
     mensagem: `${salvas} licitações salvas, ${candidatos.length} candidatos — matching disparado`,
     detalhes: {
-      pncp_ok:      pncp.status === 'fulfilled',
-      comprasnet_ok: comprasnet.status === 'fulfilled',
-      querido_ok:   queridoDiario.status === 'fulfilled',
-      google_ok:    google.status === 'fulfilled',
+      pncp_ok:       pncp.status        === 'fulfilled',
+      comprasnet_ok: comprasnet.status  === 'fulfilled',
+      querido_ok:    queridoDiario.status === 'fulfilled',
+      google_ok:     google.status      === 'fulfilled',
+      bbmnet_ok:     bbmnet.status      === 'fulfilled',
+      licitanet_ok:  licitanet.status   === 'fulfilled',
+      becsp_ok:      becsp.status       === 'fulfilled',
       total_coletadas: todasLicitacoes.length,
       salvas,
       candidatos: candidatos.length,

@@ -24,11 +24,14 @@ type Resposta = {
 }
 
 const fonteConfig: Record<string, { cor: string; bg: string }> = {
-  'PNCP':           { cor: '#6B0F1A', bg: 'rgba(107,15,26,0.07)' },
-  'ComprasNet':     { cor: '#8B1E2D', bg: 'rgba(139,30,45,0.07)' },
+  'PNCP':           { cor: '#6B0F1A', bg: 'rgba(107,15,26,0.07)'  },
+  'ComprasNet':     { cor: '#8B1E2D', bg: 'rgba(139,30,45,0.07)'  },
   'Querido Diário': { cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
   'BLL':            { cor: '#4a4a4d', bg: 'rgba(74,74,77,0.07)'   },
   'Google':         { cor: '#2d6a4f', bg: 'rgba(45,106,79,0.07)'  },
+  'BBMNET':         { cor: '#1d4ed8', bg: 'rgba(29,78,216,0.07)'  },
+  'Licitanet':      { cor: '#7c3aed', bg: 'rgba(124,58,237,0.07)' },
+  'BEC/SP':         { cor: '#0369a1', bg: 'rgba(3,105,161,0.07)'  },
 }
 
 const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
