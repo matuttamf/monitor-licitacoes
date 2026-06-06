@@ -5,7 +5,7 @@ export interface LimitesPlano {
 }
 
 export const LIMITES_PLANO: Record<string, LimitesPlano> = {
-  basic:        { maxKeywords: 10,    maxUsers: 1,  nome: 'Basic' },
+  basic:        { maxKeywords: 20,    maxUsers: 1,  nome: 'Basic' },
   profissional: { maxKeywords: 99999, maxUsers: 1,  nome: 'Profissional' },
   pro:          { maxKeywords: 99999, maxUsers: 5,  nome: 'Pro' },
   empresarial:  { maxKeywords: 99999, maxUsers: 15, nome: 'Empresarial' },
@@ -17,4 +17,9 @@ export function getLimites(plano: string): LimitesPlano {
 
 export function temMultiUsuario(plano: string): boolean {
   return getLimites(plano).maxUsers > 1
+}
+
+/** WhatsApp disponível apenas para Profissional, Pro e Empresarial */
+export function temWhatsApp(plano: string): boolean {
+  return ['profissional', 'pro', 'empresarial'].includes(plano)
 }

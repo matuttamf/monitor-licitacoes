@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { enviarAlertaEmailUsuario } from '@/lib/alerts/email'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
+import { enviarAlertaWhatsApp } from '@/lib/alerts/whatsapp'
 import { registrarCronLog } from '@/lib/cron-log'
+import { temWhatsApp } from '@/lib/planos'
 
 export const maxDuration = 300
 
@@ -34,8 +36,6 @@ export async function GET(request: Request) {
 
   const supabase = await createServiceClient()
 
-  // Configuração das queries de alertas
-  // Inclui keyword (com user_id) e dados da licitação
   const hoje = new Date().toISOString().substring(0, 10)
   const umaSemanAAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -51,9 +51,7 @@ export async function GET(request: Request) {
   `
   const FILTRO_DATA = { referencedTable: 'licitacoes' }
 
-  // 1. Todos os alertas pendentes (canais vazio) para licitações ainda dentro do prazo
-  //    Sem limite de janela de tempo: alertas que não foram enviados ficam na fila
-  //    e saem no próximo envio. Ordenados do mais antigo para o mais novo (FIFO).
+  // 1. Alertas pendentes (canais vazio) para licitações ainda dentro do prazo
   const { data: novos, error } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
@@ -95,7 +93,6 @@ export async function GET(request: Request) {
     alertasPorUsuario.get(userId)!.push(alerta)
   }
 
-  // Buscar emails de todos os usuários envolvidos
   const userIds = [...alertasPorUsuario.keys()]
   const { data: authUsers } = await supabase.auth.admin.listUsers()
   const emailMap = Object.fromEntries(
@@ -104,68 +101,63 @@ export async function GET(request: Request) {
       .map(u => [u.id, u.email!])
   )
 
-  // Buscar status e telegram_chat_id dos usuários (só envia para trial/active)
+  // Buscar perfil: status, plano, telegram_chat_id, whatsapp
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, status, telegram_chat_id')
+    .select('id, status, plano, telegram_chat_id, whatsapp')
     .in('id', userIds)
-  const statusMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.status]))
-  const telegramMap = Object.fromEntries(
-    (profiles ?? [])
-      .filter(p => p.telegram_chat_id)
-      .map(p => [p.id, p.telegram_chat_id as string])
-  )
+
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
   let totalEnviados = 0
-  const resultadosPorUsuario: Record<string, { email: string; alertas: number; ok: boolean }> = {}
+  const resultadosPorUsuario: Record<string, { email: string; alertas: number; canais: string[]; ok: boolean }> = {}
 
   for (const [userId, alertas] of alertasPorUsuario.entries()) {
     const emailUsuario = emailMap[userId]
-    const statusUsuario = statusMap[userId]
+    const perfil = profileMap[userId]
 
     // Pular usuários expirados ou sem email
-    if (!emailUsuario || statusUsuario === 'expired') continue
+    if (!emailUsuario || perfil?.status === 'expired') continue
 
     const MAX_POR_EMAIL = 30
-
-    // Novos alertas: limitados a MAX_POR_EMAIL (novas capturas que não foram enviadas)
-    // Reenvios: não entram no limite — são lembretes de licitações já conhecidas
-    const novosAlertas   = alertas.filter(a => !(a as any)._reenvio)
+    const novosAlertas    = alertas.filter(a => !(a as any)._reenvio)
     const reenviosAlertas = alertas.filter(a => !!(a as any)._reenvio)
-
     const novosParaEnviar = novosAlertas.slice(0, MAX_POR_EMAIL)
     const totalRestante   = novosAlertas.length - novosParaEnviar.length
-
-    // Reenvios sempre passam (independente do cap de novos)
     const alertasParaEnviar = [...novosParaEnviar, ...reenviosAlertas]
 
     const licitacoesDoUsuario = alertasParaEnviar.map(a => ({
       id: a.licitacao_id,
-      orgao: (a.licitacoes as any).orgao,
-      objeto: (a.licitacoes as any).objeto,
+      orgao:          (a.licitacoes as any).orgao,
+      objeto:         (a.licitacoes as any).objeto,
       valor_estimado: (a.licitacoes as any).valor_estimado,
-      data_abertura: (a.licitacoes as any).data_abertura,
-      url: (a.licitacoes as any).url,
-      estado: (a.licitacoes as any).estado,
-      cidade: (a.licitacoes as any).cidade,
-      keyword: (a.keywords as any).termo,
-      reenvio: !!(a as any)._reenvio,
+      data_abertura:  (a.licitacoes as any).data_abertura,
+      url:            (a.licitacoes as any).url,
+      estado:         (a.licitacoes as any).estado,
+      cidade:         (a.licitacoes as any).cidade,
+      keyword:        (a.keywords as any).termo,
+      reenvio:        !!(a as any)._reenvio,
     }))
 
     const canaisEnviados: string[] = []
 
-    // Enviar e-mail para este usuário (com aviso de restantes se houver)
+    // E-mail — todos os planos
     const emailOk = await enviarAlertaEmailUsuario(emailUsuario, licitacoesDoUsuario, totalRestante)
     if (emailOk) canaisEnviados.push('email')
 
-    // Telegram — envia se o usuário tiver configurado o chat_id
-    const telegramChatId = telegramMap[userId]
-    if (telegramChatId) {
-      const telegramOk = await enviarAlertaTelegram(licitacoesDoUsuario, telegramChatId)
+    // Telegram — todos os planos (se configurado)
+    if (perfil?.telegram_chat_id) {
+      const telegramOk = await enviarAlertaTelegram(licitacoesDoUsuario, perfil.telegram_chat_id)
       if (telegramOk) canaisEnviados.push('telegram')
     }
 
-    // Marcar apenas os alertas enviados neste lote como enviados
+    // WhatsApp — apenas Profissional, Pro e Empresarial
+    const planoUsuario = perfil?.plano ?? 'basic'
+    if (temWhatsApp(planoUsuario) && perfil?.whatsapp) {
+      const wppOk = await enviarAlertaWhatsApp(licitacoesDoUsuario, perfil.whatsapp)
+      if (wppOk) canaisEnviados.push('whatsapp')
+    }
+
     if (canaisEnviados.length > 0) {
       const ids = alertasParaEnviar.map(a => a.id)
       await supabase
@@ -176,9 +168,10 @@ export async function GET(request: Request) {
     }
 
     resultadosPorUsuario[emailUsuario] = {
-      email: emailUsuario,
+      email:   emailUsuario,
       alertas: alertasParaEnviar.length,
-      ok: canaisEnviados.length > 0,
+      canais:  canaisEnviados,
+      ok:      canaisEnviados.length > 0,
     }
   }
 

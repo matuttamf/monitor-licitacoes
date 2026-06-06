@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { termo } = await request.json()
+  const { termo, regiao } = await request.json()
   if (!termo?.trim()) {
     return NextResponse.json({ error: 'Termo obrigatório' }, { status: 400 })
   }
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from('keywords')
-    .insert({ termo: termo.trim().toLowerCase(), user_id: user.id })
+    .insert({ termo: termo.trim().toLowerCase(), user_id: user.id, regiao: regiao ?? 'brasil' })
     .select()
     .single()
 
@@ -77,11 +77,15 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { id, ativo } = await request.json()
+  const { id, ativo, regiao } = await request.json()
+
+  const updates: Record<string, unknown> = {}
+  if (ativo !== undefined) updates.ativo = ativo
+  if (regiao !== undefined) updates.regiao = regiao
 
   const { error } = await supabase
     .from('keywords')
-    .update({ ativo })
+    .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
 

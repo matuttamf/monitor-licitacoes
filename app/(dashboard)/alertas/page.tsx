@@ -285,9 +285,13 @@ export default function AlertasPage() {
 
                       {/* Metadados */}
                       <div className="flex gap-4 mt-2 flex-wrap">
-                        {lic?.valor_estimado && (
+                        {lic?.valor_estimado != null && lic.valor_estimado > 0 ? (
                           <span className="text-xs font-semibold" style={{ color: 'var(--preto)' }}>
                             💰 {moeda(lic.valor_estimado)}
+                          </span>
+                        ) : (
+                          <span className="text-xs" style={{ color: 'var(--cinza)' }}>
+                            💰 Valor não informado
                           </span>
                         )}
                         {lic?.data_abertura && (
