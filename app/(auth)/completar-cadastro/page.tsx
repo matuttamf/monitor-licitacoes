@@ -126,7 +126,7 @@ export default function CompletarCadastroPage() {
       })
       const data = await res.json()
       if (!res.ok) { setErro(data.error ?? 'Erro ao salvar. Tente novamente.'); return }
-      router.push('/dashboard')
+      router.push('/onboarding')
     } catch {
       setErro('Erro de conexão. Tente novamente.')
     } finally {
