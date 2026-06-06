@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { NOME_UF, ESTADOS_POR_REGIAO } from '@/lib/regioes'
+import { removerRegiao } from '@/lib/regioes'
+import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
 
 type Licitacao = {
   orgao: string
@@ -108,7 +109,7 @@ export default function AlertasPage() {
   // Filtros
   const [busca,    setBusca]   = useState('')
   const [keyword,  setKeyword] = useState('')
-  const [estado,   setEstado]  = useState('')
+  const [regioes,  setRegioes] = useState<string[]>([])
 
   // Lista de keywords do usuário para o dropdown — carrega uma só vez
   const [keywords, setKeywords] = useState<string[]>([])
@@ -125,11 +126,11 @@ export default function AlertasPage() {
     const params = new URLSearchParams({ pagina: String(p) })
     if (busca)   params.set('busca', busca)
     if (keyword) params.set('keyword', keyword)
-    if (estado)  params.set('estado', estado)
+    if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
     const res = await fetch(`/api/alertas?${params}`)
     if (res.ok) setResposta(await res.json())
     setCarregando(false)
-  }, [busca, keyword, estado])
+  }, [busca, keyword, regioes])
 
   // Re-busca quando filtros ou página mudam
   useEffect(() => {
@@ -146,12 +147,12 @@ export default function AlertasPage() {
     const params = new URLSearchParams()
     if (busca)   params.set('busca', busca)
     if (keyword) params.set('keyword', keyword)
-    if (estado)  params.set('estado', estado)
+    if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
     return params.toString()
   }
 
   const alertas = resposta?.data ?? []
-  const temFiltro = busca || keyword || estado
+  const temFiltro = busca || keyword || (regioes.length > 0 && !regioes.includes('brasil'))
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -206,30 +207,26 @@ export default function AlertasPage() {
           </select>
         </div>
 
-        {/* Estado / Região */}
-        <div className="min-w-[160px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Estado</label>
-          <select
-            value={estado}
-            onChange={e => aplicarFiltro(() => setEstado(e.target.value))}
-            className="w-full px-3 py-2 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
-          >
-            <option value="">Todos</option>
-            {Object.entries(ESTADOS_POR_REGIAO).map(([regiao, ufs]) => (
-              <optgroup key={regiao} label={regiao.replace('_', '-').replace(/^\w/, c => c.toUpperCase())}>
-                {ufs.map(uf => (
-                  <option key={uf} value={uf}>{uf} — {NOME_UF[uf]}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+        {/* Região */}
+        <div className="min-w-[200px]">
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Região / Estado</label>
+          <RegiaoSelector
+            value={regioes}
+            onChange={novas => aplicarFiltro(() => setRegioes(novas))}
+            placeholder="Todas as regiões"
+          />
+          {regioes.length > 0 && !regioes.includes('brasil') && (
+            <RegiaoChips
+              regioes={regioes}
+              onRemove={r => aplicarFiltro(() => setRegioes(removerRegiao(r, regioes)))}
+            />
+          )}
         </div>
 
         {/* Limpar */}
         {temFiltro && (
           <button
-            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setEstado('') })}
+            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setRegioes([]) })}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'var(--surface-2)', color: 'var(--cinza)', border: '1px solid var(--cinza-light)', cursor: 'pointer', alignSelf: 'flex-end' }}
           >

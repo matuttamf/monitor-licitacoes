@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
+import { estadoCompativelComRegioes } from '@/lib/regioes'
 
 const POR_PAGINA = 20
 
@@ -13,7 +14,8 @@ export async function GET(request: NextRequest) {
   const busca   = sp.get('busca')?.trim() ?? ''
   const kwTermo = sp.get('keyword') ?? ''
   const canal   = sp.get('canal') ?? ''
-  const estado  = sp.get('estado') ?? ''
+  const estado  = sp.get('estado') ?? ''        // legado — mantido por compatibilidade
+  const regioes = sp.get('regioes')?.split(',').filter(Boolean) ?? []
 
   const from = (pagina - 1) * POR_PAGINA
   const to   = from + POR_PAGINA - 1
@@ -43,10 +45,12 @@ export async function GET(request: NextRequest) {
 
   // Filtros client-side (campos vêm do join)
   let resultado = data ?? []
-  if (estado) {
+  // Filtro de região (multi — substitui o filtro de estado único)
+  const filtroRegioes = regioes.length > 0 ? regioes : estado ? [estado] : []
+  if (filtroRegioes.length > 0 && !filtroRegioes.includes('brasil')) {
     resultado = resultado.filter(a => {
       const lic = a.licitacoes as unknown as { estado?: string } | null
-      return lic?.estado?.toUpperCase() === estado.toUpperCase()
+      return estadoCompativelComRegioes(lic?.estado, filtroRegioes)
     })
   }
   if (busca) {

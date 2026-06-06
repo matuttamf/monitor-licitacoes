@@ -1,15 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  ESTADOS_POR_REGIAO,
-  NOME_UF,
-  LABEL_REGIAO,
-  adicionarRegiao,
-  removerRegiao,
-  jaCoberto,
-  labelSelecao,
-} from '@/lib/regioes'
+import { removerRegiao } from '@/lib/regioes'
+import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
 
 type Keyword = {
   id: string
@@ -19,161 +12,21 @@ type Keyword = {
   criado_em: string
 }
 
-// ─── Seletor de múltiplas regiões ──────────────────────────────────────────
-
-const GRUPOS = [
-  {
-    titulo: 'Brasil',
-    itens: [{ value: 'brasil', label: '🌎 Brasil (qualquer região)' }],
-  },
-  {
-    titulo: 'Regiões',
-    itens: [
-      { value: 'norte',        label: '🌿 Norte' },
-      { value: 'nordeste',     label: '☀️ Nordeste' },
-      { value: 'sudeste',      label: '🏙️ Sudeste' },
-      { value: 'sul',          label: '❄️ Sul' },
-      { value: 'centro_oeste', label: '🌾 Centro-Oeste' },
-    ],
-  },
-  {
-    titulo: 'Estados',
-    itens: Object.keys(NOME_UF)
-      .sort()
-      .map(uf => ({ value: uf, label: `${uf} — ${NOME_UF[uf]}` })),
-  },
-]
-
-function RegiaoSelector({
-  value,
-  onChange,
-}: {
-  value: string[]
-  onChange: (novas: string[]) => void
-}) {
-  const [aberto, setAberto] = useState(false)
-  const selecionadas = value.length === 0 ? ['brasil'] : value
-
-  function toggle(item: string) {
-    if (selecionadas.includes(item)) {
-      onChange(removerRegiao(item, selecionadas))
-    } else {
-      onChange(adicionarRegiao(item, selecionadas))
-    }
-  }
-
-  const resumo = selecionadas.includes('brasil')
-    ? '🌎 Brasil (qualquer região)'
-    : selecionadas.map(labelSelecao).join(', ')
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setAberto(v => !v)}
-        className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center justify-between gap-2"
-        style={{
-          border: '1.5px solid var(--cinza-light)',
-          background: 'white',
-          color: 'var(--preto)',
-          cursor: 'pointer',
-        }}
-      >
-        <span className="truncate text-xs" style={{ maxWidth: '280px' }}>{resumo}</span>
-        <span style={{ color: 'var(--cinza)', flexShrink: 0 }}>{aberto ? '▲' : '▼'}</span>
-      </button>
-
-      {aberto && (
-        <div
-          className="absolute z-50 mt-1 w-full rounded-xl overflow-y-auto shadow-lg"
-          style={{
-            background: 'white',
-            border: '1px solid var(--cinza-light)',
-            maxHeight: '260px',
-          }}
-        >
-          {GRUPOS.map(grupo => (
-            <div key={grupo.titulo}>
-              <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider sticky top-0"
-                style={{ background: 'var(--surface-2)', color: 'var(--cinza)', borderBottom: '1px solid var(--cinza-light)' }}>
-                {grupo.titulo}
-              </div>
-              {grupo.itens.map(item => {
-                const coberto = jaCoberto(item.value, selecionadas) && !selecionadas.includes(item.value)
-                const selecionado = selecionadas.includes(item.value)
-                return (
-                  <button
-                    key={item.value}
-                    type="button"
-                    disabled={coberto}
-                    onClick={() => toggle(item.value)}
-                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors"
-                    style={{
-                      color: coberto ? 'var(--cinza)' : 'var(--preto)',
-                      opacity: coberto ? 0.45 : 1,
-                      background: selecionado ? 'rgba(107,15,26,0.06)' : 'transparent',
-                      cursor: coberto ? 'not-allowed' : 'pointer',
-                      border: 'none',
-                    }}
-                  >
-                    <span className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 text-white text-xs"
-                      style={{ background: selecionado ? 'var(--vinho)' : 'var(--cinza-light)' }}>
-                      {selecionado ? '✓' : coberto ? '—' : ''}
-                    </span>
-                    <span className="text-xs">{item.label}</span>
-                    {coberto && <span className="text-xs ml-auto" style={{ color: 'var(--cinza)' }}>já coberto</span>}
-                  </button>
-                )
-              })}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Chips das regiões selecionadas ─────────────────────────────────────────
-
-function RegiaoChips({ regioes, onRemove }: { regioes: string[]; onRemove: (r: string) => void }) {
-  const lista = regioes.length === 0 ? ['brasil'] : regioes
-  if (lista.includes('brasil')) {
-    return <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>🌎 Brasil</span>
-  }
-  return (
-    <div className="flex flex-wrap gap-1 mt-1.5">
-      {lista.map(r => (
-        <span key={r} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
-          {labelSelecao(r)}
-          <button type="button" onClick={() => onRemove(r)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--vinho)', lineHeight: 1 }}>
-            ×
-          </button>
-        </span>
-      ))}
-    </div>
-  )
-}
-
-// ─── Página principal ────────────────────────────────────────────────────────
-
 export default function PalavrasChavePage() {
-  const [keywords, setKeywords]     = useState<Keyword[]>([])
-  const [novoTermo, setNovoTermo]   = useState('')
-  const [novasRegioes, setNovasRegioes] = useState<string[]>(['brasil'])
-  const [carregando, setCarregando] = useState(true)
-  const [erro, setErro]             = useState('')
-  const [salvando, setSalvando]     = useState<string | null>(null)
+  const [keywords, setKeywords]         = useState<Keyword[]>([])
+  const [novoTermo, setNovoTermo]       = useState('')
+  const [novasRegioes, setNovasRegioes] = useState<string[]>([])   // [] = brasil implícito
+  const [carregando, setCarregando]     = useState(true)
+  const [erro, setErro]                 = useState('')
+  const [salvando, setSalvando]         = useState<string | null>(null)
   const [editandoRegiao, setEditandoRegiao] = useState<string | null>(null)
-  const [regiaoEdit, setRegiaoEdit] = useState<string[]>(['brasil'])
+  const [regiaoEdit, setRegiaoEdit]     = useState<string[]>([])
 
   async function carregar() {
     setCarregando(true)
     const res = await fetch('/api/keywords')
     if (res.ok) {
       const data = await res.json()
-      // Normaliza regiao: se vier como string (legado), transforma em array
       setKeywords(data.map((k: Keyword & { regiao: string | string[] }) => ({
         ...k,
         regiao: Array.isArray(k.regiao) ? k.regiao : [k.regiao ?? 'brasil'],
@@ -187,10 +40,12 @@ export default function PalavrasChavePage() {
   async function adicionar(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
+    // [] significa brasil implícito — manda ['brasil'] para o backend
+    const regiao = novasRegioes.length === 0 ? ['brasil'] : novasRegioes
     const res = await fetch('/api/keywords', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termo: novoTermo, regiao: novasRegioes }),
+      body: JSON.stringify({ termo: novoTermo, regiao }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -198,7 +53,7 @@ export default function PalavrasChavePage() {
       return
     }
     setNovoTermo('')
-    setNovasRegioes(['brasil'])
+    setNovasRegioes([])
     carregar()
   }
 
@@ -213,10 +68,11 @@ export default function PalavrasChavePage() {
 
   async function salvarRegiao(id: string, regiao: string[]) {
     setSalvando(id)
+    const payload = regiao.length === 0 ? ['brasil'] : regiao
     await fetch('/api/keywords', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, regiao }),
+      body: JSON.stringify({ id, regiao: payload }),
     })
     setSalvando(null)
     setEditandoRegiao(null)
@@ -246,16 +102,14 @@ export default function PalavrasChavePage() {
       {/* Formulário de adição */}
       <form onSubmit={adicionar} className="rounded-2xl p-5 mb-5"
         style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-        <h2 className="text-xs font-semibold uppercase tracking-wider mb-4"
-          style={{ color: 'var(--cinza)' }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>
           Nova palavra-chave
         </h2>
 
         <div className="flex flex-col gap-3">
           {/* Termo */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
-              style={{ color: 'var(--cinza)' }}>Termo</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Termo</label>
             <input
               value={novoTermo}
               onChange={e => setNovoTermo(e.target.value)}
@@ -270,13 +124,16 @@ export default function PalavrasChavePage() {
 
           {/* Regiões */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
-              style={{ color: 'var(--cinza)' }}>Regiões de interesse</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Regiões de interesse</label>
             <RegiaoSelector value={novasRegioes} onChange={setNovasRegioes} />
-            <RegiaoChips regioes={novasRegioes} onRemove={r => setNovasRegioes(removerRegiao(r, novasRegioes))} />
+            {novasRegioes.length > 0 && !novasRegioes.includes('brasil') && (
+              <RegiaoChips
+                regioes={novasRegioes}
+                onRemove={r => setNovasRegioes(removerRegiao(r, novasRegioes))}
+              />
+            )}
           </div>
 
-          {/* Botão */}
           <button
             type="submit"
             className="px-5 py-2.5 rounded-xl text-sm font-semibold self-start"
@@ -303,16 +160,12 @@ export default function PalavrasChavePage() {
           ))}
         </div>
       ) : keywords.length === 0 ? (
-        <div className="rounded-2xl p-12 text-center"
-          style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="rounded-2xl p-12 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
           <p className="text-base font-medium mb-1" style={{ color: 'var(--preto)' }}>Nenhuma palavra-chave ainda</p>
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>Adicione termos acima para começar a receber alertas.</p>
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden"
-          style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-
-          {/* Cabeçalho da lista */}
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
           <div className="px-5 py-3 flex items-center justify-between"
             style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
             <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>
@@ -331,13 +184,10 @@ export default function PalavrasChavePage() {
               }}>
 
               <div className="flex items-start gap-3 flex-wrap">
-                {/* Termo */}
                 <span className="text-sm font-semibold flex-1 min-w-0 pt-0.5"
                   style={{ color: 'var(--preto)', textDecoration: kw.ativo ? 'none' : 'line-through' }}>
                   {kw.termo}
                 </span>
-
-                {/* Ações direita */}
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <button onClick={() => toggleAtivo(kw.id, kw.ativo)}
                     className="text-xs font-medium"
@@ -352,14 +202,16 @@ export default function PalavrasChavePage() {
                 </div>
               </div>
 
-              {/* Regiões — chips clicáveis para edição inline */}
+              {/* Regiões */}
               {editandoRegiao === kw.id ? (
                 <div className="mt-2 space-y-2">
-                  <RegiaoSelector
-                    value={regiaoEdit}
-                    onChange={setRegiaoEdit}
-                  />
-                  <RegiaoChips regioes={regiaoEdit} onRemove={r => setRegiaoEdit(removerRegiao(r, regiaoEdit))} />
+                  <RegiaoSelector value={regiaoEdit} onChange={setRegiaoEdit} />
+                  {regiaoEdit.length > 0 && !regiaoEdit.includes('brasil') && (
+                    <RegiaoChips
+                      regioes={regiaoEdit}
+                      onRemove={r => setRegiaoEdit(removerRegiao(r, regiaoEdit))}
+                    />
+                  )}
                   <div className="flex gap-2 mt-1">
                     <button type="button"
                       disabled={salvando === kw.id}
@@ -393,7 +245,6 @@ export default function PalavrasChavePage() {
         </div>
       )}
 
-      {/* Nota sobre limites de plano */}
       <p className="text-xs text-center mt-4" style={{ color: 'var(--cinza)' }}>
         Plano Basic: até 20 palavras-chave &nbsp;·&nbsp; Profissional / Pro / Empresarial: ilimitado
       </p>
