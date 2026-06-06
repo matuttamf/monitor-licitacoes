@@ -30,8 +30,7 @@ export function RegiaoSelector({
   onChange: (novas: string[]) => void
   placeholder?: string
 }) {
-  const [aberto,   setAberto]   = useState(false)
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [aberto, setAberto] = useState(false)
 
   const selecionadas = value
 
@@ -44,10 +43,6 @@ export function RegiaoSelector({
     } else {
       onChange(adicionarRegiao(item, selecionadas))
     }
-  }
-
-  function toggleExpand(regiao: string) {
-    setExpanded(prev => ({ ...prev, [regiao]: !prev[regiao] }))
   }
 
   const resumo =
@@ -88,7 +83,7 @@ export function RegiaoSelector({
             style={{
               background: 'white',
               border: '1px solid var(--cinza-light)',
-              maxHeight: '320px',
+              maxHeight: '400px',
               minWidth: '240px',
             }}
           >
@@ -101,47 +96,22 @@ export function RegiaoSelector({
               onToggle={() => toggle('brasil')}
             />
 
-            {/* ── Regiões (ordem alfabética) e seus estados ── */}
+            {/* ── Regiões e estados sempre visíveis, ordem alfabética ── */}
             {REGIOES_ORDEM.map(regiao => {
-              const abertaRegiao = !!expanded[regiao]
-              // Estados da região em ordem alfabética pela sigla
               const estados = [...(ESTADOS_POR_REGIAO[regiao] ?? [])].sort()
-
               return (
                 <div key={regiao}>
-                  <div className="flex items-center" style={{ borderTop: '1px solid var(--cinza-light)' }}>
-                    {/* Seta expandir/recolher */}
-                    <button
-                      type="button"
-                      onClick={() => toggleExpand(regiao)}
-                      className="flex-shrink-0 flex items-center justify-center"
-                      style={{
-                        width: 28,
-                        height: 36,
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--cinza)',
-                        fontSize: 9,
-                        paddingLeft: 12,
-                      }}
-                    >
-                      {abertaRegiao ? '▼' : '▶'}
-                    </button>
-
-                    <TreeItem
-                      label={LABEL_REGIAO[regiao] ?? regiao}
-                      depth={0}
-                      selecionado={isSelecionado(regiao)}
-                      coberto={isCoberto(regiao)}
-                      onToggle={() => toggle(regiao)}
-                      flex1
-                      noBorder
-                    />
-                  </div>
-
-                  {/* Estados (visíveis quando expandido, ordem alfabética) */}
-                  {abertaRegiao && estados.map(uf => (
+                  {/* Cabeçalho da região */}
+                  <TreeItem
+                    label={LABEL_REGIAO[regiao] ?? regiao}
+                    depth={0}
+                    selecionado={isSelecionado(regiao)}
+                    coberto={isCoberto(regiao)}
+                    onToggle={() => toggle(regiao)}
+                    topBorder
+                  />
+                  {/* Estados sempre visíveis, indentados */}
+                  {estados.map(uf => (
                     <TreeItem
                       key={uf}
                       label={`${uf} — ${NOME_UF[uf] ?? uf}`}
@@ -169,31 +139,29 @@ function TreeItem({
   selecionado,
   coberto,
   onToggle,
-  flex1 = false,
-  noBorder = false,
+  topBorder = false,
 }: {
   label: string
   depth: number
   selecionado: boolean
   coberto: boolean
   onToggle: () => void
-  flex1?: boolean
-  noBorder?: boolean
+  topBorder?: boolean
 }) {
-  const paddingLeft = depth === 0 ? 12 : 44
+  const paddingLeft = depth === 0 ? 12 : 36
 
   return (
     <button
       type="button"
       disabled={coberto}
       onClick={onToggle}
-      className={`w-full text-left flex items-center gap-2 py-2 transition-colors ${flex1 ? 'flex-1' : ''}`}
+      className="w-full text-left flex items-center gap-2 py-2 transition-colors"
       style={{
         paddingLeft,
         paddingRight: 12,
         background: selecionado ? 'rgba(107,15,26,0.05)' : 'transparent',
         border: 'none',
-        borderTop: noBorder ? 'none' : undefined,
+        borderTop: topBorder ? '1px solid var(--cinza-light)' : 'none',
         cursor: coberto ? 'not-allowed' : 'pointer',
         opacity: coberto ? 0.4 : 1,
       }}
