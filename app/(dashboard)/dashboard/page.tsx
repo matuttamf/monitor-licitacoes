@@ -95,6 +95,17 @@ function Paginacao({ pagina, paginas, onChange }: { pagina: number; paginas: num
   )
 }
 
+type EstadoStat = { uf: string; count: number; valor_total: number }
+
+const nomeEstado: Record<string, string> = {
+  AC:'Acre', AL:'Alagoas', AP:'Amapá', AM:'Amazonas', BA:'Bahia', CE:'Ceará',
+  DF:'Distrito Federal', ES:'Espírito Santo', GO:'Goiás', MA:'Maranhão',
+  MT:'Mato Grosso', MS:'Mato Grosso do Sul', MG:'Minas Gerais', PA:'Pará',
+  PB:'Paraíba', PR:'Paraná', PE:'Pernambuco', PI:'Piauí', RJ:'Rio de Janeiro',
+  RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia', RR:'Roraima',
+  SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins',
+}
+
 export default function DashboardPage() {
   const [resposta, setResposta]       = useState<Resposta | null>(null)
   const [carregando, setCarregando]   = useState(true)
@@ -102,6 +113,13 @@ export default function DashboardPage() {
   const [pagina, setPagina]           = useState(1)
   const [filtroEstado,   setFiltroEstado]   = useState('')
   const [filtroValorMin, setFiltroValorMin] = useState('')
+  const [statsEstados, setStatsEstados]     = useState<EstadoStat[]>([])
+
+  useEffect(() => {
+    fetch('/api/stats/por-estado')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.estados) setStatsEstados(d.estados) })
+  }, [])
 
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
@@ -241,6 +259,70 @@ export default function DashboardPage() {
               </p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Painel de inteligência por estado */}
+      {statsEstados.length > 0 && (
+        <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>
+                Oportunidades por estado
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                Clique em um estado para filtrar
+              </p>
+            </div>
+            {filtroEstado && (
+              <button
+                onClick={() => setFiltroEstado('')}
+                className="text-xs px-3 py-1.5 rounded-lg"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-2)', cursor: 'pointer' }}
+              >
+                ✕ Ver todos
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {statsEstados.map((e, i) => {
+              const ativo = filtroEstado === e.uf
+              const barMax = statsEstados[0]?.count ?? 1
+              const pct = Math.round((e.count / barMax) * 100)
+              return (
+                <button
+                  key={e.uf}
+                  onClick={() => setFiltroEstado(ativo ? '' : e.uf)}
+                  className="text-left rounded-xl p-3 transition-all"
+                  style={{
+                    background:  ativo ? 'var(--vinho)' : 'rgba(107,15,26,0.04)',
+                    border:      `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--border)'}`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold" style={{ color: ativo ? 'white' : 'var(--text-1)' }}>
+                      {e.uf}
+                    </span>
+                    <span className="text-xs font-semibold" style={{ color: ativo ? 'rgba(255,255,255,0.85)' : 'var(--vinho)' }}>
+                      {e.count}
+                    </span>
+                  </div>
+                  {/* Barra de progresso */}
+                  <div className="rounded-full overflow-hidden" style={{ height: '3px', background: ativo ? 'rgba(255,255,255,0.2)' : 'var(--border)' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: ativo ? 'rgba(255,255,255,0.7)' : 'var(--vinho)', borderRadius: '9999px' }} />
+                  </div>
+                  {e.valor_total > 0 && (
+                    <p className="text-xs mt-1.5 truncate" style={{ color: ativo ? 'rgba(255,255,255,0.65)' : 'var(--text-3)' }}>
+                      {e.valor_total >= 1_000_000
+                        ? `R$ ${(e.valor_total / 1_000_000).toFixed(1)}M`
+                        : `R$ ${(e.valor_total / 1_000).toFixed(0)}k`}
+                    </p>
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 
