@@ -144,8 +144,8 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '64px' }}>
             {[
               { n: '1', icon: '⚡', title: 'Cadastre-se em dois minutos', desc: 'Sete dias grátis, sem cartão de crédito. Você começa a monitorar imediatamente após o cadastro.' },
-              { n: '2', icon: '🎯', title: 'Informe o que você vende', desc: 'Notebook, cadeira, consultoria, limpeza, obras, TI — qualquer coisa vendível ao poder público, dos municípios do interior às maiores estatais do Brasil. Quanto mais específico, mais certeiro o alerta.' },
-              { n: '3', icon: '📬', title: 'Receba alertas toda manhã', desc: 'Todos os dias úteis, sua equipe recebe por e-mail e Telegram os editais abertos que combinam com o seu negócio.' },
+              { n: '2', icon: '🎯', title: 'Informe o que você vende ou fornece', desc: 'Produtos, serviços, locações, obras, consultorias, TI — qualquer objeto de contratação pública, dos municípios do interior às maiores estatais do Brasil. Quanto mais específico, mais certeiro o alerta.' },
+              { n: '3', icon: '📬', title: 'Receba alertas em tempo real', desc: 'Sempre que identificamos uma licitação compatível com seu perfil, o alerta chega por e-mail e Telegram — sem esperar o dia seguinte.' },
             ].map(step => (
               <div key={step.n} style={{ padding: '32px', background: '#FAF6F0', borderRadius: '16px', border: '1px solid #D5D2C8', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '11px', fontWeight: 800, color: '#6B0F1A', opacity: 0.15, letterSpacing: '0.05em' }}>0{step.n}</div>
@@ -256,10 +256,10 @@ export default function LandingPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
             {[
-              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 20 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null, whatsapp: false },
-              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que a mensalidade da academia', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null, whatsapp: true },
-              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido', whatsapp: true },
-              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null, whatsapp: true },
+              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 20 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null, whatsapp: false, trial: false },
+              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que a mensalidade da academia', desc: 'Para quem fornece ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null, whatsapp: true, trial: false },
+              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido', whatsapp: true, trial: false },
+              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null, whatsapp: true, trial: false },
             ].map(p => (
               <div key={p.id} style={{
                 background: p.destaque ? '#6B0F1A' : '#FAF6F0',
@@ -274,8 +274,14 @@ export default function LandingPage() {
                 )}
                 <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '4px' }}>{p.nome}</div>
                 <div style={{ fontSize: '12px', color: p.destaque ? 'rgba(255,255,255,0.45)' : '#9AA0A6', marginBottom: '16px', lineHeight: 1.4 }}>{p.desc}</div>
-                <div style={{ fontSize: '36px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '2px' }}>R${p.preco}</div>
-                <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.35)' : '#9AA0A6', marginBottom: '6px' }}>/mês · cobrado mensalmente</div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.5)' : '#9AA0A6', fontWeight: 500, marginBottom: '4px' }}>R$</span>
+                  <span style={{ fontSize: '36px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                    {p.preco.split(',')[0]}
+                    {p.preco.includes(',') && <span style={{ fontSize: '20px', fontWeight: 800 }}>,{p.preco.split(',')[1]}</span>}
+                  </span>
+                  <span style={{ fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.35)' : '#9AA0A6', marginBottom: '4px' }}>/mês</span>
+                </div>
                 <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(201,166,90,0.7)' : '#6B0F1A', fontWeight: 600, marginBottom: '20px', padding: '4px 10px', background: p.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(107,15,26,0.06)', borderRadius: '6px', display: 'inline-block' }}>
                   {p.porDia}{p.ancora ? ` — ${p.ancora}` : ''}
                 </div>
@@ -285,16 +291,16 @@ export default function LandingPage() {
                     <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.8)' : '#4a4a4d', lineHeight: 1.4 }}>{item}</span>
                   </div>
                 ))}
-                <Link href={`/cadastro?plano=${p.id}`} style={{
+                <Link href={`/assinar`} style={{
                   display: 'block', textAlign: 'center', padding: '13px', marginTop: '20px',
                   borderRadius: '10px', fontSize: '14px', fontWeight: 700,
                   background: p.destaque ? '#C9A65A' : '#6B0F1A',
                   color: p.destaque ? '#1A1A1C' : 'white',
                   textDecoration: 'none',
                 }}>
-                  Começar grátis agora
+                  Assinar agora →
                 </Link>
-                <p style={{ textAlign: 'center', fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.3)' : '#9AA0A6', marginTop: '8px', marginBottom: 0 }}>Sete dias grátis · sem cartão</p>
+                <p style={{ textAlign: 'center', fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.3)' : '#9AA0A6', marginTop: '8px', marginBottom: 0 }}>Ou <Link href="/cadastro" style={{ color: p.destaque ? 'rgba(255,255,255,0.4)' : '#6B0F1A', textDecoration: 'none', fontWeight: 600 }}>teste 7 dias grátis</Link> antes</p>
               </div>
             ))}
           </div>
@@ -366,7 +372,7 @@ export default function LandingPage() {
       <footer style={{ background: '#111113', padding: '28px 40px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: '#6B0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, color: '#C9A65A' }}>ML</div>
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© {new Date().getFullYear()} Monitor de Licitações · Monitor de Licitações - Matutta</span>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© {new Date().getFullYear()} Monitor de Licitações · Matutta Máquinas e Ferramentas</span>
         </div>
         <div style={{ display: 'flex', gap: '28px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {[['Início', '/'], ['Planos', '/assinar'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (
