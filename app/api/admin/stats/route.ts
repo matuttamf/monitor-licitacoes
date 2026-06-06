@@ -11,6 +11,11 @@ export async function GET() {
 
   const service = await createServiceClient()
 
+  // Obter ID do admin para excluí-lo das métricas
+  const { data: adminAuth } = await service.auth.admin.listUsers()
+  const adminUser = adminAuth?.users?.find(u => u.email === ADMIN_EMAIL)
+  const adminId = adminUser?.id ?? 'none'
+
   const [
     { count: totalUsuarios },
     { count: totalAtivos },
@@ -21,9 +26,9 @@ export async function GET() {
     { count: alertasHoje },
     { count: alertas7d },
   ] = await Promise.all([
-    service.from('profiles').select('*', { count: 'exact', head: true }),
-    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial'),
+    service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId),
+    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId),
+    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial').neq('id', adminId),
     service.from('keywords').select('*', { count: 'exact', head: true }).eq('ativo', true),
     service.from('alertas').select('*', { count: 'exact', head: true }),
     service.from('licitacoes').select('*', { count: 'exact', head: true }),

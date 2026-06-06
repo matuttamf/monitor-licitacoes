@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 type Usuario = {
   id: string
   email: string
+  is_admin?: boolean
   status: 'trial' | 'active' | 'expired'
   plano: string
   trial_inicio: string
@@ -48,10 +49,11 @@ const statusConfig = {
 }
 
 const JOB_LABELS: Record<string, string> = {
-  coletar:        'Coleta',
-  matching:       'Matching',
-  alertar:        'Alertas',
-  'emails-trial': 'E-mails trial',
+  coletar:          'Coleta',
+  matching:         'Matching',
+  alertar:          'Alertas e-mail',
+  'alertar-urgente': 'Alertas urgentes',
+  'emails-trial':   'E-mails trial',
   'expirar-trials': 'Expirar trials',
 }
 
@@ -83,6 +85,9 @@ export default function AdminPage() {
   // Trigger manual
   const [disparando, setDisparando] = useState<string | null>(null)
   const [resultadoTrigger, setResultadoTrigger] = useState<{ ok: boolean; status: number; data: unknown } | null>(null)
+
+  // Filtro cron
+  const [filtroJob, setFiltroJob] = useState<string>('todos')
 
   // Drawer conta
   const [contaAberta, setContaAberta]   = useState<Usuario | null>(null)
@@ -301,11 +306,19 @@ export default function AdminPage() {
                           {u.empresa && <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.empresa}</div>}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs font-medium px-2 py-1 rounded-lg inline-block mb-1" style={{ background: cfg.bg, color: cfg.cor }}>
-                            {expirado ? 'Expirado' : cfg.label}
-                            {u.status === 'trial' && !expirado && ` (${diasAte(u.trial_fim)}d)`}
-                          </span>
-                          <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.plano || 'basic'}</div>
+                          {u.is_admin ? (
+                            <span className="text-xs font-bold px-2 py-1 rounded-lg inline-block" style={{ background: 'rgba(107,15,26,0.12)', color: 'var(--vinho)', letterSpacing: '0.04em' }}>
+                              🛡 Admin
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-xs font-medium px-2 py-1 rounded-lg inline-block mb-1" style={{ background: cfg.bg, color: cfg.cor }}>
+                                {expirado ? 'Expirado' : cfg.label}
+                                {u.status === 'trial' && !expirado && ` (${diasAte(u.trial_fim)}d)`}
+                              </span>
+                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.plano || 'basic'}</div>
+                            </>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span style={{ fontSize: '15px', fontWeight: 700, color: u.keyword_count > 0 ? 'var(--vinho)' : 'var(--cinza)' }}>
@@ -329,21 +342,25 @@ export default function AdminPage() {
                               style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}>
                               Ver
                             </button>
-                            <button onClick={() => setEditando({ ...u })}
-                              style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
-                              Editar
-                            </button>
-                            {statusEfetivo !== 'active' && (
-                              <button onClick={() => alterarStatus(u.id, 'active')}
-                                style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}>
-                                Ativar
-                              </button>
-                            )}
-                            {statusEfetivo !== 'expired' && (
-                              <button onClick={() => alterarStatus(u.id, 'expired')}
-                                style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
-                                Expirar
-                              </button>
+                            {!u.is_admin && (
+                              <>
+                                <button onClick={() => setEditando({ ...u })}
+                                  style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
+                                  Editar
+                                </button>
+                                {statusEfetivo !== 'active' && (
+                                  <button onClick={() => alterarStatus(u.id, 'active')}
+                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}>
+                                    Ativar
+                                  </button>
+                                )}
+                                {statusEfetivo !== 'expired' && (
+                                  <button onClick={() => alterarStatus(u.id, 'expired')}
+                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
+                                    Expirar
+                                  </button>
+                                )}
+                              </>
                             )}
                           </div>
                         </td>
@@ -388,14 +405,29 @@ export default function AdminPage() {
 
           {/* Log completo */}
           <div style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cinza-light)' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cinza-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)' }}>
-                Últimas {cronData.logs.length} execuções
+                Execuções {filtroJob === 'todos' ? `(${cronData.logs.length})` : `· ${JOB_LABELS[filtroJob] ?? filtroJob}`}
               </span>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {['todos', ...Object.keys(JOB_LABELS)].map(job => (
+                  <button key={job} onClick={() => setFiltroJob(job)}
+                    style={{
+                      padding: '4px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                      background: filtroJob === job ? 'var(--vinho)' : 'var(--surface-2)',
+                      color: filtroJob === job ? 'white' : 'var(--cinza)',
+                      border: filtroJob === job ? 'none' : '1px solid var(--cinza-light)',
+                    } as React.CSSProperties}>
+                    {job === 'todos' ? 'Todos' : JOB_LABELS[job]}
+                  </button>
+                ))}
+              </div>
             </div>
             <div style={{ maxHeight: '480px', overflowY: 'auto' }}>
-              {cronData.logs.length === 0 ? (
-                <p style={{ padding: '20px', color: 'var(--cinza)', fontSize: '14px' }}>Sem logs ainda.</p>
+              {(() => {
+                const logsFiltrados = cronData.logs.filter(l => filtroJob === 'todos' || l.job === filtroJob)
+                return logsFiltrados.length === 0 ? (
+                <p style={{ padding: '20px', color: 'var(--cinza)', fontSize: '14px' }}>Sem logs para este filtro.</p>
               ) : (
                 <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
                   <thead>
@@ -406,7 +438,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {cronData.logs.map(log => (
+                    {logsFiltrados.map(log => (
                       <tr key={log.id} style={{ borderBottom: '1px solid var(--cinza-light)' }}>
                         <td style={{ padding: '8px 16px', color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{fmtHora(log.criado_em)}</td>
                         <td style={{ padding: '8px 16px', fontWeight: 600, color: 'var(--preto)' }}>{JOB_LABELS[log.job] ?? log.job}</td>
@@ -420,7 +452,7 @@ export default function AdminPage() {
                     ))}
                   </tbody>
                 </table>
-              )}
+              )})()}
             </div>
           </div>
         </div>

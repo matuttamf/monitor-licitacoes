@@ -51,14 +51,18 @@ export async function GET() {
     alertaPorUser[a.user_id].count++
   }
 
-  const usuarios = data?.map(p => ({
-    ...p,
-    email: emailMap[p.id] ?? 'desconhecido',
-    trial_expirado: p.status === 'trial' && new Date(p.trial_fim) < new Date(),
-    keyword_count: kwPorUser[p.id] ?? 0,
-    alerta_count:  alertaPorUser[p.id]?.count ?? 0,
-    ultimo_alerta: alertaPorUser[p.id]?.ultimo ?? null,
-  }))
+  const usuarios = data?.map(p => {
+    const email = emailMap[p.id] ?? 'desconhecido'
+    return {
+      ...p,
+      email,
+      is_admin: email === ADMIN_EMAIL,
+      trial_expirado: p.status === 'trial' && new Date(p.trial_fim) < new Date(),
+      keyword_count: kwPorUser[p.id] ?? 0,
+      alerta_count:  alertaPorUser[p.id]?.count ?? 0,
+      ultimo_alerta: alertaPorUser[p.id]?.ultimo ?? null,
+    }
+  })
 
   return NextResponse.json(usuarios)
 }
