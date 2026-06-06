@@ -2,7 +2,7 @@ import { LicitacaoRaw } from './types'
 
 const BASE_URL = 'https://pncp.gov.br/api/consulta/v1'
 
-// Modalidades mais relevantes para licitações de bens e serviços
+// Todas as modalidades do PNCP — cobertura máxima
 const MODALIDADES = [
   { codigo: 6, nome: 'Pregão Eletrônico' },
   { codigo: 7, nome: 'Pregão Presencial' },
@@ -10,6 +10,12 @@ const MODALIDADES = [
   { codigo: 5, nome: 'Concorrência Presencial' },
   { codigo: 8, nome: 'Dispensa de Licitação' },
   { codigo: 9, nome: 'Inexigibilidade' },
+  { codigo: 10, nome: 'Credenciamento' },
+  { codigo: 12, nome: 'Diálogo Competitivo' },
+  { codigo: 1, nome: 'Convite' },
+  { codigo: 2, nome: 'Tomada de Preços' },
+  { codigo: 3, nome: 'Concurso' },
+  { codigo: 11, nome: 'Leilão - Eletrônico' },
 ]
 
 interface PncpItem {
@@ -120,8 +126,9 @@ export async function coletarPNCP(dataInicio: string, dataFim: string): Promise<
   for (const resultado of resultados) {
     if (resultado.status === 'fulfilled') {
       for (const licitacao of resultado.value) {
-        if (!vistos.has(licitacao.numero_edital)) {
-          vistos.add(licitacao.numero_edital)
+        const chave = licitacao.numero_edital ?? licitacao.external_id ?? ''
+        if (!vistos.has(chave)) {
+          vistos.add(chave)
           todas.push(licitacao)
         }
       }
