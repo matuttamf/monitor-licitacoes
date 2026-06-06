@@ -76,7 +76,7 @@ export default function PrivacidadePage() {
                 <InfoRow label="Serviço">Monitor de Licitações (monitorlicitacoes.com.br)</InfoRow>
                 <InfoRow label="Contato DPO">{CONTATO_EMAIL}</InfoRow>
               </InfoBox>
-              <p>O <strong>Monitor de Licitações</strong> é uma plataforma SaaS de monitoramento de editais públicos brasileiros. Na qualidade de controlador de dados, somos responsáveis pelas decisões sobre o tratamento das suas informações pessoais nos termos da Lei nº 13.709/2018 (LGPD).</p>
+              <p>O <strong>Monitor de Licitações</strong> é uma plataforma de monitoramento de editais públicos brasileiros. Na qualidade de controlador de dados, somos responsáveis pelas decisões sobre o tratamento das suas informações pessoais nos termos da Lei nº 13.709/2018 (LGPD).</p>
             </Section>
 
             <Section titulo="2. Dados pessoais coletados">
