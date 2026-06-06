@@ -58,12 +58,12 @@ export default function LoginPage() {
             <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>antes de todos.</span>
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
-            Editais, dispensas e contratos públicos de todo o Brasil — entregues toda manhã na sua caixa de entrada.
+            Editais, dispensas e contratos públicos e privados de todo o Brasil — entregues toda manhã na sua caixa de entrada.
           </p>
         </div>
 
         <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
-          {[['195 fontes', 'Monitoradas'], ['Todo dia útil', 'Alertas'], ['IA', 'Cruzamento']].map(([num, label]) => (
+          {[['346 fontes', 'Monitoradas'], ['Público + Privado', 'Setores'], ['IA', 'Cruzamento']].map(([num, label]) => (
             <div key={label}>
               <div style={{ fontWeight: 700, fontSize: '18px', color: '#C9A65A' }}>{num}</div>
               <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{label}</div>

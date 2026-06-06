@@ -16,8 +16,6 @@ import { coletarLicitanet }        from '@/lib/scrapers/licitanet'
 import { coletarBLL }              from '@/lib/scrapers/bll'
 import { coletarLicitacoesE }      from '@/lib/scrapers/licitacoes-e'
 import { coletarLicitarDigital }   from '@/lib/scrapers/licitar-digital'
-import { coletarNegociosPublicos } from '@/lib/scrapers/negocios-publicos'
-import { coletarComprasPublicas }  from '@/lib/scrapers/compras-publicas'
 
 // ── Camada 2 — Portais estaduais (apenas os com APIs reais verificadas) ────
 import { coletarBECSP }            from '@/lib/scrapers/bec-sp'       // SIGEO real
@@ -205,7 +203,7 @@ import { registrarCronLog }        from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-const TOTAL_FONTES = 348
+const TOTAL_FONTES = 346
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -248,8 +246,6 @@ export async function GET(request: Request) {
     coletarBLL(dataInicio),
     coletarLicitacoesE(dataInicio),
     coletarLicitarDigital(dataInicio),
-    coletarNegociosPublicos(dataInicio),
-    coletarComprasPublicas(dataInicio),
     // Camada 2 — Portais estaduais com APIs reais verificadas (14-16)
     coletarBECSP(dataInicio),
     coletarPortalMG(dataInicio),
