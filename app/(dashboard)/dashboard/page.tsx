@@ -97,6 +97,31 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'Portal Joinville':  { cor: '#1e3a5f', bg: 'rgba(30,58,95,0.11)'   },
   'Portal Londrina':   { cor: '#3b0764', bg: 'rgba(59,7,100,0.11)'   },
   'Portal Ribeirão Preto':{ cor: '#92400e', bg: 'rgba(146,64,14,0.1)'},
+  // Camada 3 — Cidades batch 2 e 3
+  'Portal Santos':             { cor: '#1e3a5f', bg: 'rgba(30,58,95,0.08)'  },
+  'Portal Sorocaba':           { cor: '#065f46', bg: 'rgba(6,95,70,0.08)'   },
+  'Portal São Bernardo':       { cor: '#831843', bg: 'rgba(131,24,67,0.08)' },
+  'Portal Contagem':           { cor: '#312e81', bg: 'rgba(49,46,129,0.08)' },
+  'Portal Maringá':            { cor: '#3b0764', bg: 'rgba(59,7,100,0.08)'  },
+  'Portal São José dos Campos':{ cor: '#1e40af', bg: 'rgba(30,64,175,0.08)' },
+  'Portal Mogi das Cruzes':    { cor: '#7c2d12', bg: 'rgba(124,45,18,0.08)' },
+  'Portal Juiz de Fora':       { cor: '#065f46', bg: 'rgba(6,95,70,0.09)'   },
+  'Portal Niterói':            { cor: '#166534', bg: 'rgba(22,101,52,0.08)' },
+  'Portal Feira de Santana':   { cor: '#92400e', bg: 'rgba(146,64,14,0.09)' },
+  'Portal Osasco':             { cor: '#4c1d95', bg: 'rgba(76,29,149,0.08)' },
+  'Portal Santo André':        { cor: '#1e3a5f', bg: 'rgba(30,58,95,0.09)'  },
+  'Portal Duque de Caxias':    { cor: '#14532d', bg: 'rgba(20,83,45,0.08)'  },
+  'Portal Aparecida de Goiânia':{ cor: '#14532d', bg: 'rgba(20,83,45,0.09)' },
+  'Portal Caxias do Sul':      { cor: '#1e3a5f', bg: 'rgba(30,58,95,0.1)'   },
+  'Portal São José do Rio Preto':{ cor: '#831843', bg: 'rgba(131,24,67,0.09)' },
+  'Portal Jundiaí':            { cor: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
+  'Portal Betim':              { cor: '#065f46', bg: 'rgba(6,95,70,0.1)'     },
+  // Camada 4 — Consórcios + autarquias
+  'Consórcio Grande ABC':      { cor: '#b45309', bg: 'rgba(180,83,9,0.09)'  },
+  'FNDE':                      { cor: '#0f766e', bg: 'rgba(15,118,110,0.09)' },
+  'FNS / Ministério da Saúde': { cor: '#6B0F1A', bg: 'rgba(107,15,26,0.09)' },
+  'DNIT':                      { cor: '#374151', bg: 'rgba(55,65,81,0.09)'  },
+  'Consórcio PCJ':             { cor: '#0369a1', bg: 'rgba(3,105,161,0.09)' },
   // Camada 5 — Estatais
   'Petronect':         { cor: '#0c4a6e', bg: 'rgba(12,74,110,0.1)'   },
   'Correios':          { cor: '#d97706', bg: 'rgba(217,119,6,0.1)'   },
@@ -188,11 +213,18 @@ export default function DashboardPage() {
   const [filtroEstado,   setFiltroEstado]   = useState('')
   const [filtroValorMin, setFiltroValorMin] = useState('')
   const [statsEstados, setStatsEstados]     = useState<EstadoStat[]>([])
+  const [pcaItems, setPcaItems]             = useState<Licitacao[]>([])
 
   useEffect(() => {
     fetch('/api/stats/por-estado')
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.estados) setStatsEstados(d.estados) })
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/licitacoes?fonte=PNCP+PCA&pagina=1')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.data?.length) setPcaItems(d.data.slice(0, 4)) })
   }, [])
 
   const carregar = useCallback(async (p: number) => {
@@ -282,7 +314,7 @@ export default function DashboardPage() {
               Configure suas palavras-chave para começar
             </h2>
             <p className="text-sm mb-4" style={{ color: 'var(--text-2)', lineHeight: '1.6' }}>
-              O Monitor de Licitações rastreia editais de mais de 5.500 municípios todos os dias. Para receber alertas personalizados, cadastre os produtos ou serviços que sua empresa vende.
+              O Monitor rastreia tudo que o setor público publica — governo federal, todos os estados, as principais capitais e estatais como Petrobras e Caixa. Para receber alertas personalizados, cadastre o que sua empresa vende.
             </p>
             <div className="flex gap-3 flex-wrap">
               <Link
@@ -333,6 +365,82 @@ export default function DashboardPage() {
               </p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Radar PCA ── */}
+      {pcaItems.length > 0 && (
+        <div className="rounded-2xl mb-6 overflow-hidden" style={{ border: '1.5px solid rgba(201,166,90,0.35)', background: 'linear-gradient(135deg, rgba(201,166,90,0.05) 0%, rgba(107,15,26,0.04) 100%)' }}>
+          {/* Header PCA */}
+          <div className="flex items-start justify-between px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(201,166,90,0.15)' }}>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span style={{ fontSize: '16px' }}>🗓</span>
+                <span className="text-sm font-bold" style={{ color: '#C9A65A', letterSpacing: '-0.01em' }}>
+                  Radar PCA — O que o governo planeja comprar
+                </span>
+              </div>
+              <p className="text-xs" style={{ color: 'var(--text-3)', lineHeight: '1.5' }}>
+                Contratações planejadas para este ano. Prepare sua proposta <strong style={{ color: 'var(--text-2)' }}>antes do edital existir</strong> — seus concorrentes ainda não sabem disso.
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ml-4" style={{ background: 'rgba(201,166,90,0.15)', color: '#C9A65A', border: '1px solid rgba(201,166,90,0.3)' }}>
+              Exclusivo
+            </span>
+          </div>
+
+          {/* Cards PCA */}
+          <div className="p-4 grid grid-cols-1 gap-3">
+            {pcaItems.map(l => {
+              const cfg = fonteConfig['PNCP PCA'] ?? { cor: '#b91c1c', bg: 'rgba(185,28,28,0.07)' }
+              return (
+                <div
+                  key={l.id}
+                  className="rounded-xl p-4 flex items-start gap-4"
+                  style={{ background: 'var(--surface)', border: '1px solid rgba(201,166,90,0.2)' }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      {/* Badge "Planejado" no lugar da data */}
+                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(201,166,90,0.12)', color: '#C9A65A', border: '1px solid rgba(201,166,90,0.25)' }}>
+                        📋 Planejado {new Date().getFullYear()}
+                      </span>
+                      {l.alertas?.map((a, i) => (
+                        <span key={i} className="text-xs px-2 py-0.5 rounded-lg" style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
+                          {a.keywords?.termo}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-sm font-semibold mb-0.5 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-2)', lineHeight: '1.5' }}>
+                      {l.objeto.length > 140 ? l.objeto.substring(0, 140) + '…' : l.objeto}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                    {l.valor_estimado && (
+                      <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatarValor(l.valor_estimado)}</p>
+                    )}
+                    <a
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ background: 'rgba(201,166,90,0.15)', color: '#C9A65A', textDecoration: 'none', border: '1px solid rgba(201,166,90,0.3)' }}
+                    >
+                      Ver plano →
+                    </a>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Rodapé explicativo */}
+          <div className="px-5 py-3" style={{ borderTop: '1px solid rgba(201,166,90,0.12)', background: 'rgba(201,166,90,0.03)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-3)', lineHeight: '1.6' }}>
+              💡 O Plano de Contratações Anual (PCA) é obrigatório para todos os órgãos públicos. Ele revela o que o governo pretende comprar no ano — antes de qualquer edital ser publicado. Use isso para preparar sua empresa com meses de antecedência.
+            </p>
+          </div>
         </div>
       )}
 

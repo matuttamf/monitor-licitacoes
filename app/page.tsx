@@ -35,7 +35,7 @@ export default function LandingPage() {
           {/* Urgência */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px 6px 10px', borderRadius: '999px', background: 'rgba(201,166,90,0.08)', border: '1px solid rgba(201,166,90,0.2)', marginBottom: '40px' }}>
             <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#C9A65A', boxShadow: '0 0 8px rgba(201,166,90,0.8)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#C9A65A', letterSpacing: '0.03em' }}>O maior sistema de monitoramento de licitações do Brasil</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#C9A65A', letterSpacing: '0.03em' }}>Novo · Saiba o que o governo vai comprar antes do edital existir</span>
           </div>
 
           {/* Headline principal — o gatilho mais forte */}
@@ -47,10 +47,10 @@ export default function LandingPage() {
 
           {/* Subheadline — promessa clara */}
           <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, margin: '0 0 16px', maxWidth: '640px', fontWeight: 400 }}>
-            O Monitor de Licitações rastreia <strong style={{ color: 'rgba(255,255,255,0.85)' }}>todos os editais do Brasil</strong> e envia alertas diários com as oportunidades que combinam exatamente com o que a sua empresa vende.
+            O Monitor rastreia tudo que o setor público publica — editais, dispensas, contratos, avisos no Diário Oficial — e entrega na sua caixa de entrada as oportunidades que combinam com o que sua empresa vende, <strong style={{ color: 'rgba(255,255,255,0.85)' }}>antes que o prazo comece a correr.</strong>
           </p>
           <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6, margin: '0 0 48px', maxWidth: '580px' }}>
-            Prefeituras, estados, governo federal, autarquias e empresas públicas — monitorados automaticamente, 365 dias por ano.
+            Do governo federal à Petrobras. Das prefeituras do interior às maiores capitais do país. Nenhum contrato público passa despercebido.
           </p>
 
           {/* CTAs */}
@@ -74,7 +74,7 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0', borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '0' }}>
             {[
               { num: 'R$ 2 tri', label: 'em licitações por ano no Brasil' },
-              { num: '5.500+', label: 'municípios rastreados todo dia' },
+              { num: 'Todo dia útil', label: 'novos editais chegam na sua caixa antes das 9h' },
               { num: '< 5 dias', label: 'tempo médio de vida de um edital' },
               { num: '24h', label: 'para chegar o seu primeiro alerta' },
             ].map(({ num, label }, i) => (
@@ -101,7 +101,7 @@ export default function LandingPage() {
             {[
               { icon: '😰', titulo: '"Descobri o edital depois do prazo"', desc: 'A licitação foi publicada, abriu e fechou em cinco dias. Você ficou sabendo uma semana depois — tarde demais.' },
               { icon: '😤', titulo: '"Meu concorrente ganhou sem eu saber"', desc: 'O contrato foi entregue. Você descobriu depois. O que você venderia tranquilamente foi parar no caixa de outra empresa.' },
-              { icon: '😩', titulo: '"Não tenho tempo de verificar tudo"', desc: 'São centenas de portais, diários oficiais e sistemas diferentes. Ninguém consegue acompanhar tudo manualmente.' },
+              { icon: '😩', titulo: '"Não tenho tempo de verificar tudo"', desc: 'Cada estado tem um sistema. Cada prefeitura usa uma plataforma diferente. O Diário Oficial tem três seções. Petrobras e Caixa têm portais exclusivos. Monitorar tudo isso sozinho é humanamente impossível.' },
             ].map(c => (
               <div key={c.titulo} style={{ background: 'white', borderRadius: '16px', padding: '28px', border: '1px solid #D5D2C8' }}>
                 <div style={{ fontSize: '32px', marginBottom: '14px' }}>{c.icon}</div>
@@ -118,7 +118,7 @@ export default function LandingPage() {
                 Isso não é azar. É falta de informação a tempo.
               </p>
               <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>
-                E informação a tempo é exatamente o que o Monitor de Licitações entrega — todos os dias úteis, na sua caixa de entrada.
+                O Monitor faz o trabalho de uma equipe inteira — governo federal, todos os estados, as maiores cidades, Petrobras e Caixa — e entrega só o que importa para o seu negócio, todo dia útil.
               </p>
             </div>
             <Link href="/cadastro" style={{ flexShrink: 0, padding: '14px 28px', borderRadius: '10px', background: '#C9A65A', color: '#1A1A1C', fontWeight: 700, fontSize: '15px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
@@ -144,7 +144,7 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '64px' }}>
             {[
               { n: '1', icon: '⚡', title: 'Cadastre-se em dois minutos', desc: 'Sete dias grátis, sem cartão de crédito. Você começa a monitorar imediatamente após o cadastro.' },
-              { n: '2', icon: '🎯', title: 'Informe o que você vende', desc: 'Notebook, cadeira, ar condicionado, retroescavadeira — qualquer produto ou serviço. Quanto mais específico, melhor.' },
+              { n: '2', icon: '🎯', title: 'Informe o que você vende', desc: 'Notebook, cadeira, consultoria, limpeza, obras, TI — qualquer coisa vendível ao poder público, dos municípios do interior às maiores estatais do Brasil. Quanto mais específico, mais certeiro o alerta.' },
               { n: '3', icon: '📬', title: 'Receba alertas toda manhã', desc: 'Todos os dias úteis, sua equipe recebe por e-mail e Telegram os editais abertos que combinam com o seu negócio.' },
             ].map(step => (
               <div key={step.n} style={{ padding: '32px', background: '#FAF6F0', borderRadius: '16px', border: '1px solid #D5D2C8', position: 'relative' }}>
@@ -318,6 +318,8 @@ export default function LandingPage() {
             ['Minha empresa é pequena. Isso funciona para mim?', 'Especialmente para você. O governo brasileiro tem cotas e benefícios para micro e pequenas empresas em licitações. MEI, ME e EPP têm vantagens legais que grandes empresas não têm. Falta apenas informação — e isso o Monitor resolve.'],
             ['Como o sistema sabe quais editais combinam com meu negócio?', 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação do edital use termos diferentes dos seus.'],
             ['Com que frequência recebo alertas?', 'Monitoramos continuamente de segunda a sexta, dentro do horário comercial. Assim que identificamos uma licitação compatível com o seu perfil, ela entra na fila de envio e chega para você em breve — sem sobrecarregar sua caixa de entrada.'],
+            ['Vocês monitoram empresas como Petrobras, Correios e Caixa?', 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais brasileiras: Petrobras (via Petronect), Caixa Econômica Federal, Correios, Eletrobras e SABESP. São contratos muitas vezes maiores que os governamentais — e com menos concorrência, porque poucos sabem que essas oportunidades existem.'],
+            ['É possível saber antes que o edital seja publicado?', 'Sim. Monitoramos o Plano de Contratações Anual (PCA) — documento obrigatório onde cada órgão público divulga tudo que pretende contratar no ano. São bilhões de reais planejados antes de qualquer edital existir. Quem acompanha o PCA se prepara meses à frente dos concorrentes.'],
             ['Posso cancelar se não for o que esperava?', 'Sim, a qualquer momento, sem multa e sem burocracia. Mas aviso: é difícil cancelar quando começa a receber contratos que você nunca soube que estavam disponíveis.'],
           ].map(([q, a], i) => (
             <details key={i} style={{ borderBottom: '1px solid #D5D2C8' }}>
@@ -343,7 +345,7 @@ export default function LandingPage() {
             Cada dia sem monitoramento é um dia em que seu concorrente leva vantagem. Configure o Monitor agora e receba os primeiros alertas amanhã — de graça, sem cartão, sem compromisso.
           </p>
           <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.25)', margin: '0 0 48px' }}>
-            Mais de 5.500 municípios monitorados. Alertas diários. Sete dias inteiramente grátis.
+            Do governo federal à Petrobras — cobertura nacional completa. Sete dias inteiramente grátis, sem cartão.
           </p>
           <Link href="/cadastro" style={{
             display: 'inline-flex', alignItems: 'center', gap: '10px',

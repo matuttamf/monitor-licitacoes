@@ -48,7 +48,7 @@ export default function LoginPage() {
 
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', border: '1px solid rgba(201,166,90,0.3)' }}>ML</div>
-          <span style={{ color: 'white', fontWeight: 600 }}>Matutta</span>
+          <span style={{ color: 'white', fontWeight: 600 }}>Monitor de Licitações</span>
         </div>
 
         <div style={{ position: 'relative' }}>
@@ -58,12 +58,12 @@ export default function LoginPage() {
             <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>antes de todos.</span>
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
-            Alertas diários de licitações públicas filtrados por IA para o que a Matutta pode vender.
+            Editais, dispensas e contratos públicos de todo o Brasil — entregues toda manhã na sua caixa de entrada.
           </p>
         </div>
 
         <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
-          {[['5.500+', 'Municípios'], ['Diário', 'Atualização'], ['IA', 'Cruzamento']].map(([num, label]) => (
+          {[['95 fontes', 'Monitoradas'], ['Todo dia útil', 'Alertas'], ['IA', 'Cruzamento']].map(([num, label]) => (
             <div key={label}>
               <div style={{ fontWeight: 700, fontSize: '18px', color: '#C9A65A' }}>{num}</div>
               <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{label}</div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           </div>
 
           <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Bem-vindo de volta</h2>
-          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Acesso restrito à equipe Matutta</p>
+          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Acesse sua conta para ver os alertas</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '16px' }}>

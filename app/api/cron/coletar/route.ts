@@ -75,6 +75,35 @@ import { coletarPortalJoinville }     from '@/lib/scrapers/portal-joinville'
 import { coletarPortalLondrina }      from '@/lib/scrapers/portal-londrina'
 import { coletarPortalRibeiraoPreto } from '@/lib/scrapers/portal-ribeirao-preto'
 
+// ── Camada 3 — Cidades 100k-700k (não-capitais, batch 3) ─────────────────
+import { coletarPortalOsasco }          from '@/lib/scrapers/portal-osasco'
+import { coletarPortalSantoAndre }      from '@/lib/scrapers/portal-santo-andre'
+import { coletarPortalDuqueDeCaxias }   from '@/lib/scrapers/portal-duque-de-caxias'
+import { coletarPortalAparecidaGoiania }from '@/lib/scrapers/portal-aparecida-goiania'
+import { coletarPortalCaxiasDoSul }     from '@/lib/scrapers/portal-caxias-do-sul'
+import { coletarPortalSJRP }            from '@/lib/scrapers/portal-sjrp'
+import { coletarPortalJundiai }         from '@/lib/scrapers/portal-jundiai'
+import { coletarPortalBetim }           from '@/lib/scrapers/portal-betim'
+
+// ── Camada 3 — Cidades 100k-700k (não-capitais, batch 2) ─────────────────
+import { coletarPortalSantos }        from '@/lib/scrapers/portal-santos'
+import { coletarPortalSorocaba }      from '@/lib/scrapers/portal-sorocaba'
+import { coletarPortalSBC }           from '@/lib/scrapers/portal-sbc'
+import { coletarPortalContagem }      from '@/lib/scrapers/portal-contagem'
+import { coletarPortalMaringa }       from '@/lib/scrapers/portal-maringa'
+import { coletarPortalSJC }           from '@/lib/scrapers/portal-sjc'
+import { coletarPortalMogi }          from '@/lib/scrapers/portal-mogi'
+import { coletarPortalJuizDeFora }    from '@/lib/scrapers/portal-juiz-de-fora'
+import { coletarPortalNiteroi }       from '@/lib/scrapers/portal-niteroi'
+import { coletarPortalFeiraDeSantana }from '@/lib/scrapers/portal-feira-de-santana'
+
+// ── Camada 4 — Consórcios públicos + autarquias federais de grande porte ──
+import { coletarConsorcioGrandeABC }from '@/lib/scrapers/consorcio-grande-abc'
+import { coletarFNDE }              from '@/lib/scrapers/fnde'
+import { coletarFNS }               from '@/lib/scrapers/fns'
+import { coletarDNIT }              from '@/lib/scrapers/dnit'
+import { coletarConsorcioPCJ }      from '@/lib/scrapers/consorcio-pcj'
+
 // ── Camada 5 — Estatais ───────────────────────────────────────────────────
 import { coletarPetronect }        from '@/lib/scrapers/petronect'
 import { coletarCorreios }         from '@/lib/scrapers/correios'
@@ -88,7 +117,7 @@ import { registrarCronLog }        from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-const TOTAL_FONTES = 72
+const TOTAL_FONTES = 95
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -102,7 +131,7 @@ export async function GET(request: Request) {
   const dataInicio = ontem.toISOString().substring(0, 10)
   const dataFim    = hoje.toISOString().substring(0, 10)
 
-  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes)`)
+  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes em 5 camadas)`)
 
   // 0. Limpar licitações expiradas
   const supabase = await createServiceClient()
@@ -186,7 +215,33 @@ export async function GET(request: Request) {
     coletarPortalJoinville(dataInicio),
     coletarPortalLondrina(dataInicio),
     coletarPortalRibeiraoPreto(dataInicio),
-    // Camada 5 — Estatais (64-68)
+    // Camada 3 — Cidades 100k-700k batch 3 (69-76)
+    coletarPortalOsasco(dataInicio),
+    coletarPortalSantoAndre(dataInicio),
+    coletarPortalDuqueDeCaxias(dataInicio),
+    coletarPortalAparecidaGoiania(dataInicio),
+    coletarPortalCaxiasDoSul(dataInicio),
+    coletarPortalSJRP(dataInicio),
+    coletarPortalJundiai(dataInicio),
+    coletarPortalBetim(dataInicio),
+    // Camada 3 — Cidades 100k-700k batch 2 (77-86)
+    coletarPortalSantos(dataInicio),
+    coletarPortalSorocaba(dataInicio),
+    coletarPortalSBC(dataInicio),
+    coletarPortalContagem(dataInicio),
+    coletarPortalMaringa(dataInicio),
+    coletarPortalSJC(dataInicio),
+    coletarPortalMogi(dataInicio),
+    coletarPortalJuizDeFora(dataInicio),
+    coletarPortalNiteroi(dataInicio),
+    coletarPortalFeiraDeSantana(dataInicio),
+    // Camada 4 — Consórcios + autarquias federais (87-91)
+    coletarConsorcioGrandeABC(dataInicio),
+    coletarFNDE(dataInicio, dataFim),
+    coletarFNS(dataInicio, dataFim),
+    coletarDNIT(dataInicio, dataFim),
+    coletarConsorcioPCJ(dataInicio),
+    // Camada 5 — Estatais (92-96)
     coletarPetronect(dataInicio),
     coletarCorreios(dataInicio),
     coletarCaixa(dataInicio),
@@ -237,8 +292,14 @@ export async function GET(request: Request) {
     // Camada 3 — Capitais
     'sp_cidade','bh','recife','fortaleza','manaus','curitiba','poa','belem','goiania','salvador',
     'natal','campo_grande','maceio','sao_luis','teresina','joao_pessoa','aracaju',
-    // Camada 3 — Cidades 200k+
+    // Camada 3 — Cidades 200k+ batch 1
     'campinas','guarulhos','uberlandia','joinville','londrina','ribeirao_preto',
+    // Camada 3 — Cidades batch 3
+    'osasco','santo_andre','duque_caxias','aparecida_goiania','caxias_sul','sjrp','jundiai','betim',
+    // Camada 3 — Cidades batch 2
+    'santos','sorocaba','sbc','contagem','maringa','sjc','mogi','juiz_de_fora','niteroi','feira_de_santana',
+    // Camada 4 — Consórcios + autarquias
+    'grande_abc','fnde','fns','dnit','pcj',
     // Camada 5 — Estatais
     'petronect','correios','caixa','eletrobras','sabesp',
   ]

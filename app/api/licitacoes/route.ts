@@ -63,6 +63,9 @@ export async function GET(request: NextRequest) {
   if (searchParams.get('valor_min')) {
     query = query.gte('valor_estimado', Number(searchParams.get('valor_min')))
   }
+  if (searchParams.get('fonte')) {
+    query = query.eq('fonte', searchParams.get('fonte')!)
+  }
 
   const { data: licitacoes, count, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
