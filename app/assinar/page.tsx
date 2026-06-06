@@ -118,7 +118,7 @@ export default function AssinarPage() {
       <div style={{ maxWidth: '1300px', margin: '-40px auto 0', padding: '0 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
 
         {/* Card trial */}
-        <div style={{ background: 'white', border: '2px solid #C9A65A', borderRadius: '20px', padding: '32px 28px', position: 'relative', boxShadow: '0 4px 20px rgba(201,166,90,0.12)' }}>
+        <div style={{ background: 'white', border: '2px solid #C9A65A', borderRadius: '20px', padding: '32px 28px', position: 'relative', boxShadow: '0 4px 20px rgba(201,166,90,0.12)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '11px', fontWeight: 800, padding: '5px 16px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
             🎁 GRÁTIS
           </div>
@@ -141,7 +141,7 @@ export default function AssinarPage() {
           </div>
           <Link
             href="/cadastro"
-            style={{ display: 'block', width: '100%', padding: '14px', borderRadius: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700, background: '#C9A65A', color: '#1A1A1C', textDecoration: 'none', boxSizing: 'border-box' }}
+            style={{ display: 'block', width: '100%', padding: '14px', borderRadius: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700, background: '#C9A65A', color: '#1A1A1C', textDecoration: 'none', boxSizing: 'border-box', marginTop: 'auto' }}
           >
             Começar grátis →
           </Link>
@@ -157,6 +157,8 @@ export default function AssinarPage() {
               position: 'relative',
               boxShadow: p.destaque ? '0 20px 60px rgba(107,15,26,0.3)' : '0 4px 20px rgba(0,0,0,0.06)',
               transform: p.destaque ? 'translateY(-8px)' : 'none',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {p.destaque && (
@@ -176,7 +178,7 @@ export default function AssinarPage() {
 
             <div style={{ height: '1px', background: p.destaque ? 'rgba(201,166,90,0.2)' : '#F0EDE8', marginBottom: '24px' }} />
 
-            <div style={{ marginBottom: '28px' }}>
+            <div style={{ marginBottom: '28px', flex: 1 }}>
               {p.itens.map(item => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                   <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
