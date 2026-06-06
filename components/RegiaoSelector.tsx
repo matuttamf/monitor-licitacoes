@@ -2,44 +2,21 @@
 
 import { useState } from 'react'
 import {
+  ESTADOS_POR_REGIAO,
   NOME_UF,
+  LABEL_REGIAO,
   adicionarRegiao,
   removerRegiao,
   jaCoberto,
   labelSelecao,
 } from '@/lib/regioes'
 
-// ─── Dados dos grupos ────────────────────────────────────────────────────────
+// ─── Estrutura da árvore ──────────────────────────────────────────────────────
 
-const GRUPOS = [
-  {
-    titulo: 'Brasil',
-    itens: [{ value: 'brasil', label: '🌎 Brasil (qualquer região)' }],
-  },
-  {
-    titulo: 'Regiões',
-    itens: [
-      { value: 'norte',        label: '🌿 Norte' },
-      { value: 'nordeste',     label: '☀️ Nordeste' },
-      { value: 'sudeste',      label: '🏙️ Sudeste' },
-      { value: 'sul',          label: '❄️ Sul' },
-      { value: 'centro_oeste', label: '🌾 Centro-Oeste' },
-    ],
-  },
-  {
-    titulo: 'Estados',
-    itens: Object.keys(NOME_UF)
-      .sort()
-      .map(uf => ({ value: uf, label: `${uf} — ${NOME_UF[uf]}` })),
-  },
-]
+const REGIOES_ORDEM = ['norte', 'nordeste', 'sudeste', 'sul', 'centro_oeste'] as const
 
-// ─── Seletor dropdown multi-região ───────────────────────────────────────────
+// ─── Seletor em árvore (Brasil → Regiões → Estados) ──────────────────────────
 
-/**
- * value: array de seleções atuais. [] ou ['brasil'] = sem filtro.
- * onChange: chamado sempre que a seleção muda.
- */
 export function RegiaoSelector({
   value,
   onChange,
@@ -49,23 +26,24 @@ export function RegiaoSelector({
   onChange: (novas: string[]) => void
   placeholder?: string
 }) {
-  const [aberto, setAberto] = useState(false)
+  const [aberto,    setAberto]    = useState(false)
+  const [expanded,  setExpanded]  = useState<Record<string, boolean>>({})
 
-  // Trabalha com value diretamente — sem normalizar para ['brasil']
   const selecionadas = value
 
   function toggle(item: string) {
     if (item === 'brasil') {
-      // Brasil selecionado → desmarcar limpa tudo ([] = sem filtro = brasil implícito)
-      // Brasil desmarcado → selecionar substitui tudo por ['brasil']
       onChange(selecionadas.includes('brasil') ? [] : ['brasil'])
     } else if (selecionadas.includes(item)) {
       const novas = removerRegiao(item, selecionadas)
-      // removerRegiao retorna ['brasil'] quando fica vazio — queremos [] nesse caso
       onChange(novas.length === 1 && novas[0] === 'brasil' && !selecionadas.includes('brasil') ? [] : novas)
     } else {
       onChange(adicionarRegiao(item, selecionadas))
     }
+  }
+
+  function toggleExpand(regiao: string) {
+    setExpanded(prev => ({ ...prev, [regiao]: !prev[regiao] }))
   }
 
   const resumo =
@@ -73,11 +51,17 @@ export function RegiaoSelector({
       ? placeholder
       : selecionadas.map(labelSelecao).join(', ')
 
-  // Para exibição de "já coberto": usa value diretamente — [] = nada selecionado, nada coberto
-  const selParaVerificar = selecionadas
+  // Helpers de estado visual
+  function isSelecionado(item: string) {
+    return selecionadas.includes(item) || (item === 'brasil' && selecionadas.length === 0)
+  }
+  function isCoberto(item: string) {
+    return !selecionadas.includes(item) && jaCoberto(item, selecionadas)
+  }
 
   return (
     <div className="relative">
+      {/* Botão trigger */}
       <button
         type="button"
         onClick={() => setAberto(v => !v)}
@@ -90,73 +74,87 @@ export function RegiaoSelector({
         }}
       >
         <span className="truncate text-xs" style={{ maxWidth: '300px' }}>{resumo}</span>
-        <span style={{ color: 'var(--cinza)', flexShrink: 0 }}>{aberto ? '▲' : '▼'}</span>
+        <span style={{ color: 'var(--cinza)', flexShrink: 0, fontSize: '10px' }}>{aberto ? '▲' : '▼'}</span>
       </button>
 
       {aberto && (
         <>
-          {/* Overlay invisível para fechar ao clicar fora */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setAberto(false)}
-          />
+          {/* Overlay para fechar ao clicar fora */}
+          <div className="fixed inset-0 z-40" onClick={() => setAberto(false)} />
+
+          {/* Painel da árvore */}
           <div
             className="absolute z-50 mt-1 w-full rounded-xl overflow-y-auto shadow-lg"
             style={{
               background: 'white',
               border: '1px solid var(--cinza-light)',
-              maxHeight: '260px',
-              minWidth: '220px',
+              maxHeight: '320px',
+              minWidth: '240px',
             }}
           >
-            {GRUPOS.map(grupo => (
-              <div key={grupo.titulo}>
-                <div
-                  className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider sticky top-0"
-                  style={{
-                    background: 'var(--surface-2)',
-                    color: 'var(--cinza)',
-                    borderBottom: '1px solid var(--cinza-light)',
-                  }}
-                >
-                  {grupo.titulo}
-                </div>
-                {grupo.itens.map(item => {
-                  const selecionado = selecionadas.includes(item.value) ||
-                    (item.value === 'brasil' && selecionadas.length === 0)
-                  const coberto = !selecionado && jaCoberto(item.value, selParaVerificar)
-                  return (
+            {/* ── Brasil ── */}
+            <TreeItem
+              label="🌎 Brasil (qualquer região)"
+              depth={0}
+              selecionado={isSelecionado('brasil')}
+              coberto={false}
+              onToggle={() => toggle('brasil')}
+            />
+
+            {/* ── Regiões e seus estados ── */}
+            {REGIOES_ORDEM.map(regiao => {
+              const abertaRegiao = !!expanded[regiao]
+              const estados = ESTADOS_POR_REGIAO[regiao]
+
+              return (
+                <div key={regiao}>
+                  {/* Linha da região */}
+                  <div className="flex items-center" style={{ borderTop: '1px solid var(--cinza-light)' }}>
+                    {/* Botão expandir/recolher */}
                     <button
-                      key={item.value}
                       type="button"
-                      disabled={coberto}
-                      onClick={() => toggle(item.value)}
-                      className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors"
+                      onClick={() => toggleExpand(regiao)}
+                      className="flex-shrink-0 flex items-center justify-center"
                       style={{
-                        color: coberto ? 'var(--cinza)' : 'var(--preto)',
-                        opacity: coberto ? 0.45 : 1,
-                        background: selecionado ? 'rgba(107,15,26,0.06)' : 'transparent',
-                        cursor: coberto ? 'not-allowed' : 'pointer',
+                        width: '28px',
+                        height: '36px',
+                        background: 'none',
                         border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--cinza)',
+                        fontSize: '9px',
+                        paddingLeft: '12px',
                       }}
                     >
-                      <span
-                        className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 text-white text-xs"
-                        style={{ background: selecionado ? 'var(--vinho)' : 'var(--cinza-light)' }}
-                      >
-                        {selecionado ? '✓' : coberto ? '—' : ''}
-                      </span>
-                      <span className="text-xs">{item.label}</span>
-                      {coberto && (
-                        <span className="text-xs ml-auto" style={{ color: 'var(--cinza)' }}>
-                          já coberto
-                        </span>
-                      )}
+                      {abertaRegiao ? '▼' : '▶'}
                     </button>
-                  )
-                })}
-              </div>
-            ))}
+
+                    {/* Checkbox + label da região */}
+                    <TreeItem
+                      label={LABEL_REGIAO[regiao] ?? regiao}
+                      depth={0}
+                      selecionado={isSelecionado(regiao)}
+                      coberto={isCoberto(regiao)}
+                      onToggle={() => toggle(regiao)}
+                      flex1
+                      noBorder
+                    />
+                  </div>
+
+                  {/* Estados da região (quando expandida) */}
+                  {abertaRegiao && estados.map(uf => (
+                    <TreeItem
+                      key={uf}
+                      label={`${uf} — ${NOME_UF[uf] ?? uf}`}
+                      depth={2}
+                      selecionado={isSelecionado(uf)}
+                      coberto={isCoberto(uf)}
+                      onToggle={() => toggle(uf)}
+                    />
+                  ))}
+                </div>
+              )
+            })}
           </div>
         </>
       )}
@@ -164,7 +162,70 @@ export function RegiaoSelector({
   )
 }
 
-// ─── Chips das seleções ───────────────────────────────────────────────────────
+// ─── Item de linha da árvore ──────────────────────────────────────────────────
+
+function TreeItem({
+  label,
+  depth,
+  selecionado,
+  coberto,
+  onToggle,
+  flex1 = false,
+  noBorder = false,
+}: {
+  label: string
+  depth: number
+  selecionado: boolean
+  coberto: boolean
+  onToggle: () => void
+  flex1?: boolean
+  noBorder?: boolean
+}) {
+  const paddingLeft = depth === 0 ? 12 : depth === 1 ? 28 : 44
+
+  return (
+    <button
+      type="button"
+      disabled={coberto}
+      onClick={onToggle}
+      className={`w-full text-left flex items-center gap-2 py-2 transition-colors ${flex1 ? 'flex-1' : ''}`}
+      style={{
+        paddingLeft,
+        paddingRight: 12,
+        background: selecionado ? 'rgba(107,15,26,0.05)' : 'transparent',
+        border: 'none',
+        borderTop: noBorder ? 'none' : undefined,
+        cursor: coberto ? 'not-allowed' : 'pointer',
+        opacity: coberto ? 0.4 : 1,
+      }}
+    >
+      {/* Caixa de seleção */}
+      <span
+        className="flex-shrink-0 flex items-center justify-center rounded text-white"
+        style={{
+          width: 15,
+          height: 15,
+          background: selecionado ? 'var(--vinho)' : coberto ? 'var(--cinza-light)' : 'var(--cinza-light)',
+          fontSize: 9,
+        }}
+      >
+        {selecionado ? '✓' : coberto ? '—' : ''}
+      </span>
+
+      <span className="text-xs" style={{ color: coberto ? 'var(--cinza)' : 'var(--preto)' }}>
+        {label}
+      </span>
+
+      {coberto && (
+        <span className="text-xs ml-auto" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>
+          já coberto
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ─── Chips das seleções ativas ────────────────────────────────────────────────
 
 export function RegiaoChips({
   regioes,
@@ -196,14 +257,7 @@ export function RegiaoChips({
           <button
             type="button"
             onClick={() => onRemove(r)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              color: 'var(--vinho)',
-              lineHeight: 1,
-            }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--vinho)', lineHeight: 1 }}
           >
             ×
           </button>

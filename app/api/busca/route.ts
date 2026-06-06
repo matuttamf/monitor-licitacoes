@@ -1,12 +1,29 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
+import { ESTADOS_POR_REGIAO } from '@/lib/regioes'
 
 const POR_PAGINA = 20
+
+/** Expande seleções (regiões + UFs) para lista plana de UFs */
+function expandirParaUFs(regioes: string[]): string[] | null {
+  if (regioes.length === 0 || regioes.includes('brasil')) return null  // sem filtro
+  const ufs = new Set<string>()
+  for (const r of regioes) {
+    const estados = ESTADOS_POR_REGIAO[r]
+    if (estados) estados.forEach(uf => ufs.add(uf))
+    else ufs.add(r.toUpperCase())
+  }
+  return [...ufs]
+}
 
 export async function GET(request: NextRequest) {
   const sp         = request.nextUrl.searchParams
   const termo      = sp.get('q') ?? ''
-  const estado     = sp.get('estado')
+  const regioes    = sp.get('regioes')?.split(',').filter(Boolean) ?? []
+  // legado: ?estado=SP ainda funciona
+  const estadoLeg  = sp.get('estado')
+  if (estadoLeg && regioes.length === 0) regioes.push(estadoLeg)
+
   const dataInicio = sp.get('data_inicio')
   const valorMin   = sp.get('valor_min')
   const valorMax   = sp.get('valor_max')
@@ -18,6 +35,9 @@ export async function GET(request: NextRequest) {
 
   const cols = 'id, fonte, numero_edital, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade'
 
+  // Lista de UFs para filtro (null = sem filtro de localização)
+  const ufs = expandirParaUFs(regioes)
+
   // 1. Busca literal no campo objeto
   let textoQuery = supabase
     .from('licitacoes')
@@ -25,7 +45,7 @@ export async function GET(request: NextRequest) {
     .order('coletado_em', { ascending: false })
 
   if (termo)      textoQuery = textoQuery.ilike('objeto', `%${termo}%`) as typeof textoQuery
-  if (estado)     textoQuery = textoQuery.eq('estado', estado) as typeof textoQuery
+  if (ufs)        textoQuery = textoQuery.in('estado', ufs) as typeof textoQuery
   if (dataInicio) textoQuery = textoQuery.gte('data_abertura', dataInicio) as typeof textoQuery
   if (valorMin)   textoQuery = textoQuery.gte('valor_estimado', Number(valorMin)) as typeof textoQuery
   if (valorMax)   textoQuery = textoQuery.lte('valor_estimado', Number(valorMax)) as typeof textoQuery
@@ -74,7 +94,7 @@ export async function GET(request: NextRequest) {
         .order('coletado_em', { ascending: false })
         .limit(POR_PAGINA)
 
-      if (estado)     semQ = semQ.eq('estado', estado) as typeof semQ
+      if (ufs)        semQ = semQ.in('estado', ufs) as typeof semQ
       if (dataInicio) semQ = semQ.gte('data_abertura', dataInicio) as typeof semQ
       if (valorMin)   semQ = semQ.gte('valor_estimado', Number(valorMin)) as typeof semQ
       if (valorMax)   semQ = semQ.lte('valor_estimado', Number(valorMax)) as typeof semQ

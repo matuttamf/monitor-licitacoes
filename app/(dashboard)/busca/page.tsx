@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { removerRegiao } from '@/lib/regioes'
+import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
 
 type Licitacao = {
   id: string
@@ -22,7 +24,6 @@ type Resposta = {
   paginas: number
 }
 
-const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
 
 const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'PNCP':           { cor: '#6B0F1A', bg: 'rgba(107,15,26,0.07)'  },
@@ -95,7 +96,7 @@ function Paginacao({ pagina, paginas, onChange }: { pagina: number; paginas: num
 
 export default function BuscaPage() {
   const [termo,      setTermo]      = useState('')
-  const [estado,     setEstado]     = useState('')
+  const [regioes,    setRegioes]    = useState<string[]>([])
   const [valorMin,   setValorMin]   = useState('')
   const [valorMax,   setValorMax]   = useState('')
   const [dataInicio, setDataInicio] = useState('')
@@ -111,7 +112,7 @@ export default function BuscaPage() {
 
     const params = new URLSearchParams({ pagina: String(p) })
     if (termo)      params.set('q', termo)
-    if (estado)     params.set('estado', estado)
+    if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
     if (valorMin)   params.set('valor_min', valorMin)
     if (valorMax)   params.set('valor_max', valorMax)
     if (dataInicio) params.set('data_inicio', dataInicio)
@@ -119,7 +120,7 @@ export default function BuscaPage() {
     const res = await fetch(`/api/busca?${params}`)
     if (res.ok) setResposta(await res.json())
     setBuscando(false)
-  }, [termo, estado, valorMin, valorMax, dataInicio])
+  }, [termo, regioes, valorMin, valorMax, dataInicio])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -174,16 +175,11 @@ export default function BuscaPage() {
         {/* Filtros secundários */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Estado</label>
-            <select
-              value={estado}
-              onChange={e => setEstado(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--border)', outline: 'none', color: 'var(--text-1)', background: 'var(--surface)' }}
-            >
-              <option value="">Todos</option>
-              {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-            </select>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Região / Estado</label>
+            <RegiaoSelector value={regioes} onChange={setRegioes} placeholder="Todos" />
+            {regioes.length > 0 && !regioes.includes('brasil') && (
+              <RegiaoChips regioes={regioes} onRemove={r => setRegioes(removerRegiao(r, regioes))} />
+            )}
           </div>
 
           <div>
@@ -241,10 +237,10 @@ export default function BuscaPage() {
           >
             🔄 Buscar agora nas fontes
           </button>
-          {(termo || estado || valorMin || valorMax || dataInicio) && (
+          {(termo || (regioes.length > 0 && !regioes.includes('brasil')) || valorMin || valorMax || dataInicio) && (
             <button
               type="button"
-              onClick={() => { setTermo(''); setEstado(''); setValorMin(''); setValorMax(''); setDataInicio('') }}
+              onClick={() => { setTermo(''); setRegioes([]); setValorMin(''); setValorMax(''); setDataInicio('') }}
               className="px-4 py-2.5 rounded-xl text-sm"
               style={{ color: 'var(--text-3)', cursor: 'pointer' }}
             >
