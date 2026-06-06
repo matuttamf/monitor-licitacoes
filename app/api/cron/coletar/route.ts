@@ -8,7 +8,7 @@ import { coletarPNCPPCA }          from '@/lib/scrapers/pncp-pca'
 import { coletarComprasNet }       from '@/lib/scrapers/comprasnet'
 import { coletarQueridoDiario }    from '@/lib/scrapers/querido-diario'
 import { coletarGoogle }           from '@/lib/scrapers/google'
-import { coletarDOU }              from '@/lib/scrapers/dou'
+import { coletarDOU }              from '@/lib/scrapers/dou'          // 3 seções
 
 // ── Camada 1 — Plataformas privadas nacionais ─────────────────────────────
 import { coletarBBMNET }           from '@/lib/scrapers/bbmnet'
@@ -19,7 +19,7 @@ import { coletarLicitarDigital }   from '@/lib/scrapers/licitar-digital'
 import { coletarNegociosPublicos } from '@/lib/scrapers/negocios-publicos'
 import { coletarComprasPublicas }  from '@/lib/scrapers/compras-publicas'
 
-// ── Camada 2 — Portais estaduais ──────────────────────────────────────────
+// ── Camada 2 — Portais estaduais (todos 27 estados + DF) ──────────────────
 import { coletarBECSP }            from '@/lib/scrapers/bec-sp'
 import { coletarPortalMG }         from '@/lib/scrapers/portal-mg'
 import { coletarPortalRS }         from '@/lib/scrapers/portal-rs'
@@ -34,7 +34,6 @@ import { coletarPortalDF }         from '@/lib/scrapers/portal-df'
 import { coletarPortalES }         from '@/lib/scrapers/portal-es'
 import { coletarPortalMT }         from '@/lib/scrapers/portal-mt'
 import { coletarPortalAM }         from '@/lib/scrapers/portal-am'
-// Estados expandidos
 import { coletarPortalMS }         from '@/lib/scrapers/portal-ms'
 import { coletarPortalPB }         from '@/lib/scrapers/portal-pb'
 import { coletarPortalPA }         from '@/lib/scrapers/portal-pa'
@@ -49,7 +48,7 @@ import { coletarPortalSE }         from '@/lib/scrapers/portal-se'
 import { coletarPortalAL }         from '@/lib/scrapers/portal-al'
 import { coletarPortalAP }         from '@/lib/scrapers/portal-ap'
 
-// ── Camada 3 — Municípios grandes ─────────────────────────────────────────
+// ── Camada 3 — Capitais (todas 27 capitais + DF) ──────────────────────────
 import { coletarPortalSPCidade }   from '@/lib/scrapers/portal-sp-cidade'
 import { coletarPortalBH }         from '@/lib/scrapers/portal-bh'
 import { coletarPortalRecife }     from '@/lib/scrapers/portal-recife'
@@ -60,6 +59,21 @@ import { coletarPortalPOA }        from '@/lib/scrapers/portal-poa'
 import { coletarPortalBelem }      from '@/lib/scrapers/portal-belem'
 import { coletarPortalGoiania }    from '@/lib/scrapers/portal-goiania'
 import { coletarPortalSalvador }   from '@/lib/scrapers/portal-salvador'
+import { coletarPortalNatal }      from '@/lib/scrapers/portal-natal'
+import { coletarPortalCampoGrande }from '@/lib/scrapers/portal-campo-grande'
+import { coletarPortalMaceio }     from '@/lib/scrapers/portal-maceio'
+import { coletarPortalSaoLuis }    from '@/lib/scrapers/portal-sao-luis'
+import { coletarPortalTeresina }   from '@/lib/scrapers/portal-teresina'
+import { coletarPortalJoaoPessoa } from '@/lib/scrapers/portal-joao-pessoa'
+import { coletarPortalAracaju }    from '@/lib/scrapers/portal-aracaju'
+
+// ── Camada 3 — Cidades grandes (50k+ hab, não-capitais) ───────────────────
+import { coletarPortalCampinas }      from '@/lib/scrapers/portal-campinas'
+import { coletarPortalGuarulhos }     from '@/lib/scrapers/portal-guarulhos'
+import { coletarPortalUberlandia }    from '@/lib/scrapers/portal-uberlandia'
+import { coletarPortalJoinville }     from '@/lib/scrapers/portal-joinville'
+import { coletarPortalLondrina }      from '@/lib/scrapers/portal-londrina'
+import { coletarPortalRibeiraoPreto } from '@/lib/scrapers/portal-ribeirao-preto'
 
 // ── Camada 5 — Estatais ───────────────────────────────────────────────────
 import { coletarPetronect }        from '@/lib/scrapers/petronect'
@@ -74,7 +88,7 @@ import { registrarCronLog }        from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-const TOTAL_FONTES = 56
+const TOTAL_FONTES = 72
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -110,7 +124,7 @@ export async function GET(request: Request) {
     coletarComprasNet(dataInicio),
     coletarQueridoDiario(termosAtivos.slice(0, 5)),
     coletarGoogle(termosAtivos),
-    coletarDOU(dataInicio),
+    coletarDOU(dataInicio),                    // DOU 3 seções integradas
     // Plataformas (7-13)
     coletarBBMNET(dataInicio),
     coletarLicitanet(dataInicio),
@@ -119,7 +133,7 @@ export async function GET(request: Request) {
     coletarLicitarDigital(dataInicio),
     coletarNegociosPublicos(dataInicio),
     coletarComprasPublicas(dataInicio),
-    // Camada 2 — Estados originais (14-27)
+    // Camada 2 — Estados (14-40)
     coletarBECSP(dataInicio),
     coletarPortalMG(dataInicio),
     coletarPortalRS(dataInicio),
@@ -134,7 +148,6 @@ export async function GET(request: Request) {
     coletarPortalES(dataInicio),
     coletarPortalMT(dataInicio),
     coletarPortalAM(dataInicio),
-    // Camada 2 — Estados expandidos (28-40)
     coletarPortalMS(dataInicio),
     coletarPortalPB(dataInicio),
     coletarPortalPA(dataInicio),
@@ -148,7 +161,7 @@ export async function GET(request: Request) {
     coletarPortalSE(dataInicio),
     coletarPortalAL(dataInicio),
     coletarPortalAP(dataInicio),
-    // Camada 3 — Municípios grandes (41-50)
+    // Camada 3 — Capitais (41-57)
     coletarPortalSPCidade(dataInicio),
     coletarPortalBH(dataInicio),
     coletarPortalRecife(dataInicio),
@@ -159,7 +172,21 @@ export async function GET(request: Request) {
     coletarPortalBelem(dataInicio),
     coletarPortalGoiania(dataInicio),
     coletarPortalSalvador(dataInicio),
-    // Camada 5 — Estatais (51-55)
+    coletarPortalNatal(dataInicio),
+    coletarPortalCampoGrande(dataInicio),
+    coletarPortalMaceio(dataInicio),
+    coletarPortalSaoLuis(dataInicio),
+    coletarPortalTeresina(dataInicio),
+    coletarPortalJoaoPessoa(dataInicio),
+    coletarPortalAracaju(dataInicio),
+    // Camada 3 — Cidades 200k+ (58-63)
+    coletarPortalCampinas(dataInicio),
+    coletarPortalGuarulhos(dataInicio),
+    coletarPortalUberlandia(dataInicio),
+    coletarPortalJoinville(dataInicio),
+    coletarPortalLondrina(dataInicio),
+    coletarPortalRibeiraoPreto(dataInicio),
+    // Camada 5 — Estatais (64-68)
     coletarPetronect(dataInicio),
     coletarCorreios(dataInicio),
     coletarCaixa(dataInicio),
@@ -176,7 +203,7 @@ export async function GET(request: Request) {
   const totalOk = fonteOk.filter(Boolean).length
   console.log(`Coletadas ${todasLicitacoes.length} licitações de ${totalOk}/${TOTAL_FONTES} fontes`)
 
-  // 2. Salvar (deduplicação por external_id)
+  // 2. Salvar (deduplicação por external_id / numero_edital)
   const salvas = await salvarLicitacoes(todasLicitacoes)
   console.log(`${salvas} licitações novas salvas`)
 
@@ -199,15 +226,23 @@ export async function GET(request: Request) {
     method: 'GET', headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
   }).catch(err => console.error('Erro matching:', err))
 
-  // Nomes das 56 fontes para o log detalhado
   const nomes = [
+    // Camada 1
     'pncp','pncp_contratos','pncp_pca','comprasnet','querido','google','dou',
+    // Plataformas
     'bbmnet','licitanet','bll','licitacoes_e','licitar_digital','negocios_publicos','compras_publicas',
+    // Camada 2 — Estados
     'bec_sp','mg','rs','pr','ba','rj','sc','ce','pe','go','df','es','mt','am',
     'ms','pb','pa','ac','ro','rr','to','ma','pi','rn','se','al','ap',
+    // Camada 3 — Capitais
     'sp_cidade','bh','recife','fortaleza','manaus','curitiba','poa','belem','goiania','salvador',
+    'natal','campo_grande','maceio','sao_luis','teresina','joao_pessoa','aracaju',
+    // Camada 3 — Cidades 200k+
+    'campinas','guarulhos','uberlandia','joinville','londrina','ribeirao_preto',
+    // Camada 5 — Estatais
     'petronect','correios','caixa','eletrobras','sabesp',
   ]
+
   const detalhes: Record<string, unknown> = Object.fromEntries(nomes.map((n, i) => [`${n}_ok`, fonteOk[i]]))
   detalhes.total_coletadas = todasLicitacoes.length
   detalhes.fontes_ativas   = totalOk

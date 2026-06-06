@@ -33,6 +33,8 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'Querido Diário':    { cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
   'Google':            { cor: '#2d6a4f', bg: 'rgba(45,106,79,0.07)'  },
   'DOU':               { cor: '#374151', bg: 'rgba(55,65,81,0.07)'   },
+  'DOU Seção 1':       { cor: '#4b5563', bg: 'rgba(75,85,99,0.07)'  },
+  'DOU Seção 2':       { cor: '#6b7280', bg: 'rgba(107,114,128,0.07)'},
   // Plataformas privadas
   'BBMNET':            { cor: '#1d4ed8', bg: 'rgba(29,78,216,0.07)'  },
   'Licitanet':         { cor: '#7c3aed', bg: 'rgba(124,58,237,0.07)' },
@@ -80,6 +82,21 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'Portal Belém':      { cor: '#064e3b', bg: 'rgba(6,78,59,0.09)'    },
   'Portal Goiânia':    { cor: '#14532d', bg: 'rgba(20,83,45,0.09)'   },
   'Portal Salvador':   { cor: '#92400e', bg: 'rgba(146,64,14,0.09)'  },
+  // Capitais restantes
+  'Portal Natal':      { cor: '#065f46', bg: 'rgba(6,95,70,0.09)'    },
+  'Portal Campo Grande':{ cor: '#166534', bg: 'rgba(22,101,52,0.1)'  },
+  'Portal Maceió':     { cor: '#1e40af', bg: 'rgba(30,64,175,0.09)'  },
+  'Portal São Luís':   { cor: '#3b0764', bg: 'rgba(59,7,100,0.1)'    },
+  'Portal Teresina':   { cor: '#4c1d95', bg: 'rgba(76,29,149,0.09)'  },
+  'Portal João Pessoa':{ cor: '#1e3a5f', bg: 'rgba(30,58,95,0.1)'    },
+  'Portal Aracaju':    { cor: '#0f766e', bg: 'rgba(15,118,110,0.09)' },
+  // Cidades 200k+
+  'Portal Campinas':   { cor: '#831843', bg: 'rgba(131,24,67,0.08)'  },
+  'Portal Guarulhos':  { cor: '#7c2d12', bg: 'rgba(124,45,18,0.09)'  },
+  'Portal Uberlândia': { cor: '#065f46', bg: 'rgba(6,95,70,0.1)'     },
+  'Portal Joinville':  { cor: '#1e3a5f', bg: 'rgba(30,58,95,0.11)'   },
+  'Portal Londrina':   { cor: '#3b0764', bg: 'rgba(59,7,100,0.11)'   },
+  'Portal Ribeirão Preto':{ cor: '#92400e', bg: 'rgba(146,64,14,0.1)'},
   // Camada 5 — Estatais
   'Petronect':         { cor: '#0c4a6e', bg: 'rgba(12,74,110,0.1)'   },
   'Correios':          { cor: '#d97706', bg: 'rgba(217,119,6,0.1)'   },
