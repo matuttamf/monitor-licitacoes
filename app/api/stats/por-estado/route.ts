@@ -49,7 +49,7 @@ export async function GET() {
 
   const estados = [...mapa.entries()]
     .map(([uf, stats]) => ({ uf, ...stats }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) => b.valor_total - a.valor_total)
     .slice(0, 8) // top 8 estados
 
   return NextResponse.json({ estados, total: licitacaoIds.length })
