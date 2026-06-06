@@ -1,5 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
+import { ESTADOS_POR_REGIAO } from '@/lib/regioes'
+
+function expandirParaUFs(regioes: string[]): string[] | null {
+  if (regioes.length === 0 || regioes.includes('brasil')) return null
+  const ufs = new Set<string>()
+  for (const r of regioes) {
+    const estados = ESTADOS_POR_REGIAO[r]
+    if (estados) estados.forEach(uf => ufs.add(uf))
+    else ufs.add(r.toUpperCase())
+  }
+  return [...ufs]
+}
 
 const POR_PAGINA = 20
 
@@ -54,14 +66,21 @@ export async function GET(request: NextRequest) {
     .order('coletado_em',    { ascending: false })
     .range(from, to)
 
-  if (searchParams.get('estado')) {
-    query = query.eq('estado', searchParams.get('estado')!)
-  }
+  // Região — aceita ?regioes=sul,RJ  e legado ?estado=SP
+  const regioes = searchParams.get('regioes')?.split(',').filter(Boolean) ?? []
+  const estadoLeg = searchParams.get('estado') ?? ''
+  if (estadoLeg && regioes.length === 0) regioes.push(estadoLeg)
+  const ufs = expandirParaUFs(regioes)
+  if (ufs) query = query.in('estado', ufs) as typeof query
+
   if (searchParams.get('data_inicio')) {
     query = query.gte('data_abertura', searchParams.get('data_inicio')!)
   }
   if (searchParams.get('valor_min')) {
     query = query.gte('valor_estimado', Number(searchParams.get('valor_min')))
+  }
+  if (searchParams.get('valor_max')) {
+    query = query.lte('valor_estimado', Number(searchParams.get('valor_max')))
   }
   if (searchParams.get('fonte')) {
     query = query.eq('fonte', searchParams.get('fonte')!)

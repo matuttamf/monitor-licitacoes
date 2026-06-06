@@ -107,9 +107,11 @@ export default function AlertasPage() {
   const [pagina, setPagina]         = useState(1)
 
   // Filtros
-  const [busca,    setBusca]   = useState('')
-  const [keyword,  setKeyword] = useState('')
-  const [regioes,  setRegioes] = useState<string[]>([])
+  const [busca,     setBusca]    = useState('')
+  const [keyword,   setKeyword]  = useState('')
+  const [regioes,   setRegioes]  = useState<string[]>([])
+  const [valorMin,  setValorMin] = useState('')
+  const [valorMax,  setValorMax] = useState('')
 
   // Lista de keywords do usuário para o dropdown — carrega uma só vez
   const [keywords, setKeywords] = useState<string[]>([])
@@ -124,13 +126,15 @@ export default function AlertasPage() {
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
     const params = new URLSearchParams({ pagina: String(p) })
-    if (busca)   params.set('busca', busca)
-    if (keyword) params.set('keyword', keyword)
+    if (busca)    params.set('busca', busca)
+    if (keyword)  params.set('keyword', keyword)
     if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
+    if (valorMin) params.set('valor_min', valorMin)
+    if (valorMax) params.set('valor_max', valorMax)
     const res = await fetch(`/api/alertas?${params}`)
     if (res.ok) setResposta(await res.json())
     setCarregando(false)
-  }, [busca, keyword, regioes])
+  }, [busca, keyword, regioes, valorMin, valorMax])
 
   // Re-busca quando filtros ou página mudam
   useEffect(() => {
@@ -145,14 +149,16 @@ export default function AlertasPage() {
 
   function buildExportParams() {
     const params = new URLSearchParams()
-    if (busca)   params.set('busca', busca)
-    if (keyword) params.set('keyword', keyword)
+    if (busca)    params.set('busca', busca)
+    if (keyword)  params.set('keyword', keyword)
     if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
+    if (valorMin) params.set('valor_min', valorMin)
+    if (valorMax) params.set('valor_max', valorMax)
     return params.toString()
   }
 
   const alertas = resposta?.data ?? []
-  const temFiltro = busca || keyword || (regioes.length > 0 && !regioes.includes('brasil'))
+  const temFiltro = busca || keyword || (regioes.length > 0 && !regioes.includes('brasil')) || valorMin || valorMax
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -223,10 +229,36 @@ export default function AlertasPage() {
           )}
         </div>
 
+        {/* Valor mínimo */}
+        <div className="min-w-[130px]">
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Valor mín. (R$)</label>
+          <input
+            type="number"
+            value={valorMin}
+            onChange={e => aplicarFiltro(() => setValorMin(e.target.value))}
+            placeholder="0"
+            className="w-full px-3 py-2 rounded-xl text-sm"
+            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
+          />
+        </div>
+
+        {/* Valor máximo */}
+        <div className="min-w-[130px]">
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Valor máx. (R$)</label>
+          <input
+            type="number"
+            value={valorMax}
+            onChange={e => aplicarFiltro(() => setValorMax(e.target.value))}
+            placeholder="Sem limite"
+            className="w-full px-3 py-2 rounded-xl text-sm"
+            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
+          />
+        </div>
+
         {/* Limpar */}
         {temFiltro && (
           <button
-            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setRegioes([]) })}
+            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setRegioes([]); setValorMin(''); setValorMax('') })}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'var(--surface-2)', color: 'var(--cinza)', border: '1px solid var(--cinza-light)', cursor: 'pointer', alignSelf: 'flex-end' }}
           >

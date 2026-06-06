@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { removerRegiao } from '@/lib/regioes'
+import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
 
 type Licitacao = {
   id: string
@@ -361,7 +363,6 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'Raízen':            { cor: '#d97706', bg: 'rgba(217,119,6,0.11)'  },
 }
 
-const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
 
 function formatarValor(valor?: number) {
   if (!valor) return null
@@ -440,9 +441,10 @@ export default function DashboardPage() {
   const [resposta, setResposta]       = useState<Resposta | null>(null)
   const [carregando, setCarregando]   = useState(true)
   const [primeiraVez, setPrimeiraVez] = useState(true)
-  const [pagina, setPagina]           = useState(1)
-  const [filtroEstado,   setFiltroEstado]   = useState('')
+  const [pagina, setPagina]               = useState(1)
+  const [filtroRegioes,  setFiltroRegioes] = useState<string[]>([])
   const [filtroValorMin, setFiltroValorMin] = useState('')
+  const [filtroValorMax, setFiltroValorMax] = useState('')
   const [statsEstados, setStatsEstados]     = useState<EstadoStat[]>([])
   const [pcaItems, setPcaItems]             = useState<Licitacao[]>([])
 
@@ -461,18 +463,20 @@ export default function DashboardPage() {
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
     const params = new URLSearchParams({ pagina: String(p) })
-    if (filtroEstado)   params.set('estado', filtroEstado)
+    if (filtroRegioes.length > 0 && !filtroRegioes.includes('brasil'))
+      params.set('regioes', filtroRegioes.join(','))
     if (filtroValorMin) params.set('valor_min', filtroValorMin)
+    if (filtroValorMax) params.set('valor_max', filtroValorMax)
     const res = await fetch(`/api/licitacoes?${params}`)
     if (res.ok) setResposta(await res.json())
     setCarregando(false)
     setPrimeiraVez(false)
-  }, [filtroEstado, filtroValorMin])
+  }, [filtroRegioes, filtroValorMin, filtroValorMax])
 
   useEffect(() => {
     setPagina(1)
     carregar(1)
-  }, [filtroEstado, filtroValorMin]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filtroRegioes, filtroValorMin, filtroValorMax]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     carregar(pagina)
@@ -480,7 +484,7 @@ export default function DashboardPage() {
 
   const licitacoes  = resposta?.data ?? []
   const totalValor  = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
-  const semFiltros  = !filtroEstado && !filtroValorMin
+  const semFiltros  = filtroRegioes.length === 0 && !filtroValorMin && !filtroValorMax
   const semResultados = !carregando && !primeiraVez && resposta?.total === 0 && semFiltros
 
   return (
@@ -497,35 +501,50 @@ export default function DashboardPage() {
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-end gap-3 flex-wrap">
+          {/* Região */}
+          <div className="min-w-[200px]">
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Região / Estado</label>
+            <RegiaoSelector
+              value={filtroRegioes}
+              onChange={setFiltroRegioes}
+              placeholder="Todos"
+            />
+            {filtroRegioes.length > 0 && !filtroRegioes.includes('brasil') && (
+              <RegiaoChips regioes={filtroRegioes} onRemove={r => setFiltroRegioes(removerRegiao(r, filtroRegioes))} />
+            )}
+          </div>
+
           {/* Valor mínimo */}
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: 'var(--text-3)' }}>R$</span>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Valor mín. (R$)</label>
             <input
               type="number"
               value={filtroValorMin}
               onChange={e => setFiltroValorMin(e.target.value)}
-              placeholder="Valor mín."
-              className="text-sm rounded-xl pl-9 pr-3 py-2.5 outline-none w-36"
+              placeholder="0"
+              className="text-sm rounded-xl px-3 py-2.5 outline-none w-32"
               style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
             />
           </div>
 
-          {/* Estado */}
-          <select
-            value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
-            className="text-sm rounded-xl px-4 py-2.5 outline-none"
-            style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
-          >
-            <option value="">Todos os estados</option>
-            {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-          </select>
+          {/* Valor máximo */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Valor máx. (R$)</label>
+            <input
+              type="number"
+              value={filtroValorMax}
+              onChange={e => setFiltroValorMax(e.target.value)}
+              placeholder="Sem limite"
+              className="text-sm rounded-xl px-3 py-2.5 outline-none w-32"
+              style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
+            />
+          </div>
 
           {/* Limpar filtros */}
-          {(filtroEstado || filtroValorMin) && (
+          {!semFiltros && (
             <button
-              onClick={() => { setFiltroEstado(''); setFiltroValorMin('') }}
+              onClick={() => { setFiltroRegioes([]); setFiltroValorMin(''); setFiltroValorMax('') }}
               className="text-sm rounded-xl px-3 py-2.5"
               style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer' }}
             >
@@ -687,9 +706,9 @@ export default function DashboardPage() {
                 Clique em um estado para filtrar
               </p>
             </div>
-            {filtroEstado && (
+            {filtroRegioes.length > 0 && (
               <button
-                onClick={() => setFiltroEstado('')}
+                onClick={() => setFiltroRegioes([])}
                 className="text-xs px-3 py-1.5 rounded-lg"
                 style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-2)', cursor: 'pointer' }}
               >
@@ -699,13 +718,13 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {statsEstados.map((e, i) => {
-              const ativo = filtroEstado === e.uf
+              const ativo = filtroRegioes.includes(e.uf)
               const barMax = statsEstados[0]?.count ?? 1
               const pct = Math.round((e.count / barMax) * 100)
               return (
                 <button
                   key={e.uf}
-                  onClick={() => setFiltroEstado(ativo ? '' : e.uf)}
+                  onClick={() => setFiltroRegioes(ativo ? filtroRegioes.filter(r => r !== e.uf) : [...filtroRegioes, e.uf])}
                   className="text-left rounded-xl p-3 transition-all"
                   style={{
                     background:  ativo ? 'var(--vinho)' : 'rgba(107,15,26,0.04)',
