@@ -142,6 +142,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[]): string {
 
       ${cards}
 
+
       <!-- CTA principal -->
       <div style="text-align:center;margin-top:28px;padding-top:24px;border-top:1px solid #E0D8CF">
         <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitor-licitacoes-two.vercel.app'}/alertas"
@@ -165,15 +166,18 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[]): string {
 }
 
 // Função principal — envia para o email do usuário específico
-export async function enviarAlertaEmailUsuario(emailDestino: string, licitacoes: LicitacaoAlerta[]): Promise<boolean> {
+export async function enviarAlertaEmailUsuario(emailDestino: string, licitacoes: LicitacaoAlerta[], restantes = 0): Promise<boolean> {
   if (licitacoes.length === 0) return false
 
   const resend = new Resend(process.env.RESEND_API_KEY!)
 
+  const total = licitacoes.length
+  const subject = `🔔 ${total} nova${total !== 1 ? 's' : ''} licitaç${total !== 1 ? 'ões' : 'ão'} para você — ${new Date().toLocaleDateString('pt-BR')}`
+
   const { error } = await resend.emails.send({
     from: process.env.EMAIL_REMETENTE!,
     to: emailDestino,
-    subject: `🔔 ${licitacoes.length} nova(s) licitação(ões) para você — ${new Date().toLocaleDateString('pt-BR')}`,
+    subject,
     html: gerarHtmlAlerta(licitacoes),
   })
 

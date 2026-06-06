@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('alertas')
     .select(`
-      id, enviado_em, canais,
+      id, criado_em, enviado_em, canais,
       licitacoes(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura),
       keywords(termo)
     `, { count: 'exact' })

@@ -14,7 +14,8 @@ type Licitacao = {
 
 type Alerta = {
   id: string
-  enviado_em: string
+  criado_em: string
+  enviado_em: string | null
   canais: string[]
   licitacoes: Licitacao | null
   keywords: { termo: string } | null
@@ -35,6 +36,10 @@ const canalConfig: Record<string, { label: string; cor: string; bg: string }> = 
 function moeda(v?: number) {
   if (!v) return null
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+}
+
+function isNovo(criado_em: string) {
+  return Date.now() - new Date(criado_em).getTime() < 24 * 60 * 60 * 1000
 }
 
 function Paginacao({ pagina, paginas, onChange }: { pagina: number; paginas: number; onChange: (p: number) => void }) {
@@ -134,6 +139,13 @@ export default function AlertasPage() {
     setPagina(1)
   }
 
+  function buildExportParams() {
+    const params = new URLSearchParams()
+    if (busca)   params.set('busca', busca)
+    if (keyword) params.set('keyword', keyword)
+    return params.toString()
+  }
+
   const alertas = resposta?.data ?? []
   const temFiltro = busca || keyword
 
@@ -147,6 +159,18 @@ export default function AlertasPage() {
             {resposta ? `${resposta.total} alerta${resposta.total !== 1 ? 's' : ''} encontrado${resposta.total !== 1 ? 's' : ''}` : 'Carregando…'}
           </p>
         </div>
+
+        {/* Exportar CSV */}
+        {resposta && resposta.total > 0 && (
+          <a
+            href={`/api/alertas/exportar?${buildExportParams()}`}
+            download
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+            style={{ background: 'white', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', textDecoration: 'none' }}
+          >
+            ↓ Exportar CSV
+          </a>
+        )}
       </div>
 
       {/* Filtros */}
@@ -210,7 +234,8 @@ export default function AlertasPage() {
         <>
           <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
             {alertas.map((a, idx) => {
-              const lic = a.licitacoes
+              const lic  = a.licitacoes
+              const novo = isNovo(a.criado_em)
               return (
                 <div
                   key={a.id}
@@ -221,6 +246,13 @@ export default function AlertasPage() {
                     <div className="flex-1 min-w-0">
                       {/* Tags */}
                       <div className="flex items-center gap-2 flex-wrap mb-2">
+                        {/* Badge Novo */}
+                        {novo && (
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                            style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
+                            ✦ Novo
+                          </span>
+                        )}
                         {a.keywords?.termo && (
                           <span className="text-xs font-medium px-2.5 py-1 rounded-lg"
                             style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>

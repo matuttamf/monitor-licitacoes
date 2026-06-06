@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 
 type Licitacao = {
   id: string
@@ -95,36 +96,42 @@ function Paginacao({ pagina, paginas, onChange }: { pagina: number; paginas: num
 }
 
 export default function DashboardPage() {
-  const [resposta, setResposta]     = useState<Resposta | null>(null)
-  const [carregando, setCarregando] = useState(true)
-  const [pagina, setPagina]         = useState(1)
-  const [filtroEstado, setFiltroEstado] = useState('')
+  const [resposta, setResposta]       = useState<Resposta | null>(null)
+  const [carregando, setCarregando]   = useState(true)
+  const [primeiraVez, setPrimeiraVez] = useState(true)
+  const [pagina, setPagina]           = useState(1)
+  const [filtroEstado,   setFiltroEstado]   = useState('')
+  const [filtroValorMin, setFiltroValorMin] = useState('')
 
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
     const params = new URLSearchParams({ pagina: String(p) })
-    if (filtroEstado) params.set('estado', filtroEstado)
+    if (filtroEstado)   params.set('estado', filtroEstado)
+    if (filtroValorMin) params.set('valor_min', filtroValorMin)
     const res = await fetch(`/api/licitacoes?${params}`)
     if (res.ok) setResposta(await res.json())
     setCarregando(false)
-  }, [filtroEstado])
+    setPrimeiraVez(false)
+  }, [filtroEstado, filtroValorMin])
 
   useEffect(() => {
     setPagina(1)
     carregar(1)
-  }, [filtroEstado]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filtroEstado, filtroValorMin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     carregar(pagina)
   }, [pagina, carregar])
 
-  const licitacoes = resposta?.data ?? []
-  const totalValor = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
+  const licitacoes  = resposta?.data ?? []
+  const totalValor  = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
+  const semFiltros  = !filtroEstado && !filtroValorMin
+  const semResultados = !carregando && !primeiraVez && resposta?.total === 0 && semFiltros
 
   return (
     <div className="max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text-1)' }}>
             Dashboard
@@ -133,46 +140,109 @@ export default function DashboardPage() {
             Licitações com match nas suas palavras-chave
           </p>
         </div>
-        <select
-          value={filtroEstado}
-          onChange={e => setFiltroEstado(e.target.value)}
-          className="text-sm rounded-xl px-4 py-2.5 outline-none"
-          style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
-        >
-          <option value="">Todos os estados</option>
-          {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-        </select>
+
+        {/* Filtros */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Valor mínimo */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: 'var(--text-3)' }}>R$</span>
+            <input
+              type="number"
+              value={filtroValorMin}
+              onChange={e => setFiltroValorMin(e.target.value)}
+              placeholder="Valor mín."
+              className="text-sm rounded-xl pl-9 pr-3 py-2.5 outline-none w-36"
+              style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
+            />
+          </div>
+
+          {/* Estado */}
+          <select
+            value={filtroEstado}
+            onChange={e => setFiltroEstado(e.target.value)}
+            className="text-sm rounded-xl px-4 py-2.5 outline-none"
+            style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
+          >
+            <option value="">Todos os estados</option>
+            {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+          </select>
+
+          {/* Limpar filtros */}
+          {(filtroEstado || filtroValorMin) && (
+            <button
+              onClick={() => { setFiltroEstado(''); setFiltroValorMin('') }}
+              className="text-sm rounded-xl px-3 py-2.5"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer' }}
+            >
+              ✕ Limpar
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {[
-          {
-            label: 'Licitações encontradas',
-            valor: carregando ? '—' : (resposta?.total ?? 0).toString(),
-            cor: 'var(--vinho)',
-          },
-          {
-            label: 'Volume estimado (página)',
-            valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'),
-            cor: 'var(--dourado)',
-          },
-          {
-            label: 'Página atual',
-            valor: carregando ? '—' : `${resposta?.pagina ?? 1} / ${resposta?.paginas ?? 1}`,
-            cor: 'var(--bordo)',
-          },
-        ].map(stat => (
-          <div key={stat.label} className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>
-              {stat.label}
+      {/* Banner de onboarding — só aparece se não há licitações e não há filtros */}
+      {semResultados && (
+        <div className="rounded-2xl p-6 mb-8 flex items-start gap-5"
+          style={{ background: 'linear-gradient(135deg, rgba(107,15,26,0.06), rgba(201,166,90,0.06))', border: '1.5px solid rgba(107,15,26,0.15)' }}>
+          <div className="text-3xl flex-shrink-0">🚀</div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold mb-1" style={{ color: 'var(--text-1)' }}>
+              Configure suas palavras-chave para começar
+            </h2>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-2)', lineHeight: '1.6' }}>
+              O Monitor de Licitações rastreia editais de mais de 5.500 municípios todos os dias. Para receber alertas personalizados, cadastre os produtos ou serviços que sua empresa vende.
             </p>
-            <p className="text-2xl font-semibold" style={{ color: stat.cor }}>
-              {stat.valor}
-            </p>
+            <div className="flex gap-3 flex-wrap">
+              <Link
+                href="/palavras-chave"
+                className="inline-block text-sm font-semibold px-5 py-2.5 rounded-xl"
+                style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
+              >
+                Cadastrar palavras-chave →
+              </Link>
+              <Link
+                href="/busca"
+                className="inline-block text-sm font-medium px-5 py-2.5 rounded-xl"
+                style={{ background: 'var(--surface)', color: 'var(--text-2)', border: '1px solid var(--border)', textDecoration: 'none' }}
+              >
+                Buscar licitações agora
+              </Link>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Stats — só exibe se já carregou e tem dados */}
+      {!semResultados && (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[
+            {
+              label: 'Licitações encontradas',
+              valor: carregando ? '—' : (resposta?.total ?? 0).toString(),
+              cor: 'var(--vinho)',
+            },
+            {
+              label: 'Volume estimado (página)',
+              valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'),
+              cor: 'var(--dourado)',
+            },
+            {
+              label: 'Página atual',
+              valor: carregando ? '—' : `${resposta?.pagina ?? 1} / ${resposta?.paginas ?? 1}`,
+              cor: 'var(--bordo)',
+            },
+          ].map(stat => (
+            <div key={stat.label} className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>
+                {stat.label}
+              </p>
+              <p className="text-2xl font-semibold" style={{ color: stat.cor }}>
+                {stat.valor}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Lista */}
       {carregando ? (
@@ -181,11 +251,11 @@ export default function DashboardPage() {
             <div key={i} className="rounded-2xl animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', height: '110px' }} />
           ))}
         </div>
-      ) : licitacoes.length === 0 ? (
+      ) : licitacoes.length === 0 && !semResultados ? (
         <div className="rounded-2xl p-16 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-1)' }}>Nenhuma licitação encontrada</p>
+          <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-1)' }}>Nenhuma licitação para esses filtros</p>
           <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Acesse Busca para buscar agora nas fontes disponíveis.
+            Tente remover os filtros ou ampliar os critérios.
           </p>
         </div>
       ) : (

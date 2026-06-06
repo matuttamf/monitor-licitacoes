@@ -2,15 +2,23 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { enviarAlertaEmailUsuario } from '@/lib/alerts/email'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
+import { registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-function dentroDoHorarioComercial(): boolean {
-  const agora = new Date()
+function dentroDoHorarioPermitido(): boolean {
+  const agora   = new Date()
   const brasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000)
-  const dia = brasilia.getUTCDay()
+  const dia  = brasilia.getUTCDay()  // 0=Dom 1=Seg … 5=Sex 6=Sáb
   const hora = brasilia.getUTCHours()
-  return dia >= 1 && dia <= 5 && hora >= 7 && hora < 17
+
+  // Segunda a sexta: horário comercial completo (07h–17h)
+  if (dia >= 1 && dia <= 5) return hora >= 7 && hora < 17
+
+  // Sábado: apenas manhã (07h–13h) — drenagem de fila excedente da semana
+  if (dia === 6) return hora >= 7 && hora < 13
+
+  return false // Domingo: nunca
 }
 
 export async function GET(request: Request) {
@@ -19,13 +27,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  if (!dentroDoHorarioComercial()) {
-    return NextResponse.json({ ok: true, motivo: 'Fora do horário comercial', enviados: 0 })
+  if (!dentroDoHorarioPermitido()) {
+    await registrarCronLog({ job: 'alertar', status: 'ignorado', mensagem: 'Fora do horário permitido' })
+    return NextResponse.json({ ok: true, motivo: 'Fora do horário permitido', enviados: 0 })
   }
 
   const supabase = await createServiceClient()
 
-  // Buscar alertas pendentes (canais vazio) criados nas últimas 48h
+  // Configuração das queries de alertas
   // Inclui keyword (com user_id) e dados da licitação
   const hoje = new Date().toISOString().substring(0, 10)
   const umaSemanAAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -42,15 +51,16 @@ export async function GET(request: Request) {
   `
   const FILTRO_DATA = { referencedTable: 'licitacoes' }
 
-  // 1. Novos alertas ainda não enviados (últimas 48h)
+  // 1. Todos os alertas pendentes (canais vazio) para licitações ainda dentro do prazo
+  //    Sem limite de janela de tempo: alertas que não foram enviados ficam na fila
+  //    e saem no próximo envio. Ordenados do mais antigo para o mais novo (FIFO).
   const { data: novos, error } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .eq('canais', '{}')
-    .gte('criado_em', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
     .order('criado_em', { ascending: true })
-    .limit(150)
+    .limit(300)
 
   // 2. Alertas já enviados há mais de 7 dias, mas licitação ainda aberta → reenvio
   const { data: reenvios } = await supabase
@@ -116,7 +126,20 @@ export async function GET(request: Request) {
     // Pular usuários expirados ou sem email
     if (!emailUsuario || statusUsuario === 'expired') continue
 
-    const licitacoesDoUsuario = alertas.map(a => ({
+    const MAX_POR_EMAIL = 30
+
+    // Novos alertas: limitados a MAX_POR_EMAIL (novas capturas que não foram enviadas)
+    // Reenvios: não entram no limite — são lembretes de licitações já conhecidas
+    const novosAlertas   = alertas.filter(a => !(a as any)._reenvio)
+    const reenviosAlertas = alertas.filter(a => !!(a as any)._reenvio)
+
+    const novosParaEnviar = novosAlertas.slice(0, MAX_POR_EMAIL)
+    const totalRestante   = novosAlertas.length - novosParaEnviar.length
+
+    // Reenvios sempre passam (independente do cap de novos)
+    const alertasParaEnviar = [...novosParaEnviar, ...reenviosAlertas]
+
+    const licitacoesDoUsuario = alertasParaEnviar.map(a => ({
       id: a.licitacao_id,
       orgao: (a.licitacoes as any).orgao,
       objeto: (a.licitacoes as any).objeto,
@@ -131,8 +154,8 @@ export async function GET(request: Request) {
 
     const canaisEnviados: string[] = []
 
-    // Enviar e-mail para este usuário
-    const emailOk = await enviarAlertaEmailUsuario(emailUsuario, licitacoesDoUsuario)
+    // Enviar e-mail para este usuário (com aviso de restantes se houver)
+    const emailOk = await enviarAlertaEmailUsuario(emailUsuario, licitacoesDoUsuario, totalRestante)
     if (emailOk) canaisEnviados.push('email')
 
     // Telegram — envia se o usuário tiver configurado o chat_id
@@ -142,29 +165,37 @@ export async function GET(request: Request) {
       if (telegramOk) canaisEnviados.push('telegram')
     }
 
-    // Marcar alertas deste usuário como enviados
+    // Marcar apenas os alertas enviados neste lote como enviados
     if (canaisEnviados.length > 0) {
-      const ids = alertas.map(a => a.id)
+      const ids = alertasParaEnviar.map(a => a.id)
       await supabase
         .from('alertas')
         .update({ canais: canaisEnviados, enviado_em: new Date().toISOString() })
         .in('id', ids)
-      totalEnviados += alertas.length
+      totalEnviados += alertasParaEnviar.length
     }
 
     resultadosPorUsuario[emailUsuario] = {
       email: emailUsuario,
-      alertas: alertas.length,
+      alertas: alertasParaEnviar.length,
       ok: canaisEnviados.length > 0,
     }
   }
 
-  console.log(`Alertas enviados para ${Object.keys(resultadosPorUsuario).length} usuários, ${totalEnviados} alertas no total`)
+  const totalUsuarios = Object.keys(resultadosPorUsuario).length
+  console.log(`Alertas enviados para ${totalUsuarios} usuários, ${totalEnviados} alertas no total`)
+
+  await registrarCronLog({
+    job:      'alertar',
+    status:   'ok',
+    mensagem: `${totalEnviados} alertas enviados para ${totalUsuarios} usuário(s)`,
+    detalhes: resultadosPorUsuario,
+  })
 
   return NextResponse.json({
     ok: true,
     enviados: totalEnviados,
-    usuarios: Object.keys(resultadosPorUsuario).length,
+    usuarios: totalUsuarios,
     detalhes: resultadosPorUsuario,
   })
 }

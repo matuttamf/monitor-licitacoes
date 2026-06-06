@@ -6,6 +6,7 @@ import { coletarGoogle } from '@/lib/scrapers/google'
 import { salvarLicitacoes } from '@/lib/scrapers/salvar'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { createServiceClient } from '@/lib/supabase/server'
+import { registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300 // 5 minutos (máximo Vercel)
 
@@ -104,6 +105,21 @@ export async function GET(request: Request) {
     method: 'GET',
     headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
   }).catch(err => console.error('Erro ao disparar matching:', err))
+
+  await registrarCronLog({
+    job:      'coletar',
+    status:   'ok',
+    mensagem: `${salvas} licitações salvas, ${candidatos.length} candidatos — matching disparado`,
+    detalhes: {
+      pncp_ok:      pncp.status === 'fulfilled',
+      comprasnet_ok: comprasnet.status === 'fulfilled',
+      querido_ok:   queridoDiario.status === 'fulfilled',
+      google_ok:    google.status === 'fulfilled',
+      total_coletadas: todasLicitacoes.length,
+      salvas,
+      candidatos: candidatos.length,
+    },
+  })
 
   return NextResponse.json({
     ok: true,

@@ -1,40 +1,45 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const POR_PAGINA = 20
+
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const termo = searchParams.get('q') ?? ''
+  const sp         = request.nextUrl.searchParams
+  const termo      = sp.get('q') ?? ''
+  const estado     = sp.get('estado')
+  const dataInicio = sp.get('data_inicio')
+  const valorMin   = sp.get('valor_min')
+  const valorMax   = sp.get('valor_max')
+  const pagina     = Math.max(1, Number(sp.get('pagina') ?? '1'))
+
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
-
-  const estado    = searchParams.get('estado')
-  const dataInicio = searchParams.get('data_inicio')
-  const valorMin  = searchParams.get('valor_min')
-  const valorMax  = searchParams.get('valor_max')
+  if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   const cols = 'id, fonte, numero_edital, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade'
 
-  // 1. Busca literal no campo objeto (todos os usuários)
+  // 1. Busca literal no campo objeto
   let textoQuery = supabase
     .from('licitacoes')
-    .select(cols)
+    .select(cols, { count: 'exact' })
     .order('coletado_em', { ascending: false })
-    .limit(100)
 
-  if (termo) textoQuery = textoQuery.ilike('objeto', `%${termo}%`) as any
-  if (estado) textoQuery = textoQuery.eq('estado', estado) as any
-  if (dataInicio) textoQuery = textoQuery.gte('data_abertura', dataInicio) as any
-  if (valorMin) textoQuery = textoQuery.gte('valor_estimado', Number(valorMin)) as any
-  if (valorMax) textoQuery = textoQuery.lte('valor_estimado', Number(valorMax)) as any
+  if (termo)      textoQuery = textoQuery.ilike('objeto', `%${termo}%`) as typeof textoQuery
+  if (estado)     textoQuery = textoQuery.eq('estado', estado) as typeof textoQuery
+  if (dataInicio) textoQuery = textoQuery.gte('data_abertura', dataInicio) as typeof textoQuery
+  if (valorMin)   textoQuery = textoQuery.gte('valor_estimado', Number(valorMin)) as typeof textoQuery
+  if (valorMax)   textoQuery = textoQuery.lte('valor_estimado', Number(valorMax)) as typeof textoQuery
 
-  const { data: textoResults, error } = await textoQuery
+  const from = (pagina - 1) * POR_PAGINA
+  const to   = from + POR_PAGINA - 1
+  textoQuery = textoQuery.range(from, to) as typeof textoQuery
+
+  const { data: textoResults, count, error } = await textoQuery
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // 2. Busca semântica: licitações que foram alertadas para keywords do usuário que batem com o termo
+  // 2. Busca semântica: licitações alertadas para keywords do usuário que batem com o termo
   let semanticIds: string[] = []
-  if (termo && user) {
-    // Encontrar keywords do usuário que contenham o termo buscado
+  if (termo) {
     const { data: kws } = await supabase
       .from('keywords')
       .select('id')
@@ -47,7 +52,7 @@ export async function GET(request: NextRequest) {
         .from('alertas')
         .select('licitacao_id')
         .in('keyword_id', kwIds)
-        .limit(100)
+        .limit(200)
 
       if (alertas?.length) {
         semanticIds = alertas.map(a => a.licitacao_id)
@@ -55,25 +60,28 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 3. Buscar as licitações semânticas que não vieram na busca literal
+  // 3. Buscar licitações semânticas que não vieram na busca literal (apenas na primeira página)
   const textoIds = new Set((textoResults ?? []).map(l => l.id))
-  const novosIds = semanticIds.filter(id => !textoIds.has(id))
+  let semanticResults: { id: string; fonte: string; numero_edital?: string; orgao: string; objeto: string; valor_estimado?: number; data_abertura?: string; url: string; estado?: string; cidade?: string }[] = []
 
-  let semanticResults: typeof textoResults = []
-  if (novosIds.length > 0) {
-    let semQ = supabase
-      .from('licitacoes')
-      .select(cols)
-      .in('id', novosIds)
-      .order('coletado_em', { ascending: false })
+  if (pagina === 1 && semanticIds.length > 0) {
+    const novosIds = semanticIds.filter(id => !textoIds.has(id))
+    if (novosIds.length > 0) {
+      let semQ = supabase
+        .from('licitacoes')
+        .select(cols)
+        .in('id', novosIds)
+        .order('coletado_em', { ascending: false })
+        .limit(POR_PAGINA)
 
-    if (estado) semQ = semQ.eq('estado', estado) as any
-    if (dataInicio) semQ = semQ.gte('data_abertura', dataInicio) as any
-    if (valorMin) semQ = semQ.gte('valor_estimado', Number(valorMin)) as any
-    if (valorMax) semQ = semQ.lte('valor_estimado', Number(valorMax)) as any
+      if (estado)     semQ = semQ.eq('estado', estado) as typeof semQ
+      if (dataInicio) semQ = semQ.gte('data_abertura', dataInicio) as typeof semQ
+      if (valorMin)   semQ = semQ.gte('valor_estimado', Number(valorMin)) as typeof semQ
+      if (valorMax)   semQ = semQ.lte('valor_estimado', Number(valorMax)) as typeof semQ
 
-    const { data: semData } = await semQ
-    semanticResults = semData ?? []
+      const { data: semData } = await semQ
+      semanticResults = semData ?? []
+    }
   }
 
   // 4. Combinar: texto literal primeiro, depois semânticos (marcados)
@@ -82,5 +90,8 @@ export async function GET(request: NextRequest) {
     ...semanticResults.map(l => ({ ...l, _semantico: true })),
   ]
 
-  return NextResponse.json(combined)
+  const total   = count ?? 0
+  const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
+
+  return NextResponse.json({ data: combined, total, pagina, paginas })
 }

@@ -28,11 +28,13 @@ CREATE TABLE IF NOT EXISTS invites (
 
 ALTER TABLE invites ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "owner gerencia seus convites" ON invites;
 CREATE POLICY "owner gerencia seus convites"
   ON invites FOR ALL TO authenticated
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "service role gerencia convites" ON invites;
 CREATE POLICY "service role gerencia convites"
   ON invites FOR ALL TO service_role USING (true);
 

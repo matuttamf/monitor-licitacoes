@@ -30,6 +30,12 @@ export async function GET(request: Request) {
     const email = authUser?.user?.email
     if (!email) continue
 
+    // Verifica se trial expira amanhã (usa trial_fim — mais preciso que contar dias)
+    const fim    = new Date(usuario.trial_fim)
+    const amanha = new Date(agora)
+    amanha.setDate(amanha.getDate() + 1)
+    const expiraAmanha = fim.toDateString() === amanha.toDateString()
+
     try {
       // Dia 3: e-mail de engajamento
       if (diasDeTrial === 3) {
@@ -55,8 +61,8 @@ export async function GET(request: Request) {
         enviados++
       }
 
-      // Dia 6: urgência (expira amanhã)
-      if (diasDeTrial === 6) {
+      // Expira amanhã: e-mail de urgência (baseado em trial_fim, cobre trials de duração variável)
+      if (expiraAmanha) {
         await enviarEmailUrgencia(email)
         enviados++
       }

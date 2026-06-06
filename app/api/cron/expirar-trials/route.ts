@@ -26,5 +26,11 @@ export async function GET(request: Request) {
   const expirados = data?.length ?? 0
   console.log(`${expirados} trial(s) expirado(s) automaticamente`)
 
+  // Limpeza automática: remover cron_logs com mais de 90 dias
+  await supabase
+    .from('cron_logs')
+    .delete()
+    .lt('criado_em', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
+
   return NextResponse.json({ ok: true, expirados })
 }

@@ -247,7 +247,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Investimento mínimo. Retorno ilimitado.</div>
             <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#1A1A1C' }}>
-              A partir de R$1,66 por dia — menos que um café — para nunca mais perder um contrato.
+              A partir de R$1,66 por dia — menos que um cafezinho — para nunca mais perder um contrato.
             </h2>
             <p style={{ fontSize: '17px', color: '#9AA0A6', maxWidth: '560px', margin: '0 auto' }}>
               Escolha o plano ideal para o tamanho da sua operação. Sete dias grátis em todos. Sem cartão de crédito agora.
@@ -256,10 +256,10 @@ export default function LandingPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
             {[
-              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um café', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
-              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que um almoço', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
-              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um jantar', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
-              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: 'até 15 usuários', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null },
+              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
+              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que um pão de queijo', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
+              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
+              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null },
             ].map(p => (
               <div key={p.id} style={{
                 background: p.destaque ? '#6B0F1A' : '#FAF6F0',
@@ -277,7 +277,7 @@ export default function LandingPage() {
                 <div style={{ fontSize: '36px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '2px' }}>R${p.preco}</div>
                 <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.35)' : '#9AA0A6', marginBottom: '6px' }}>/mês · cobrado mensalmente</div>
                 <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(201,166,90,0.7)' : '#6B0F1A', fontWeight: 600, marginBottom: '20px', padding: '4px 10px', background: p.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(107,15,26,0.06)', borderRadius: '6px', display: 'inline-block' }}>
-                  {p.porDia} — {p.ancora}
+                  {p.porDia}{p.ancora ? ` — ${p.ancora}` : ''}
                 </div>
                 {[p.keywords, p.usuarios, 'Alertas por e-mail e Telegram', 'Busca manual no painel'].map(item => (
                   <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
@@ -317,7 +317,7 @@ export default function LandingPage() {
             ['Preciso de cartão de crédito para começar?', 'Não. Os sete dias de teste são completamente gratuitos e sem burocracia. Você só cadastra uma forma de pagamento se decidir continuar após o período de teste.'],
             ['Minha empresa é pequena. Isso funciona para mim?', 'Especialmente para você. O governo brasileiro tem cotas e benefícios para micro e pequenas empresas em licitações. MEI, ME e EPP têm vantagens legais que grandes empresas não têm. Falta apenas informação — e isso o Monitor resolve.'],
             ['Como o sistema sabe quais editais combinam com meu negócio?', 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação do edital use termos diferentes dos seus.'],
-            ['Com que frequência recebo alertas?', 'Diariamente, de segunda a sexta. Enviamos até quatro e-mails por dia, com no máximo 50 oportunidades cada, sempre dentro do horário comercial. Você nunca fica sobrecarregado e nunca perde uma oportunidade.'],
+            ['Com que frequência recebo alertas?', 'Monitoramos continuamente de segunda a sexta, dentro do horário comercial. Assim que identificamos uma licitação compatível com o seu perfil, ela entra na fila de envio e chega para você em breve — sem sobrecarregar sua caixa de entrada.'],
             ['Posso cancelar se não for o que esperava?', 'Sim, a qualquer momento, sem multa e sem burocracia. Mas aviso: é difícil cancelar quando começa a receber contratos que você nunca soube que estavam disponíveis.'],
           ].map(([q, a], i) => (
             <details key={i} style={{ borderBottom: '1px solid #D5D2C8' }}>
