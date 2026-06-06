@@ -77,7 +77,7 @@ export default function ExpiradoPage() {
       </div>
 
       {/* Hero */}
-      <div className="bg-[#1A1A1C] px-6 md:px-10 py-14 md:py-[52px] pb-18 text-center">
+      <div className="bg-[#1A1A1C] px-6 md:px-10 py-14 md:py-16 text-center">
         <div className="w-[52px] h-[52px] rounded-[14px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-black text-sm mx-auto mb-6">
           ML
         </div>
@@ -97,7 +97,7 @@ export default function ExpiradoPage() {
       </div>
 
       {/* Cards */}
-      <div className="max-w-[1100px] mx-auto -mt-10 px-4 md:px-6 pb-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="max-w-[1100px] mx-auto px-4 md:px-6 pt-8 pb-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {PLANOS.map(p => (
           <div
             key={p.id}
