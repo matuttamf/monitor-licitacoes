@@ -17,7 +17,7 @@ const PLANOS = [
     nome: 'Profissional',
     preco: '97,90',
     destaque: false,
-    descricao: 'Para vendedores ativos',
+    descricao: 'Para quem fornece ativamente ao governo',
     itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
@@ -65,80 +65,77 @@ export default function ExpiradoPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAF6F0', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#FAF6F0] font-sans">
 
-      {/* Banner de aviso */}
-      <div style={{ background: '#6B0F1A', padding: '18px 32px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '18px' }}>⏰</span>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: 'white' }}>
-            Seu período de teste encerrou
-          </span>
-          <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)' }}>
-            — Escolha um plano para continuar monitorando licitações
-          </span>
+      {/* Banner */}
+      <div className="bg-[#6B0F1A] px-6 py-4 text-center">
+        <div className="flex items-center justify-center gap-2.5 flex-wrap">
+          <span className="text-lg">⏰</span>
+          <span className="text-[15px] font-bold text-white">Seu período de teste encerrou</span>
+          <span className="text-sm text-[rgba(255,255,255,0.7)]">— Escolha um plano para continuar monitorando licitações</span>
         </div>
       </div>
 
       {/* Hero */}
-      <div style={{ background: '#1A1A1C', padding: '52px 40px 72px', textAlign: 'center' }}>
-        <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '13px', margin: '0 auto 24px' }}>
+      <div className="bg-[#1A1A1C] px-6 md:px-10 py-14 md:py-[52px] pb-18 text-center">
+        <div className="w-[52px] h-[52px] rounded-[14px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-black text-sm mx-auto mb-6">
           ML
         </div>
-        <h1 style={{ fontSize: '38px', fontWeight: 400, color: 'white', margin: '0 0 14px', fontFamily: 'Georgia, serif', lineHeight: 1.2 }}>
+        <h1 className="text-3xl md:text-[38px] font-normal text-white mb-3.5 leading-snug" style={{ fontFamily: 'Georgia, serif' }}>
           Reative seu acesso
         </h1>
-        <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.5)', margin: '0 auto', maxWidth: '480px', lineHeight: 1.6 }}>
+        <p className="text-base text-[rgba(255,255,255,0.5)] max-w-[480px] mx-auto leading-relaxed">
           Suas palavras-chave e configurações estão salvas. Assine agora e volte a receber alertas de licitações imediatamente.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '28px', marginTop: '28px', flexWrap: 'wrap' }}>
+        <div className="flex justify-center gap-6 md:gap-7 mt-7 flex-wrap">
           {[['🔒', 'Pagamento seguro'], ['↩', 'Cancele quando quiser'], ['⚡', 'Ativação imediata']].map(([icon, text]) => (
-            <div key={text as string} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.35)', fontSize: '13px' }}>
+            <div key={text as string} className="flex items-center gap-1.5 text-[rgba(255,255,255,0.35)] text-sm">
               <span>{icon}</span><span>{text}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Cards de planos */}
-      <div style={{ maxWidth: '1100px', margin: '-40px auto 0', padding: '0 24px 60px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+      {/* Cards */}
+      <div className="max-w-[1100px] mx-auto -mt-10 px-4 md:px-6 pb-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {PLANOS.map(p => (
           <div
             key={p.id}
-            style={{
-              background: p.destaque ? '#6B0F1A' : 'white',
-              border: p.destaque ? '2px solid #C9A65A' : '1px solid #D5D2C8',
-              borderRadius: '20px',
-              padding: '32px 28px',
-              position: 'relative',
-              boxShadow: p.destaque ? '0 20px 60px rgba(107,15,26,0.3)' : '0 4px 20px rgba(0,0,0,0.06)',
-              transform: p.destaque ? 'translateY(-8px)' : 'none',
-            }}
+            className={`rounded-[20px] p-7 relative flex flex-col ${
+              p.destaque
+                ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_20px_60px_rgba(107,15,26,0.3)] lg:-translate-y-2'
+                : 'bg-white border border-[#D5D2C8] shadow-[0_4px_20px_rgba(0,0,0,0.06)]'
+            }`}
           >
             {p.destaque && (
-              <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '11px', fontWeight: 800, padding: '5px 16px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
                 ⭐ MAIS POPULAR
               </div>
             )}
 
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '6px' }}>{p.nome}</div>
-            <div style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.6)' : '#9AA0A6', marginBottom: '20px' }}>{p.descricao}</div>
+            <div className={`text-[11px] font-bold tracking-widest uppercase mb-1.5 text-center ${p.destaque ? 'text-[#C9A65A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
+            <div className={`text-sm mb-5 text-center ${p.destaque ? 'text-[rgba(255,255,255,0.6)]' : 'text-[#9AA0A6]'}`}>{p.descricao}</div>
 
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.5)' : '#9AA0A6', fontWeight: 500 }}>R$</span>
-              <span style={{ fontSize: '44px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', lineHeight: 1 }}>{p.preco}</span>
+            <div className="flex items-end justify-center gap-1 mb-7">
+              <span className={`text-sm font-medium mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
+              <span className={`text-[44px] font-black leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
+                {p.preco.split(',')[0]}
+                {p.preco.includes(',') && (
+                  <span className="text-2xl font-black">,{p.preco.split(',')[1]}</span>
+                )}
+              </span>
+              <span className={`text-sm mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.4)]' : 'text-[#9AA0A6]'}`}>/mês</span>
             </div>
-            <div style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.4)' : '#9AA0A6', marginBottom: '28px' }}>/mês · cobrado mensalmente</div>
 
-            <div style={{ height: '1px', background: p.destaque ? 'rgba(201,166,90,0.2)' : '#F0EDE8', marginBottom: '24px' }} />
+            <div className={`h-px mb-6 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#F0EDE8]'}`} />
 
-            <div style={{ marginBottom: '28px' }}>
+            <div className="flex-1 mb-7">
               {p.itens.map(item => (
-                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '10px', color: p.destaque ? '#C9A65A' : '#6B0F1A', fontWeight: 700 }}>✓</span>
+                <div key={item} className="flex items-center gap-2.5 mb-2.5">
+                  <div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[rgba(107,15,26,0.08)]'}`}>
+                    <span className={`text-[10px] font-bold ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
                   </div>
-                  <span style={{ fontSize: '14px', color: p.destaque ? 'rgba(255,255,255,0.85)' : '#4a4a4d' }}>{item}</span>
+                  <span className={`text-sm ${p.destaque ? 'text-[rgba(255,255,255,0.85)]' : 'text-[#4a4a4d]'}`}>{item}</span>
                 </div>
               ))}
             </div>
@@ -146,19 +143,9 @@ export default function ExpiradoPage() {
             <button
               onClick={() => handleAssinar(p.id)}
               disabled={loadingPlano !== null}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '12px',
-                border: 'none',
-                cursor: loadingPlano !== null ? 'not-allowed' : 'pointer',
-                fontSize: '15px',
-                fontWeight: 700,
-                background: p.destaque ? '#C9A65A' : '#6B0F1A',
-                color: p.destaque ? '#1A1A1C' : 'white',
-                opacity: loadingPlano !== null && loadingPlano !== p.id ? 0.5 : loadingPlano === p.id ? 0.8 : 1,
-                transition: 'opacity 0.2s',
-              }}
+              className={`w-full py-3.5 rounded-xl border-none text-[15px] font-bold transition-opacity ${
+                p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
+              } ${loadingPlano !== null && loadingPlano !== p.id ? 'opacity-50 cursor-not-allowed' : loadingPlano === p.id ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {loadingPlano === p.id ? 'Aguarde...' : 'Assinar agora →'}
             </button>
@@ -167,22 +154,22 @@ export default function ExpiradoPage() {
       </div>
 
       {erro && (
-        <div style={{ maxWidth: '600px', margin: '-20px auto 40px', padding: '0 24px' }}>
-          <div style={{ background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', color: '#b91c1c', textAlign: 'center' }}>{erro}</div>
+        <div className="max-w-[600px] mx-auto -mt-6 mb-10 px-6">
+          <div className="bg-[rgba(185,28,28,0.08)] border border-[rgba(185,28,28,0.2)] rounded-xl px-5 py-3.5 text-sm text-[#b91c1c] text-center">{erro}</div>
         </div>
       )}
 
       {/* Contato + Logout */}
-      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '0 24px 60px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+      <div className="max-w-[400px] mx-auto px-6 pb-16 flex flex-col gap-3 items-center">
         <a
           href="https://wa.me/5531998317066?text=Olá! Quero reativar minha conta no Monitor de Licitações."
           target="_blank"
           rel="noopener noreferrer"
-          style={{ display: 'block', width: '100%', padding: '12px', borderRadius: '12px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#16a34a', background: 'rgba(37,211,102,0.08)', border: '1.5px solid rgba(37,211,102,0.2)', textDecoration: 'none' }}
+          className="block w-full py-3 rounded-xl text-center text-sm font-semibold text-[#16a34a] bg-[rgba(37,211,102,0.08)] border border-[rgba(37,211,102,0.2)] no-underline"
         >
           💬 Falar no WhatsApp
         </a>
-<div style={{ width: '100%' }}>
+        <div className="w-full">
           <LogoutButton />
         </div>
       </div>
