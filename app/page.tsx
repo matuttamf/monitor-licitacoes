@@ -257,7 +257,7 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
             {[
               { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
-              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que um pão de queijo', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
+              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que a mensalidade da academia', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
               { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
               { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null },
             ].map(p => (
