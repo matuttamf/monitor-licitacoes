@@ -101,33 +101,33 @@ export default function AlertasPage() {
   const [pagina, setPagina]         = useState(1)
 
   // Filtros
-  const [busca,    setBusca]    = useState('')
-  const [keyword,  setKeyword]  = useState('')
-  const [canal,    setCanal]    = useState('')
+  const [busca,    setBusca]   = useState('')
+  const [keyword,  setKeyword] = useState('')
 
   // Lista de keywords do usuário para o dropdown
   const [keywords, setKeywords] = useState<string[]>([])
 
-  // Carregar keywords disponíveis
-  useEffect(() => {
-    fetch('/api/keywords')
-      .then(r => r.json())
-      .then((kws: { termo: string }[]) => {
-        if (Array.isArray(kws)) setKeywords(kws.map(k => k.termo))
-      })
-  }, [])
-
+  // Carrega keywords e alertas em paralelo
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
+
     const params = new URLSearchParams({ pagina: String(p) })
     if (busca)   params.set('busca', busca)
     if (keyword) params.set('keyword', keyword)
-    if (canal)   params.set('canal', canal)
 
-    const res = await fetch(`/api/alertas?${params}`)
-    if (res.ok) setResposta(await res.json())
+    const [resAlertas, resKeywords] = await Promise.all([
+      fetch(`/api/alertas?${params}`),
+      keywords.length === 0 ? fetch('/api/keywords') : Promise.resolve(null),
+    ])
+
+    if (resAlertas.ok) setResposta(await resAlertas.json())
+    if (resKeywords?.ok) {
+      const kws: { termo: string }[] = await resKeywords.json()
+      if (Array.isArray(kws)) setKeywords(kws.map(k => k.termo))
+    }
+
     setCarregando(false)
-  }, [busca, keyword, canal])
+  }, [busca, keyword, keywords.length])
 
   // Re-busca quando filtros ou página mudam
   useEffect(() => {
@@ -141,7 +141,7 @@ export default function AlertasPage() {
   }
 
   const alertas = resposta?.data ?? []
-  const temFiltro = busca || keyword || canal
+  const temFiltro = busca || keyword
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -184,25 +184,10 @@ export default function AlertasPage() {
           </select>
         </div>
 
-        {/* Canal */}
-        <div className="min-w-[140px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Canal</label>
-          <select
-            value={canal}
-            onChange={e => aplicarFiltro(() => setCanal(e.target.value))}
-            className="w-full px-3 py-2 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
-          >
-            <option value="">Todos</option>
-            <option value="email">E-mail</option>
-            <option value="telegram">Telegram</option>
-          </select>
-        </div>
-
         {/* Limpar */}
         {temFiltro && (
           <button
-            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setCanal('') })}
+            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword('') })}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'var(--surface-2)', color: 'var(--cinza)', border: '1px solid var(--cinza-light)', cursor: 'pointer', alignSelf: 'flex-end' }}
           >

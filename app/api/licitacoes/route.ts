@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
     .from('licitacoes')
     .select('id, fonte, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, coletado_em', { count: 'exact' })
     .in('id', licitacaoIds)
-    .order('coletado_em', { ascending: false })
+    .order('valor_estimado', { ascending: false, nullsFirst: false })
+    .order('coletado_em',    { ascending: false })
     .range(from, to)
 
   if (searchParams.get('estado')) {
