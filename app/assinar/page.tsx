@@ -262,7 +262,7 @@ export default function AssinarPage() {
 
       {/* Footer */}
       <div style={{ background: '#1A1A1C', padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>© 2025 Monitor de Licitações · Matutta</span>
+        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>© {new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
         <div style={{ display: 'flex', gap: '24px' }}>
           <Link href="/" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Início</Link>
           <Link href="/login" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Entrar</Link>

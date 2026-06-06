@@ -109,7 +109,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <div className="text-sm font-medium truncate" style={{ color: 'white' }}>
                 {emailPrefix}
               </div>
-              <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>Matutta</div>
+              <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>Matutta Soluções Digitais</div>
             </div>
           </div>
           <LogoutButton />

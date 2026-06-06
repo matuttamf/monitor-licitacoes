@@ -12,7 +12,7 @@ export const metadata = {
 // - CONTATO_EMAIL: e-mail oficial de privacidade (ex: privacidade@seudominio.com.br)
 // - CONTATO_SITE: URL do site oficial
 
-const EMPRESA_NOME    = 'Monitor de Licitações - Matutta'   // TODO: razão social oficial
+const EMPRESA_NOME    = 'Matutta Soluções Digitais'   // TODO: razão social oficial
 const EMPRESA_CNPJ    = '[CNPJ em processo de registro]'     // TODO: inserir CNPJ
 const EMPRESA_SEDE    = 'Brasil'                             // TODO: inserir cidade/UF
 const CONTATO_EMAIL   = 'privacidade@monitorlicitacoes.com.br' // TODO: criar e-mail oficial
@@ -291,7 +291,7 @@ export default function PrivacidadePage() {
 
             <Section titulo="13. Encarregado de dados (DPO)">
               <InfoBox>
-                <InfoRow label="Responsável">Monitor de Licitações - Matutta</InfoRow>
+                <InfoRow label="Responsável">Matutta Soluções Digitais</InfoRow>
                 <InfoRow label="E-mail de privacidade">{CONTATO_EMAIL}</InfoRow>
                 <InfoRow label="Site">{CONTATO_SITE}</InfoRow>
                 <InfoRow label="Tempo de resposta">Até 15 dias úteis</InfoRow>

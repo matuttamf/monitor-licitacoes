@@ -11,7 +11,7 @@ export const metadata = {
 // - EMPRESA_SEDE_CIDADE: cidade da sede (foro contratual)
 // - CONTATO_EMAIL: e-mail oficial de atendimento (ex: contato@seudominio.com.br)
 
-const EMPRESA_NOME        = 'Monitor de Licitações - Matutta'     // TODO: razão social oficial
+const EMPRESA_NOME        = 'Matutta Soluções Digitais'     // TODO: razão social oficial
 const EMPRESA_CNPJ        = '[CNPJ em processo de registro]'       // TODO: inserir CNPJ
 const EMPRESA_SEDE_CIDADE = 'Belo Horizonte/MG'                    // TODO: confirmar cidade da sede
 const CONTATO_EMAIL       = 'contato@monitorlicitacoes.com.br'     // TODO: criar e-mail oficial
