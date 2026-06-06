@@ -63,7 +63,7 @@ export default function LoginPage() {
         </div>
 
         <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
-          {[['95 fontes', 'Monitoradas'], ['Todo dia útil', 'Alertas'], ['IA', 'Cruzamento']].map(([num, label]) => (
+          {[['195 fontes', 'Monitoradas'], ['Todo dia útil', 'Alertas'], ['IA', 'Cruzamento']].map(([num, label]) => (
             <div key={label}>
               <div style={{ fontWeight: 700, fontSize: '18px', color: '#C9A65A' }}>{num}</div>
               <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{label}</div>

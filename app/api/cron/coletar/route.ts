@@ -8,7 +8,7 @@ import { coletarPNCPPCA }          from '@/lib/scrapers/pncp-pca'
 import { coletarComprasNet }       from '@/lib/scrapers/comprasnet'
 import { coletarQueridoDiario }    from '@/lib/scrapers/querido-diario'
 import { coletarGoogle }           from '@/lib/scrapers/google'
-import { coletarDOU }              from '@/lib/scrapers/dou'          // 3 seções
+import { coletarDOU }              from '@/lib/scrapers/dou'
 
 // ── Camada 1 — Plataformas privadas nacionais ─────────────────────────────
 import { coletarBBMNET }           from '@/lib/scrapers/bbmnet'
@@ -48,7 +48,7 @@ import { coletarPortalSE }         from '@/lib/scrapers/portal-se'
 import { coletarPortalAL }         from '@/lib/scrapers/portal-al'
 import { coletarPortalAP }         from '@/lib/scrapers/portal-ap'
 
-// ── Camada 3 — Capitais (todas 27 capitais + DF) ──────────────────────────
+// ── Camada 3 — Capitais (17 capitais com portais próprios) ────────────────
 import { coletarPortalSPCidade }   from '@/lib/scrapers/portal-sp-cidade'
 import { coletarPortalBH }         from '@/lib/scrapers/portal-bh'
 import { coletarPortalRecife }     from '@/lib/scrapers/portal-recife'
@@ -67,7 +67,7 @@ import { coletarPortalTeresina }   from '@/lib/scrapers/portal-teresina'
 import { coletarPortalJoaoPessoa } from '@/lib/scrapers/portal-joao-pessoa'
 import { coletarPortalAracaju }    from '@/lib/scrapers/portal-aracaju'
 
-// ── Camada 3 — Cidades grandes (50k+ hab, não-capitais) ───────────────────
+// ── Camada 3 — Cidades 200k+ batch 1 ─────────────────────────────────────
 import { coletarPortalCampinas }      from '@/lib/scrapers/portal-campinas'
 import { coletarPortalGuarulhos }     from '@/lib/scrapers/portal-guarulhos'
 import { coletarPortalUberlandia }    from '@/lib/scrapers/portal-uberlandia'
@@ -75,17 +75,7 @@ import { coletarPortalJoinville }     from '@/lib/scrapers/portal-joinville'
 import { coletarPortalLondrina }      from '@/lib/scrapers/portal-londrina'
 import { coletarPortalRibeiraoPreto } from '@/lib/scrapers/portal-ribeirao-preto'
 
-// ── Camada 3 — Cidades 100k-700k (não-capitais, batch 3) ─────────────────
-import { coletarPortalOsasco }          from '@/lib/scrapers/portal-osasco'
-import { coletarPortalSantoAndre }      from '@/lib/scrapers/portal-santo-andre'
-import { coletarPortalDuqueDeCaxias }   from '@/lib/scrapers/portal-duque-de-caxias'
-import { coletarPortalAparecidaGoiania }from '@/lib/scrapers/portal-aparecida-goiania'
-import { coletarPortalCaxiasDoSul }     from '@/lib/scrapers/portal-caxias-do-sul'
-import { coletarPortalSJRP }            from '@/lib/scrapers/portal-sjrp'
-import { coletarPortalJundiai }         from '@/lib/scrapers/portal-jundiai'
-import { coletarPortalBetim }           from '@/lib/scrapers/portal-betim'
-
-// ── Camada 3 — Cidades 100k-700k (não-capitais, batch 2) ─────────────────
+// ── Camada 3 — Cidades batch 2 ────────────────────────────────────────────
 import { coletarPortalSantos }        from '@/lib/scrapers/portal-santos'
 import { coletarPortalSorocaba }      from '@/lib/scrapers/portal-sorocaba'
 import { coletarPortalSBC }           from '@/lib/scrapers/portal-sbc'
@@ -97,7 +87,17 @@ import { coletarPortalJuizDeFora }    from '@/lib/scrapers/portal-juiz-de-fora'
 import { coletarPortalNiteroi }       from '@/lib/scrapers/portal-niteroi'
 import { coletarPortalFeiraDeSantana }from '@/lib/scrapers/portal-feira-de-santana'
 
-// ── Camada 4 — Consórcios públicos + autarquias federais de grande porte ──
+// ── Camada 3 — Cidades batch 3 ────────────────────────────────────────────
+import { coletarPortalOsasco }          from '@/lib/scrapers/portal-osasco'
+import { coletarPortalSantoAndre }      from '@/lib/scrapers/portal-santo-andre'
+import { coletarPortalDuqueDeCaxias }   from '@/lib/scrapers/portal-duque-de-caxias'
+import { coletarPortalAparecidaGoiania }from '@/lib/scrapers/portal-aparecida-goiania'
+import { coletarPortalCaxiasDoSul }     from '@/lib/scrapers/portal-caxias-do-sul'
+import { coletarPortalSJRP }            from '@/lib/scrapers/portal-sjrp'
+import { coletarPortalJundiai }         from '@/lib/scrapers/portal-jundiai'
+import { coletarPortalBetim }           from '@/lib/scrapers/portal-betim'
+
+// ── Camada 4 — Consórcios + autarquias federais ───────────────────────────
 import { coletarConsorcioGrandeABC }from '@/lib/scrapers/consorcio-grande-abc'
 import { coletarFNDE }              from '@/lib/scrapers/fnde'
 import { coletarFNS }               from '@/lib/scrapers/fns'
@@ -111,13 +111,65 @@ import { coletarCaixa }            from '@/lib/scrapers/caixa'
 import { coletarEletrobras }       from '@/lib/scrapers/eletrobras'
 import { coletarSabesp }           from '@/lib/scrapers/sabesp'
 
+// ── Camada 6 — Órgãos federais via PNCP CNPJ (18 novos) ──────────────────
+import {
+  coletarINSS, coletarMEC, coletarCAPES, coletarCNPq, coletarEMBRAPA,
+  coletarIBGE_org, coletarFIOCRUZ, coletarANVISA, coletarINFRAERO,
+  coletarANATEL, coletarCODEVASF, coletarCONAB, coletarAGU, coletarTCU,
+  coletarINCRA, coletarIBAMA, coletarSERPRO, coletarDATAPREV,
+} from '@/lib/scrapers/orgaos-federais'
+
+// ── Camada 7 — Cidades via PNCP IBGE (Sudeste — 29 cidades) ──────────────
+import {
+  coletarSaoGoncalo, coletarNovaIguacu, coletarCamposGoyt,
+  coletarVoltaRedonda, coletarMacae, coletarPetropolis,
+  coletarPiracicaba, coletarMaua, coletarDiadema, coletarCarapicuiba,
+  coletarBauru, coletarFranca, coletarLimeira, coletarBarueri,
+  coletarTaubate, coletarSuzano, coletarSumare, coletarSaoVicente,
+  coletarPraiaGrande, coletarTaboaoDaSerra,
+  coletarUberaba, coletarGovValadares, coletarIpatinga,
+  coletarSeteLagoas, coletarDivinopolis, coletarMontesClaros,
+  coletarVilaVelha, coletarSerra, coletarCariacica,
+} from '@/lib/scrapers/cidades-pncp-sudeste'
+
+// ── Camada 7 — Cidades via PNCP IBGE (Sul — 18 cidades) ──────────────────
+import {
+  coletarPontaGrossa, coletarCascavel, coletarFozDoIguacu,
+  coletarSJPinhais, coletarColombo,
+  coletarBlumenau, coletarSaoJoseSC, coletarChapeco, coletarItajai,
+  coletarBalnearioCamboriu, coletarPalhoca,
+  coletarPelotas, coletarCanoas, coletarSantaMaria,
+  coletarNovoHamburgo, coletarGravitai, coletarViamao, coletarSaoLeopoldo,
+} from '@/lib/scrapers/cidades-pncp-sul'
+
+// ── Camada 7 — Cidades via PNCP IBGE (Nordeste — 19 cidades) ─────────────
+import {
+  coletarVitoriaConquista, coletarCamacari, coletarItabuna,
+  coletarIlheus, coletarLauroDeFreitas,
+  coletarCaruaru, coletarPetrolina, coletarOlinda, coletarCaboSantoAgost,
+  coletarCaucaia, coletarJuazeiroDoNorte, coletarMaracanau, coletarSobral,
+  coletarMossoro, coletarCampinaGrande,
+  coletarImperatriz, coletarTimon, coletarParnaiba, coletarArapiraca,
+} from '@/lib/scrapers/cidades-pncp-nordeste'
+
+// ── Camada 7 — Cidades via PNCP IBGE (Norte + CO — 20 cidades) ───────────
+import {
+  coletarFlorianopolis, coletarVitoriaES, coletarCuiaba,
+  coletarPortoVelho, coletarRioBranco, coletarMacapa,
+  coletarBoaVista, coletarPalmas,
+  coletarAnanindeua, coletarSantarem, coletarMaraba, coletarCastanhal,
+  coletarAnapolisGO, coletarRioVerdeGO, coletarDourados,
+  coletarVarzeaGrande, coletarRondonopolis,
+  coletarJiParana, coletarAraguaina,
+} from '@/lib/scrapers/cidades-pncp-norte-co'
+
 import { salvarLicitacoes }        from '@/lib/scrapers/salvar'
 import { createServiceClient }     from '@/lib/supabase/server'
 import { registrarCronLog }        from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-const TOTAL_FONTES = 95
+const TOTAL_FONTES = 195
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -131,7 +183,7 @@ export async function GET(request: Request) {
   const dataInicio = ontem.toISOString().substring(0, 10)
   const dataFim    = hoje.toISOString().substring(0, 10)
 
-  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes em 5 camadas)`)
+  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes em 7 camadas)`)
 
   // 0. Limpar licitações expiradas
   const supabase = await createServiceClient()
@@ -153,7 +205,7 @@ export async function GET(request: Request) {
     coletarComprasNet(dataInicio),
     coletarQueridoDiario(termosAtivos.slice(0, 5)),
     coletarGoogle(termosAtivos),
-    coletarDOU(dataInicio),                    // DOU 3 seções integradas
+    coletarDOU(dataInicio),
     // Plataformas (7-13)
     coletarBBMNET(dataInicio),
     coletarLicitanet(dataInicio),
@@ -190,7 +242,7 @@ export async function GET(request: Request) {
     coletarPortalSE(dataInicio),
     coletarPortalAL(dataInicio),
     coletarPortalAP(dataInicio),
-    // Camada 3 — Capitais (41-57)
+    // Camada 3 — Capitais com portais próprios (41-57)
     coletarPortalSPCidade(dataInicio),
     coletarPortalBH(dataInicio),
     coletarPortalRecife(dataInicio),
@@ -208,23 +260,14 @@ export async function GET(request: Request) {
     coletarPortalTeresina(dataInicio),
     coletarPortalJoaoPessoa(dataInicio),
     coletarPortalAracaju(dataInicio),
-    // Camada 3 — Cidades 200k+ (58-63)
+    // Camada 3 — Cidades 200k+ batch 1 (58-63)
     coletarPortalCampinas(dataInicio),
     coletarPortalGuarulhos(dataInicio),
     coletarPortalUberlandia(dataInicio),
     coletarPortalJoinville(dataInicio),
     coletarPortalLondrina(dataInicio),
     coletarPortalRibeiraoPreto(dataInicio),
-    // Camada 3 — Cidades 100k-700k batch 3 (69-76)
-    coletarPortalOsasco(dataInicio),
-    coletarPortalSantoAndre(dataInicio),
-    coletarPortalDuqueDeCaxias(dataInicio),
-    coletarPortalAparecidaGoiania(dataInicio),
-    coletarPortalCaxiasDoSul(dataInicio),
-    coletarPortalSJRP(dataInicio),
-    coletarPortalJundiai(dataInicio),
-    coletarPortalBetim(dataInicio),
-    // Camada 3 — Cidades 100k-700k batch 2 (77-86)
+    // Camada 3 — Cidades batch 2 (64-73)
     coletarPortalSantos(dataInicio),
     coletarPortalSorocaba(dataInicio),
     coletarPortalSBC(dataInicio),
@@ -235,18 +278,135 @@ export async function GET(request: Request) {
     coletarPortalJuizDeFora(dataInicio),
     coletarPortalNiteroi(dataInicio),
     coletarPortalFeiraDeSantana(dataInicio),
-    // Camada 4 — Consórcios + autarquias federais (87-91)
+    // Camada 3 — Cidades batch 3 (74-81)
+    coletarPortalOsasco(dataInicio),
+    coletarPortalSantoAndre(dataInicio),
+    coletarPortalDuqueDeCaxias(dataInicio),
+    coletarPortalAparecidaGoiania(dataInicio),
+    coletarPortalCaxiasDoSul(dataInicio),
+    coletarPortalSJRP(dataInicio),
+    coletarPortalJundiai(dataInicio),
+    coletarPortalBetim(dataInicio),
+    // Camada 4 — Consórcios + autarquias (82-86)
     coletarConsorcioGrandeABC(dataInicio),
     coletarFNDE(dataInicio, dataFim),
     coletarFNS(dataInicio, dataFim),
     coletarDNIT(dataInicio, dataFim),
     coletarConsorcioPCJ(dataInicio),
-    // Camada 5 — Estatais (92-96)
+    // Camada 5 — Estatais (87-91)
     coletarPetronect(dataInicio),
     coletarCorreios(dataInicio),
     coletarCaixa(dataInicio),
     coletarEletrobras(dataInicio),
     coletarSabesp(dataInicio),
+    // Camada 6 — Órgãos federais PNCP CNPJ (92-109)
+    coletarINSS(dataInicio, dataFim),
+    coletarMEC(dataInicio, dataFim),
+    coletarCAPES(dataInicio, dataFim),
+    coletarCNPq(dataInicio, dataFim),
+    coletarEMBRAPA(dataInicio, dataFim),
+    coletarIBGE_org(dataInicio, dataFim),
+    coletarFIOCRUZ(dataInicio, dataFim),
+    coletarANVISA(dataInicio, dataFim),
+    coletarINFRAERO(dataInicio, dataFim),
+    coletarANATEL(dataInicio, dataFim),
+    coletarCODEVASF(dataInicio, dataFim),
+    coletarCONAB(dataInicio, dataFim),
+    coletarAGU(dataInicio, dataFim),
+    coletarTCU(dataInicio, dataFim),
+    coletarINCRA(dataInicio, dataFim),
+    coletarIBAMA(dataInicio, dataFim),
+    coletarSERPRO(dataInicio, dataFim),
+    coletarDATAPREV(dataInicio, dataFim),
+    // Camada 7 — Cidades PNCP IBGE Sudeste (110-138)
+    coletarSaoGoncalo(dataInicio, dataFim),
+    coletarNovaIguacu(dataInicio, dataFim),
+    coletarCamposGoyt(dataInicio, dataFim),
+    coletarVoltaRedonda(dataInicio, dataFim),
+    coletarMacae(dataInicio, dataFim),
+    coletarPetropolis(dataInicio, dataFim),
+    coletarPiracicaba(dataInicio, dataFim),
+    coletarMaua(dataInicio, dataFim),
+    coletarDiadema(dataInicio, dataFim),
+    coletarCarapicuiba(dataInicio, dataFim),
+    coletarBauru(dataInicio, dataFim),
+    coletarFranca(dataInicio, dataFim),
+    coletarLimeira(dataInicio, dataFim),
+    coletarBarueri(dataInicio, dataFim),
+    coletarTaubate(dataInicio, dataFim),
+    coletarSuzano(dataInicio, dataFim),
+    coletarSumare(dataInicio, dataFim),
+    coletarSaoVicente(dataInicio, dataFim),
+    coletarPraiaGrande(dataInicio, dataFim),
+    coletarTaboaoDaSerra(dataInicio, dataFim),
+    coletarUberaba(dataInicio, dataFim),
+    coletarGovValadares(dataInicio, dataFim),
+    coletarIpatinga(dataInicio, dataFim),
+    coletarSeteLagoas(dataInicio, dataFim),
+    coletarDivinopolis(dataInicio, dataFim),
+    coletarMontesClaros(dataInicio, dataFim),
+    coletarVilaVelha(dataInicio, dataFim),
+    coletarSerra(dataInicio, dataFim),
+    coletarCariacica(dataInicio, dataFim),
+    // Camada 7 — Sul (139-156)
+    coletarPontaGrossa(dataInicio, dataFim),
+    coletarCascavel(dataInicio, dataFim),
+    coletarFozDoIguacu(dataInicio, dataFim),
+    coletarSJPinhais(dataInicio, dataFim),
+    coletarColombo(dataInicio, dataFim),
+    coletarBlumenau(dataInicio, dataFim),
+    coletarSaoJoseSC(dataInicio, dataFim),
+    coletarChapeco(dataInicio, dataFim),
+    coletarItajai(dataInicio, dataFim),
+    coletarBalnearioCamboriu(dataInicio, dataFim),
+    coletarPalhoca(dataInicio, dataFim),
+    coletarPelotas(dataInicio, dataFim),
+    coletarCanoas(dataInicio, dataFim),
+    coletarSantaMaria(dataInicio, dataFim),
+    coletarNovoHamburgo(dataInicio, dataFim),
+    coletarGravitai(dataInicio, dataFim),
+    coletarViamao(dataInicio, dataFim),
+    coletarSaoLeopoldo(dataInicio, dataFim),
+    // Camada 7 — Nordeste (157-175)
+    coletarVitoriaConquista(dataInicio, dataFim),
+    coletarCamacari(dataInicio, dataFim),
+    coletarItabuna(dataInicio, dataFim),
+    coletarIlheus(dataInicio, dataFim),
+    coletarLauroDeFreitas(dataInicio, dataFim),
+    coletarCaruaru(dataInicio, dataFim),
+    coletarPetrolina(dataInicio, dataFim),
+    coletarOlinda(dataInicio, dataFim),
+    coletarCaboSantoAgost(dataInicio, dataFim),
+    coletarCaucaia(dataInicio, dataFim),
+    coletarJuazeiroDoNorte(dataInicio, dataFim),
+    coletarMaracanau(dataInicio, dataFim),
+    coletarSobral(dataInicio, dataFim),
+    coletarMossoro(dataInicio, dataFim),
+    coletarCampinaGrande(dataInicio, dataFim),
+    coletarImperatriz(dataInicio, dataFim),
+    coletarTimon(dataInicio, dataFim),
+    coletarParnaiba(dataInicio, dataFim),
+    coletarArapiraca(dataInicio, dataFim),
+    // Camada 7 — Norte + Centro-Oeste (176-194)
+    coletarFlorianopolis(dataInicio, dataFim),
+    coletarVitoriaES(dataInicio, dataFim),
+    coletarCuiaba(dataInicio, dataFim),
+    coletarPortoVelho(dataInicio, dataFim),
+    coletarRioBranco(dataInicio, dataFim),
+    coletarMacapa(dataInicio, dataFim),
+    coletarBoaVista(dataInicio, dataFim),
+    coletarPalmas(dataInicio, dataFim),
+    coletarAnanindeua(dataInicio, dataFim),
+    coletarSantarem(dataInicio, dataFim),
+    coletarMaraba(dataInicio, dataFim),
+    coletarCastanhal(dataInicio, dataFim),
+    coletarAnapolisGO(dataInicio, dataFim),
+    coletarRioVerdeGO(dataInicio, dataFim),
+    coletarDourados(dataInicio, dataFim),
+    coletarVarzeaGrande(dataInicio, dataFim),
+    coletarRondonopolis(dataInicio, dataFim),
+    coletarJiParana(dataInicio, dataFim),
+    coletarAraguaina(dataInicio, dataFim),
   ])
 
   const ok   = (r: PromiseSettledResult<LicitacaoRaw[]>): LicitacaoRaw[] => r.status === 'fulfilled' ? r.value : []
@@ -258,7 +418,7 @@ export async function GET(request: Request) {
   const totalOk = fonteOk.filter(Boolean).length
   console.log(`Coletadas ${todasLicitacoes.length} licitações de ${totalOk}/${TOTAL_FONTES} fontes`)
 
-  // 2. Salvar (deduplicação por external_id / numero_edital)
+  // 2. Salvar (deduplicação por external_id)
   const salvas = await salvarLicitacoes(todasLicitacoes)
   console.log(`${salvas} licitações novas salvas`)
 
@@ -292,16 +452,41 @@ export async function GET(request: Request) {
     // Camada 3 — Capitais
     'sp_cidade','bh','recife','fortaleza','manaus','curitiba','poa','belem','goiania','salvador',
     'natal','campo_grande','maceio','sao_luis','teresina','joao_pessoa','aracaju',
-    // Camada 3 — Cidades 200k+ batch 1
+    // Camada 3 — batch 1
     'campinas','guarulhos','uberlandia','joinville','londrina','ribeirao_preto',
-    // Camada 3 — Cidades batch 3
-    'osasco','santo_andre','duque_caxias','aparecida_goiania','caxias_sul','sjrp','jundiai','betim',
-    // Camada 3 — Cidades batch 2
+    // Camada 3 — batch 2
     'santos','sorocaba','sbc','contagem','maringa','sjc','mogi','juiz_de_fora','niteroi','feira_de_santana',
-    // Camada 4 — Consórcios + autarquias
+    // Camada 3 — batch 3
+    'osasco','santo_andre','duque_caxias','aparecida_goiania','caxias_sul','sjrp','jundiai','betim',
+    // Camada 4
     'grande_abc','fnde','fns','dnit','pcj',
-    // Camada 5 — Estatais
+    // Camada 5
     'petronect','correios','caixa','eletrobras','sabesp',
+    // Camada 6 — Órgãos federais
+    'inss','mec','capes','cnpq','embrapa','ibge_org','fiocruz','anvisa',
+    'infraero','anatel','codevasf','conab','agu','tcu','incra','ibama','serpro','dataprev',
+    // Camada 7 — Sudeste
+    'sao_goncalo','nova_iguacu','campos_goyt','volta_redonda','macae','petropolis',
+    'piracicaba','maua','diadema','carapicuiba','bauru','franca','limeira','barueri',
+    'taubate','suzano','sumare','sao_vicente','praia_grande','taboao_serra',
+    'uberaba','gov_valadares','ipatinga','sete_lagoas','divinopolis','montes_claros',
+    'vila_velha','serra_es','cariacica',
+    // Camada 7 — Sul
+    'ponta_grossa','cascavel','foz_iguacu','sj_pinhais','colombo',
+    'blumenau','sao_jose_sc','chapeco','itajai','balneario_camboriu','palhoca',
+    'pelotas','canoas','santa_maria','novo_hamburgo','gravitai','viamao','sao_leopoldo',
+    // Camada 7 — Nordeste
+    'vitoria_conquista','camacari','itabuna','ilheus','lauro_freitas',
+    'caruaru','petrolina','olinda','cabo_sto_agostinho',
+    'caucaia','juazeiro_norte','maracanau','sobral',
+    'mossoro','campina_grande',
+    'imperatriz','timon','parnaiba','arapiraca',
+    // Camada 7 — Norte+CO
+    'florianopolis','vitoria_es','cuiaba','porto_velho','rio_branco','macapa',
+    'boa_vista','palmas',
+    'ananindeua','santarem','maraba','castanhal',
+    'anapolis_go','rio_verde_go','dourados','varzea_grande','rondonopolis',
+    'ji_parana','araguaina',
   ]
 
   const detalhes: Record<string, unknown> = Object.fromEntries(nomes.map((n, i) => [`${n}_ok`, fonteOk[i]]))
