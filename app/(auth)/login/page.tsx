@@ -43,10 +43,10 @@ function LoginForm() {
         <div className="absolute bottom-[10%] right-[5%] w-[40%] h-[40%] rounded-full bg-[#C9A65A] opacity-10 blur-[80px]" />
 
         {/* Logo */}
-        <div className="relative flex items-center gap-3">
+        <Link href="/" className="relative flex items-center gap-3 no-underline">
           <div className="w-10 h-10 rounded-xl bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-[13px] border border-[rgba(201,166,90,0.3)]">ML</div>
           <span className="text-white font-semibold">Monitor de Licitações</span>
-        </div>
+        </Link>
 
         {/* Headline */}
         <div className="relative">
@@ -78,10 +78,10 @@ function LoginForm() {
         <div className="w-full max-w-[380px]">
 
           {/* Logo mobile */}
-          <div className="flex items-center gap-2.5 mb-10 lg:hidden">
+          <Link href="/" className="flex items-center gap-2.5 mb-10 lg:hidden no-underline">
             <div className="w-9 h-9 rounded-[10px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-xs">ML</div>
             <span className="font-bold text-[15px] text-[#1A1A1C]">Monitor de Licitações</span>
-          </div>
+          </Link>
 
           <h2 className="text-2xl sm:text-[26px] font-bold text-[#1A1A1C] mb-1.5">Bem-vindo de volta</h2>
           <p className="text-sm text-[#9AA0A6] mb-8">Acesse sua conta para ver os alertas</p>
