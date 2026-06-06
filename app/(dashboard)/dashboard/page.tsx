@@ -32,6 +32,11 @@ const fonteConfig: Record<string, { cor: string; bg: string }> = {
   'BBMNET':         { cor: '#1d4ed8', bg: 'rgba(29,78,216,0.07)'  },
   'Licitanet':      { cor: '#7c3aed', bg: 'rgba(124,58,237,0.07)' },
   'BEC/SP':         { cor: '#0369a1', bg: 'rgba(3,105,161,0.07)'  },
+  'Licitações-e':   { cor: '#b45309', bg: 'rgba(180,83,9,0.07)'   },
+  'Portal MG':      { cor: '#065f46', bg: 'rgba(6,95,70,0.07)'    },
+  'Portal RS':      { cor: '#1e3a5f', bg: 'rgba(30,58,95,0.07)'   },
+  'Portal PR':      { cor: '#3b0764', bg: 'rgba(59,7,100,0.07)'   },
+  'Licitar Digital':{ cor: '#9f1239', bg: 'rgba(159,18,57,0.07)'  },
 }
 
 const estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
