@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     .select(SELECT_ALERTAS)
     .neq('canais', '{}')
     .lte('enviado_em', umaSemanAAtras)
-    .or(`data_abratura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
     .order('score', { ascending: false })
     .limit(50)
 

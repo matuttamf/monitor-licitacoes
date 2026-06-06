@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createServiceClient } from '@/lib/supabase/server'
 import { registrarCronLog } from '@/lib/cron-log'
-import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
+import { enviarTextoTelegram } from '@/lib/alerts/telegram'
 import { enviarResumoSemanalWhatsApp } from '@/lib/alerts/whatsapp'
 import { temWhatsApp } from '@/lib/planos'
 
@@ -20,15 +20,6 @@ export const maxDuration = 300
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM_EMAIL = process.env.RESEND_FROM ?? 'Monitor de Licitações <alertas@monitordelicitacoes.com.br>'
-
-// Regiões → estados brasileiros
-const REGIOES: Record<string, string[]> = {
-  norte:        ['AC', 'AM', 'AP', 'PA', 'RO', 'RR', 'TO'],
-  nordeste:     ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
-  sudeste:      ['ES', 'MG', 'RJ', 'SP'],
-  sul:          ['PR', 'RS', 'SC'],
-  centro_oeste: ['DF', 'GO', 'MS', 'MT'],
-}
 
 function inicioSemana(): string {
   const d = new Date()
@@ -261,11 +252,8 @@ export async function GET(request: Request) {
     if (perfil?.telegram_chat_id) {
       try {
         const texto = gerarTextoTelegramResumo({ total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl })
-        await enviarAlertaTelegram(
-          [{ orgao: 'Resumo', objeto: texto, url: `${appUrl}/alertas`, keyword: '' }],
-          perfil.telegram_chat_id,
-        )
-        canaisEnviados.push('telegram')
+        const ok = await enviarTextoTelegram(perfil.telegram_chat_id, texto)
+        if (ok) canaisEnviados.push('telegram')
       } catch (e) {
         console.error('Resumo semanal — erro telegram:', userId, e)
       }

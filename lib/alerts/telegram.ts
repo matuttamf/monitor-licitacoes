@@ -47,6 +47,13 @@ async function enviarMensagemTelegram(token: string, chatId: string, texto: stri
   return true
 }
 
+/** Envia um texto puro (já formatado em Markdown) para um chat */
+export async function enviarTextoTelegram(chatId: string, texto: string): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  if (!token || !chatId) return false
+  return enviarMensagemTelegram(token, chatId, texto)
+}
+
 export async function enviarAlertaTelegram(
   licitacoes: LicitacaoAlerta[],
   chatId: string
