@@ -182,13 +182,7 @@ export default function ExpiradoPage() {
         >
           💬 Falar no WhatsApp
         </a>
-        <a
-          href="mailto:matuttamaquinaseferramentas@gmail.com?subject=Quero reativar minha conta"
-          style={{ display: 'block', width: '100%', padding: '12px', borderRadius: '12px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#6B0F1A', background: 'transparent', border: '1.5px solid rgba(107,15,26,0.2)', textDecoration: 'none' }}
-        >
-          ✉ Falar por e-mail
-        </a>
-        <div style={{ width: '100%' }}>
+<div style={{ width: '100%' }}>
           <LogoutButton />
         </div>
       </div>
