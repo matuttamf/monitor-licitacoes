@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   // Agrupar keywords por licitacao_id
   const keywordsPorLicitacao = new Map<string, string[]>()
   for (const a of alertas) {
-    const termo = (a.keywords as { termo: string } | null)?.termo
+    const termo = (a.keywords as unknown as { termo: string } | null)?.termo
     if (!termo) continue
     const lista = keywordsPorLicitacao.get(a.licitacao_id) ?? []
     if (!lista.includes(termo)) lista.push(termo)

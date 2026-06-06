@@ -45,11 +45,12 @@ export async function GET(request: NextRequest) {
   if (busca) {
     const termo = busca.toLowerCase()
     resultado = resultado.filter(a => {
-      const lic = a.licitacoes as { orgao: string; objeto: string } | null
+      const lic = a.licitacoes as unknown as { orgao: string; objeto: string } | null
+      const kw  = a.keywords  as unknown as { termo: string } | null
       return (
         lic?.orgao?.toLowerCase().includes(termo) ||
         lic?.objeto?.toLowerCase().includes(termo) ||
-        (a.keywords as { termo: string } | null)?.termo?.toLowerCase().includes(termo)
+        kw?.termo?.toLowerCase().includes(termo)
       )
     })
   }
