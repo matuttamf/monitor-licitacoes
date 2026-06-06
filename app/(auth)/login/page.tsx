@@ -1,55 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
+import { loginAction } from './actions'
 import Link from 'next/link'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState('')
-  const [carregando, setCarregando] = useState(false)
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const erroParam = params.get('erro')
-    if (erroParam === 'link_expirado') setErro('Link expirado ou já utilizado. Solicite um novo e-mail de recuperação.')
-    if (erroParam === 'link_invalido') setErro('Link inválido. Solicite um novo e-mail de recuperação.')
-  }, [])
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setCarregando(true)
-    setErro('')
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-    if (error) {
-      if (error.message.includes('Email not confirmed')) {
-        setErro('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.')
-      } else if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_credentials')) {
-        setErro('E-mail ou senha incorretos.')
-      } else {
-        setErro('Erro ao entrar: ' + error.message)
-      }
-      setCarregando(false)
-      return
-    }
-    // Aguarda o Supabase gravar a sessão no cookie antes de redirecionar
-    // Isso evita race condition no mobile onde getSession() retorna null
-    await new Promise<void>(resolve => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_IN') {
-          subscription.unsubscribe()
-          resolve()
-        }
-      })
-      // Fallback: redireciona em até 1s mesmo sem o evento
-      setTimeout(resolve, 1000)
-    })
-    const params = new URLSearchParams(window.location.search)
-    const redirect = params.get('redirect')
-    window.location.href = redirect ?? '/dashboard'
-  }
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') ?? ''
+  const erroParam = searchParams.get('erro') ?? ''
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
@@ -71,7 +30,7 @@ export default function LoginPage() {
             <span style={{ color: '#C9A65A', fontStyle: 'italic' }}>antes de todos.</span>
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
-            Editais, dispensas e contratos públicos e privados de todo o Brasil — entregues toda manhã na sua caixa de entrada.
+            Editais, dispensas e contratos públicos e privados de todo o Brasil — monitorados em tempo real.
           </p>
         </div>
 
@@ -91,7 +50,6 @@ export default function LoginPage() {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', background: '#FAF6F0' }}>
         <div style={{ width: '100%', maxWidth: '380px' }}>
 
-          {/* Logo mobile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
             <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>ML</div>
             <span style={{ fontWeight: 700, fontSize: '15px', color: '#1A1A1C' }}>Monitor de Licitações</span>
@@ -100,17 +58,17 @@ export default function LoginPage() {
           <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Bem-vindo de volta</h2>
           <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Acesse sua conta para ver os alertas</p>
 
-          <form onSubmit={handleLogin}>
+          <form action={loginAction}>
+            {/* Campo hidden com o redirect */}
+            <input type="hidden" name="redirect" value={redirect} />
+
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>E-mail</label>
               <input
                 type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                name="email"
                 required
                 style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
@@ -118,27 +76,23 @@ export default function LoginPage() {
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Senha</label>
               <input
                 type="password"
-                value={senha}
-                onChange={e => setSenha(e.target.value)}
+                name="senha"
                 required
                 style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={e => { e.target.style.borderColor = '#6B0F1A'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = '#D5D2C8'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
-            {erro && (
+            {erroParam && (
               <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
-                ⚠ {erro}
+                ⚠ {erroParam}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={carregando}
-              style={{ width: '100%', padding: '13px', borderRadius: '12px', background: carregando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, border: 'none', cursor: carregando ? 'not-allowed' : 'pointer', letterSpacing: '0.02em' }}
+              style={{ width: '100%', padding: '13px', borderRadius: '12px', background: '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.02em' }}
             >
-              {carregando ? 'Entrando...' : 'Entrar'}
+              Entrar
             </button>
           </form>
 
@@ -151,5 +105,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#FAF6F0' }} />}>
+      <LoginForm />
+    </Suspense>
   )
 }
