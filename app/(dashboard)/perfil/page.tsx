@@ -23,7 +23,7 @@ type Perfil = {
 }
 
 export default function PerfilPage() {
-  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', status: 'trial', trial_fim: null })
+  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', status: 'trial', trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
   const [salvandoAlerta, setSalvandoAlerta] = useState(false)
   const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [pausandoCanal, setPausandoCanal] = useState<string | null>(null)
