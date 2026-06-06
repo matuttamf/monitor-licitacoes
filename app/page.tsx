@@ -1,127 +1,181 @@
 import Link from 'next/link'
 
+const PLANOS = [
+  {
+    id: 'trial',
+    nome: 'Período de Teste',
+    preco: null,
+    porDia: 'Grátis',
+    desc: 'Experimente sem compromisso',
+    keywords: 'Até 20 palavras-chave',
+    usuarios: '1 usuário',
+    destaque: false,
+    tag: '🎁 GRÁTIS',
+    whatsapp: false,
+    href: '/cadastro',
+    btnText: 'Começar 7 dias grátis',
+    note: 'Sem cartão de crédito',
+  },
+  {
+    id: 'basic',
+    nome: 'Basic',
+    preco: '49,90',
+    porDia: 'R$1,66/dia',
+    desc: 'Para quem está começando no setor público',
+    keywords: 'Até 20 palavras-chave',
+    usuarios: '1 usuário',
+    destaque: false,
+    tag: null,
+    whatsapp: false,
+    href: '/assinar',
+    btnText: 'Assinar agora →',
+    note: 'Ou teste 7 dias grátis antes',
+  },
+  {
+    id: 'profissional',
+    nome: 'Profissional',
+    preco: '97,90',
+    porDia: 'R$3,26/dia',
+    desc: 'Para quem fornece ativamente para o governo',
+    keywords: 'Ilimitadas',
+    usuarios: '1 usuário',
+    destaque: false,
+    tag: null,
+    whatsapp: true,
+    href: '/assinar',
+    btnText: 'Assinar agora →',
+    note: 'Ou teste 7 dias grátis antes',
+  },
+  {
+    id: 'pro',
+    nome: 'Pro',
+    preco: '197,90',
+    porDia: 'R$6,60/dia',
+    desc: 'Para equipes comerciais que querem crescer',
+    keywords: 'Ilimitadas',
+    usuarios: 'Até 5 usuários',
+    destaque: true,
+    tag: '⭐ MAIS POPULAR',
+    whatsapp: true,
+    href: '/assinar',
+    btnText: 'Assinar agora →',
+    note: 'Ou teste 7 dias grátis antes',
+  },
+  {
+    id: 'empresarial',
+    nome: 'Empresarial',
+    preco: '497,00',
+    porDia: 'R$16,57/dia',
+    desc: 'Para operações que dependem do setor público',
+    keywords: 'Ilimitadas',
+    usuarios: 'Até 15 usuários',
+    destaque: false,
+    tag: null,
+    whatsapp: true,
+    href: '/assinar',
+    btnText: 'Assinar agora →',
+    note: 'Ou teste 7 dias grátis antes',
+  },
+]
+
 export default function LandingPage() {
   return (
-    <div style={{ fontFamily: '"Inter", system-ui, -apple-system, sans-serif', background: '#FAF6F0', color: '#1A1A1C', margin: 0, padding: 0 }}>
+    <div className="font-sans bg-[#FAF6F0] text-[#1A1A1C]">
 
       {/* ── HEADER ── */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 60px', height: '68px',
-        background: 'rgba(250,246,240,0.97)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(201,166,90,0.12)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '9px', background: '#6B0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px', color: '#C9A65A', letterSpacing: '0.05em', flexShrink: 0 }}>ML</div>
-          <span style={{ fontWeight: 700, fontSize: '16px', color: '#1A1A1C', letterSpacing: '-0.02em' }}>Monitor de Licitações</span>
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[60px] h-[68px] bg-[rgba(250,246,240,0.97)] backdrop-blur-xl border-b border-[rgba(201,166,90,0.12)]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-[9px] bg-[#6B0F1A] flex items-center justify-center font-black text-xs text-[#C9A65A] shrink-0">ML</div>
+          <span className="font-bold text-base text-[#1A1A1C] tracking-tight hidden sm:block">Monitor de Licitações</span>
         </div>
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Link href="#como-funciona" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Como funciona</Link>
-          <Link href="/assinar" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Planos</Link>
-          <Link href="/login" style={{ padding: '8px 16px', fontSize: '14px', color: '#4a4a4d', textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
-          <Link href="/cadastro" style={{ padding: '10px 22px', fontSize: '14px', fontWeight: 700, background: '#6B0F1A', color: 'white', textDecoration: 'none', borderRadius: '10px', letterSpacing: '-0.01em' }}>Começar grátis</Link>
+        <nav className="flex items-center gap-1 md:gap-2">
+          <Link href="#como-funciona" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Como funciona</Link>
+          <Link href="/assinar" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Planos</Link>
+          <Link href="/login" className="px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Entrar</Link>
+          <Link href="/cadastro" className="px-4 md:px-[22px] py-2.5 text-sm font-bold bg-[#6B0F1A] text-white no-underline rounded-[10px]">Começar grátis</Link>
         </nav>
       </header>
 
       {/* ── HERO ── */}
-      <section style={{ background: '#1A1A1C', padding: '100px 60px 110px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-80px', left: '-80px', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(107,15,26,0.45) 0%, transparent 60%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '-120px', right: '-80px', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(201,166,90,0.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
+      <section className="bg-[#1A1A1C] px-6 md:px-[60px] py-[70px] md:py-[100px] relative overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,rgba(107,15,26,0.45)_0%,transparent_60%)] pointer-events-none" />
+        <div className="absolute -bottom-32 -right-20 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(201,166,90,0.1)_0%,transparent_65%)] pointer-events-none" />
 
-        <div style={{ maxWidth: '920px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-
-          {/* Urgência */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px 6px 10px', borderRadius: '999px', background: 'rgba(201,166,90,0.08)', border: '1px solid rgba(201,166,90,0.2)', marginBottom: '40px' }}>
-            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#C9A65A', boxShadow: '0 0 8px rgba(201,166,90,0.8)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#C9A65A', letterSpacing: '0.03em' }}>Novo · Saiba o que o governo vai comprar antes do edital existir</span>
+        <div className="max-w-[920px] mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[rgba(201,166,90,0.08)] border border-[rgba(201,166,90,0.2)] mb-10">
+            <div className="w-[7px] h-[7px] rounded-full bg-[#C9A65A] shadow-[0_0_8px_rgba(201,166,90,0.8)]" />
+            <span className="text-xs font-semibold text-[#C9A65A] tracking-wide">Novo · Saiba o que o governo vai comprar antes do edital existir</span>
           </div>
 
-          {/* Headline principal — o gatilho mais forte */}
-          <h1 style={{ fontSize: '70px', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.04em', margin: '0 0 30px', color: 'white', maxWidth: '860px' }}>
+          <h1 className="text-[42px] md:text-[70px] font-black leading-[1.05] tracking-[-0.04em] mb-8 text-white max-w-[860px]">
             Cada edital publicado sem você saber é{' '}
-            <span style={{ color: '#C9A65A', fontStyle: 'italic', fontFamily: 'Georgia, serif', fontWeight: 400 }}>dinheiro direto</span>{' '}
+            <span className="text-[#C9A65A] italic font-normal" style={{ fontFamily: 'Georgia, serif' }}>dinheiro direto</span>{' '}
             no bolso do seu concorrente.
           </h1>
 
-          {/* Subheadline — promessa clara */}
-          <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, margin: '0 0 16px', maxWidth: '640px', fontWeight: 400 }}>
-            O Monitor rastreia tudo que o setor público publica — editais, dispensas, contratos, avisos no Diário Oficial — e entrega na sua caixa de entrada as oportunidades que combinam com o que sua empresa vende, <strong style={{ color: 'rgba(255,255,255,0.85)' }}>antes que o prazo comece a correr.</strong>
+          <p className="text-base md:text-xl text-[rgba(255,255,255,0.6)] leading-relaxed mb-4 max-w-[640px]">
+            O Monitor rastreia tudo que o setor público publica — editais, dispensas, contratos, avisos no Diário Oficial — e entrega as oportunidades que combinam com o que sua empresa vende, <strong className="text-[rgba(255,255,255,0.85)]">antes que o prazo comece a correr.</strong>
           </p>
-          <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6, margin: '0 0 48px', maxWidth: '580px' }}>
+          <p className="text-sm md:text-base text-[rgba(255,255,255,0.35)] leading-relaxed mb-12 max-w-[580px]">
             Do governo federal à Petrobras. Das prefeituras do interior às maiores capitais do país. Nenhum contrato público passa despercebido.
           </p>
 
-          {/* CTAs */}
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '64px' }}>
-            <Link href="/cadastro" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '8px',
-              padding: '17px 34px', borderRadius: '12px',
-              background: '#6B0F1A', color: 'white', fontSize: '16px', fontWeight: 700,
-              textDecoration: 'none', letterSpacing: '-0.01em',
-              boxShadow: '0 8px 32px rgba(107,15,26,0.55)',
-            }}>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-16">
+            <Link href="/cadastro" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#6B0F1A] text-white text-base font-bold no-underline shadow-[0_8px_32px_rgba(107,15,26,0.55)]">
               Quero receber alertas agora →
             </Link>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>✓ Sete dias completamente grátis</span>
-              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>✓ Sem cartão de crédito agora</span>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[rgba(255,255,255,0.45)]">✓ Sete dias completamente grátis</span>
+              <span className="text-sm text-[rgba(255,255,255,0.45)]">✓ Sem cartão de crédito agora</span>
             </div>
           </div>
 
-          {/* Prova em números */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0', borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '0' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 border-t border-[rgba(255,255,255,0.07)]">
             {[
               { num: 'R$ 2 tri', label: 'em licitações por ano no Brasil' },
-              { num: 'Todo dia útil', label: 'novos editais chegam na sua caixa antes das 9h' },
+              { num: 'Todo dia útil', label: 'novos editais chegam antes das 9h' },
               { num: '< 5 dias', label: 'tempo médio de vida de um edital' },
               { num: '24h', label: 'para chegar o seu primeiro alerta' },
             ].map(({ num, label }, i) => (
-              <div key={num} style={{ padding: '24px 20px 8px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                <div style={{ fontSize: '26px', fontWeight: 800, color: 'white', letterSpacing: '-0.03em', marginBottom: '4px' }}>{num}</div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{label}</div>
+              <div key={num} className={`pt-6 pb-2 px-4 md:px-5 ${i > 0 ? 'border-l border-[rgba(255,255,255,0.06)]' : ''}`}>
+                <div className="text-xl md:text-[26px] font-black text-white tracking-tight mb-1">{num}</div>
+                <div className="text-xs text-[rgba(255,255,255,0.3)] leading-snug">{label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── RECONHECE ESSA SITUAÇÃO? (agitar a dor) ── */}
-      <section style={{ padding: '100px 60px', background: '#FAF6F0' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Reconhece essa situação?</div>
-            <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0', color: '#1A1A1C' }}>
-              Você está perdendo contratos<br />que eram seus por direito.
+      {/* ── DOR ── */}
+      <section className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-[#FAF6F0]">
+        <div className="max-w-[960px] mx-auto">
+          <div className="text-center mb-14">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Reconhece essa situação?</div>
+            <h2 className="text-3xl md:text-[44px] font-black tracking-tight leading-[1.1] text-[#1A1A1C]">
+              Você está perdendo contratos<br className="hidden md:block" />que eram seus por direito.
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
             {[
               { icon: '😰', titulo: '"Descobri o edital depois do prazo"', desc: 'A licitação foi publicada, abriu e fechou em cinco dias. Você ficou sabendo uma semana depois — tarde demais.' },
               { icon: '😤', titulo: '"Meu concorrente ganhou sem eu saber"', desc: 'O contrato foi entregue. Você descobriu depois. O que você venderia tranquilamente foi parar no caixa de outra empresa.' },
-              { icon: '😩', titulo: '"Não tenho tempo de verificar tudo"', desc: 'Cada estado tem um sistema. Cada prefeitura usa uma plataforma diferente. O Diário Oficial tem três seções. Petrobras e Caixa têm portais exclusivos. Monitorar tudo isso sozinho é humanamente impossível.' },
+              { icon: '😩', titulo: '"Não tenho tempo de verificar tudo"', desc: 'Cada estado tem um sistema. Cada prefeitura usa uma plataforma diferente. O Diário Oficial tem três seções. Monitorar tudo isso sozinho é humanamente impossível.' },
             ].map(c => (
-              <div key={c.titulo} style={{ background: 'white', borderRadius: '16px', padding: '28px', border: '1px solid #D5D2C8' }}>
-                <div style={{ fontSize: '32px', marginBottom: '14px' }}>{c.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: '15px', color: '#1A1A1C', marginBottom: '10px', lineHeight: 1.3 }}>{c.titulo}</div>
-                <p style={{ fontSize: '14px', color: '#9AA0A6', lineHeight: 1.7, margin: 0 }}>{c.desc}</p>
+              <div key={c.titulo} className="bg-white rounded-2xl p-7 border border-[#D5D2C8]">
+                <div className="text-[32px] mb-3">{c.icon}</div>
+                <div className="font-bold text-[15px] text-[#1A1A1C] mb-2.5 leading-snug">{c.titulo}</div>
+                <p className="text-sm text-[#9AA0A6] leading-relaxed m-0">{c.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Virada */}
-          <div style={{ background: '#6B0F1A', borderRadius: '18px', padding: '36px 44px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+          <div className="bg-[#6B0F1A] rounded-[18px] p-8 md:p-9 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <p style={{ fontSize: '22px', fontWeight: 700, color: 'white', margin: '0 0 6px', lineHeight: 1.3 }}>
-                Isso não é azar. É falta de informação a tempo.
-              </p>
-              <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>
-                O Monitor faz o trabalho de uma equipe inteira — governo federal, todos os estados, as maiores cidades, Petrobras e Caixa — e entrega só o que importa para o seu negócio, todo dia útil.
-              </p>
+              <p className="text-lg md:text-[22px] font-bold text-white m-0 mb-1.5 leading-snug">Isso não é azar. É falta de informação a tempo.</p>
+              <p className="text-sm md:text-[15px] text-[rgba(255,255,255,0.55)] m-0">O Monitor faz o trabalho de uma equipe inteira — governo federal, todos os estados, as maiores cidades, Petrobras e Caixa — e entrega só o que importa para o seu negócio.</p>
             </div>
-            <Link href="/cadastro" style={{ flexShrink: 0, padding: '14px 28px', borderRadius: '10px', background: '#C9A65A', color: '#1A1A1C', fontWeight: 700, fontSize: '15px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            <Link href="/cadastro" className="shrink-0 px-7 py-3.5 rounded-[10px] bg-[#C9A65A] text-[#1A1A1C] font-bold text-[15px] no-underline whitespace-nowrap">
               Resolver isso agora →
             </Link>
           </div>
@@ -129,54 +183,53 @@ export default function LandingPage() {
       </section>
 
       {/* ── COMO FUNCIONA ── */}
-      <section id="como-funciona" style={{ padding: '100px 60px', background: 'white' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Simples. Automático. Eficaz.</div>
-            <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: '#1A1A1C' }}>
-              Configure uma vez.<br />Receba oportunidades para sempre.
+      <section id="como-funciona" className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-white">
+        <div className="max-w-[960px] mx-auto">
+          <div className="text-center mb-16">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Simples. Automático. Eficaz.</div>
+            <h2 className="text-3xl md:text-[44px] font-black tracking-tight leading-[1.1] mb-4 text-[#1A1A1C]">
+              Configure uma vez.<br className="hidden md:block" />Receba oportunidades para sempre.
             </h2>
-            <p style={{ fontSize: '18px', color: '#9AA0A6', maxWidth: '540px', margin: '0 auto', lineHeight: 1.6 }}>
+            <p className="text-base md:text-lg text-[#9AA0A6] max-w-[540px] mx-auto leading-relaxed">
               Você define o que sua empresa vende. Nós monitoramos tudo e avisamos quando o governo quer comprar.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '64px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {[
               { n: '1', icon: '⚡', title: 'Cadastre-se em dois minutos', desc: 'Sete dias grátis, sem cartão de crédito. Você começa a monitorar imediatamente após o cadastro.' },
-              { n: '2', icon: '🎯', title: 'Informe o que você vende ou fornece', desc: 'Produtos, serviços, locações, obras, consultorias, TI — qualquer objeto de contratação pública, dos municípios do interior às maiores estatais do Brasil. Quanto mais específico, mais certeiro o alerta.' },
+              { n: '2', icon: '🎯', title: 'Informe o que você vende ou fornece', desc: 'Produtos, serviços, locações, obras, consultorias, TI — qualquer objeto de contratação pública, dos municípios do interior às maiores estatais do Brasil.' },
               { n: '3', icon: '📬', title: 'Receba alertas em tempo real', desc: 'Sempre que identificamos uma licitação compatível com seu perfil, o alerta chega por e-mail, Telegram ou WhatsApp — sem esperar o dia seguinte.' },
             ].map(step => (
-              <div key={step.n} style={{ padding: '32px', background: '#FAF6F0', borderRadius: '16px', border: '1px solid #D5D2C8', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '11px', fontWeight: 800, color: '#6B0F1A', opacity: 0.15, letterSpacing: '0.05em' }}>0{step.n}</div>
-                <div style={{ fontSize: '28px', marginBottom: '16px' }}>{step.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: '16px', color: '#1A1A1C', marginBottom: '8px', letterSpacing: '-0.02em' }}>{step.title}</div>
-                <div style={{ fontSize: '14px', color: '#9AA0A6', lineHeight: 1.7 }}>{step.desc}</div>
+              <div key={step.n} className="p-8 bg-[#FAF6F0] rounded-2xl border border-[#D5D2C8] relative">
+                <div className="absolute top-5 right-5 text-[11px] font-black text-[#6B0F1A] opacity-15 tracking-wide">0{step.n}</div>
+                <div className="text-[28px] mb-4">{step.icon}</div>
+                <div className="font-bold text-base text-[#1A1A1C] mb-2 tracking-tight">{step.title}</div>
+                <div className="text-sm text-[#9AA0A6] leading-relaxed">{step.desc}</div>
               </div>
             ))}
           </div>
 
-          {/* Diferencial de IA */}
-          <div style={{ background: '#1A1A1C', borderRadius: '20px', padding: '48px 56px', display: 'flex', gap: '56px', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(107,15,26,0.4) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ flex: 1, position: 'relative' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '14px' }}>Inteligência a seu favor</div>
-              <h3 style={{ fontSize: '28px', fontWeight: 800, color: 'white', margin: '0 0 16px', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+          <div className="bg-[#1A1A1C] rounded-[20px] p-8 md:p-12 flex flex-col md:flex-row gap-10 md:gap-14 items-start md:items-center relative overflow-hidden">
+            <div className="absolute -top-16 -right-16 w-[300px] h-[300px] rounded-full bg-[radial-gradient(circle,rgba(107,15,26,0.4)_0%,transparent_70%)] pointer-events-none" />
+            <div className="flex-1 relative">
+              <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#C9A65A] mb-3">Inteligência a seu favor</div>
+              <h3 className="text-2xl md:text-[28px] font-black text-white mb-4 tracking-tight leading-snug">
                 O sistema entende o que você vende — não apenas o que você escreveu.
               </h3>
-              <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: 0 }}>
-                Diferente dos buscadores comuns que exigem a palavra exata, nosso sistema interpreta contexto e significado. Quem monitora <strong style={{ color: 'rgba(255,255,255,0.8)' }}>"notebook"</strong> recebe alertas de <em>"equipamentos de informática"</em>, <em>"computadores portáteis"</em> e <em>"material de tecnologia"</em> também.
+              <p className="text-sm md:text-[15px] text-[rgba(255,255,255,0.5)] leading-relaxed m-0">
+                Diferente dos buscadores comuns, nosso sistema interpreta contexto. Quem monitora <strong className="text-[rgba(255,255,255,0.8)]">"notebook"</strong> recebe alertas de <em>"equipamentos de informática"</em>, <em>"computadores portáteis"</em> e <em>"material de tecnologia"</em> também.
               </p>
             </div>
-            <div style={{ flexShrink: 0, width: '220px' }}>
+            <div className="shrink-0 w-full md:w-[220px]">
               {[
                 { kw: 'notebook', desc: '37 editais encontrados esta semana' },
                 { kw: 'cadeira', desc: '52 editais encontrados esta semana' },
                 { kw: 'ar condicionado', desc: '28 editais encontrados esta semana' },
               ].map(({ kw, desc }) => (
-                <div key={kw} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '12px 16px', marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', color: '#C9A65A', fontWeight: 700, marginBottom: '3px' }}>{kw}</div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{desc}</div>
+                <div key={kw} className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] rounded-[10px] px-4 py-3 mb-2.5">
+                  <div className="text-xs text-[#C9A65A] font-bold mb-1">{kw}</div>
+                  <div className="text-[11px] text-[rgba(255,255,255,0.35)]">{desc}</div>
                 </div>
               ))}
             </div>
@@ -184,199 +237,163 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PROVA SOCIAL (resultados específicos) ── */}
-      <section style={{ padding: '100px 60px', background: '#FAF6F0' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Resultados de quem chegou primeiro</div>
-            <h2 style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: '#1A1A1C' }}>
-              Quem monitora, vende mais para o governo.
-            </h2>
-            <p style={{ fontSize: '17px', color: '#9AA0A6', margin: 0, maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+      {/* ── PROVA SOCIAL ── */}
+      <section className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-[#FAF6F0]">
+        <div className="max-w-[960px] mx-auto">
+          <div className="text-center mb-14">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Resultados de quem chegou primeiro</div>
+            <h2 className="text-3xl md:text-[40px] font-black tracking-tight mb-4 text-[#1A1A1C]">Quem monitora, vende mais para o governo.</h2>
+            <p className="text-base md:text-[17px] text-[#9AA0A6] max-w-[520px] mx-auto">
               A diferença entre ganhar ou perder um contrato público quase sempre se resume a uma coisa: quem soube primeiro.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
-              {
-                valor: 'R$ 127.000',
-                desc: 'Contrato de notebooks para prefeitura do interior de MG',
-                depoimento: '"O alerta chegou na segunda-feira. Na sexta já tínhamos enviado a proposta. Ganhamos o contrato. Sem o Monitor, nunca saberíamos que esse edital existia."',
-                empresa: 'Distribuidora de TI — Belo Horizonte, MG',
-                emoji: '💻',
-              },
-              {
-                valor: 'R$ 84.500',
-                desc: 'Fornecimento de cadeiras para escola estadual de SP',
-                depoimento: '"Faturamos quase R$ 85 mil em um contrato que nem sabíamos que existia. O sistema me avisou antes de qualquer concorrente. Agora renovo todo mês."',
-                empresa: 'Fabricante de móveis — Ubá, MG',
-                emoji: '🪑',
-              },
-              {
-                valor: 'R$ 43.200',
-                desc: 'Material de higiene para câmara municipal de RJ',
-                depoimento: '"Pensava que licitação era coisa de empresa grande. Com o Monitor, ganhei meu primeiro contrato com o governo em menos de 30 dias. Valeu 20 anos de mensalidade."',
-                empresa: 'Distribuidora de limpeza — Rio de Janeiro, RJ',
-                emoji: '🧴',
-              },
+              { valor: 'R$ 127.000', desc: 'Contrato de notebooks para prefeitura do interior de MG', depoimento: '"O alerta chegou na segunda-feira. Na sexta já tínhamos enviado a proposta. Ganhamos o contrato. Sem o Monitor, nunca saberíamos que esse edital existia."', empresa: 'Distribuidora de TI — Belo Horizonte, MG', emoji: '💻' },
+              { valor: 'R$ 84.500', desc: 'Fornecimento de cadeiras para escola estadual de SP', depoimento: '"Faturamos quase R$ 85 mil em um contrato que nem sabíamos que existia. O sistema me avisou antes de qualquer concorrente. Agora renovo todo mês."', empresa: 'Fabricante de móveis — Ubá, MG', emoji: '🪑' },
+              { valor: 'R$ 43.200', desc: 'Material de higiene para câmara municipal de RJ', depoimento: '"Pensava que licitação era coisa de empresa grande. Com o Monitor, ganhei meu primeiro contrato com o governo em menos de 30 dias."', empresa: 'Distribuidora de limpeza — Rio de Janeiro, RJ', emoji: '🧴' },
             ].map((t, i) => (
-              <div key={i} style={{ background: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #D5D2C8', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: '24px', marginBottom: '12px' }}>{t.emoji}</div>
-                <div style={{ fontSize: '30px', fontWeight: 800, color: '#6B0F1A', letterSpacing: '-0.03em', marginBottom: '4px' }}>{t.valor}</div>
-                <div style={{ fontSize: '13px', color: '#9AA0A6', marginBottom: '20px' }}>{t.desc}</div>
-                <p style={{ fontSize: '14px', color: '#4a4a4d', lineHeight: 1.75, fontStyle: 'italic', margin: '0 0 auto', paddingBottom: '20px' }}>{t.depoimento}</p>
-                <div style={{ fontSize: '12px', color: '#9AA0A6', fontWeight: 700, paddingTop: '20px', borderTop: '1px solid #F0EDE8' }}>{t.empresa}</div>
+              <div key={i} className="bg-white rounded-2xl p-8 border border-[#D5D2C8] flex flex-col">
+                <div className="text-[24px] mb-3">{t.emoji}</div>
+                <div className="text-[28px] md:text-[30px] font-black text-[#6B0F1A] tracking-tight mb-1">{t.valor}</div>
+                <div className="text-sm text-[#9AA0A6] mb-5">{t.desc}</div>
+                <p className="text-sm text-[#4a4a4d] leading-[1.75] italic mb-auto pb-5">{t.depoimento}</p>
+                <div className="text-xs text-[#9AA0A6] font-bold pt-5 border-t border-[#F0EDE8]">{t.empresa}</div>
               </div>
             ))}
           </div>
 
-          {/* Gatilho de escassez temporal */}
-          <div style={{ marginTop: '32px', background: 'white', borderRadius: '14px', padding: '20px 28px', border: '1px solid #D5D2C8', display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ fontSize: '20px' }}>⏱</div>
-            <p style={{ fontSize: '14px', color: '#4a4a4d', margin: 0, lineHeight: 1.6 }}>
-              <strong style={{ color: '#6B0F1A' }}>Editais fecham em média em cinco dias.</strong> Cada dia sem monitoramento é uma janela de oportunidade que fecha sem você. Empresas que começaram a monitorar esta semana já têm vantagem sobre as que vão começar na semana que vem.
+          <div className="mt-8 bg-white rounded-[14px] p-5 md:p-7 border border-[#D5D2C8] flex items-start md:items-center gap-4">
+            <div className="text-xl shrink-0">⏱</div>
+            <p className="text-sm text-[#4a4a4d] m-0 leading-relaxed">
+              <strong className="text-[#6B0F1A]">Editais fecham em média em cinco dias.</strong> Cada dia sem monitoramento é uma janela de oportunidade que fecha sem você. Empresas que começaram a monitorar esta semana já têm vantagem sobre as que vão começar na semana que vem.
             </p>
           </div>
         </div>
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="planos" style={{ padding: '100px 60px', background: 'white' }}>
-        <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '16px' }}>Investimento mínimo. Retorno ilimitado.</div>
-            <h2 style={{ fontSize: '44px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 12px', color: '#1A1A1C' }}>
-              A partir de R$1,66 por dia — menos que um cafezinho — para nunca mais perder um contrato.
+      <section id="planos" className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-white">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="text-center mb-14">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Investimento mínimo. Retorno ilimitado.</div>
+            <h2 className="text-3xl md:text-[44px] font-black tracking-tight mb-3 text-[#1A1A1C]">
+              A partir de R$1,66 por dia para nunca mais perder um contrato.
             </h2>
-            <p style={{ fontSize: '17px', color: '#9AA0A6', maxWidth: '560px', margin: '0 auto' }}>
-              Escolha o plano ideal para o tamanho da sua operação. Sete dias grátis em todos. Sem cartão de crédito agora.
+            <p className="text-base md:text-[17px] text-[#9AA0A6] max-w-[560px] mx-auto">
+              Escolha o plano ideal. Comece com 7 dias grátis — sem cartão de crédito.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
-            {[
-              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 20 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null, whatsapp: false, trial: false },
-              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que a mensalidade da academia', desc: 'Para quem fornece ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null, whatsapp: true, trial: false },
-              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido', whatsapp: true, trial: false },
-              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null, whatsapp: true, trial: false },
-            ].map(p => (
-              <div key={p.id} style={{
-                background: p.destaque ? '#6B0F1A' : '#FAF6F0',
-                border: p.destaque ? '2px solid #C9A65A' : '1px solid #D5D2C8',
-                borderRadius: '16px',
-                padding: p.destaque ? '36px 24px' : '28px 24px',
-                position: 'relative',
-                boxShadow: p.destaque ? '0 16px 48px rgba(107,15,26,0.25)' : 'none',
-              }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            {PLANOS.map(p => (
+              <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col ${p.destaque ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_16px_48px_rgba(107,15,26,0.25)]' : p.id === 'trial' ? 'bg-[#FAF6F0] border-2 border-[#C9A65A]' : 'bg-[#FAF6F0] border border-[#D5D2C8]'}`}>
                 {p.tag && (
-                  <div style={{ position: 'absolute', top: '-13px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '10px', fontWeight: 800, padding: '4px 14px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{p.tag.toUpperCase()}</div>
+                  <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#C9A65A] text-[#1A1A1C]'}`}>{p.tag}</div>
                 )}
-                <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '4px' }}>{p.nome}</div>
-                <div style={{ fontSize: '12px', color: p.destaque ? 'rgba(255,255,255,0.45)' : '#9AA0A6', marginBottom: '16px', lineHeight: 1.4 }}>{p.desc}</div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.5)' : '#9AA0A6', fontWeight: 500, marginBottom: '4px' }}>R$</span>
-                  <span style={{ fontSize: '36px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', letterSpacing: '-0.04em', lineHeight: 1 }}>
-                    {p.preco.split(',')[0]}
-                    {p.preco.includes(',') && <span style={{ fontSize: '20px', fontWeight: 800 }}>,{p.preco.split(',')[1]}</span>}
-                  </span>
-                  <span style={{ fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.35)' : '#9AA0A6', marginBottom: '4px' }}>/mês</span>
-                </div>
-                <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(201,166,90,0.7)' : '#6B0F1A', fontWeight: 600, marginBottom: '20px', padding: '4px 10px', background: p.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(107,15,26,0.06)', borderRadius: '6px', display: 'inline-block' }}>
-                  {p.porDia}{p.ancora ? ` — ${p.ancora}` : ''}
-                </div>
-                {[p.keywords, p.usuarios, p.whatsapp ? 'Alertas por e-mail, Telegram e WhatsApp' : 'Alertas por e-mail', 'Busca manual no painel'].map(item => (
-                  <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{ color: p.destaque ? '#C9A65A' : '#6B0F1A', fontWeight: 700, fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
-                    <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.8)' : '#4a4a4d', lineHeight: 1.4 }}>{item}</span>
+
+                <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
+                <div className={`text-xs mb-4 leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
+
+                {p.preco ? (
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className={`text-xs font-medium mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
+                    <span className={`text-[32px] font-black tracking-tight leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
+                      {p.preco.split(',')[0]}
+                      <span className="text-[18px]">,{p.preco.split(',')[1]}</span>
+                    </span>
+                    <span className={`text-[11px] mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
                   </div>
-                ))}
-                <Link href={`/assinar`} style={{
-                  display: 'block', textAlign: 'center', padding: '13px', marginTop: '20px',
-                  borderRadius: '10px', fontSize: '14px', fontWeight: 700,
-                  background: p.destaque ? '#C9A65A' : '#6B0F1A',
-                  color: p.destaque ? '#1A1A1C' : 'white',
-                  textDecoration: 'none',
-                }}>
-                  Assinar agora →
+                ) : (
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
+                  </div>
+                )}
+
+                <div className={`text-[11px] font-semibold mb-4 px-2 py-1 rounded inline-block ${p.destaque ? 'text-[rgba(201,166,90,0.7)] bg-[rgba(201,166,90,0.1)]' : p.id === 'trial' ? 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'}`}>
+                  {p.porDia}
+                </div>
+
+                <div className="flex-1 mb-5">
+                  {[p.keywords, p.usuarios, p.whatsapp ? 'E-mail, Telegram e WhatsApp' : 'Alertas por e-mail', 'Busca manual no painel'].map(item => (
+                    <div key={item} className="flex items-start gap-2 mb-2">
+                      <span className={`font-bold text-sm shrink-0 mt-0.5 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
+                      <span className={`text-xs leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.8)]' : 'text-[#4a4a4d]'}`}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Link href={p.href} className={`block text-center py-3 rounded-[10px] text-sm font-bold no-underline ${p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : p.id === 'trial' ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'}`}>
+                  {p.btnText}
                 </Link>
-                <p style={{ textAlign: 'center', fontSize: '11px', color: p.destaque ? 'rgba(255,255,255,0.3)' : '#9AA0A6', marginTop: '8px', marginBottom: 0 }}>Ou <Link href="/cadastro" style={{ color: p.destaque ? 'rgba(255,255,255,0.4)' : '#6B0F1A', textDecoration: 'none', fontWeight: 600 }}>teste 7 dias grátis</Link> antes</p>
+                <p className={`text-center text-[11px] mt-2 mb-0 ${p.destaque ? 'text-[rgba(255,255,255,0.3)]' : 'text-[#9AA0A6]'}`}>{p.note}</p>
               </div>
             ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '28px' }}>
-            <p style={{ fontSize: '13px', color: '#9AA0A6', margin: '0 0 6px' }}>
-              Todos os planos incluem busca manual, histórico de alertas e suporte via WhatsApp. Assine a partir de R$ 49,90/mês.
-            </p>
-            <Link href="/assinar" style={{ fontSize: '13px', color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Ver comparação detalhada dos planos →</Link>
+          <div className="text-center mt-7">
+            <Link href="/assinar" className="text-sm text-[#6B0F1A] font-semibold no-underline">Ver comparação detalhada dos planos →</Link>
           </div>
         </div>
       </section>
 
-      {/* ── FAQ — destruir objeções ── */}
-      <section style={{ padding: '80px 60px', background: '#FAF6F0' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.03em', textAlign: 'center', marginBottom: '8px', color: '#1A1A1C' }}>Dúvidas frequentes</h2>
-          <p style={{ textAlign: 'center', color: '#9AA0A6', fontSize: '16px', marginBottom: '48px' }}>Respondemos as principais dúvidas de quem está considerando monitorar licitações.</p>
+      {/* ── FAQ ── */}
+      <section className="px-6 md:px-[60px] py-[70px] md:py-20 bg-[#FAF6F0]">
+        <div className="max-w-[760px] mx-auto">
+          <h2 className="text-3xl md:text-[36px] font-black tracking-tight text-center mb-2 text-[#1A1A1C]">Dúvidas frequentes</h2>
+          <p className="text-center text-[#9AA0A6] text-base mb-12">Respondemos as principais dúvidas de quem está considerando monitorar licitações.</p>
           {[
             ['Preciso de cartão de crédito para começar?', 'Não. Os sete dias de teste são completamente gratuitos e sem burocracia. Você só cadastra uma forma de pagamento se decidir continuar após o período de teste.'],
             ['Minha empresa é pequena. Isso funciona para mim?', 'Especialmente para você. O governo brasileiro tem cotas e benefícios para micro e pequenas empresas em licitações. MEI, ME e EPP têm vantagens legais que grandes empresas não têm. Falta apenas informação — e isso o Monitor resolve.'],
             ['Como o sistema sabe quais editais combinam com meu negócio?', 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação do edital use termos diferentes dos seus.'],
             ['Com que frequência recebo alertas?', 'Monitoramos continuamente de segunda a sexta, dentro do horário comercial. Assim que identificamos uma licitação compatível com o seu perfil, ela entra na fila de envio e chega para você em breve — sem sobrecarregar sua caixa de entrada.'],
-            ['Vocês monitoram empresas como Petrobras, Correios e Caixa?', 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais brasileiras: Petrobras (via Petronect), Caixa Econômica Federal, Correios, Eletrobras e SABESP. São contratos muitas vezes maiores que os governamentais — e com menos concorrência, porque poucos sabem que essas oportunidades existem.'],
-            ['É possível saber antes que o edital seja publicado?', 'Sim. Monitoramos o Plano de Contratações Anual (PCA) — documento obrigatório onde cada órgão público divulga tudo que pretende contratar no ano. São bilhões de reais planejados antes de qualquer edital existir. Quem acompanha o PCA se prepara meses à frente dos concorrentes.'],
-            ['Posso cancelar se não for o que esperava?', 'Sim, a qualquer momento, sem multa e sem burocracia. Mas aviso: é difícil cancelar quando começa a receber contratos que você nunca soube que estavam disponíveis.'],
+            ['Vocês monitoram empresas como Petrobras, Correios e Caixa?', 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais brasileiras: Petrobras, Caixa Econômica Federal, Correios, Eletrobras e SABESP.'],
+            ['Posso cancelar se não for o que esperava?', 'Sim, a qualquer momento, sem multa e sem burocracia.'],
           ].map(([q, a], i) => (
-            <details key={i} style={{ borderBottom: '1px solid #D5D2C8' }}>
-              <summary style={{ padding: '22px 0', cursor: 'pointer', fontWeight: 600, fontSize: '15px', color: '#1A1A1C', display: 'flex', justifyContent: 'space-between', alignItems: 'center', listStyle: 'none' }}>
+            <details key={i} className="border-b border-[#D5D2C8]">
+              <summary className="py-5 cursor-pointer font-semibold text-[15px] text-[#1A1A1C] flex justify-between items-center list-none">
                 {q}
-                <span style={{ color: '#6B0F1A', fontSize: '22px', fontWeight: 300, flexShrink: 0, marginLeft: '16px', lineHeight: 1 }}>+</span>
+                <span className="text-[#6B0F1A] text-[22px] font-light shrink-0 ml-4 leading-none">+</span>
               </summary>
-              <p style={{ paddingBottom: '22px', margin: 0, fontSize: '15px', color: '#9AA0A6', lineHeight: 1.75 }}>{a}</p>
+              <p className="pb-5 m-0 text-[15px] text-[#9AA0A6] leading-[1.75]">{a}</p>
             </details>
           ))}
         </div>
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section style={{ background: '#1A1A1C', padding: '100px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '800px', height: '500px', background: 'radial-gradient(ellipse, rgba(107,15,26,0.45) 0%, transparent 65%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '720px', margin: '0 auto' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '20px' }}>Sua decisão. Agora.</div>
-          <h2 style={{ fontSize: '54px', fontWeight: 400, color: 'white', letterSpacing: '-0.02em', lineHeight: 1.1, margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>
-            O governo vai publicar novos editais amanhã de manhã. <em style={{ color: '#C9A65A' }}>Você vai saber?</em>
+      <section className="bg-[#1A1A1C] px-6 md:px-[60px] py-[70px] md:py-[100px] text-center relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse,rgba(107,15,26,0.45)_0%,transparent_65%)] pointer-events-none" />
+        <div className="relative z-10 max-w-[720px] mx-auto">
+          <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#C9A65A] mb-5">Sua decisão. Agora.</div>
+          <h2 className="text-4xl md:text-[54px] font-normal text-white tracking-tight leading-[1.1] mb-5" style={{ fontFamily: 'Georgia, serif' }}>
+            O governo vai publicar novos editais amanhã de manhã. <em className="text-[#C9A65A]">Você vai saber?</em>
           </h2>
-          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.45)', margin: '0 0 12px', lineHeight: 1.65 }}>
-            Cada dia sem monitoramento é um dia em que seu concorrente leva vantagem. Configure o Monitor agora e receba os primeiros alertas amanhã — de graça, sem cartão, sem compromisso.
+          <p className="text-base md:text-lg text-[rgba(255,255,255,0.45)] mb-3 leading-relaxed">
+            Cada dia sem monitoramento é um dia em que seu concorrente leva vantagem. Configure o Monitor agora e receba os primeiros alertas — de graça, sem cartão, sem compromisso.
           </p>
-          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.25)', margin: '0 0 48px' }}>
+          <p className="text-sm text-[rgba(255,255,255,0.25)] mb-12">
             Do governo federal à Petrobras — cobertura nacional completa. Sete dias inteiramente grátis, sem cartão.
           </p>
-          <Link href="/cadastro" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '10px',
-            padding: '18px 40px', borderRadius: '14px',
-            background: '#6B0F1A', color: 'white', fontSize: '17px', fontWeight: 700,
-            textDecoration: 'none', letterSpacing: '-0.01em',
-            boxShadow: '0 12px 40px rgba(107,15,26,0.55)',
-          }}>
+          <Link href="/cadastro" className="inline-flex items-center gap-2.5 px-10 py-5 rounded-[14px] bg-[#6B0F1A] text-white text-base md:text-[17px] font-bold no-underline shadow-[0_12px_40px_rgba(107,15,26,0.55)]">
             Quero meu acesso gratuito agora →
           </Link>
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.2)', marginTop: '18px' }}>
+          <p className="text-xs text-[rgba(255,255,255,0.2)] mt-5">
             Cadastro em dois minutos · Sem cartão de crédito · Cancele quando quiser
           </p>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: '#111113', padding: '28px 40px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: '#6B0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, color: '#C9A65A' }}>ML</div>
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.25)' }}>© {new Date().getFullYear()} Monitor de Licitações · Matutta Máquinas e Ferramentas</span>
+      <footer className="bg-[#111113] px-10 py-7 text-center">
+        <div className="flex items-center justify-center gap-2.5 mb-4">
+          <div className="w-7 h-7 rounded-[7px] bg-[#6B0F1A] flex items-center justify-center text-[10px] font-black text-[#C9A65A]">ML</div>
+          <span className="text-sm text-[rgba(255,255,255,0.25)]">© {new Date().getFullYear()} Monitor de Licitações · Matutta Máquinas e Ferramentas</span>
         </div>
-        <div style={{ display: 'flex', gap: '28px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="flex gap-7 justify-center flex-wrap">
           {[['Início', '/'], ['Planos', '/assinar'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (
-            <Link key={label} href={href} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>{label}</Link>
+            <Link key={label} href={href} className="text-sm text-[rgba(255,255,255,0.3)] no-underline">{label}</Link>
           ))}
         </div>
       </footer>
