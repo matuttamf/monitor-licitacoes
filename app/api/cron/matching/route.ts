@@ -58,10 +58,13 @@ export async function GET(request: Request) {
   const userIds = [...new Set(keywords.map(k => k.user_id).filter(Boolean))]
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, min_valor_interesse')
+    .select('id, min_valor_interesse, max_valor_interesse')
     .in('id', userIds)
   const minValorMap = Object.fromEntries(
     (profiles ?? []).map(p => [p.id, p.min_valor_interesse ?? 0])
+  )
+  const maxValorMap = Object.fromEntries(
+    (profiles ?? []).map(p => [p.id, p.max_valor_interesse ?? 0])
   )
 
   // Mapas auxiliares
@@ -91,6 +94,7 @@ export async function GET(request: Request) {
       if (!estadoCompativelComRegioes(lic.estado, kw.regiao)) continue
 
       const minValor = minValorMap[kw.user_id] ?? 0
+      const maxValor = maxValorMap[kw.user_id] ?? 0
 
       const s = calcularScore({
         objeto:            lic.objeto,
@@ -99,7 +103,11 @@ export async function GET(request: Request) {
         regiaoKeyword:     kw.regiao,
         valorLicitacao:    lic.valor_estimado,
         minValorInteresse: minValor,
+        maxValorInteresse: maxValor,
       })
+
+      // null = valor acima do máximo → descarta
+      if (!s) continue
 
       // Só salva se score mínimo para e-mail — abaixo disso vai só pro painel (futuro)
       if (s.score >= SCORE_MIN_EMAIL) {

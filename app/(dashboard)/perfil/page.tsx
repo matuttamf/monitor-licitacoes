@@ -10,10 +10,11 @@ type Perfil = {
   whatsapp: string
   telegram_chat_id: string
   min_valor_interesse: number
+  max_valor_interesse: number
 }
 
 export default function PerfilPage() {
-  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0 })
+  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0 })
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
@@ -34,6 +35,7 @@ export default function PerfilPage() {
           whatsapp:            d.whatsapp ?? '',
           telegram_chat_id:    d.telegram_chat_id ?? '',
           min_valor_interesse: d.min_valor_interesse ?? 0,
+          max_valor_interesse: d.max_valor_interesse ?? 0,
         })
       })
       .finally(() => setCarregando(false))
@@ -46,7 +48,7 @@ export default function PerfilPage() {
     const res = await fetch('/api/perfil', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome: perfil.nome, empresa: perfil.empresa, telefone: perfil.telefone, whatsapp: perfil.whatsapp, min_valor_interesse: perfil.min_valor_interesse }),
+      body: JSON.stringify({ nome: perfil.nome, empresa: perfil.empresa, telefone: perfil.telefone, whatsapp: perfil.whatsapp, min_valor_interesse: perfil.min_valor_interesse, max_valor_interesse: perfil.max_valor_interesse }),
     })
     setSalvando(false)
     if (res.ok) setMensagem({ tipo: 'ok', texto: 'Dados salvos com sucesso!' })
@@ -141,28 +143,53 @@ export default function PerfilPage() {
             </div>
           ))}
 
-          {/* Valor mínimo de interesse */}
+          {/* Faixa de valor de interesse */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              Valor mínimo de interesse
+              Faixa de valor de interesse
             </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none" style={{ color: 'var(--cinza)' }}>R$</span>
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                value={perfil.min_valor_interesse || ''}
-                onChange={e => setPerfil(prev => ({ ...prev, min_valor_interesse: Number(e.target.value) || 0 }))}
-                placeholder="0 (sem filtro)"
-                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm transition-all"
-                style={{ ...inputStyle, background: 'white' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.08)' }}
-                onBlur={e =>  { e.target.style.borderColor = 'var(--cinza-light)'; e.target.style.boxShadow = 'none' }}
-              />
+            <div className="flex gap-3">
+              {/* Mínimo */}
+              <div className="flex-1">
+                <span className="block text-xs mb-1" style={{ color: 'var(--cinza)' }}>Mínimo</span>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none" style={{ color: 'var(--cinza)' }}>R$</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={perfil.min_valor_interesse || ''}
+                    onChange={e => setPerfil(prev => ({ ...prev, min_valor_interesse: Number(e.target.value) || 0 }))}
+                    placeholder="0 (sem mínimo)"
+                    className="w-full pl-9 pr-3 py-3 rounded-xl text-sm transition-all"
+                    style={{ ...inputStyle, background: 'white' }}
+                    onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.08)' }}
+                    onBlur={e =>  { e.target.style.borderColor = 'var(--cinza-light)'; e.target.style.boxShadow = 'none' }}
+                  />
+                </div>
+              </div>
+              {/* Máximo */}
+              <div className="flex-1">
+                <span className="block text-xs mb-1" style={{ color: 'var(--cinza)' }}>Máximo</span>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none" style={{ color: 'var(--cinza)' }}>R$</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={perfil.max_valor_interesse || ''}
+                    onChange={e => setPerfil(prev => ({ ...prev, max_valor_interesse: Number(e.target.value) || 0 }))}
+                    placeholder="0 (sem limite)"
+                    className="w-full pl-9 pr-3 py-3 rounded-xl text-sm transition-all"
+                    style={{ ...inputStyle, background: 'white' }}
+                    onFocus={e => { e.target.style.borderColor = 'var(--vinho)'; e.target.style.boxShadow = '0 0 0 3px rgba(107,15,26,0.08)' }}
+                    onBlur={e =>  { e.target.style.borderColor = 'var(--cinza-light)'; e.target.style.boxShadow = 'none' }}
+                  />
+                </div>
+              </div>
             </div>
             <p className="text-xs mt-1.5" style={{ color: 'var(--cinza)' }}>
-              Licitações abaixo deste valor terão menor prioridade nos seus alertas. Deixe em 0 para receber de qualquer valor.
+              Licitações fora desta faixa serão ignoradas. Deixe em 0 para não aplicar o filtro correspondente.
             </p>
           </div>
 

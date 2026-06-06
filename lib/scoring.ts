@@ -100,10 +100,20 @@ export function scoreLocalizacao(
 
 // ─── Score de VALOR (15%) ─────────────────────────────────────────────────
 
+/**
+ * Retorna -1 se a licitação deve ser EXCLUÍDA por ultrapassar o máximo.
+ * Caso contrário retorna score 0–100.
+ */
 export function scoreValor(
   valorLicitacao: number | null | undefined,
   minValorInteresse: number,
+  maxValorInteresse: number = 0,
 ): number {
+  // Filtro hard de máximo — retorna -1 para sinalizar exclusão
+  if (maxValorInteresse > 0 && valorLicitacao != null && valorLicitacao > 0) {
+    if (valorLicitacao > maxValorInteresse) return -1
+  }
+
   // Usuário não definiu mínimo → neutro positivo
   if (!minValorInteresse || minValorInteresse <= 0) return 75
 
@@ -136,10 +146,14 @@ export function calcularScore(params: {
   regiaoKeyword:     string[] | string | null | undefined
   valorLicitacao:    number | null | undefined
   minValorInteresse: number
-}): ScoreResult {
+  maxValorInteresse?: number
+}): ScoreResult | null {
   const sk = scoreKeyword(params.objeto, params.termo)
   const sl = scoreLocalizacao(params.estadoLicitacao, params.regiaoKeyword)
-  const sv = scoreValor(params.valorLicitacao, params.minValorInteresse)
+  const sv = scoreValor(params.valorLicitacao, params.minValorInteresse, params.maxValorInteresse ?? 0)
+
+  // Valor acima do máximo definido → descarta completamente
+  if (sv === -1) return null
 
   const total = Math.round(sk * 0.60 + sl * 0.25 + sv * 0.15)
 

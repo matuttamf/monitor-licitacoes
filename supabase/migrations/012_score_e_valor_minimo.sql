@@ -8,9 +8,11 @@ ALTER TABLE alertas
 -- Índice para o cron de alertas ordenar por score desc eficientemente
 CREATE INDEX IF NOT EXISTS alertas_score_idx ON alertas (score DESC);
 
--- Valor mínimo de interesse declarado pelo usuário (0 = sem filtro)
+-- Valor mínimo e máximo de interesse declarado pelo usuário (0 = sem filtro)
 ALTER TABLE profiles
-  ADD COLUMN IF NOT EXISTS min_valor_interesse numeric NOT NULL DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS min_valor_interesse numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS max_valor_interesse numeric NOT NULL DEFAULT 0;
 
 COMMENT ON COLUMN alertas.score IS 'Score 0-100 de relevância. Interno — nunca exibido ao usuário.';
 COMMENT ON COLUMN profiles.min_valor_interesse IS 'Valor mínimo (R$) de licitação de interesse declarado pelo usuário.';
+COMMENT ON COLUMN profiles.max_valor_interesse IS 'Valor máximo (R$) de licitação de interesse declarado pelo usuário. 0 = sem limite.';
