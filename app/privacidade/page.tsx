@@ -113,7 +113,7 @@ export default function PrivacidadePage() {
 
             <Section titulo="3. Finalidade do tratamento">
               <Tabela colunas={['Finalidade', 'Descrição']}>
-                <tr><Td>Prestação do serviço</Td><Td>Identificar licitações relevantes via IA e enviar alertas por e-mail e Telegram</Td></tr>
+                <tr><Td>Prestação do serviço</Td><Td>Identificar licitações relevantes via IA e enviar alertas por e-mail, Telegram e WhatsApp</Td></tr>
                 <tr><Td>Gestão da conta</Td><Td>Autenticação, controle de acesso, gerenciamento de plano e trial</Td></tr>
                 <tr><Td>Comunicações</Td><Td>Alertas de licitações, avisos sobre trial, atualizações do serviço</Td></tr>
                 <tr><Td>Segurança</Td><Td>Prevenção de fraudes, acessos não autorizados e abuso do sistema</Td></tr>
