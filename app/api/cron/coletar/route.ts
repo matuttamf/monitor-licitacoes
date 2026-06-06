@@ -97,12 +97,10 @@ import { coletarPortalSJRP }            from '@/lib/scrapers/portal-sjrp'
 import { coletarPortalJundiai }         from '@/lib/scrapers/portal-jundiai'
 import { coletarPortalBetim }           from '@/lib/scrapers/portal-betim'
 
-// ── Camada 4 — Consórcios + autarquias federais ───────────────────────────
-import { coletarConsorcioGrandeABC }from '@/lib/scrapers/consorcio-grande-abc'
+// ── Camada 4 — Autarquias federais ────────────────────────────────────────
 import { coletarFNDE }              from '@/lib/scrapers/fnde'
 import { coletarFNS }               from '@/lib/scrapers/fns'
 import { coletarDNIT }              from '@/lib/scrapers/dnit'
-import { coletarConsorcioPCJ }      from '@/lib/scrapers/consorcio-pcj'
 
 // ── Camada 5 — Estatais ───────────────────────────────────────────────────
 import { coletarPetronect }        from '@/lib/scrapers/petronect'
@@ -218,10 +216,44 @@ import {
   coletarVALEC, coletarCPRM, coletarEBC, coletarHEMOBRAS, coletarPPSA, coletarEBSERH,
 } from '@/lib/scrapers/portos-concessoes'
 
-// ── Camada 10 — Empresas privadas/capital aberto (5) ─────────────────────
+// ── Camada 10 — Judiciário + Legislativo + MPF (11) ──────────────────────
 import {
-  coletarVale, coletarEmbraer, coletarGerdau, coletarSuzano as coletarSuzanoEmpresa, coletarRaizen,
-} from '@/lib/scrapers/empresas-privadas'
+  coletarSTF, coletarSTJ, coletarTST, coletarTSE, coletarSTM,
+  coletarCNJ, coletarCNMP, coletarCamara, coletarSenado, coletarMPF, coletarDPU,
+} from '@/lib/scrapers/judiciario-legislativo'
+
+// ── Camada 10 — Agências Reguladoras (9) ──────────────────────────────────
+import {
+  coletarANEEL, coletarANAC, coletarANTT, coletarANP, coletarANS,
+  coletarANA, coletarANTAQ, coletarANCINE, coletarABIN,
+} from '@/lib/scrapers/agencias-reguladoras'
+
+// ── Camada 10 — Segurança + Ministérios + Bancos Regionais (13) ───────────
+import {
+  coletarPolFederal, coletarPRF, coletarPCDF, coletarCBMDF,
+  coletarMinDefesa, coletarMinFazenda, coletarMAPA, coletarMinTrabalho, coletarMinJustica,
+  coletarBNB, coletarBASA, coletarCasaMoeda, coletarIMBEL,
+} from '@/lib/scrapers/seguranca-ministerios'
+
+// ── Camada 10 — Cidades médias adicionais via PNCP IBGE (34) ──────────────
+import {
+  coletarGuaruja, coletarItu, coletarItapetininga, coletarBragancaPaulista,
+  coletarLorena, coletarRegistro,
+  coletarResende, coletarTresRios, coletarBarraMansa,
+  coletarAraxa, coletarConselheiro, coletarItajuba,
+  coletarJuazeiroBa, coletarJequie, coletarAlagoinhas, coletarTeixeiraFreitas,
+  coletarCrato, coletarIguatu,
+  coletarCaxiasMa, coletarAcailandia,
+  coletarGurupi,
+  coletarParauapebas, coletarAltamira,
+  coletarVilhena, coletarCacoal,
+  coletarSinop, coletarSorriso,
+  coletarTresLagoas, coletarCorumba,
+  coletarCatalao, coletarJatai,
+  coletarSantanaAP,
+  coletarCaico,
+  coletarSantaRitaPB,
+} from '@/lib/scrapers/cidades-pncp-mais'
 
 import { salvarLicitacoes }        from '@/lib/scrapers/salvar'
 import { createServiceClient }     from '@/lib/supabase/server'
@@ -229,7 +261,7 @@ import { registrarCronLog }        from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-const TOTAL_FONTES = 312
+const TOTAL_FONTES = 372
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -243,7 +275,7 @@ export async function GET(request: Request) {
   const dataInicio = ontem.toISOString().substring(0, 10)
   const dataFim    = hoje.toISOString().substring(0, 10)
 
-  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes em 10 camadas)`)
+  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes verificadas em 10 camadas)`)
 
   // 0. Limpar licitações expiradas
   const supabase = await createServiceClient()
@@ -347,12 +379,10 @@ export async function GET(request: Request) {
     coletarPortalSJRP(dataInicio),
     coletarPortalJundiai(dataInicio),
     coletarPortalBetim(dataInicio),
-    // Camada 4 — Consórcios + autarquias (82-86)
-    coletarConsorcioGrandeABC(dataInicio),
+    // Camada 4 — Autarquias federais (82-84)
     coletarFNDE(dataInicio, dataFim),
     coletarFNS(dataInicio, dataFim),
     coletarDNIT(dataInicio, dataFim),
-    coletarConsorcioPCJ(dataInicio),
     // Camada 5 — Estatais (87-91)
     coletarPetronect(dataInicio),
     coletarCorreios(dataInicio),
@@ -584,12 +614,77 @@ export async function GET(request: Request) {
     coletarHEMOBRAS(dataInicio, dataFim),
     coletarPPSA(dataInicio, dataFim),
     coletarEBSERH(dataInicio, dataFim),
-    // Camada 10 — Empresas privadas/capital aberto (307-311)
-    coletarVale(dataInicio),
-    coletarEmbraer(dataInicio),
-    coletarGerdau(dataInicio),
-    coletarSuzanoEmpresa(dataInicio),
-    coletarRaizen(dataInicio),
+    // Camada 10 — Judiciário + Legislativo + MPF (307-317)
+    coletarSTF(dataInicio, dataFim),
+    coletarSTJ(dataInicio, dataFim),
+    coletarTST(dataInicio, dataFim),
+    coletarTSE(dataInicio, dataFim),
+    coletarSTM(dataInicio, dataFim),
+    coletarCNJ(dataInicio, dataFim),
+    coletarCNMP(dataInicio, dataFim),
+    coletarCamara(dataInicio, dataFim),
+    coletarSenado(dataInicio, dataFim),
+    coletarMPF(dataInicio, dataFim),
+    coletarDPU(dataInicio, dataFim),
+    // Camada 10 — Agências Reguladoras (318-326)
+    coletarANEEL(dataInicio, dataFim),
+    coletarANAC(dataInicio, dataFim),
+    coletarANTT(dataInicio, dataFim),
+    coletarANP(dataInicio, dataFim),
+    coletarANS(dataInicio, dataFim),
+    coletarANA(dataInicio, dataFim),
+    coletarANTAQ(dataInicio, dataFim),
+    coletarANCINE(dataInicio, dataFim),
+    coletarABIN(dataInicio, dataFim),
+    // Camada 10 — Segurança + Ministérios + Bancos Regionais (327-339)
+    coletarPolFederal(dataInicio, dataFim),
+    coletarPRF(dataInicio, dataFim),
+    coletarPCDF(dataInicio, dataFim),
+    coletarCBMDF(dataInicio, dataFim),
+    coletarMinDefesa(dataInicio, dataFim),
+    coletarMinFazenda(dataInicio, dataFim),
+    coletarMAPA(dataInicio, dataFim),
+    coletarMinTrabalho(dataInicio, dataFim),
+    coletarMinJustica(dataInicio, dataFim),
+    coletarBNB(dataInicio, dataFim),
+    coletarBASA(dataInicio, dataFim),
+    coletarCasaMoeda(dataInicio, dataFim),
+    coletarIMBEL(dataInicio, dataFim),
+    // Camada 10 — Cidades médias adicionais PNCP IBGE (340-373)
+    coletarGuaruja(dataInicio, dataFim),
+    coletarItu(dataInicio, dataFim),
+    coletarItapetininga(dataInicio, dataFim),
+    coletarBragancaPaulista(dataInicio, dataFim),
+    coletarLorena(dataInicio, dataFim),
+    coletarRegistro(dataInicio, dataFim),
+    coletarResende(dataInicio, dataFim),
+    coletarTresRios(dataInicio, dataFim),
+    coletarBarraMansa(dataInicio, dataFim),
+    coletarAraxa(dataInicio, dataFim),
+    coletarConselheiro(dataInicio, dataFim),
+    coletarItajuba(dataInicio, dataFim),
+    coletarJuazeiroBa(dataInicio, dataFim),
+    coletarJequie(dataInicio, dataFim),
+    coletarAlagoinhas(dataInicio, dataFim),
+    coletarTeixeiraFreitas(dataInicio, dataFim),
+    coletarCrato(dataInicio, dataFim),
+    coletarIguatu(dataInicio, dataFim),
+    coletarCaxiasMa(dataInicio, dataFim),
+    coletarAcailandia(dataInicio, dataFim),
+    coletarGurupi(dataInicio, dataFim),
+    coletarParauapebas(dataInicio, dataFim),
+    coletarAltamira(dataInicio, dataFim),
+    coletarVilhena(dataInicio, dataFim),
+    coletarCacoal(dataInicio, dataFim),
+    coletarSinop(dataInicio, dataFim),
+    coletarSorriso(dataInicio, dataFim),
+    coletarTresLagoas(dataInicio, dataFim),
+    coletarCorumba(dataInicio, dataFim),
+    coletarCatalao(dataInicio, dataFim),
+    coletarJatai(dataInicio, dataFim),
+    coletarSantanaAP(dataInicio, dataFim),
+    coletarCaico(dataInicio, dataFim),
+    coletarSantaRitaPB(dataInicio, dataFim),
   ])
 
   const ok   = (r: PromiseSettledResult<LicitacaoRaw[]>): LicitacaoRaw[] => r.status === 'fulfilled' ? r.value : []
@@ -642,7 +737,7 @@ export async function GET(request: Request) {
     // Camada 3 — batch 3
     'osasco','santo_andre','duque_caxias','aparecida_goiania','caxias_sul','sjrp','jundiai','betim',
     // Camada 4
-    'grande_abc','fnde','fns','dnit','pcj',
+    'fnde','fns','dnit',
     // Camada 5
     'petronect','correios','caixa','eletrobras','sabesp',
     // Camada 6 — Órgãos federais
@@ -698,8 +793,30 @@ export async function GET(request: Request) {
     'porto_recife_p','porto_salvador_p','porto_itaqui','porto_manaus_p',
     'porto_belem_p','porto_fortaleza_p',
     'valec','cprm','ebc','hemobras','ppsa','ebserh',
-    // Camada 10 — Empresas privadas
-    'vale','embraer','gerdau','suzano_empresa','raizen',
+    // Camada 10 — Judiciário + Legislativo + MPF
+    'stf','stj','tst','tse','stm','cnj','cnmp','camara','senado','mpf','dpu',
+    // Camada 10 — Agências Reguladoras
+    'aneel','anac','antt','anp','ans','ana','antaq','ancine','abin',
+    // Camada 10 — Segurança + Ministérios + Bancos Regionais
+    'pol_federal','prf','pcdf','cbmdf',
+    'min_defesa','min_fazenda','mapa','min_trabalho','min_justica',
+    'bnb','basa','casa_moeda','imbel',
+    // Camada 10 — Cidades médias adicionais
+    'guaruja','itu_sp','itapetininga','braganca_paulista','lorena','registro',
+    'resende_rj','tres_rios','barra_mansa',
+    'araxa','conselheiro_laf','itajuba',
+    'juazeiro_ba','jequie','alagoinhas','teixeira_freitas',
+    'crato','iguatu',
+    'caxias_ma','acailandia',
+    'gurupi',
+    'parauapebas','altamira',
+    'vilhena','cacoal',
+    'sinop','sorriso',
+    'tres_lagoas','corumba',
+    'catalao','jatai',
+    'santana_ap',
+    'caico',
+    'santa_rita_pb',
   ]
 
   const detalhes: Record<string, unknown> = Object.fromEntries(nomes.map((n, i) => [`${n}_ok`, fonteOk[i]]))
