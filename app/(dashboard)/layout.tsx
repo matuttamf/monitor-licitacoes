@@ -24,9 +24,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plano, owner_id')
+    .select('plano, owner_id, status, trial_fim')
     .eq('id', user.id)
     .single()
+
+  // Bloquear acesso ao painel se trial expirado (exceto admin)
+  const isAdmin = user.email === ADMIN_EMAIL
+  if (!isAdmin && profile) {
+    const expirado =
+      profile.status === 'expired' ||
+      (profile.status === 'trial' && profile.trial_fim && new Date(profile.trial_fim) < new Date())
+    if (expirado) redirect('/expirado')
+  }
 
   // Equipe visível apenas para owners de planos Pro/Empresarial
   const exibirEquipe = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
