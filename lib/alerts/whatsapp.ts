@@ -1,12 +1,14 @@
 /**
- * Envio de alertas via WhatsApp (Evolution API)
+ * Envio de alertas via WhatsApp — Z-API
  *
  * Variáveis de ambiente necessárias:
- *   EVOLUTION_API_URL   — ex: https://evo.suainstancia.com.br
- *   EVOLUTION_API_KEY   — chave de acesso da instância
- *   EVOLUTION_INSTANCE  — nome da instância (padrão: "monitor")
+ *   ZAPI_INSTANCE_ID    — ID da instância (ex: "3DF1234...")
+ *   ZAPI_INSTANCE_TOKEN — Token da instância
+ *   ZAPI_CLIENT_TOKEN   — Client-Token (header obrigatório na Z-API v2)
  *
- * Se as variáveis não estiverem definidas, as funções retornam false silenciosamente.
+ * Endpoint base: https://api.z-api.io/instances/{instanceId}/token/{instanceToken}/send-text
+ *
+ * Documentação: https://developer.z-api.io/
  */
 
 interface LicitacaoAlerta {
@@ -19,9 +21,11 @@ interface LicitacaoAlerta {
   reenvio?: boolean
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────
+
 function formatarNumero(telefone: string): string {
-  // Remove tudo que não é dígito e garante prefixo 55 (Brasil)
   const digits = telefone.replace(/\D/g, '')
+  // Z-API aceita formato com país: 5531999999999
   if (digits.startsWith('55') && digits.length >= 12) return digits
   return `55${digits}`
 }
@@ -38,13 +42,20 @@ function formatarData(d?: string): string {
   return `📅 Abertura: ${dt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}\n`
 }
 
+// ─── Montagem de mensagem ─────────────────────────────────────────────────
+
 const LOTE_WPP = 5
 
-function montarMensagem(licitacoes: LicitacaoAlerta[], parte: number, total: number): string {
+function montarMensagem(
+  licitacoes: LicitacaoAlerta[],
+  parte: number,
+  total: number,
+  appUrl: string,
+): string {
   const header =
-    `🔔 *Monitor de Licitações — ${new Date().toLocaleDateString('pt-BR')}*` +
+    `🔔 *Alerta Monitor de Licitações*` +
     (total > 1 ? ` (${parte}/${total})` : '') +
-    `\n\n`
+    ` — ${new Date().toLocaleDateString('pt-BR')}\n\n`
 
   const linhas = licitacoes.map(l => {
     const objeto = l.objeto.length > 120 ? l.objeto.substring(0, 120) + '…' : l.objeto
@@ -58,105 +69,113 @@ function montarMensagem(licitacoes: LicitacaoAlerta[], parte: number, total: num
     )
   }).join('\n\n---\n\n')
 
-  return header + linhas
+  const rodape = `\n\n_Ver todas as oportunidades no painel: ${appUrl}/alertas_`
+
+  return header + linhas + rodape
 }
 
-async function enviarMensagemWpp(numero: string, texto: string): Promise<boolean> {
-  const url  = process.env.EVOLUTION_API_URL
-  const key  = process.env.EVOLUTION_API_KEY
-  const inst = process.env.EVOLUTION_INSTANCE ?? 'monitor'
+// ─── Envio via Z-API ──────────────────────────────────────────────────────
 
-  if (!url || !key) return false
+async function enviarMensagemZApi(numero: string, texto: string): Promise<boolean> {
+  const instanceId    = process.env.ZAPI_INSTANCE_ID
+  const instanceToken = process.env.ZAPI_INSTANCE_TOKEN
+  const clientToken   = process.env.ZAPI_CLIENT_TOKEN
+
+  if (!instanceId || !instanceToken) return false
+
+  const url = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`
 
   try {
-    const res = await fetch(`${url}/message/sendText/${inst}`, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': key,
+        ...(clientToken ? { 'Client-Token': clientToken } : {}),
       },
-      body: JSON.stringify({
-        number: numero,
-        text: texto,
-        delay: 500,
-      }),
+      body: JSON.stringify({ phone: numero, message: texto }),
       signal: AbortSignal.timeout(15000),
     })
 
     if (!res.ok) {
       const body = await res.text().catch(() => '')
-      console.error(`WhatsApp erro ${res.status} para ${numero}:`, body)
+      console.error(`Z-API erro ${res.status} para ${numero}:`, body)
       return false
     }
     return true
   } catch (err) {
-    console.error('WhatsApp exceção:', err instanceof Error ? err.message : err)
+    console.error('Z-API exceção:', err instanceof Error ? err.message : err)
     return false
   }
 }
+
+// ─── Funções exportadas ───────────────────────────────────────────────────
 
 export async function enviarAlertaWhatsApp(
   licitacoes: LicitacaoAlerta[],
   telefone: string,
 ): Promise<boolean> {
-  if (!process.env.EVOLUTION_API_URL || !telefone || licitacoes.length === 0) return false
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone || licitacoes.length === 0) return false
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const numero = formatarNumero(telefone)
+
   const lotes: LicitacaoAlerta[][] = []
   for (let i = 0; i < licitacoes.length; i += LOTE_WPP) {
     lotes.push(licitacoes.slice(i, i + LOTE_WPP))
   }
 
-  // Resumo inicial se mais de um lote
+  // Resumo inicial quando há múltiplos lotes
   if (lotes.length > 1) {
     const resumo =
       `🔔 *Monitor de Licitações — ${new Date().toLocaleDateString('pt-BR')}*\n\n` +
-      `Encontrei *${licitacoes.length} licitações* para você.\n` +
-      `Enviando em ${lotes.length} mensagens. ⬇️`
-    await enviarMensagemWpp(numero, resumo)
-    await new Promise(r => setTimeout(r, 400))
+      `Encontrei *${licitacoes.length} oportunidades* para você.\n` +
+      `Enviando em ${lotes.length} mensagens. ⬇️\n\n` +
+      `_Todas as oportunidades estão no painel: ${appUrl}/alertas_`
+    await enviarMensagemZApi(numero, resumo)
+    await new Promise(r => setTimeout(r, 500))
   }
 
   let tudo_ok = true
   for (let i = 0; i < lotes.length; i++) {
-    const ok = await enviarMensagemWpp(numero, montarMensagem(lotes[i], i + 1, lotes.length))
+    const ok = await enviarMensagemZApi(numero, montarMensagem(lotes[i], i + 1, lotes.length, appUrl))
     if (!ok) tudo_ok = false
-    if (i < lotes.length - 1) await new Promise(r => setTimeout(r, 500))
+    if (i < lotes.length - 1) await new Promise(r => setTimeout(r, 600))
   }
   return tudo_ok
 }
 
-/** Envia um resumo semanal via WhatsApp */
+/** Resumo semanal via WhatsApp */
 export async function enviarResumoSemanalWhatsApp(
   telefone: string,
   totalAlertas: number,
   volumeTotal: number,
   topKeywords: { termo: string; count: number }[],
 ): Promise<boolean> {
-  if (!process.env.EVOLUTION_API_URL || !telefone) return false
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const numero = formatarNumero(telefone)
+
   const volume = volumeTotal > 0
-    ? `\n💰 *Volume total:* R$ ${volumeTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+    ? `\n💰 *Volume total estimado:* R$ ${volumeTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
     : ''
 
   const topList = topKeywords.slice(0, 5)
     .map((k, i) => `${i + 1}. ${k.termo} (${k.count})`)
     .join('\n')
 
+  const inicio = (() => {
+    const d = new Date(); d.setDate(d.getDate() - 6)
+    return d.toLocaleDateString('pt-BR')
+  })()
+
   const texto =
     `📊 *Resumo Semanal — Monitor de Licitações*\n` +
-    `Semana de ${getInicioSemana()} a ${new Date().toLocaleDateString('pt-BR')}\n\n` +
-    `🔔 *${totalAlertas} licitações* encontradas para você esta semana.` +
+    `Semana: ${inicio} a ${new Date().toLocaleDateString('pt-BR')}\n\n` +
+    `🔔 *${totalAlertas} licitaç${totalAlertas !== 1 ? 'ões' : 'ão'}* encontrada${totalAlertas !== 1 ? 's' : ''} para você.` +
     volume +
     (topList ? `\n\n🏆 *Top palavras-chave:*\n${topList}` : '') +
-    `\n\n_Acesse o painel para ver todos os detalhes →_`
+    `\n\n_Ver todas no painel: ${appUrl}/alertas_`
 
-  return enviarMensagemWpp(numero, texto)
-}
-
-function getInicioSemana(): string {
-  const d = new Date()
-  d.setDate(d.getDate() - 6)
-  return d.toLocaleDateString('pt-BR')
+  return enviarMensagemZApi(numero, texto)
 }
