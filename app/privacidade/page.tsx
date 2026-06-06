@@ -84,6 +84,7 @@ export default function PrivacidadePage() {
               <SubTitulo>2.1 Dados fornecidos diretamente por você</SubTitulo>
               <Tabela colunas={['Categoria', 'Dados', 'Momento da coleta']}>
                 <tr><Td>Identificação</Td><Td>Nome completo, e-mail, credencial de acesso</Td><Td>Cadastro</Td></tr>
+                <tr><Td>Documento fiscal</Td><Td>CPF ou CNPJ</Td><Td>Cadastro (obrigatório para validação e impedimento de múltiplos trials)</Td></tr>
                 <tr><Td>Contato</Td><Td>Telefone, WhatsApp</Td><Td>Perfil (opcional)</Td></tr>
                 <tr><Td>Empresa</Td><Td>Nome da empresa</Td><Td>Perfil (opcional)</Td></tr>
                 <tr><Td>Preferências</Td><Td>Palavras-chave de monitoramento</Td><Td>Uso do painel</Td></tr>
