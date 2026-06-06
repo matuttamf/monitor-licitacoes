@@ -163,13 +163,73 @@ import {
   coletarJiParana, coletarAraguaina,
 } from '@/lib/scrapers/cidades-pncp-norte-co'
 
+// ── Camada 8 — SP Interior (23 cidades) ──────────────────────────────────
+import {
+  coletarItaquaquecetuba, coletarCotia, coletarEmbuDasArtes, coletarItapevi,
+  coletarHortolandia, coletarIndaiatuba, coletarAmericana, coletarFerrazVasc,
+  coletarItapecericaSerra, coletarSaoCaetanoSul,
+  coletarSaoCarlos, coletarAraraquara, coletarPresPrudente, coletarRioClaro,
+  coletarJacarei, coletarAracatuba, coletarMarilia, coletarMogiGuacu,
+  coletarBotucatu, coletarCatanduva, coletarGuaratingueta,
+  coletarSertaozinho, coletarLeme,
+} from '@/lib/scrapers/cidades-pncp-sp-interior'
+
+// ── Camada 8 — RJ interior + MG extra + ES extra (23 cidades) ─────────────
+import {
+  coletarBelfordRoxo, coletarSJMeriti, coletarMage, coletarItaborai,
+  coletarNovaFriburgo, coletarAngraDoReis, coletarCaboFrio,
+  coletarNilopolis, coletarTeresopolis, coletarQueimados,
+  coletarPatosDeMinas, coletarTeofiloOtoni, coletarPocosDeCaldas,
+  coletarBarbacena, coletarCoronelFabriciano, coletarMuriae,
+  coletarVarginha, coletarLavras, coletarAlfenas,
+  coletarLinhares, coletarSaoMateus, coletarColatina, coletarCachoeiro,
+} from '@/lib/scrapers/cidades-pncp-rj-mg-es'
+
+// ── Camada 8 — Sul extra + GO/MS extra (24 cidades) ───────────────────────
+import {
+  coletarApucarana, coletarGuarapuava, coletarParanagua as coletarParanaguaCidade,
+  coletarAraucaria, coletarPinhais, coletarAlmiranteTam, coletarToledo, coletarUmuarama,
+  coletarCricuma, coletarLages, coletarJaragua, coletarBiguacu,
+  coletarTubarao, coletarNavegantes,
+  coletarPassoFundo, coletarBage, coletarSantaCruzSul,
+  coletarCachoeirinha, coletarAlvorada, coletarErechim,
+  coletarLuzianiaGO, coletarValparaisoGO, coletarCaldasNovas, coletarItumbiara,
+} from '@/lib/scrapers/cidades-pncp-sul-extra'
+
+// ── Camada 9 — Estatais estaduais: energia + saneamento + bancos (26) ─────
+import {
+  coletarCEMIG, coletarCOPEL, coletarCELESC, coletarCEAL,
+  coletarENERGISASE, coletarCELPA, coletarCEMAR,
+  coletarCEDAE, coletarCOPASA, coletarSANEPAR, coletarCASAN,
+  coletarEMBASA, coletarCAGEPA, coletarCAERN, coletarCAGECE,
+  coletarCOMPESA, coletarCOSANPA, coletarCAEMA, coletarAGESPISA,
+  coletarDESO, coletarSANESUL, coletarCASAL,
+  coletarBDMG, coletarBRDE, coletarBANRISUL, coletarBRB,
+} from '@/lib/scrapers/estatais-estaduais'
+
+// ── Camada 9 — Portos + concessionárias + empresas federais (16) ──────────
+import {
+  coletarPortoSantos, coletarPortoParanagua, coletarPortoRioGrande,
+  coletarPortoVitoria, coletarPortoRecife as coletarPortoRecifePorto,
+  coletarPortoSalvador as coletarPortoSalvadorPorto,
+  coletarPortoItaqui, coletarPortoManaus as coletarPortoManausPorto,
+  coletarPortoBelem as coletarPortoBelemPorto,
+  coletarPortoFortaleza as coletarPortoFortalezaPorto,
+  coletarVALEC, coletarCPRM, coletarEBC, coletarHEMOBRAS, coletarPPSA, coletarEBSERH,
+} from '@/lib/scrapers/portos-concessoes'
+
+// ── Camada 10 — Empresas privadas/capital aberto (5) ─────────────────────
+import {
+  coletarVale, coletarEmbraer, coletarGerdau, coletarSuzano as coletarSuzanoEmpresa, coletarRaizen,
+} from '@/lib/scrapers/empresas-privadas'
+
 import { salvarLicitacoes }        from '@/lib/scrapers/salvar'
 import { createServiceClient }     from '@/lib/supabase/server'
 import { registrarCronLog }        from '@/lib/cron-log'
 
 export const maxDuration = 300
 
-const TOTAL_FONTES = 195
+const TOTAL_FONTES = 312
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -183,7 +243,7 @@ export async function GET(request: Request) {
   const dataInicio = ontem.toISOString().substring(0, 10)
   const dataFim    = hoje.toISOString().substring(0, 10)
 
-  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes em 7 camadas)`)
+  console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes em 10 camadas)`)
 
   // 0. Limpar licitações expiradas
   const supabase = await createServiceClient()
@@ -407,6 +467,129 @@ export async function GET(request: Request) {
     coletarRondonopolis(dataInicio, dataFim),
     coletarJiParana(dataInicio, dataFim),
     coletarAraguaina(dataInicio, dataFim),
+    // Camada 8 — SP Interior (195-217)
+    coletarItaquaquecetuba(dataInicio, dataFim),
+    coletarCotia(dataInicio, dataFim),
+    coletarEmbuDasArtes(dataInicio, dataFim),
+    coletarItapevi(dataInicio, dataFim),
+    coletarHortolandia(dataInicio, dataFim),
+    coletarIndaiatuba(dataInicio, dataFim),
+    coletarAmericana(dataInicio, dataFim),
+    coletarFerrazVasc(dataInicio, dataFim),
+    coletarItapecericaSerra(dataInicio, dataFim),
+    coletarSaoCaetanoSul(dataInicio, dataFim),
+    coletarSaoCarlos(dataInicio, dataFim),
+    coletarAraraquara(dataInicio, dataFim),
+    coletarPresPrudente(dataInicio, dataFim),
+    coletarRioClaro(dataInicio, dataFim),
+    coletarJacarei(dataInicio, dataFim),
+    coletarAracatuba(dataInicio, dataFim),
+    coletarMarilia(dataInicio, dataFim),
+    coletarMogiGuacu(dataInicio, dataFim),
+    coletarBotucatu(dataInicio, dataFim),
+    coletarCatanduva(dataInicio, dataFim),
+    coletarGuaratingueta(dataInicio, dataFim),
+    coletarSertaozinho(dataInicio, dataFim),
+    coletarLeme(dataInicio, dataFim),
+    // Camada 8 — RJ interior + MG extra + ES extra (218-240)
+    coletarBelfordRoxo(dataInicio, dataFim),
+    coletarSJMeriti(dataInicio, dataFim),
+    coletarMage(dataInicio, dataFim),
+    coletarItaborai(dataInicio, dataFim),
+    coletarNovaFriburgo(dataInicio, dataFim),
+    coletarAngraDoReis(dataInicio, dataFim),
+    coletarCaboFrio(dataInicio, dataFim),
+    coletarNilopolis(dataInicio, dataFim),
+    coletarTeresopolis(dataInicio, dataFim),
+    coletarQueimados(dataInicio, dataFim),
+    coletarPatosDeMinas(dataInicio, dataFim),
+    coletarTeofiloOtoni(dataInicio, dataFim),
+    coletarPocosDeCaldas(dataInicio, dataFim),
+    coletarBarbacena(dataInicio, dataFim),
+    coletarCoronelFabriciano(dataInicio, dataFim),
+    coletarMuriae(dataInicio, dataFim),
+    coletarVarginha(dataInicio, dataFim),
+    coletarLavras(dataInicio, dataFim),
+    coletarAlfenas(dataInicio, dataFim),
+    coletarLinhares(dataInicio, dataFim),
+    coletarSaoMateus(dataInicio, dataFim),
+    coletarColatina(dataInicio, dataFim),
+    coletarCachoeiro(dataInicio, dataFim),
+    // Camada 8 — Sul extra + GO/MS extra (241-264)
+    coletarApucarana(dataInicio, dataFim),
+    coletarGuarapuava(dataInicio, dataFim),
+    coletarParanaguaCidade(dataInicio, dataFim),
+    coletarAraucaria(dataInicio, dataFim),
+    coletarPinhais(dataInicio, dataFim),
+    coletarAlmiranteTam(dataInicio, dataFim),
+    coletarToledo(dataInicio, dataFim),
+    coletarUmuarama(dataInicio, dataFim),
+    coletarCricuma(dataInicio, dataFim),
+    coletarLages(dataInicio, dataFim),
+    coletarJaragua(dataInicio, dataFim),
+    coletarBiguacu(dataInicio, dataFim),
+    coletarTubarao(dataInicio, dataFim),
+    coletarNavegantes(dataInicio, dataFim),
+    coletarPassoFundo(dataInicio, dataFim),
+    coletarBage(dataInicio, dataFim),
+    coletarSantaCruzSul(dataInicio, dataFim),
+    coletarCachoeirinha(dataInicio, dataFim),
+    coletarAlvorada(dataInicio, dataFim),
+    coletarErechim(dataInicio, dataFim),
+    coletarLuzianiaGO(dataInicio, dataFim),
+    coletarValparaisoGO(dataInicio, dataFim),
+    coletarCaldasNovas(dataInicio, dataFim),
+    coletarItumbiara(dataInicio, dataFim),
+    // Camada 9 — Estatais estaduais (265-290)
+    coletarCEMIG(dataInicio, dataFim),
+    coletarCOPEL(dataInicio, dataFim),
+    coletarCELESC(dataInicio, dataFim),
+    coletarCEAL(dataInicio, dataFim),
+    coletarENERGISASE(dataInicio, dataFim),
+    coletarCELPA(dataInicio, dataFim),
+    coletarCEMAR(dataInicio, dataFim),
+    coletarCEDAE(dataInicio, dataFim),
+    coletarCOPASA(dataInicio, dataFim),
+    coletarSANEPAR(dataInicio, dataFim),
+    coletarCASAN(dataInicio, dataFim),
+    coletarEMBASA(dataInicio, dataFim),
+    coletarCAGEPA(dataInicio, dataFim),
+    coletarCAERN(dataInicio, dataFim),
+    coletarCAGECE(dataInicio, dataFim),
+    coletarCOMPESA(dataInicio, dataFim),
+    coletarCOSANPA(dataInicio, dataFim),
+    coletarCAEMA(dataInicio, dataFim),
+    coletarAGESPISA(dataInicio, dataFim),
+    coletarDESO(dataInicio, dataFim),
+    coletarSANESUL(dataInicio, dataFim),
+    coletarCASAL(dataInicio, dataFim),
+    coletarBDMG(dataInicio, dataFim),
+    coletarBRDE(dataInicio, dataFim),
+    coletarBANRISUL(dataInicio, dataFim),
+    coletarBRB(dataInicio, dataFim),
+    // Camada 9 — Portos + concessionárias (291-306)
+    coletarPortoSantos(dataInicio, dataFim),
+    coletarPortoParanagua(dataInicio, dataFim),
+    coletarPortoRioGrande(dataInicio, dataFim),
+    coletarPortoVitoria(dataInicio, dataFim),
+    coletarPortoRecifePorto(dataInicio, dataFim),
+    coletarPortoSalvadorPorto(dataInicio, dataFim),
+    coletarPortoItaqui(dataInicio, dataFim),
+    coletarPortoManausPorto(dataInicio, dataFim),
+    coletarPortoBelemPorto(dataInicio, dataFim),
+    coletarPortoFortalezaPorto(dataInicio, dataFim),
+    coletarVALEC(dataInicio, dataFim),
+    coletarCPRM(dataInicio, dataFim),
+    coletarEBC(dataInicio, dataFim),
+    coletarHEMOBRAS(dataInicio, dataFim),
+    coletarPPSA(dataInicio, dataFim),
+    coletarEBSERH(dataInicio, dataFim),
+    // Camada 10 — Empresas privadas/capital aberto (307-311)
+    coletarVale(dataInicio),
+    coletarEmbraer(dataInicio),
+    coletarGerdau(dataInicio),
+    coletarSuzanoEmpresa(dataInicio),
+    coletarRaizen(dataInicio),
   ])
 
   const ok   = (r: PromiseSettledResult<LicitacaoRaw[]>): LicitacaoRaw[] => r.status === 'fulfilled' ? r.value : []
@@ -487,6 +670,36 @@ export async function GET(request: Request) {
     'ananindeua','santarem','maraba','castanhal',
     'anapolis_go','rio_verde_go','dourados','varzea_grande','rondonopolis',
     'ji_parana','araguaina',
+    // Camada 8 — SP interior
+    'itaquaquecetuba','cotia','embu_artes','itapevi','hortolandia','indaiatuba',
+    'americana','ferraz_vasc','itapecerica','sao_caetano_sul',
+    'sao_carlos','araraquara','pres_prudente','rio_claro','jacarei',
+    'aracatuba','marilia','mogi_guacu','botucatu','catanduva',
+    'guaratingueta','sertaozinho','leme',
+    // Camada 8 — RJ interior + MG extra + ES extra
+    'belford_roxo','sj_meriti','mage','itaborai','nova_friburgo',
+    'angra_reis','cabo_frio','nilopolis','teresopolis','queimados',
+    'patos_minas','teofilo_otoni','pocos_caldas','barbacena',
+    'coronel_fabriciano','muriae','varginha','lavras','alfenas',
+    'linhares','sao_mateus','colatina','cachoeiro',
+    // Camada 8 — Sul extra + GO/MS extra
+    'apucarana','guarapuava','paranagua_cid','araucaria','pinhais',
+    'almirante_tam','toledo','umuarama',
+    'cricuma','lages','jaragua','biguacu','tubarao','navegantes',
+    'passo_fundo','bage','santa_cruz_sul','cachoeirinha','alvorada','erechim',
+    'luziana_go','valparaiso_go','caldas_novas','itumbiara',
+    // Camada 9 — Estatais estaduais
+    'cemig','copel','celesc','ceal','energisa_se','celpa','cemar',
+    'cedae','copasa','sanepar','casan','embasa','cagepa','caern',
+    'cagece','compesa','cosanpa','caema','agespisa','deso','sanesul','casal',
+    'bdmg','brde','banrisul','brb',
+    // Camada 9 — Portos + concessões
+    'porto_santos','porto_paranagua','porto_rio_grande','porto_vitoria',
+    'porto_recife_p','porto_salvador_p','porto_itaqui','porto_manaus_p',
+    'porto_belem_p','porto_fortaleza_p',
+    'valec','cprm','ebc','hemobras','ppsa','ebserh',
+    // Camada 10 — Empresas privadas
+    'vale','embraer','gerdau','suzano_empresa','raizen',
   ]
 
   const detalhes: Record<string, unknown> = Object.fromEntries(nomes.map((n, i) => [`${n}_ok`, fonteOk[i]]))
