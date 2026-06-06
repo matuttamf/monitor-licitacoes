@@ -50,7 +50,7 @@ export const NOME_UF: Record<string, string> = {
 
 /** labelSelecao sem emoji */
 export function labelSelecao(s: string): string {
-  if (s === 'brasil') return 'Brasil'
+  if (s === 'brasil') return '🌎 Brasil'
   if (LABEL_REGIAO[s]) return LABEL_REGIAO[s]
   return s.toUpperCase() // UF
 }

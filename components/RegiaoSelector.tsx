@@ -24,7 +24,7 @@ const REGIOES_ORDEM = (
 export function RegiaoSelector({
   value,
   onChange,
-  placeholder = 'Brasil (qualquer região)',
+  placeholder = '🌎 Brasil (qualquer região)',
 }: {
   value: string[]
   onChange: (novas: string[]) => void
@@ -89,7 +89,7 @@ export function RegiaoSelector({
           >
             {/* ── Brasil ── */}
             <TreeItem
-              label="Brasil (qualquer região)"
+              label="🌎 Brasil (qualquer região)"
               depth={0}
               selecionado={isSelecionado('brasil')}
               coberto={false}
@@ -207,7 +207,7 @@ export function RegiaoChips({
         className="text-xs px-2 py-0.5 rounded-full"
         style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}
       >
-        Brasil
+        🌎 Brasil
       </span>
     )
   }
