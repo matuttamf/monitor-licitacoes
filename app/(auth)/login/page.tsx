@@ -1,14 +1,38 @@
 'use client'
 
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
-import { loginAction } from './actions'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 function LoginForm() {
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') ?? ''
-  const erroParam = searchParams.get('erro') ?? ''
+
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [erro, setErro] = useState('')
+  const [carregando, setCarregando] = useState(false)
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setCarregando(true)
+    setErro('')
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
+    if (error) {
+      if (error.message.includes('Email not confirmed')) {
+        setErro('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.')
+      } else if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_credentials')) {
+        setErro('E-mail ou senha incorretos.')
+      } else {
+        setErro('Erro ao entrar: ' + error.message)
+      }
+      setCarregando(false)
+      return
+    }
+    window.location.href = redirect || '/dashboard'
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
@@ -46,7 +70,7 @@ function LoginForm() {
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6B0F1A, #C9A65A, transparent)' }} />
       </div>
 
-      {/* Painel direito — formulário */}
+      {/* Painel direito */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', background: '#FAF6F0' }}>
         <div style={{ width: '100%', maxWidth: '380px' }}>
 
@@ -58,15 +82,13 @@ function LoginForm() {
           <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 6px' }}>Bem-vindo de volta</h2>
           <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>Acesse sua conta para ver os alertas</p>
 
-          <form action={loginAction}>
-            {/* Campo hidden com o redirect */}
-            <input type="hidden" name="redirect" value={redirect} />
-
+          <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>E-mail</label>
               <input
                 type="email"
-                name="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 required
                 style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
               />
@@ -76,23 +98,25 @@ function LoginForm() {
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Senha</label>
               <input
                 type="password"
-                name="senha"
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
                 required
                 style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #D5D2C8', background: 'white', fontSize: '14px', color: '#1A1A1C', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
 
-            {erroParam && (
+            {erro && (
               <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
-                ⚠ {erroParam}
+                ⚠ {erro}
               </div>
             )}
 
             <button
               type="submit"
-              style={{ width: '100%', padding: '13px', borderRadius: '12px', background: '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.02em' }}
+              disabled={carregando}
+              style={{ width: '100%', padding: '13px', borderRadius: '12px', background: carregando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, border: 'none', cursor: carregando ? 'not-allowed' : 'pointer', letterSpacing: '0.02em' }}
             >
-              Entrar
+              {carregando ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
