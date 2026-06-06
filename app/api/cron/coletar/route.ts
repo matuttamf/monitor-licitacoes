@@ -636,7 +636,7 @@ export async function GET(request: Request) {
     // Camada 1
     'pncp','pncp_contratos','pncp_pca','comprasnet','querido','google','dou',
     // Plataformas
-    'bbmnet','licitanet','bll','licitacoes_e','licitar_digital','negocios_publicos','compras_publicas',
+    'bbmnet','licitanet','bll','licitacoes_e','licitar_digital',
     // Camada 2 — Portais estaduais reais
     'bec_sp','mg','pr',
     // Camada 3 — Capitais via PNCP IBGE (17)

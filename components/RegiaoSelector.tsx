@@ -73,8 +73,8 @@ export function RegiaoSelector({
       ? placeholder
       : selecionadas.map(labelSelecao).join(', ')
 
-  // Para exibição de "já coberto": considera brasil selecionado se array vazio
-  const selParaVerificar = selecionadas.length === 0 ? ['brasil'] : selecionadas
+  // Para exibição de "já coberto": usa value diretamente — [] = nada selecionado, nada coberto
+  const selParaVerificar = selecionadas
 
   return (
     <div className="relative">

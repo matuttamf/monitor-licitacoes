@@ -102,7 +102,7 @@ export function jaCoberto(item: string, selecoes: string[]): boolean {
  */
 export function adicionarRegiao(item: string, atual: string[]): string[] {
   if (item === 'brasil') return ['brasil']
-  if (selecaoEhBrasil(atual)) return atual
+  if (atual.includes('brasil')) return atual   // brasil explícito = tudo já coberto
   if (jaCoberto(item, atual)) return atual
 
   // Ao adicionar região mãe, remove UFs já cobertas por ela

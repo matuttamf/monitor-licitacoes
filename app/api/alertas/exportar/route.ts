@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { type NextRequest } from 'next/server'
+import { estadoCompativelComRegioes } from '@/lib/regioes'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -9,6 +10,7 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams
   const busca   = sp.get('busca')?.trim() ?? ''
   const kwTermo = sp.get('keyword') ?? ''
+  const regioes = sp.get('regioes')?.split(',').filter(Boolean) ?? []
 
   let query = supabase
     .from('alertas')
@@ -31,6 +33,14 @@ export async function GET(request: NextRequest) {
   type KwRow  = { termo?: string } | null
 
   let resultado = data ?? []
+
+  // Filtro de região (mesmo comportamento do route principal)
+  if (regioes.length > 0 && !regioes.includes('brasil')) {
+    resultado = resultado.filter(a => {
+      const lic = a.licitacoes as unknown as { estado?: string } | null
+      return estadoCompativelComRegioes(lic?.estado, regioes)
+    })
+  }
 
   if (busca) {
     const termo = busca.toLowerCase()

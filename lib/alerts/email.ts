@@ -26,7 +26,7 @@ function formatarData(d?: string) {
   return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[]): string {
+function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0): string {
   const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const total = licitacoes.length
 
@@ -143,9 +143,17 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[]): string {
       ${cards}
 
 
+      ${restantes > 0 ? `<!-- Aviso restantes -->
+      <div style="text-align:center;margin:20px 0;padding:12px 20px;background:#FFF7ED;border:1px solid #FDDCAA;border-radius:10px">
+        <p style="margin:0;font-size:13px;color:#92400E">
+          ⚠️ Há mais <strong>${restantes}</strong> licitaç${restantes !== 1 ? 'ões' : 'ão'} que não coube${restantes !== 1 ? 'ram' : ''} neste e-mail.
+          <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'}/alertas" style="color:#6B0F1A;font-weight:700">Veja todas no painel →</a>
+        </p>
+      </div>` : ''}
+
       <!-- CTA principal -->
       <div style="text-align:center;margin-top:28px;padding-top:24px;border-top:1px solid #E0D8CF">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitor-licitacoes-two.vercel.app'}/alertas"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'}/alertas"
            style="display:inline-block;background:linear-gradient(135deg,#6B0F1A,#8B1520);color:white;padding:15px 40px;border-radius:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:0.3px">
           Ver todas no painel →
         </a>
@@ -178,7 +186,7 @@ export async function enviarAlertaEmailUsuario(emailDestino: string, licitacoes:
     from: process.env.EMAIL_REMETENTE!,
     to: emailDestino,
     subject,
-    html: gerarHtmlAlerta(licitacoes),
+    html: gerarHtmlAlerta(licitacoes, restantes),
   })
 
   if (error) {
