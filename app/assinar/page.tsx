@@ -167,14 +167,19 @@ export default function AssinarPage() {
               </div>
             )}
 
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '6px' }}>{p.nome}</div>
-            <div style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.6)' : '#9AA0A6', marginBottom: '20px' }}>{p.descricao}</div>
+            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '6px', textAlign: 'center' }}>{p.nome}</div>
+            <div style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.6)' : '#9AA0A6', marginBottom: '20px', textAlign: 'center' }}>{p.descricao}</div>
 
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.5)' : '#9AA0A6', fontWeight: 500 }}>R$</span>
-              <span style={{ fontSize: '44px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', lineHeight: 1 }}>{p.preco}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '4px', marginBottom: '28px' }}>
+              <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.5)' : '#9AA0A6', fontWeight: 500, marginBottom: '6px' }}>R$</span>
+              <span style={{ fontSize: '44px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', lineHeight: 1 }}>
+                {p.preco.split(',')[0]}
+                {p.preco.includes(',') && (
+                  <span style={{ fontSize: '24px', fontWeight: 800 }}>,{p.preco.split(',')[1]}</span>
+                )}
+              </span>
+              <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.4)' : '#9AA0A6', marginBottom: '6px' }}>/mês</span>
             </div>
-            <div style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.4)' : '#9AA0A6', marginBottom: '28px' }}>/mês · cobrado mensalmente</div>
 
             <div style={{ height: '1px', background: p.destaque ? 'rgba(201,166,90,0.2)' : '#F0EDE8', marginBottom: '24px' }} />
 
