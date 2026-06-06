@@ -34,9 +34,20 @@ export default function LoginPage() {
       setCarregando(false)
       return
     }
-    // Hard redirect para garantir que os cookies de sessão sejam enviados ao servidor
+    // Aguarda o Supabase gravar a sessão no cookie antes de redirecionar
+    // Isso evita race condition no mobile onde getSession() retorna null
+    await new Promise<void>(resolve => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_IN') {
+          subscription.unsubscribe()
+          resolve()
+        }
+      })
+      // Fallback: redireciona em até 1s mesmo sem o evento
+      setTimeout(resolve, 1000)
+    })
     const params = new URLSearchParams(window.location.search)
-    const redirect = params.get('redirect') // já decodificado pelo URLSearchParams
+    const redirect = params.get('redirect')
     window.location.href = redirect ?? '/dashboard'
   }
 

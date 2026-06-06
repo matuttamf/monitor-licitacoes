@@ -28,15 +28,6 @@ function CheckoutConteudo() {
 
     async function iniciarCheckout() {
       try {
-        // Verifica sessão no cliente antes de chamar a API
-        const supabase = createClient()
-        const { data: { session } } = await supabase.auth.getSession()
-
-        if (!session) {
-          setStatus('nao-autenticado')
-          return
-        }
-
         const res = await fetch('/api/assinatura/criar', {
           method:      'POST',
           credentials: 'same-origin',

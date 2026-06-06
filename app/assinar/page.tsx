@@ -47,14 +47,6 @@ export default function AssinarPage() {
     setLoadingPlano(planoId)
     setErro('')
     try {
-      // Verifica sessão client-side antes de chamar a API
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        window.location.href = `/checkout?plano=${planoId}`
-        return
-      }
-
       const res = await fetch('/api/assinatura/criar', {
         method:      'POST',
         credentials: 'same-origin',
