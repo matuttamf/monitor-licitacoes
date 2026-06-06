@@ -77,7 +77,7 @@ export default function ExpiradoPage() {
       </div>
 
       {/* Hero */}
-      <div className="bg-[#1A1A1C] px-6 md:px-10 py-14 md:py-16 text-center">
+      <div className="bg-[#1A1A1C] px-6 md:px-10 py-8 md:py-10 text-center">
         <div className="w-[52px] h-[52px] rounded-[14px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-black text-sm mx-auto mb-6">
           ML
         </div>
