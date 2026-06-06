@@ -26,12 +26,12 @@ export const ADJACENCIAS: Record<string, string[]> = {
 
 /** Rótulos para exibição */
 export const LABEL_REGIAO: Record<string, string> = {
-  brasil:       '🌎 Brasil',
-  norte:        '🌿 Norte',
-  nordeste:     '☀️ Nordeste',
-  sudeste:      '🏙️ Sudeste',
-  sul:          '❄️ Sul',
-  centro_oeste: '🌾 Centro-Oeste',
+  brasil:       'Brasil',
+  norte:        'Norte',
+  nordeste:     'Nordeste',
+  sudeste:      'Sudeste',
+  sul:          'Sul',
+  centro_oeste: 'Centro-Oeste',
 }
 
 /** Estados do filtro — sigla para nome curto */
@@ -47,6 +47,13 @@ export const NOME_UF: Record<string, string> = {
 }
 
 // ─── Utilitários ──────────────────────────────────────────────────────────
+
+/** labelSelecao sem emoji */
+export function labelSelecao(s: string): string {
+  if (s === 'brasil') return 'Brasil'
+  if (LABEL_REGIAO[s]) return LABEL_REGIAO[s]
+  return s.toUpperCase() // UF
+}
 
 /** Retorna o nome da grande região de uma UF */
 export function regiaoDeUF(uf: string): string | null {
@@ -150,9 +157,3 @@ export function estadoCompativelComRegioes(
   return false
 }
 
-/** Label curto para exibição de uma seleção */
-export function labelSelecao(s: string): string {
-  if (s === 'brasil') return '🌎 Brasil'
-  if (LABEL_REGIAO[s]) return LABEL_REGIAO[s]
-  return s.toUpperCase() // UF
-}

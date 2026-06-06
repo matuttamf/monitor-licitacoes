@@ -11,23 +11,27 @@ import {
   labelSelecao,
 } from '@/lib/regioes'
 
-// ─── Estrutura da árvore ──────────────────────────────────────────────────────
-
-const REGIOES_ORDEM = ['norte', 'nordeste', 'sudeste', 'sul', 'centro_oeste'] as const
+// Regiões em ordem alfabética pelo label
+const REGIOES_ORDEM = (
+  Object.entries(LABEL_REGIAO)
+    .filter(([key]) => key !== 'brasil')
+    .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+    .map(([key]) => key)
+) as string[]
 
 // ─── Seletor em árvore (Brasil → Regiões → Estados) ──────────────────────────
 
 export function RegiaoSelector({
   value,
   onChange,
-  placeholder = '🌎 Brasil (qualquer região)',
+  placeholder = 'Brasil (qualquer região)',
 }: {
   value: string[]
   onChange: (novas: string[]) => void
   placeholder?: string
 }) {
-  const [aberto,    setAberto]    = useState(false)
-  const [expanded,  setExpanded]  = useState<Record<string, boolean>>({})
+  const [aberto,   setAberto]   = useState(false)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   const selecionadas = value
 
@@ -51,7 +55,6 @@ export function RegiaoSelector({
       ? placeholder
       : selecionadas.map(labelSelecao).join(', ')
 
-  // Helpers de estado visual
   function isSelecionado(item: string) {
     return selecionadas.includes(item) || (item === 'brasil' && selecionadas.length === 0)
   }
@@ -61,7 +64,6 @@ export function RegiaoSelector({
 
   return (
     <div className="relative">
-      {/* Botão trigger */}
       <button
         type="button"
         onClick={() => setAberto(v => !v)}
@@ -79,10 +81,8 @@ export function RegiaoSelector({
 
       {aberto && (
         <>
-          {/* Overlay para fechar ao clicar fora */}
           <div className="fixed inset-0 z-40" onClick={() => setAberto(false)} />
 
-          {/* Painel da árvore */}
           <div
             className="absolute z-50 mt-1 w-full rounded-xl overflow-y-auto shadow-lg"
             style={{
@@ -94,42 +94,41 @@ export function RegiaoSelector({
           >
             {/* ── Brasil ── */}
             <TreeItem
-              label="🌎 Brasil (qualquer região)"
+              label="Brasil (qualquer região)"
               depth={0}
               selecionado={isSelecionado('brasil')}
               coberto={false}
               onToggle={() => toggle('brasil')}
             />
 
-            {/* ── Regiões e seus estados ── */}
+            {/* ── Regiões (ordem alfabética) e seus estados ── */}
             {REGIOES_ORDEM.map(regiao => {
               const abertaRegiao = !!expanded[regiao]
-              const estados = ESTADOS_POR_REGIAO[regiao]
+              // Estados da região em ordem alfabética pela sigla
+              const estados = [...(ESTADOS_POR_REGIAO[regiao] ?? [])].sort()
 
               return (
                 <div key={regiao}>
-                  {/* Linha da região */}
                   <div className="flex items-center" style={{ borderTop: '1px solid var(--cinza-light)' }}>
-                    {/* Botão expandir/recolher */}
+                    {/* Seta expandir/recolher */}
                     <button
                       type="button"
                       onClick={() => toggleExpand(regiao)}
                       className="flex-shrink-0 flex items-center justify-center"
                       style={{
-                        width: '28px',
-                        height: '36px',
+                        width: 28,
+                        height: 36,
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
                         color: 'var(--cinza)',
-                        fontSize: '9px',
-                        paddingLeft: '12px',
+                        fontSize: 9,
+                        paddingLeft: 12,
                       }}
                     >
                       {abertaRegiao ? '▼' : '▶'}
                     </button>
 
-                    {/* Checkbox + label da região */}
                     <TreeItem
                       label={LABEL_REGIAO[regiao] ?? regiao}
                       depth={0}
@@ -141,7 +140,7 @@ export function RegiaoSelector({
                     />
                   </div>
 
-                  {/* Estados da região (quando expandida) */}
+                  {/* Estados (visíveis quando expandido, ordem alfabética) */}
                   {abertaRegiao && estados.map(uf => (
                     <TreeItem
                       key={uf}
@@ -181,7 +180,7 @@ function TreeItem({
   flex1?: boolean
   noBorder?: boolean
 }) {
-  const paddingLeft = depth === 0 ? 12 : depth === 1 ? 28 : 44
+  const paddingLeft = depth === 0 ? 12 : 44
 
   return (
     <button
@@ -199,13 +198,12 @@ function TreeItem({
         opacity: coberto ? 0.4 : 1,
       }}
     >
-      {/* Caixa de seleção */}
       <span
         className="flex-shrink-0 flex items-center justify-center rounded text-white"
         style={{
           width: 15,
           height: 15,
-          background: selecionado ? 'var(--vinho)' : coberto ? 'var(--cinza-light)' : 'var(--cinza-light)',
+          background: selecionado ? 'var(--vinho)' : 'var(--cinza-light)',
           fontSize: 9,
         }}
       >
@@ -241,13 +239,15 @@ export function RegiaoChips({
         className="text-xs px-2 py-0.5 rounded-full"
         style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}
       >
-        🌎 Brasil
+        Brasil
       </span>
     )
   }
+  // Chips em ordem alfabética
+  const ordenados = [...lista].sort((a, b) => labelSelecao(a).localeCompare(labelSelecao(b), 'pt-BR'))
   return (
     <div className="flex flex-wrap gap-1 mt-1.5">
-      {lista.map(r => (
+      {ordenados.map(r => (
         <span
           key={r}
           className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
