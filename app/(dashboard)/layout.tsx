@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import LogoutButton from './components/LogoutButton'
+import { NavItem } from './components/NavItem'
 import { temMultiUsuario } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
@@ -143,15 +143,3 @@ export default async function DashboardLayout({ children }: { children: React.Re
   )
 }
 
-function NavItem({ href, label, icon }: { href: string; label: string; icon: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all"
-      style={{ color: 'rgba(255,255,255,0.5)' }}
-    >
-      <span style={{ fontSize: '14px', color: 'var(--dourado)', opacity: 0.6 }}>{icon}</span>
-      <span className="font-medium">{label}</span>
-    </Link>
-  )
-}

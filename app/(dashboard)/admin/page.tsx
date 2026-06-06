@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
 type Usuario = {
   id: string
   email: string
@@ -15,55 +17,90 @@ type Usuario = {
   telefone?: string
   whatsapp?: string
   empresa?: string
+  keyword_count: number
+  alerta_count: number
+  ultimo_alerta: string | null
 }
 
-type Keyword = { id: string; termo: string; ativo: boolean; criado_em: string }
-type Alerta  = {
-  id: string
-  criado_em: string
-  canais: string[]
-  licitacoes: {
-    objeto: string
-    orgao: string
-    valor_estimado?: number
-    data_abertura?: string
-  } | null
+type Keyword    = { id: string; termo: string; ativo: boolean; criado_em: string }
+type Alerta     = {
+  id: string; criado_em: string; canais: string[]
+  licitacoes: { objeto: string; orgao: string; valor_estimado?: number; data_abertura?: string } | null
 }
 type SubUsuario = { id: string; nome: string | null; email: string }
+type ContaDetalhe = { keywords: Keyword[]; alertas: Alerta[]; subUsuarios: SubUsuario[] }
 
-type ContaDetalhe = {
-  keywords: Keyword[]
-  alertas: Alerta[]
-  subUsuarios: SubUsuario[]
+type Stats = {
+  totalUsuarios: number; totalAtivos: number; totalTrial: number; totalExpired: number
+  totalKeywords: number; totalAlertas: number; totalLicitacoes: number
+  alertasHoje: number; alertas7d: number
 }
+
+type CronLog = { id: string; job: string; status: string; mensagem: string; detalhes: unknown; criado_em: string }
+type CronData = { logs: CronLog[]; ultimasPorJob: Record<string, { status: string; mensagem: string; criado_em: string } | null> }
+
+// ─── Config visual ────────────────────────────────────────────────────────────
 
 const statusConfig = {
-  active:  { label: 'Ativo',    cor: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-  trial:   { label: 'Trial',    cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)' },
-  expired: { label: 'Expirado', cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
+  active:  { label: 'Ativo',    cor: '#10b981', bg: 'rgba(16,185,129,0.1)'  },
+  trial:   { label: 'Trial',    cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
+  expired: { label: 'Expirado', cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
 }
 
-type ResultadoTrigger = { ok: boolean; status: number; data: unknown }
+const JOB_LABELS: Record<string, string> = {
+  coletar:        'Coleta',
+  matching:       'Matching',
+  alertar:        'Alertas',
+  'emails-trial': 'E-mails trial',
+  'expirar-trials': 'Expirar trials',
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const fmt     = (d: string | null) => d ? new Date(d).toLocaleDateString('pt-BR') : '—'
+const fmtHora = (d: string | null) => d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
+const diasAte  = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
+const moeda    = (v?: number) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [usuarios, setUsuarios]   = useState<Usuario[]>([])
+  const [stats, setStats]         = useState<Stats | null>(null)
+  const [cronData, setCronData]   = useState<CronData | null>(null)
   const [carregando, setCarregando] = useState(true)
-  const [erro, setErro] = useState('')
-  const [editando, setEditando] = useState<Usuario | null>(null)
-  const [salvando, setSalvando] = useState(false)
-  const [disparando, setDisparando] = useState<string | null>(null)
-  const [resultadoTrigger, setResultadoTrigger] = useState<ResultadoTrigger | null>(null)
+  const [erro, setErro]           = useState('')
+  const [aba, setAba]             = useState<'usuarios' | 'cron'>('usuarios')
 
-  // Painel de conta
-  const [contaAberta, setContaAberta] = useState<Usuario | null>(null)
+  // Filtros
+  const [busca, setBusca]         = useState('')
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'active' | 'trial' | 'expired'>('todos')
+
+  // Edição
+  const [editando, setEditando]   = useState<Usuario | null>(null)
+  const [salvando, setSalvando]   = useState(false)
+
+  // Trigger manual
+  const [disparando, setDisparando] = useState<string | null>(null)
+  const [resultadoTrigger, setResultadoTrigger] = useState<{ ok: boolean; status: number; data: unknown } | null>(null)
+
+  // Drawer conta
+  const [contaAberta, setContaAberta]   = useState<Usuario | null>(null)
   const [contaDetalhe, setContaDetalhe] = useState<ContaDetalhe | null>(null)
   const [carregandoConta, setCarregandoConta] = useState(false)
 
   async function carregar() {
     setCarregando(true)
-    const res = await fetch('/api/admin/usuarios')
-    if (!res.ok) { setErro('Acesso negado ou erro ao carregar.'); setCarregando(false); return }
-    setUsuarios(await res.json())
+    const [resU, resS, resC] = await Promise.all([
+      fetch('/api/admin/usuarios'),
+      fetch('/api/admin/stats'),
+      fetch('/api/admin/cron-logs'),
+    ])
+    if (!resU.ok) { setErro('Acesso negado ou erro ao carregar.'); setCarregando(false); return }
+    const [u, s, c] = await Promise.all([resU.json(), resS.json(), resC.json()])
+    setUsuarios(u)
+    setStats(s)
+    setCronData(c)
     setCarregando(false)
   }
 
@@ -79,11 +116,7 @@ export default function AdminPage() {
   }
 
   async function alterarStatus(id: string, status: string) {
-    await fetch('/api/admin/usuarios', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    })
+    await fetch('/api/admin/usuarios', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
     carregar()
   }
 
@@ -91,17 +124,8 @@ export default function AdminPage() {
     if (!editando) return
     setSalvando(true)
     await fetch('/api/admin/usuarios', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: editando.id,
-        nome: editando.nome,
-        telefone: editando.telefone,
-        whatsapp: editando.whatsapp,
-        empresa: editando.empresa,
-        plano: editando.plano,
-        status: editando.status,
-      }),
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editando.id, nome: editando.nome, telefone: editando.telefone, whatsapp: editando.whatsapp, empresa: editando.empresa, plano: editando.plano, status: editando.status }),
     })
     setSalvando(false)
     setEditando(null)
@@ -111,308 +135,412 @@ export default function AdminPage() {
   async function dispararAcao(acao: string) {
     setDisparando(acao)
     setResultadoTrigger(null)
-    const res = await fetch('/api/admin/trigger', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao }),
-    })
-    const data = await res.json()
-    setResultadoTrigger({ ok: res.ok, status: res.status, data })
+    const res = await fetch('/api/admin/trigger', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao }) })
+    setResultadoTrigger({ ok: res.ok, status: res.status, data: await res.json() })
     setDisparando(null)
+    carregar() // atualiza logs
   }
 
-  const fmt = (d: string) => d ? new Date(d).toLocaleDateString('pt-BR') : '—'
-  const fmtHora = (d: string) => d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
-  const dias = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
-  const moeda = (v?: number) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
+  // Filtragem
+  const usuariosFiltrados = usuarios.filter(u => {
+    const statusEfetivo = (u.trial_expirado && u.status === 'trial') ? 'expired' : u.status
+    if (filtroStatus !== 'todos' && statusEfetivo !== filtroStatus) return false
+    if (busca) {
+      const q = busca.toLowerCase()
+      return u.email.toLowerCase().includes(q) || (u.nome ?? '').toLowerCase().includes(q) || (u.empresa ?? '').toLowerCase().includes(q)
+    }
+    return true
+  })
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-7xl mx-auto">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>Painel Administrativo</h1>
-          <p className="text-sm" style={{ color: 'var(--cinza)' }}>Gerencie usuários e assinaturas</p>
+          <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>Painel Administrativo</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--cinza)' }}>Visão geral do sistema</p>
         </div>
-        <div className="flex gap-3 text-sm">
-          {[
-            { label: `${usuarios.filter(u => u.status === 'active').length} ativos`, cor: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-            { label: `${usuarios.filter(u => u.status === 'trial').length} em trial`, cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)' },
-            { label: `${usuarios.filter(u => u.status === 'expired' || u.trial_expirado).length} expirados`, cor: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-          ].map(b => (
-            <span key={b.label} className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: b.bg, color: b.cor }}>{b.label}</span>
-          ))}
-        </div>
+        <button onClick={carregar} style={{ fontSize: '12px', color: 'var(--cinza)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--cinza-light)', background: 'white', cursor: 'pointer' }}>
+          ↺ Atualizar
+        </button>
       </div>
 
       {erro && <div className="rounded-xl p-4 mb-6 text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>{erro}</div>}
 
-      {/* Painel de controle */}
-      <div className="rounded-2xl p-6 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-        <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
-        <div className="flex gap-3 flex-wrap">
+      {/* ── KPI Cards ── */}
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           {[
-            { acao: 'coletar',  label: '🔍 Coletar licitações', desc: 'Busca novos editais em todas as fontes' },
-            { acao: 'matching', label: '🤖 Processar matches',  desc: 'Analisa candidatos e gera alertas' },
-            { acao: 'alertar',  label: '📧 Enviar alertas',     desc: 'Dispara e-mails e Telegram' },
-            { acao: 'emails',   label: '📩 E-mails de trial',   desc: 'Envia sequência de trial' },
+            { label: 'Usuários',      value: stats.totalUsuarios,   sub: `${stats.totalAtivos} ativos`,     cor: '#6B0F1A' },
+            { label: 'Ativos',        value: stats.totalAtivos,     sub: 'assinantes pagos',                cor: '#10b981' },
+            { label: 'Em trial',      value: stats.totalTrial,      sub: 'período grátis',                  cor: '#C9A65A' },
+            { label: 'Keywords ativas', value: stats.totalKeywords, sub: 'monitoradas',                    cor: '#3b82f6' },
+            { label: 'Alertas hoje',  value: stats.alertasHoje,     sub: `${stats.alertas7d} nos 7 dias`,   cor: '#8b5cf6' },
+            { label: 'Total alertas', value: stats.totalAlertas,    sub: 'desde o início',                  cor: '#6B0F1A' },
+            { label: 'Licitações',    value: stats.totalLicitacoes, sub: 'no banco',                        cor: '#0ea5e9' },
+          ].map(({ label, value, sub, cor }) => (
+            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
+                {value.toLocaleString('pt-BR')}
+              </div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px' }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Trigger manual ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { acao: 'coletar',  label: '🔍 Coletar',   desc: 'Busca novos editais' },
+            { acao: 'matching', label: '🤖 Matching',   desc: 'Gera candidatos' },
+            { acao: 'alertar',  label: '📧 Alertar',    desc: 'Envia alertas' },
+            { acao: 'emails',   label: '📩 E-mails trial', desc: 'Sequência trial' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
-              className="flex-1 min-w-[160px] px-4 py-3 rounded-xl text-left transition-all"
-              style={{ background: disparando === acao ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)', border: '1px solid var(--cinza-light)', cursor: disparando ? 'not-allowed' : 'pointer', opacity: disparando && disparando !== acao ? 0.5 : 1 }}>
-              <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--preto)' }}>
-                {disparando === acao ? '⏳ Executando...' : label}
+              style={{
+                padding: '10px 16px', borderRadius: '12px', textAlign: 'left',
+                background: disparando === acao ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)',
+                border: '1px solid var(--cinza-light)',
+                cursor: disparando ? 'not-allowed' : 'pointer',
+                opacity: disparando && disparando !== acao ? 0.5 : 1,
+                minWidth: '130px',
+              }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)' }}>
+                {disparando === acao ? '⏳ Executando…' : label}
               </div>
-              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{desc}</div>
+              <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px' }}>{desc}</div>
             </button>
           ))}
         </div>
-
         {resultadoTrigger && (
-          <div className="mt-4 rounded-xl p-4" style={{
-            background: resultadoTrigger.ok ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)',
-            border: `1px solid ${resultadoTrigger.ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-          }}>
+          <div className="mt-3 rounded-xl p-3" style={{ background: resultadoTrigger.ok ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${resultadoTrigger.ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
             <div className="text-xs font-semibold mb-1" style={{ color: resultadoTrigger.ok ? '#10b981' : '#ef4444' }}>
-              {resultadoTrigger.ok ? '✓ Executado com sucesso' : '⚠ Erro na execução'} — status {resultadoTrigger.status}
+              {resultadoTrigger.ok ? '✓ Executado' : '⚠ Erro'} — HTTP {resultadoTrigger.status}
             </div>
-            <pre className="text-xs overflow-auto" style={{ color: 'var(--cinza)', maxHeight: '120px' }}>
+            <pre className="text-xs overflow-auto" style={{ color: 'var(--cinza)', maxHeight: '100px', margin: 0 }}>
               {JSON.stringify(resultadoTrigger.data, null, 2)}
             </pre>
           </div>
         )}
       </div>
 
-      {carregando ? (
-        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="rounded-2xl animate-pulse" style={{ background: 'white', border: '1px solid var(--cinza-light)', height: '72px' }} />)}</div>
-      ) : usuarios.length === 0 ? (
-        <div className="rounded-2xl p-10 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-          <p style={{ color: 'var(--cinza)' }}>Nenhum usuário cadastrado ainda.</p>
-        </div>
-      ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--cinza-light)' }}>
-                {['Usuário', 'Plano / Status', 'Trial até', 'Cadastro', 'Ações'].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map(u => {
-                const expirado = u.trial_expirado && u.status === 'trial'
-                const cfg = statusConfig[expirado ? 'expired' : u.status]
-                return (
-                  <tr key={u.id} style={{ borderBottom: '1px solid var(--cinza-light)' }}>
-                    <td className="px-5 py-4">
-                      <div className="font-medium" style={{ color: 'var(--preto)' }}>{u.nome || '—'}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>{u.email}</div>
-                      {u.empresa && <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.empresa}</div>}
-                      {u.telefone && <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.telefone}</div>}
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="text-xs font-semibold mb-1" style={{ color: 'var(--cinza)' }}>{u.plano || 'basic'}</div>
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
-                        {expirado ? 'Trial expirado' : cfg.label}
-                        {u.status === 'trial' && !expirado && ` (${dias(u.trial_fim)}d)`}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-sm" style={{ color: 'var(--cinza)' }}>{fmt(u.trial_fim)}</td>
-                    <td className="px-5 py-4 text-sm" style={{ color: 'var(--cinza)' }}>{fmt(u.criado_em)}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex gap-2 flex-wrap">
-                        <button onClick={() => abrirConta(u)}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                          style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}>
-                          Ver conta
-                        </button>
-                        <button onClick={() => setEditando({ ...u })}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                          style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
-                          Editar
-                        </button>
-                        {u.status !== 'active' && (
-                          <button onClick={() => alterarStatus(u.id, 'active')}
-                            className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                            style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
-                            Ativar
-                          </button>
-                        )}
-                        {u.status !== 'expired' && (
-                          <button onClick={() => alterarStatus(u.id, 'expired')}
-                            className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                            style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444' }}>
-                            Expirar
-                          </button>
-                        )}
-                      </div>
-                    </td>
+      {/* ── Abas ── */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
+        {(['usuarios', 'cron'] as const).map(a => (
+          <button key={a} onClick={() => setAba(a)}
+            style={{
+              padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
+              background: aba === a ? 'var(--vinho)' : 'white',
+              color: aba === a ? 'white' : 'var(--cinza)',
+              border: aba === a ? 'none' : '1px solid var(--cinza-light)',
+            } as React.CSSProperties}>
+            {a === 'usuarios' ? `Usuários (${usuarios.length})` : 'Cron logs'}
+          </button>
+        ))}
+      </div>
+
+      {/* ══ ABA USUÁRIOS ══ */}
+      {aba === 'usuarios' && (
+        <>
+          {/* Filtros */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              type="text" value={busca} onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar por e-mail, nome ou empresa…"
+              style={{ flex: 1, minWidth: '220px', padding: '9px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white' }}
+            />
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {(['todos', 'active', 'trial', 'expired'] as const).map(s => (
+                <button key={s} onClick={() => setFiltroStatus(s)}
+                  style={{
+                    padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: 'pointer',
+                    background: filtroStatus === s ? (s === 'active' ? '#10b981' : s === 'trial' ? '#C9A65A' : s === 'expired' ? '#ef4444' : 'var(--vinho)') : 'white',
+                    color: filtroStatus === s ? 'white' : 'var(--cinza)',
+                    border: filtroStatus === s ? 'none' : '1px solid var(--cinza-light)',
+                  } as React.CSSProperties}>
+                  {s === 'todos' ? 'Todos' : s === 'active' ? 'Ativos' : s === 'trial' ? 'Trial' : 'Expirados'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {carregando ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[1,2,3].map(i => <div key={i} className="animate-pulse rounded-2xl" style={{ background: 'white', border: '1px solid var(--cinza-light)', height: '68px' }} />)}
+            </div>
+          ) : usuariosFiltrados.length === 0 ? (
+            <div className="rounded-2xl p-10 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+              <p style={{ color: 'var(--cinza)' }}>Nenhum usuário encontrado.</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--cinza-light)' }}>
+                    {['Usuário', 'Status / Plano', 'Keywords', 'Alertas', 'Último alerta', 'Cadastro', 'Ações'].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {usuariosFiltrados.map(u => {
+                    const expirado  = u.trial_expirado && u.status === 'trial'
+                    const statusEfetivo = expirado ? 'expired' : u.status
+                    const cfg = statusConfig[statusEfetivo]
+                    return (
+                      <tr key={u.id} style={{ borderBottom: '1px solid var(--cinza-light)' }}
+                        className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="font-medium" style={{ color: 'var(--preto)' }}>{u.nome || '—'}</div>
+                          <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>{u.email}</div>
+                          {u.empresa && <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.empresa}</div>}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs font-medium px-2 py-1 rounded-lg inline-block mb-1" style={{ background: cfg.bg, color: cfg.cor }}>
+                            {expirado ? 'Expirado' : cfg.label}
+                            {u.status === 'trial' && !expirado && ` (${diasAte(u.trial_fim)}d)`}
+                          </span>
+                          <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.plano || 'basic'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: u.keyword_count > 0 ? 'var(--vinho)' : 'var(--cinza)' }}>
+                            {u.keyword_count}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: u.alerta_count > 0 ? '#10b981' : 'var(--cinza)' }}>
+                            {u.alerta_count}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>
+                          {fmtHora(u.ultimo_alerta)}
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>
+                          {fmt(u.criado_em)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <button onClick={() => abrirConta(u)}
+                              style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}>
+                              Ver
+                            </button>
+                            <button onClick={() => setEditando({ ...u })}
+                              style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
+                              Editar
+                            </button>
+                            {statusEfetivo !== 'active' && (
+                              <button onClick={() => alterarStatus(u.id, 'active')}
+                                style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}>
+                                Ativar
+                              </button>
+                            )}
+                            {statusEfetivo !== 'expired' && (
+                              <button onClick={() => alterarStatus(u.id, 'expired')}
+                                style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
+                                Expirar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ══ ABA CRON LOGS ══ */}
+      {aba === 'cron' && cronData && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* Status por job */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            {Object.entries(cronData.ultimasPorJob).map(([job, ultima]) => (
+              <div key={job} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '14px', padding: '14px 16px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)', marginBottom: '8px' }}>
+                  {JOB_LABELS[job] ?? job}
+                </div>
+                {ultima ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: ultima.status === 'ok' ? '#10b981' : '#ef4444', flexShrink: 0 }} />
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: ultima.status === 'ok' ? '#10b981' : '#ef4444' }}>
+                        {ultima.status === 'ok' ? 'OK' : 'Erro'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{fmtHora(ultima.criado_em)}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ultima.mensagem}</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: '12px', color: 'var(--cinza)' }}>Sem registros</div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Log completo */}
+          <div style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cinza-light)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)' }}>
+                Últimas {cronData.logs.length} execuções
+              </span>
+            </div>
+            <div style={{ maxHeight: '480px', overflowY: 'auto' }}>
+              {cronData.logs.length === 0 ? (
+                <p style={{ padding: '20px', color: 'var(--cinza)', fontSize: '14px' }}>Sem logs ainda.</p>
+              ) : (
+                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--cinza-light)', position: 'sticky', top: 0, background: 'white' }}>
+                      {['Data', 'Job', 'Status', 'Mensagem'].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '8px 16px', color: 'var(--cinza)', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cronData.logs.map(log => (
+                      <tr key={log.id} style={{ borderBottom: '1px solid var(--cinza-light)' }}>
+                        <td style={{ padding: '8px 16px', color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{fmtHora(log.criado_em)}</td>
+                        <td style={{ padding: '8px 16px', fontWeight: 600, color: 'var(--preto)' }}>{JOB_LABELS[log.job] ?? log.job}</td>
+                        <td style={{ padding: '8px 16px' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: '6px', fontWeight: 600, background: log.status === 'ok' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.08)', color: log.status === 'ok' ? '#10b981' : '#ef4444' }}>
+                            {log.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '8px 16px', color: 'var(--cinza)', maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.mensagem}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Modal de edição */}
+      {/* ── Modal edição ── */}
       {editando && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--preto)' }}>Editar usuário</h2>
             <p className="text-sm mb-6" style={{ color: 'var(--cinza)' }}>{editando.email}</p>
-
             <div className="space-y-4">
-              {[
-                { label: 'Nome', key: 'nome', placeholder: 'Nome completo' },
-                { label: 'Empresa', key: 'empresa', placeholder: 'Nome da empresa' },
-                { label: 'Telefone', key: 'telefone', placeholder: '(31) 99999-9999' },
-                { label: 'WhatsApp', key: 'whatsapp', placeholder: '(31) 99999-9999' },
-              ].map(({ label, key, placeholder }) => (
+              {([
+                { label: 'Nome',     key: 'nome',     placeholder: 'Nome completo'    },
+                { label: 'Empresa',  key: 'empresa',  placeholder: 'Nome da empresa'  },
+                { label: 'Telefone', key: 'telefone', placeholder: '(31) 99999-9999'  },
+                { label: 'WhatsApp', key: 'whatsapp', placeholder: '(31) 99999-9999'  },
+              ] as const).map(({ label, key, placeholder }) => (
                 <div key={key}>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>{label}</label>
-                  <input
-                    value={(editando as unknown as Record<string, string>)[key] ?? ''}
-                    onChange={e => setEditando({ ...editando, [key]: e.target.value })}
-                    placeholder={placeholder}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm"
-                    style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
-                  />
+                  <input value={(editando as unknown as Record<string, string>)[key] ?? ''} onChange={e => setEditando({ ...editando, [key]: e.target.value })}
+                    placeholder={placeholder} className="w-full px-4 py-2.5 rounded-xl text-sm"
+                    style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }} />
                 </div>
               ))}
-
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Plano</label>
-                <select
-                  value={editando.plano ?? 'basic'}
-                  onChange={e => setEditando({ ...editando, plano: e.target.value })}
+                <select value={editando.plano ?? 'basic'} onChange={e => setEditando({ ...editando, plano: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl text-sm"
-                  style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
-                >
-                  {['basic', 'profissional', 'pro', 'empresarial'].map(p => (
-                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                  ))}
+                  style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}>
+                  {['basic', 'profissional', 'pro', 'empresarial'].map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
                 </select>
               </div>
-
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Status</label>
-                <select
-                  value={editando.status}
-                  onChange={e => setEditando({ ...editando, status: e.target.value as 'trial' | 'active' | 'expired' })}
+                <select value={editando.status} onChange={e => setEditando({ ...editando, status: e.target.value as 'trial' | 'active' | 'expired' })}
                   className="w-full px-4 py-2.5 rounded-xl text-sm"
-                  style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
-                >
+                  style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}>
                   <option value="trial">Trial</option>
                   <option value="active">Ativo</option>
                   <option value="expired">Expirado</option>
                 </select>
               </div>
             </div>
-
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setEditando(null)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-                style={{ border: '1.5px solid var(--cinza-light)', color: 'var(--cinza)' }}>
-                Cancelar
-              </button>
-              <button onClick={salvarEdicao} disabled={salvando}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
-                style={{ background: salvando ? '#9AA0A6' : 'var(--vinho)', cursor: salvando ? 'not-allowed' : 'pointer' }}>
-                {salvando ? 'Salvando...' : 'Salvar alterações'}
+              <button onClick={() => setEditando(null)} className="flex-1 py-2.5 rounded-xl text-sm font-medium" style={{ border: '1.5px solid var(--cinza-light)', color: 'var(--cinza)', background: 'white', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={salvarEdicao} disabled={salvando} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+                style={{ background: salvando ? '#9AA0A6' : 'var(--vinho)', cursor: salvando ? 'not-allowed' : 'pointer', border: 'none' }}>
+                {salvando ? 'Salvando…' : 'Salvar alterações'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Painel lateral — Ver conta */}
+      {/* ── Drawer conta ── */}
       {contaAberta && (
         <>
-          {/* Overlay */}
-          <div
-            onClick={() => setContaAberta(null)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40 }}
-          />
-          {/* Drawer */}
-          <div style={{
-            position: 'fixed', top: 0, right: 0, bottom: 0, width: '520px', maxWidth: '95vw',
-            background: 'white', zIndex: 50, overflowY: 'auto',
-            boxShadow: '-8px 0 40px rgba(0,0,0,0.15)',
-            display: 'flex', flexDirection: 'column',
-          }}>
-            {/* Header */}
+          <div onClick={() => setContaAberta(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40 }} />
+          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '520px', maxWidth: '95vw', background: 'white', zIndex: 50, overflowY: 'auto', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Header drawer */}
             <div style={{ padding: '24px', borderBottom: '1px solid var(--cinza-light)', flexShrink: 0 }}>
-              <div className="flex items-start justify-between gap-4">
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                 <div>
-                  <h2 className="text-lg font-semibold" style={{ color: 'var(--preto)' }}>
-                    {contaAberta.nome || 'Sem nome'}
-                  </h2>
-                  <p className="text-sm mt-0.5" style={{ color: 'var(--cinza)' }}>{contaAberta.email}</p>
-                  {contaAberta.empresa && <p className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>{contaAberta.empresa}</p>}
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
-                      {contaAberta.plano || 'basic'}
-                    </span>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
-                      style={{ background: statusConfig[contaAberta.trial_expirado ? 'expired' : contaAberta.status].bg, color: statusConfig[contaAberta.trial_expirado ? 'expired' : contaAberta.status].cor }}>
+                  <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--preto)', margin: 0 }}>{contaAberta.nome || 'Sem nome'}</h2>
+                  <p style={{ fontSize: '13px', color: 'var(--cinza)', margin: '2px 0 0' }}>{contaAberta.email}</p>
+                  {contaAberta.empresa && <p style={{ fontSize: '12px', color: 'var(--cinza)', margin: '2px 0 0' }}>{contaAberta.empresa}</p>}
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '8px', background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>{contaAberta.plano || 'basic'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '8px', background: statusConfig[contaAberta.trial_expirado ? 'expired' : contaAberta.status].bg, color: statusConfig[contaAberta.trial_expirado ? 'expired' : contaAberta.status].cor }}>
                       {contaAberta.trial_expirado ? 'Trial expirado' : statusConfig[contaAberta.status].label}
                     </span>
                   </div>
                 </div>
-                <button onClick={() => setContaAberta(null)}
-                  style={{ flexShrink: 0, padding: '8px', borderRadius: '8px', background: 'var(--surface-2)', color: 'var(--cinza)', fontWeight: 600, fontSize: '18px', lineHeight: 1, border: 'none', cursor: 'pointer' }}>
-                  ✕
-                </button>
+                <button onClick={() => setContaAberta(null)} style={{ padding: '6px 10px', borderRadius: '8px', background: 'var(--surface-2)', color: 'var(--cinza)', fontSize: '16px', fontWeight: 700, lineHeight: 1, border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
               </div>
 
-              {/* Contatos */}
+              {/* Uso resumido */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '14px' }}>
+                {[
+                  { label: 'Keywords', value: contaAberta.keyword_count, cor: 'var(--vinho)' },
+                  { label: 'Alertas',  value: contaAberta.alerta_count,  cor: '#10b981'      },
+                  { label: 'Cadastro', value: fmt(contaAberta.criado_em), cor: 'var(--cinza)' },
+                ].map(({ label, value, cor }) => (
+                  <div key={label} style={{ background: 'var(--surface-2)', borderRadius: '10px', padding: '10px 12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: cor }}>{value}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+
               {(contaAberta.telefone || contaAberta.whatsapp) && (
-                <div className="flex gap-3 mt-4">
-                  {contaAberta.telefone && (
-                    <a href={`tel:${contaAberta.telefone}`} className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                      style={{ background: 'var(--surface-2)', color: 'var(--cinza)', textDecoration: 'none' }}>
-                      📞 {contaAberta.telefone}
-                    </a>
-                  )}
-                  {contaAberta.whatsapp && (
-                    <a href={`https://wa.me/55${contaAberta.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-                      className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                      style={{ background: 'rgba(37,211,102,0.1)', color: '#16a34a', textDecoration: 'none' }}>
-                      💬 WhatsApp
-                    </a>
-                  )}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  {contaAberta.telefone && <a href={`tel:${contaAberta.telefone}`} style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '8px', background: 'var(--surface-2)', color: 'var(--cinza)', textDecoration: 'none' }}>📞 {contaAberta.telefone}</a>}
+                  {contaAberta.whatsapp && <a href={`https://wa.me/55${contaAberta.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '8px', background: 'rgba(37,211,102,0.1)', color: '#16a34a', textDecoration: 'none' }}>💬 WhatsApp</a>}
                 </div>
               )}
             </div>
 
-            {/* Conteúdo */}
+            {/* Conteúdo drawer */}
             <div style={{ padding: '24px', flex: 1 }}>
               {carregandoConta ? (
-                <div className="space-y-4">
-                  {[1,2,3].map(i => <div key={i} className="rounded-xl animate-pulse" style={{ background: 'var(--surface-2)', height: '60px' }} />)}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[1,2,3].map(i => <div key={i} className="animate-pulse rounded-xl" style={{ background: 'var(--surface-2)', height: '56px' }} />)}
                 </div>
               ) : contaDetalhe ? (
-                <div className="space-y-8">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
-                  {/* Palavras-chave */}
+                  {/* Keywords */}
                   <section>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
-                      Palavras-chave monitoradas ({contaDetalhe.keywords.length})
+                    <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)', marginBottom: '10px' }}>
+                      Palavras-chave ({contaDetalhe.keywords.length})
                     </h3>
                     {contaDetalhe.keywords.length === 0 ? (
-                      <p className="text-sm" style={{ color: 'var(--cinza)' }}>Nenhuma palavra-chave cadastrada.</p>
+                      <p style={{ fontSize: '13px', color: 'var(--cinza)' }}>Nenhuma palavra-chave cadastrada.</p>
                     ) : (
-                      <div className="flex flex-wrap gap-2">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {contaDetalhe.keywords.map(kw => (
-                          <span key={kw.id}
-                            className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                            style={{
-                              background: kw.ativo ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)',
-                              color: kw.ativo ? 'var(--vinho)' : 'var(--cinza)',
-                              border: '1px solid',
-                              borderColor: kw.ativo ? 'rgba(107,15,26,0.15)' : 'var(--cinza-light)',
-                            }}>
+                          <span key={kw.id} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '8px', fontWeight: 600, background: kw.ativo ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)', color: kw.ativo ? 'var(--vinho)' : 'var(--cinza)', border: '1px solid', borderColor: kw.ativo ? 'rgba(107,15,26,0.15)' : 'var(--cinza-light)' }}>
                             {kw.ativo ? '' : '⏸ '}{kw.termo}
                           </span>
                         ))}
@@ -423,18 +551,18 @@ export default function AdminPage() {
                   {/* Sub-usuários */}
                   {contaDetalhe.subUsuarios.length > 0 && (
                     <section>
-                      <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
-                        Membros da equipe ({contaDetalhe.subUsuarios.length})
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)', marginBottom: '10px' }}>
+                        Equipe ({contaDetalhe.subUsuarios.length})
                       </h3>
-                      <div className="space-y-2">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {contaDetalhe.subUsuarios.map(s => (
-                          <div key={s.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: 'var(--surface-2)' }}>
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: 'var(--vinho)' }}>
+                          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '10px', background: 'var(--surface-2)' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--vinho)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>
                               {(s.nome || s.email).charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="text-sm font-medium" style={{ color: 'var(--preto)' }}>{s.nome || '—'}</div>
-                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{s.email}</div>
+                              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)' }}>{s.nome || '—'}</div>
+                              <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{s.email}</div>
                             </div>
                           </div>
                         ))}
@@ -444,30 +572,24 @@ export default function AdminPage() {
 
                   {/* Alertas recentes */}
                   <section>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
+                    <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)', marginBottom: '10px' }}>
                       Alertas recentes ({contaDetalhe.alertas.length})
                     </h3>
                     {contaDetalhe.alertas.length === 0 ? (
-                      <p className="text-sm" style={{ color: 'var(--cinza)' }}>Nenhum alerta gerado ainda.</p>
+                      <p style={{ fontSize: '13px', color: 'var(--cinza)' }}>Nenhum alerta gerado ainda.</p>
                     ) : (
-                      <div className="space-y-3">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {contaDetalhe.alertas.map(a => {
                           const lic = a.licitacoes
                           return (
-                            <div key={a.id} className="rounded-xl p-3" style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
-                              <p className="text-sm font-medium leading-snug mb-1" style={{ color: 'var(--preto)' }}>
-                                {lic?.objeto ?? '(sem título)'}
-                              </p>
-                              <div className="flex gap-3 flex-wrap mt-1">
-                                {lic?.orgao && <span className="text-xs" style={{ color: 'var(--cinza)' }}>🏛 {lic.orgao}</span>}
-                                {lic?.valor_estimado && <span className="text-xs" style={{ color: 'var(--cinza)' }}>💰 {moeda(lic.valor_estimado)}</span>}
-                                {lic?.data_abertura && <span className="text-xs" style={{ color: 'var(--cinza)' }}>📅 {fmt(lic.data_abertura)}</span>}
+                            <div key={a.id} style={{ padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+                              <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--preto)', margin: '0 0 4px', lineHeight: 1.4 }}>{lic?.objeto ?? '(sem título)'}</p>
+                              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                {lic?.orgao && <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>🏛 {lic.orgao}</span>}
+                                {lic?.valor_estimado && <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>💰 {moeda(lic.valor_estimado)}</span>}
                               </div>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-xs" style={{ color: 'rgba(0,0,0,0.3)' }}>Enviado em {fmtHora(a.criado_em)}</span>
-                                {a.canais?.length > 0 && (
-                                  <span className="text-xs" style={{ color: 'rgba(0,0,0,0.3)' }}>· {a.canais.join(', ')}</span>
-                                )}
+                              <div style={{ fontSize: '11px', color: 'rgba(0,0,0,0.3)', marginTop: '4px' }}>
+                                {fmtHora(a.criado_em)}{a.canais?.length > 0 ? ` · ${a.canais.join(', ')}` : ''}
                               </div>
                             </div>
                           )
@@ -478,16 +600,13 @@ export default function AdminPage() {
 
                 </div>
               ) : (
-                <p className="text-sm" style={{ color: '#ef4444' }}>Erro ao carregar dados da conta.</p>
+                <p style={{ fontSize: '13px', color: '#ef4444' }}>Erro ao carregar dados da conta.</p>
               )}
             </div>
 
-            {/* Rodapé com ação rápida */}
+            {/* Rodapé drawer */}
             <div style={{ padding: '16px 24px', borderTop: '1px solid var(--cinza-light)', flexShrink: 0 }}>
-              <button
-                onClick={() => { setContaAberta(null); setEditando({ ...contaAberta }) }}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold text-white"
-                style={{ background: 'var(--vinho)', cursor: 'pointer', border: 'none' }}>
+              <button onClick={() => { setContaAberta(null); setEditando({ ...contaAberta }) }} style={{ width: '100%', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, color: 'white', background: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
                 Editar dados desta conta
               </button>
             </div>
@@ -495,7 +614,7 @@ export default function AdminPage() {
         </>
       )}
 
-      <p className="text-xs mt-4 text-center" style={{ color: 'var(--cinza)' }}>
+      <p style={{ fontSize: '11px', color: 'var(--cinza)', textAlign: 'center', marginTop: '16px' }}>
         Acesso restrito ao administrador.
       </p>
     </div>

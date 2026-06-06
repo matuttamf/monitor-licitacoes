@@ -24,16 +24,40 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Buscar emails dos usuários via auth
+  // Emails via auth
   const { data: authData } = await supabase.auth.admin.listUsers()
   const emailMap = Object.fromEntries(
     (authData?.users ?? []).map(u => [u.id, u.email])
   )
 
+  // Contagem de keywords por usuário
+  const { data: kwCounts } = await supabase
+    .from('keywords')
+    .select('user_id')
+    .eq('ativo', true)
+  const kwPorUser: Record<string, number> = {}
+  for (const kw of kwCounts ?? []) {
+    kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
+  }
+
+  // Contagem + último alerta por usuário
+  const { data: alertaCounts } = await supabase
+    .from('alertas')
+    .select('user_id, enviado_em')
+    .order('enviado_em', { ascending: false })
+  const alertaPorUser: Record<string, { count: number; ultimo: string | null }> = {}
+  for (const a of alertaCounts ?? []) {
+    if (!alertaPorUser[a.user_id]) alertaPorUser[a.user_id] = { count: 0, ultimo: a.enviado_em }
+    alertaPorUser[a.user_id].count++
+  }
+
   const usuarios = data?.map(p => ({
     ...p,
     email: emailMap[p.id] ?? 'desconhecido',
     trial_expirado: p.status === 'trial' && new Date(p.trial_fim) < new Date(),
+    keyword_count: kwPorUser[p.id] ?? 0,
+    alerta_count:  alertaPorUser[p.id]?.count ?? 0,
+    ultimo_alerta: alertaPorUser[p.id]?.ultimo ?? null,
   }))
 
   return NextResponse.json(usuarios)
