@@ -145,7 +145,7 @@ export default function LandingPage() {
             {[
               { n: '1', icon: '⚡', title: 'Cadastre-se em dois minutos', desc: 'Sete dias grátis, sem cartão de crédito. Você começa a monitorar imediatamente após o cadastro.' },
               { n: '2', icon: '🎯', title: 'Informe o que você vende ou fornece', desc: 'Produtos, serviços, locações, obras, consultorias, TI — qualquer objeto de contratação pública, dos municípios do interior às maiores estatais do Brasil. Quanto mais específico, mais certeiro o alerta.' },
-              { n: '3', icon: '📬', title: 'Receba alertas em tempo real', desc: 'Sempre que identificamos uma licitação compatível com seu perfil, o alerta chega por e-mail e Telegram — sem esperar o dia seguinte.' },
+              { n: '3', icon: '📬', title: 'Receba alertas em tempo real', desc: 'Sempre que identificamos uma licitação compatível com seu perfil, o alerta chega por e-mail, Telegram ou WhatsApp — sem esperar o dia seguinte.' },
             ].map(step => (
               <div key={step.n} style={{ padding: '32px', background: '#FAF6F0', borderRadius: '16px', border: '1px solid #D5D2C8', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '11px', fontWeight: 800, color: '#6B0F1A', opacity: 0.15, letterSpacing: '0.05em' }}>0{step.n}</div>
