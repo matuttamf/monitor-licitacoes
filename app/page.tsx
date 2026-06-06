@@ -256,10 +256,10 @@ export default function LandingPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
             {[
-              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null },
-              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que a mensalidade da academia', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null },
-              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido' },
-              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null },
+              { nome: 'Basic', preco: '49,90', porDia: 'R$1,66/dia', ancora: 'menos que um cafezinho', desc: 'Para quem está começando no setor público', keywords: 'Até 10 palavras-chave', usuarios: '1 usuário', destaque: false, id: 'basic', tag: null, whatsapp: false },
+              { nome: 'Profissional', preco: '97,90', porDia: 'R$3,26/dia', ancora: 'menos que a mensalidade da academia', desc: 'Para quem vende ativamente para o governo', keywords: 'Ilimitadas', usuarios: '1 usuário', destaque: false, id: 'profissional', tag: null, whatsapp: true },
+              { nome: 'Pro', preco: '197,90', porDia: 'R$6,60/dia', ancora: 'menos que um suco natural', desc: 'Para equipes comerciais que querem crescer', keywords: 'Ilimitadas', usuarios: 'Até 5 usuários', destaque: true, id: 'pro', tag: 'Mais escolhido', whatsapp: true },
+              { nome: 'Empresarial', preco: '497,00', porDia: 'R$16,57/dia', ancora: '', desc: 'Para operações que dependem do setor público', keywords: 'Ilimitadas', usuarios: 'Até 15 usuários', destaque: false, id: 'empresarial', tag: null, whatsapp: true },
             ].map(p => (
               <div key={p.id} style={{
                 background: p.destaque ? '#6B0F1A' : '#FAF6F0',
@@ -279,7 +279,7 @@ export default function LandingPage() {
                 <div style={{ fontSize: '11px', color: p.destaque ? 'rgba(201,166,90,0.7)' : '#6B0F1A', fontWeight: 600, marginBottom: '20px', padding: '4px 10px', background: p.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(107,15,26,0.06)', borderRadius: '6px', display: 'inline-block' }}>
                   {p.porDia}{p.ancora ? ` — ${p.ancora}` : ''}
                 </div>
-                {[p.keywords, p.usuarios, 'Alertas por e-mail, Telegram e WhatsApp', 'Busca manual no painel'].map(item => (
+                {[p.keywords, p.usuarios, p.whatsapp ? 'Alertas por e-mail, Telegram e WhatsApp' : 'Alertas por e-mail e Telegram', 'Busca manual no painel'].map(item => (
                   <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
                     <span style={{ color: p.destaque ? '#C9A65A' : '#6B0F1A', fontWeight: 700, fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                     <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.8)' : '#4a4a4d', lineHeight: 1.4 }}>{item}</span>

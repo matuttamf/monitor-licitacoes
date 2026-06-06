@@ -13,7 +13,7 @@ const PLANOS = [
     descricao: 'Ideal para começar',
     keywords: 'Até 10 palavras-chave',
     usuarios: '1 usuário',
-    itens: ['10 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['10 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
     id: 'profissional',
