@@ -204,7 +204,8 @@ export default function AdminPage() {
             { acao: 'coletar',  label: '🔍 Coletar',   desc: 'Busca novos editais' },
             { acao: 'matching', label: '🤖 Matching',   desc: 'Gera candidatos' },
             { acao: 'alertar',  label: '📧 Alertar',    desc: 'Envia alertas' },
-            { acao: 'emails',   label: '📩 E-mails trial', desc: 'Sequência trial' },
+            { acao: 'emails',        label: '📩 E-mails trial',   desc: 'Sequência trial'          },
+            { acao: 'remover-norte', label: '🗺 Remover Norte',   desc: 'Limpa Norte das keywords' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
               style={{

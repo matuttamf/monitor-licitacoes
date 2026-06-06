@@ -17,6 +17,8 @@ interface LicitacaoAlerta {
   valor_estimado?: number
   data_abertura?: string
   url: string
+  estado?: string
+  cidade?: string
   keyword: string
   reenvio?: boolean
 }
@@ -42,36 +44,23 @@ function formatarData(d?: string): string {
   return `📅 Abertura: ${dt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}\n`
 }
 
-// ─── Montagem de mensagem ─────────────────────────────────────────────────
+// ─── Montagem de mensagem individual ─────────────────────────────────────
 
-const LOTE_WPP = 5
+function montarMensagemIndividual(l: LicitacaoAlerta, appUrl: string): string {
+  const localidade = [l.cidade, l.estado].filter(Boolean).join(' — ')
+  const objeto = l.objeto.length > 350 ? l.objeto.substring(0, 350) + '…' : l.objeto
 
-function montarMensagem(
-  licitacoes: LicitacaoAlerta[],
-  parte: number,
-  total: number,
-  appUrl: string,
-): string {
-  const header =
-    `🔔 *Alerta Monitor de Licitações*` +
-    (total > 1 ? ` (${parte}/${total})` : '') +
-    ` — ${new Date().toLocaleDateString('pt-BR')}\n\n`
-
-  const linhas = licitacoes.map(l => {
-    const objeto = l.objeto.length > 120 ? l.objeto.substring(0, 120) + '…' : l.objeto
-    return (
-      `🔹 *${l.keyword.toUpperCase()}*${l.reenvio ? ' _(lembrete)_' : ''}\n` +
-      `📋 ${l.orgao}\n` +
-      `📝 ${objeto}\n` +
-      formatarValor(l.valor_estimado) +
-      formatarData(l.data_abertura) +
-      `🔗 ${l.url}`
-    )
-  }).join('\n\n---\n\n')
-
-  const rodape = `\n\n_Ver todas as oportunidades no painel: ${appUrl}/alertas_`
-
-  return header + linhas + rodape
+  return (
+    `🚨 *OPORTUNIDADE!*\n\n` +
+    `🔹 *${l.keyword.toUpperCase()}*${l.reenvio ? ' _(lembrete)_' : ''}\n` +
+    `📋 ${l.orgao}\n` +
+    (localidade ? `📍 ${localidade}\n` : '') +
+    `📝 ${objeto}\n` +
+    formatarValor(l.valor_estimado) +
+    formatarData(l.data_abertura) +
+    `🔗 ${l.url}\n\n` +
+    `_Acompanhe todas as licitações no Painel: ${appUrl}/alertas_`
+  )
 }
 
 // ─── Envio via Z-API ──────────────────────────────────────────────────────
@@ -110,6 +99,10 @@ async function enviarMensagemZApi(numero: string, texto: string): Promise<boolea
 
 // ─── Funções exportadas ───────────────────────────────────────────────────
 
+/**
+ * Envia uma mensagem individual por licitação, estilo sirene.
+ * Intervalo de ~3s entre mensagens.
+ */
 export async function enviarAlertaWhatsApp(
   licitacoes: LicitacaoAlerta[],
   telefone: string,
@@ -119,27 +112,11 @@ export async function enviarAlertaWhatsApp(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const numero = formatarNumero(telefone)
 
-  const lotes: LicitacaoAlerta[][] = []
-  for (let i = 0; i < licitacoes.length; i += LOTE_WPP) {
-    lotes.push(licitacoes.slice(i, i + LOTE_WPP))
-  }
-
-  // Resumo inicial quando há múltiplos lotes
-  if (lotes.length > 1) {
-    const resumo =
-      `🔔 *Monitor de Licitações — ${new Date().toLocaleDateString('pt-BR')}*\n\n` +
-      `Encontrei *${licitacoes.length} oportunidades* para você.\n` +
-      `Enviando em ${lotes.length} mensagens. ⬇️\n\n` +
-      `_Todas as oportunidades estão no painel: ${appUrl}/alertas_`
-    await enviarMensagemZApi(numero, resumo)
-    await new Promise(r => setTimeout(r, 500))
-  }
-
   let tudo_ok = true
-  for (let i = 0; i < lotes.length; i++) {
-    const ok = await enviarMensagemZApi(numero, montarMensagem(lotes[i], i + 1, lotes.length, appUrl))
+  for (let i = 0; i < licitacoes.length; i++) {
+    const ok = await enviarMensagemZApi(numero, montarMensagemIndividual(licitacoes[i], appUrl))
     if (!ok) tudo_ok = false
-    if (i < lotes.length - 1) await new Promise(r => setTimeout(r, 600))
+    if (i < licitacoes.length - 1) await new Promise(r => setTimeout(r, 3000))
   }
   return tudo_ok
 }

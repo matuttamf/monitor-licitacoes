@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getLimites, OPCOES_EMAILS_DIA, OPCOES_ITENS_EMAIL, HORARIOS_POR_QTD } from '@/lib/planos'
 
 type Perfil = {
   nome: string
@@ -11,10 +12,21 @@ type Perfil = {
   telegram_chat_id: string
   min_valor_interesse: number
   max_valor_interesse: number
+  emails_por_dia: number
+  itens_por_email: number
+  plano: string
+  status: string
+  trial_fim: string | null
+  email_pausado_ate: string | null
+  telegram_pausado_ate: string | null
+  whatsapp_pausado_ate: string | null
 }
 
 export default function PerfilPage() {
-  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0 })
+  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', status: 'trial', trial_fim: null })
+  const [salvandoAlerta, setSalvandoAlerta] = useState(false)
+  const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
+  const [pausandoCanal, setPausandoCanal] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
@@ -36,6 +48,14 @@ export default function PerfilPage() {
           telegram_chat_id:    d.telegram_chat_id ?? '',
           min_valor_interesse: d.min_valor_interesse ?? 0,
           max_valor_interesse: d.max_valor_interesse ?? 0,
+          emails_por_dia:        d.emails_por_dia  ?? 5,
+          itens_por_email:       d.itens_por_email ?? ((['basic','trial'].includes(d.plano ?? 'trial')) ? 10 : 20),
+          plano:                 d.plano ?? 'basic',
+          status:                d.status ?? 'trial',
+          trial_fim:             d.trial_fim ?? null,
+          email_pausado_ate:     d.email_pausado_ate ?? null,
+          telegram_pausado_ate:  d.telegram_pausado_ate ?? null,
+          whatsapp_pausado_ate:  d.whatsapp_pausado_ate ?? null,
         })
       })
       .finally(() => setCarregando(false))
@@ -53,6 +73,23 @@ export default function PerfilPage() {
     setSalvando(false)
     if (res.ok) setMensagem({ tipo: 'ok', texto: 'Dados salvos com sucesso!' })
     else setMensagem({ tipo: 'erro', texto: 'Erro ao salvar. Tente novamente.' })
+  }
+
+  async function salvarPreferenciasAlerta(e: React.FormEvent) {
+    e.preventDefault()
+    setSalvandoAlerta(true)
+    setAlertaMsg(null)
+    const res = await fetch('/api/perfil', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emails_por_dia: perfil.emails_por_dia, itens_por_email: perfil.itens_por_email }),
+    })
+    setSalvandoAlerta(false)
+    if (res.ok) setAlertaMsg({ tipo: 'ok', texto: 'Preferências salvas!' })
+    else {
+      const d = await res.json().catch(() => ({}))
+      setAlertaMsg({ tipo: 'erro', texto: d.error ?? 'Erro ao salvar.' })
+    }
   }
 
   async function salvarTelegram(e: React.FormEvent) {
@@ -73,6 +110,41 @@ export default function PerfilPage() {
     setSalvandoTelegram(false)
     if (res.ok) setTelegramMsg({ tipo: 'ok', texto: chatId ? 'Telegram conectado! Você receberá alertas por lá.' : 'Telegram desconectado.' })
     else setTelegramMsg({ tipo: 'erro', texto: 'Erro ao salvar. Tente novamente.' })
+  }
+
+  const OPCOES_PAUSA = [
+    { label: '1 hora',   ms: 1 * 60 * 60 * 1000 },
+    { label: '4 horas',  ms: 4 * 60 * 60 * 1000 },
+    { label: '8 horas',  ms: 8 * 60 * 60 * 1000 },
+    { label: '12 horas', ms: 12 * 60 * 60 * 1000 },
+    { label: '24 horas', ms: 24 * 60 * 60 * 1000 },
+    { label: '2 dias',   ms: 2 * 24 * 60 * 60 * 1000 },
+    { label: '7 dias',   ms: 7 * 24 * 60 * 60 * 1000 },
+  ]
+
+  async function pausarCanal(canal: 'email' | 'telegram' | 'whatsapp', ms: number | null) {
+    setPausandoCanal(canal)
+    const campo = `${canal}_pausado_ate`
+    const valor = ms ? new Date(Date.now() + ms).toISOString() : null
+    const res = await fetch('/api/perfil', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [campo]: valor }),
+    })
+    if (res.ok) setPerfil(prev => ({ ...prev, [campo]: valor }))
+    setPausandoCanal(null)
+  }
+
+  function labelPausa(ate: string | null): string {
+    if (!ate) return ''
+    const fim = new Date(ate)
+    if (fim <= new Date()) return ''
+    const diff = fim.getTime() - Date.now()
+    const h = Math.floor(diff / 3600000)
+    const m = Math.floor((diff % 3600000) / 60000)
+    if (h >= 24) return `${Math.ceil(diff / 86400000)}d`
+    if (h > 0)   return `${h}h${m > 0 ? `${m}m` : ''}`
+    return `${m}m`
   }
 
   const campos = [
@@ -211,6 +283,107 @@ export default function PerfilPage() {
         </form>
       </div>
 
+      {/* Preferências de alertas por e-mail */}
+      {(() => {
+        const limites = getLimites(perfil.plano)
+        const opcoesDia = OPCOES_EMAILS_DIA.filter(n => n <= limites.maxEmailsPorDia)
+        const opcoesItens = OPCOES_ITENS_EMAIL.filter(n => n <= limites.maxItensPorEmail)
+        const horarios = HORARIOS_POR_QTD[perfil.emails_por_dia] ?? HORARIOS_POR_QTD[2]
+        const horarioStr = horarios.map(h => `${h}h`).join(', ')
+
+        return (
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <div className="px-8 py-5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-lg flex-shrink-0"
+                style={{ background: 'var(--vinho)' }}>✉</div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Frequência de alertas por e-mail</div>
+                <div className="text-xs" style={{ color: 'var(--cinza)' }}>Controle quantos e-mails você recebe por dia e quantas licitações por mensagem</div>
+              </div>
+            </div>
+
+            <form onSubmit={salvarPreferenciasAlerta} className="px-8 py-6 space-y-6">
+              {/* E-mails por dia */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
+                  E-mails por dia
+                  <span className="ml-2 normal-case font-normal" style={{ color: 'var(--cinza)', opacity: 0.7 }}>
+                    (plano {limites.nome}: até {limites.maxEmailsPorDia})
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {opcoesDia.map(n => {
+                    const ativo = perfil.emails_por_dia === n
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setPerfil(prev => ({ ...prev, emails_por_dia: n }))}
+                        className="w-11 h-11 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          background: ativo ? 'var(--vinho)' : 'var(--surface-2)',
+                          color: ativo ? 'white' : 'var(--cinza)',
+                          border: `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--cinza-light)'}`,
+                        }}
+                      >{n}</button>
+                    )
+                  })}
+                </div>
+                {horarios.length > 0 && (
+                  <p className="text-xs mt-2.5" style={{ color: 'var(--cinza)' }}>
+                    📅 Horários de envio (horário de Brasília): <strong>{horarioStr}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Itens por e-mail */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
+                  Licitações por e-mail
+                  <span className="ml-2 normal-case font-normal" style={{ color: 'var(--cinza)', opacity: 0.7 }}>
+                    (plano {limites.nome}: até {limites.maxItensPorEmail})
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {opcoesItens.map(n => {
+                    const ativo = perfil.itens_por_email === n
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setPerfil(prev => ({ ...prev, itens_por_email: n }))}
+                        className="px-5 h-11 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          background: ativo ? 'var(--vinho)' : 'var(--surface-2)',
+                          color: ativo ? 'white' : 'var(--cinza)',
+                          border: `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--cinza-light)'}`,
+                        }}
+                      >{n} itens</button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {alertaMsg && (
+                <div className="rounded-xl px-4 py-3 text-sm" style={{
+                  background: alertaMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+                  border: `1px solid ${alertaMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                  color: alertaMsg.tipo === 'ok' ? '#10b981' : '#ef4444',
+                }}>
+                  {alertaMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{alertaMsg.texto}
+                </div>
+              )}
+
+              <button type="submit" disabled={salvandoAlerta}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ background: salvandoAlerta ? '#9AA0A6' : 'var(--vinho)', cursor: salvandoAlerta ? 'not-allowed' : 'pointer' }}>
+                {salvandoAlerta ? 'Salvando...' : 'Salvar preferências'}
+              </button>
+            </form>
+          </div>
+        )
+      })()}
+
       {/* Seção Telegram */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         {/* Cabeçalho */}
@@ -312,6 +485,77 @@ export default function PerfilPage() {
           </form>
         </div>
       </div>
+      {/* ── Pausar notificações ── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="px-8 py-5" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: 'rgba(107,15,26,0.08)' }}>⏸</div>
+            <div>
+              <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Pausar notificações</div>
+              <div className="text-xs" style={{ color: 'var(--cinza)' }}>Silencia temporariamente um canal. Volta automaticamente no prazo.</div>
+            </div>
+          </div>
+        </div>
+        <div className="px-8 py-6 space-y-5">
+          {([
+            { canal: 'email',    label: 'E-mail',    icon: '📧', campo: 'email_pausado_ate'    },
+            { canal: 'telegram', label: 'Telegram',  icon: '✈',  campo: 'telegram_pausado_ate' },
+            { canal: 'whatsapp', label: 'WhatsApp',  icon: '💬', campo: 'whatsapp_pausado_ate'  },
+          ] as const).map(({ canal, label, icon, campo }) => {
+            const ate = perfil[campo]
+            const pausado = !!ate && new Date(ate) > new Date()
+            const tempo = labelPausa(ate)
+            return (
+              <div key={canal}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '16px' }}>{icon}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--preto)' }}>{label}</span>
+                    {pausado ? (
+                      <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', background: 'rgba(245,158,11,0.1)', color: '#d97706' }}>
+                        ⏸ pausado por {tempo}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', background: 'rgba(16,185,129,0.08)', color: '#10b981' }}>
+                        ● ativo
+                      </span>
+                    )}
+                  </div>
+                  {pausado && (
+                    <button
+                      onClick={() => pausarCanal(canal, null)}
+                      disabled={pausandoCanal === canal}
+                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}
+                    >
+                      Reativar
+                    </button>
+                  )}
+                </div>
+                {!pausado && (
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {OPCOES_PAUSA.map(op => (
+                      <button
+                        key={op.ms}
+                        onClick={() => pausarCanal(canal, op.ms)}
+                        disabled={pausandoCanal === canal}
+                        style={{
+                          fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '8px',
+                          background: 'var(--surface-2)', color: 'var(--cinza)',
+                          border: '1px solid var(--cinza-light)', cursor: 'pointer',
+                          opacity: pausandoCanal === canal ? 0.5 : 1,
+                        }}
+                      >
+                        {op.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
     </div>
   )
 }

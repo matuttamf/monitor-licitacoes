@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 
-export type CronJob = 'coletar' | 'matching' | 'alertar' | 'emails-trial' | 'expirar-trials' | 'resumo-semanal'
+export type CronJob = 'coletar' | 'matching' | 'alertar' | 'alertar-urgente' | 'emails-trial' | 'expirar-trials' | 'resumo-semanal'
 export type CronStatus = 'ok' | 'erro' | 'ignorado'
 
 export interface CronLogEntry {

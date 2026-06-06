@@ -4,27 +4,26 @@ interface LicitacaoAlerta {
   valor_estimado?: number
   data_abertura?: string
   url: string
+  estado?: string
+  cidade?: string
   keyword: string
 }
 
-const LOTE_TELEGRAM = 5  // máx por mensagem (Telegram: 4.096 chars)
+function formatarMensagemIndividual(l: LicitacaoAlerta, appUrl: string): string {
+  const localidade = [l.cidade, l.estado].filter(Boolean).join(' — ')
+  const objeto = l.objeto.substring(0, 350) + (l.objeto.length > 350 ? '...' : '')
 
-function formatarLote(licitacoes: LicitacaoAlerta[], loteAtual: number, totalLotes: number): string {
-  const header =
-    `🔔 *Monitor de Licitações — ${new Date().toLocaleDateString('pt-BR')}*` +
-    (totalLotes > 1 ? ` (${loteAtual}/${totalLotes})` : '') +
-    `\n\n`
-
-  const linhas = licitacoes.map(l =>
+  return (
+    `🚨 *OPORTUNIDADE!*\n\n` +
     `🔹 *${l.keyword.toUpperCase()}*\n` +
     `📋 ${l.orgao}\n` +
-    `📝 ${l.objeto.substring(0, 100)}${l.objeto.length > 100 ? '...' : ''}\n` +
-    `${l.valor_estimado ? `💰 R$ ${l.valor_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` : ''}` +
-    `${l.data_abertura ? `📅 Abertura: ${l.data_abertura}\n` : ''}` +
-    `🔗 [Ver edital](${l.url})`
-  ).join('\n\n---\n\n')
-
-  return header + linhas
+    (localidade ? `📍 ${localidade}\n` : '') +
+    `📝 ${objeto}\n` +
+    (l.valor_estimado ? `💰 R$ ${l.valor_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` : '') +
+    (l.data_abertura ? `📅 Abertura: ${l.data_abertura}\n` : '') +
+    `🔗 [Ver edital](${l.url})\n\n` +
+    `_Acompanhe todas as licitações no [Painel](${appUrl}/alertas)._`
+  )
 }
 
 async function enviarMensagemTelegram(token: string, chatId: string, texto: string): Promise<boolean> {
@@ -54,6 +53,10 @@ export async function enviarTextoTelegram(chatId: string, texto: string): Promis
   return enviarMensagemTelegram(token, chatId, texto)
 }
 
+/**
+ * Envia uma mensagem individual por licitação, estilo sirene.
+ * Intervalo de ~3s entre mensagens para respeitar rate limit do Telegram.
+ */
 export async function enviarAlertaTelegram(
   licitacoes: LicitacaoAlerta[],
   chatId: string
@@ -61,34 +64,17 @@ export async function enviarAlertaTelegram(
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token || !chatId || licitacoes.length === 0) return false
 
-  // Dividir em lotes para não ultrapassar o limite de 4.096 chars do Telegram
-  const lotes: LicitacaoAlerta[][] = []
-  for (let i = 0; i < licitacoes.length; i += LOTE_TELEGRAM) {
-    lotes.push(licitacoes.slice(i, i + LOTE_TELEGRAM))
-  }
-
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   let tudo_ok = true
 
-  // Enviar um resumo inicial se houver múltiplos lotes
-  if (lotes.length > 1) {
-    const resumo =
-      `🔔 *Monitor de Licitações — ${new Date().toLocaleDateString('pt-BR')}*\n\n` +
-      `Encontramos *${licitacoes.length} licitações* para você.\n` +
-      `Enviando em ${lotes.length} mensagens para melhor leitura. ⬇️`
-
-    await enviarMensagemTelegram(token, chatId, resumo)
-    // Breve pausa para não ser bloqueado pelo Telegram (30 msg/s por bot)
-    await new Promise(r => setTimeout(r, 300))
-  }
-
-  for (let i = 0; i < lotes.length; i++) {
-    const texto = formatarLote(lotes[i], i + 1, lotes.length)
+  for (let i = 0; i < licitacoes.length; i++) {
+    const texto = formatarMensagemIndividual(licitacoes[i], appUrl)
     const ok = await enviarMensagemTelegram(token, chatId, texto)
     if (!ok) tudo_ok = false
 
-    // Pausa entre lotes para respeitar rate limit do Telegram
-    if (i < lotes.length - 1) {
-      await new Promise(r => setTimeout(r, 500))
+    // Pausa entre mensagens — respeita rate limit (30 msg/s por bot)
+    if (i < licitacoes.length - 1) {
+      await new Promise(r => setTimeout(r, 3000))
     }
   }
 

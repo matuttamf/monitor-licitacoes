@@ -14,6 +14,41 @@ export async function POST(request: Request) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://monitor-licitacoes-two.vercel.app'
   const secret = process.env.CRON_SECRET
 
+  // Ação especial: remover região Norte das keywords do admin
+  if (acao === 'remover-norte') {
+    const NORTE = ['norte', 'AC', 'AM', 'AP', 'PA', 'RO', 'RR', 'TO']
+    const OUTRAS = ['nordeste', 'sudeste', 'sul', 'centro_oeste']
+
+    // Busca keywords do admin
+    const { data: kws, error: errKw } = await supabase
+      .from('keywords')
+      .select('id, regiao')
+      .eq('user_id', user.id)
+
+    if (errKw) return NextResponse.json({ error: errKw.message }, { status: 500 })
+
+    let atualizadas = 0
+    for (const kw of kws ?? []) {
+      const regioes: string[] = kw.regiao ?? ['brasil']
+
+      // brasil → troca por todas exceto Norte
+      if (regioes.includes('brasil')) {
+        await supabase.from('keywords').update({ regiao: OUTRAS }).eq('id', kw.id)
+        atualizadas++
+        continue
+      }
+
+      // Remove Norte e UFs do Norte
+      const nova = regioes.filter(r => !NORTE.includes(r))
+      if (nova.length !== regioes.length) {
+        await supabase.from('keywords').update({ regiao: nova.length ? nova : ['brasil'] }).eq('id', kw.id)
+        atualizadas++
+      }
+    }
+
+    return NextResponse.json({ ok: true, atualizadas, total: kws?.length ?? 0 })
+  }
+
   const rotas: Record<string, string> = {
     coletar:          `${baseUrl}/api/cron/coletar`,
     matching:         `${baseUrl}/api/cron/matching`,

@@ -1,21 +1,28 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { enviarAlertaEmailUsuario } from '@/lib/alerts/email'
-import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
-import { enviarAlertaWhatsApp } from '@/lib/alerts/whatsapp'
 import { registrarCronLog } from '@/lib/cron-log'
-import { temWhatsApp } from '@/lib/planos'
-import { MAX_POR_EMAIL, SCORE_MIN_URGENTE } from '@/lib/scoring'
+import { getLimites, HORARIOS_POR_QTD } from '@/lib/planos'
 
 export const maxDuration = 300
 
-function dentroDoHorarioPermitido(): boolean {
+/** Retorna hora e dia no fuso Brasília (UTC-3) */
+function horasBrasilia(): { dia: number; hora: number } {
   const brasilia = new Date(Date.now() - 3 * 60 * 60 * 1000)
-  const dia  = brasilia.getUTCDay()
-  const hora = brasilia.getUTCHours()
-  if (dia >= 1 && dia <= 5) return hora >= 7 && hora < 17
-  if (dia === 6)            return hora >= 7 && hora < 13
+  return { dia: brasilia.getUTCDay(), hora: brasilia.getUTCHours() }
+}
+
+function dentroDoHorarioGlobal(): boolean {
+  const { dia, hora } = horasBrasilia()
+  if (dia >= 1 && dia <= 5) return hora >= 7 && hora <= 17
+  if (dia === 6)            return hora >= 7 && hora <= 15
   return false
+}
+
+/** Verifica se a hora atual (BRT) está no schedule do usuário */
+function horarioPermitidoParaUsuario(emailsPorDia: number, horaBRT: number): boolean {
+  const horarios = HORARIOS_POR_QTD[emailsPorDia] ?? HORARIOS_POR_QTD[2]
+  return horarios.includes(horaBRT)
 }
 
 export async function GET(request: Request) {
@@ -24,11 +31,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  if (!dentroDoHorarioPermitido()) {
+  if (!dentroDoHorarioGlobal()) {
     await registrarCronLog({ job: 'alertar', status: 'ignorado', mensagem: 'Fora do horário permitido' })
     return NextResponse.json({ ok: true, motivo: 'Fora do horário permitido', enviados: 0 })
   }
 
+  const { hora: horaBRT } = horasBrasilia()
   const supabase  = await createServiceClient()
   const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const hoje      = new Date().toISOString().substring(0, 10)
@@ -47,7 +55,7 @@ export async function GET(request: Request) {
     .select(SELECT_ALERTAS)
     .eq('canais', '{}')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
-    .order('score', { ascending: false })   // mais relevantes primeiro
+    .order('score', { ascending: false })
     .limit(500)
 
   // 2. Reenvios (enviados há > 7 dias, licitação ainda aberta)
@@ -93,7 +101,7 @@ export async function GET(request: Request) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, status, plano, telegram_chat_id, whatsapp')
+    .select('id, status, plano, telegram_chat_id, whatsapp, emails_por_dia, itens_por_email, trial_fim, email_pausado_ate')
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
@@ -104,21 +112,42 @@ export async function GET(request: Request) {
     const email  = emailMap[userId]
     const perfil = profileMap[userId]
     if (!email || perfil?.status === 'expired') continue
+    // Canal e-mail pausado?
+    if (perfil?.email_pausado_ate && new Date(perfil.email_pausado_ate) > new Date()) continue
 
-    const plano = perfil?.plano ?? 'basic'
+    const plano   = perfil?.plano ?? 'basic'
+    const limites = getLimites(plano)
+
+    // Padrão por plano: todos começam com 5 e-mails/dia;
+    // itens: basic/trial = 10, demais = 20
+    const defaultItens = (plano === 'basic' || plano === 'trial') ? 10 : 20
+    const emailsPorDia  = Math.min(perfil?.emails_por_dia  ?? 5,          limites.maxEmailsPorDia)
+    const itensPorEmail = Math.min(perfil?.itens_por_email ?? defaultItens, limites.maxItensPorEmail)
+
+    // Verificar se este é um horário programado para o usuário
+    if (!horarioPermitidoParaUsuario(emailsPorDia, horaBRT)) continue
+
+    const planoEhTrial = perfil?.status === 'trial'
+    const trialInfo = planoEhTrial && perfil?.trial_fim
+      ? (() => {
+          const fim = new Date(perfil.trial_fim)
+          const dias = Math.max(0, Math.ceil((fim.getTime() - Date.now()) / 86400000))
+          return { diasRestantes: dias, appUrl }
+        })()
+      : undefined
 
     // Separar novos de reenvios
     const novosAlertas    = alertas.filter(a => !(a as any)._reenvio)
     const reenviosAlertas = alertas.filter(a =>  (a as any)._reenvio)
 
-    // Novos: cap de MAX_POR_EMAIL, ordenados por score desc (já vêm ordenados da query)
-    const novosParaEnviar = novosAlertas.slice(0, MAX_POR_EMAIL)
+    // Novos: cap por preferência do usuário
+    const novosParaEnviar = novosAlertas.slice(0, itensPorEmail)
     const totalRestante   = novosAlertas.length - novosParaEnviar.length
 
     const alertasParaEnviar = [...novosParaEnviar, ...reenviosAlertas]
     if (!alertasParaEnviar.length) continue
 
-    // Montar lista de licitações com score
+    // Montar lista de licitações
     const licitacoesDoUsuario = alertasParaEnviar.map(a => ({
       id:             a.licitacao_id,
       orgao:          (a.licitacoes as any).orgao,
@@ -133,26 +162,12 @@ export async function GET(request: Request) {
       score:          (a as any).score ?? 0,
     }))
 
-    // Urgentes (score ≥ 80) → WA + Telegram
-    const urgentes = licitacoesDoUsuario.filter(l => l.score >= SCORE_MIN_URGENTE)
-
     const canaisEnviados: string[] = []
 
-    // E-mail: todos (score já filtrado no matching ≥ SCORE_MIN_EMAIL)
-    const emailOk = await enviarAlertaEmailUsuario(email, licitacoesDoUsuario, totalRestante)
+    // E-mail: todos (com info de trial se aplicável)
+    // Telegram/WA urgentes são gerenciados pelo /api/cron/alertar-urgente (a cada 5 min)
+    const emailOk = await enviarAlertaEmailUsuario(email, licitacoesDoUsuario, totalRestante, trialInfo)
     if (emailOk) canaisEnviados.push('email')
-
-    // Telegram: apenas urgentes (score ≥ 80)
-    if (perfil?.telegram_chat_id && urgentes.length > 0) {
-      const telegramOk = await enviarAlertaTelegram(urgentes, perfil.telegram_chat_id)
-      if (telegramOk) canaisEnviados.push('telegram')
-    }
-
-    // WhatsApp: apenas Profissional+ E score ≥ 80
-    if (temWhatsApp(plano) && perfil?.whatsapp && urgentes.length > 0) {
-      const wppOk = await enviarAlertaWhatsApp(urgentes, perfil.whatsapp)
-      if (wppOk) canaisEnviados.push('whatsapp')
-    }
 
     if (canaisEnviados.length > 0) {
       const ids = alertasParaEnviar.map(a => a.id)
@@ -164,22 +179,24 @@ export async function GET(request: Request) {
     }
 
     resultadosPorUsuario[email] = {
-      alertas:  alertasParaEnviar.length,
-      urgentes: urgentes.length,
-      canais:   canaisEnviados,
-      ok:       canaisEnviados.length > 0,
+      alertas:      alertasParaEnviar.length,
+      canais:       canaisEnviados,
+      emailsPorDia,
+      itensPorEmail,
+      horaBRT,
+      ok: canaisEnviados.length > 0,
     }
   }
 
   const totalUsuarios = Object.keys(resultadosPorUsuario).length
-  console.log(`Alertas: ${totalEnviados} enviados para ${totalUsuarios} usuários`)
+  console.log(`Alertas: ${totalEnviados} enviados para ${totalUsuarios} usuários (BRT ${horaBRT}h)`)
 
   await registrarCronLog({
     job:      'alertar',
     status:   'ok',
-    mensagem: `${totalEnviados} alertas para ${totalUsuarios} usuário(s)`,
+    mensagem: `${totalEnviados} alertas para ${totalUsuarios} usuário(s) — BRT ${horaBRT}h`,
     detalhes: resultadosPorUsuario,
   })
 
-  return NextResponse.json({ ok: true, enviados: totalEnviados, usuarios: totalUsuarios, detalhes: resultadosPorUsuario })
+  return NextResponse.json({ ok: true, enviados: totalEnviados, usuarios: totalUsuarios, horaBRT, detalhes: resultadosPorUsuario })
 }
