@@ -9,10 +9,7 @@ const PLANOS = [
     nome: 'Basic',
     preco: '49,90',
     destaque: false,
-    cor: '#8B1E2D',
     descricao: 'Ideal para começar',
-    keywords: 'Até 10 palavras-chave',
-    usuarios: '1 usuário',
     itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
@@ -20,10 +17,7 @@ const PLANOS = [
     nome: 'Profissional',
     preco: '97,90',
     destaque: false,
-    cor: '#6B0F1A',
-    descricao: 'Para vendedores ativos',
-    keywords: 'Palavras-chave ilimitadas',
-    usuarios: '1 usuário',
+    descricao: 'Para quem fornece ativamente ao governo',
     itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
@@ -31,10 +25,7 @@ const PLANOS = [
     nome: 'Pro',
     preco: '197,90',
     destaque: true,
-    cor: '#6B0F1A',
     descricao: 'Para equipes comerciais',
-    keywords: 'Palavras-chave ilimitadas',
-    usuarios: 'Até 5 usuários',
     itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte prioritário via WhatsApp'],
   },
   {
@@ -42,10 +33,7 @@ const PLANOS = [
     nome: 'Empresarial',
     preco: '497',
     destaque: false,
-    cor: '#1A1A1C',
     descricao: 'Para grandes operações',
-    keywords: 'Palavras-chave ilimitadas',
-    usuarios: 'Até 15 usuários',
     itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Relatório semanal detalhado', 'Suporte dedicado'],
   },
 ]
@@ -66,130 +54,121 @@ export default function AssinarPage() {
       if (!res.ok) {
         const data = await res.json()
         if (data.error === 'Não autorizado') {
-          window.location.href = `/cadastro?plano=${planoId}`
+          window.location.href = `/checkout?plano=${planoId}`
           return
         }
         throw new Error(data.error || 'Erro ao criar assinatura')
       }
       const { url } = await res.json()
       window.location.href = url
-    } catch (e: any) {
-      setErro(e.message || 'Erro ao processar. Tente novamente.')
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Erro ao processar. Tente novamente.')
     } finally {
       setLoadingPlano(null)
     }
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAF6F0', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="min-h-screen bg-[#FAF6F0] font-sans">
 
       {/* Header */}
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 40px', background: 'rgba(250,246,240,0.95)', borderBottom: '1px solid rgba(201,166,90,0.15)', position: 'sticky', top: 0, zIndex: 10 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '11px' }}>ML</div>
-          <span style={{ fontWeight: 700, fontSize: '15px', color: '#1A1A1C' }}>Monitor de Licitações</span>
+      <header className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-10 py-4 bg-[rgba(250,246,240,0.95)] border-b border-[rgba(201,166,90,0.15)] backdrop-blur-xl">
+        <Link href="/" className="flex items-center gap-2.5 no-underline">
+          <div className="w-8 h-8 rounded-lg bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-[11px]">ML</div>
+          <span className="font-bold text-[15px] text-[#1A1A1C] hidden sm:block">Monitor de Licitações</span>
         </Link>
-        <Link href="/login" style={{ fontSize: '14px', color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Já tenho conta →</Link>
+        <Link href="/login" className="text-sm text-[#6B0F1A] font-semibold no-underline">Já tenho conta →</Link>
       </header>
 
-      {/* Hero dos planos */}
-      <div style={{ background: '#1A1A1C', padding: '60px 40px 80px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-block', padding: '4px 14px', borderRadius: '999px', background: 'rgba(201,166,90,0.1)', border: '1px solid rgba(201,166,90,0.2)', color: '#C9A65A', fontSize: '12px', fontWeight: 600, letterSpacing: '0.06em', marginBottom: '20px' }}>
+      {/* Hero */}
+      <div className="bg-[#1A1A1C] px-6 md:px-10 py-14 md:py-20 text-center">
+        <div className="inline-block px-3.5 py-1 rounded-full bg-[rgba(201,166,90,0.1)] border border-[rgba(201,166,90,0.2)] text-[#C9A65A] text-xs font-semibold tracking-wider mb-5">
           7 DIAS GRÁTIS · SEM CARTÃO DE CRÉDITO
         </div>
-        <h1 style={{ fontSize: '42px', fontWeight: 400, color: 'white', margin: '0 0 16px', fontFamily: 'Georgia, serif', lineHeight: 1.2 }}>
+        <h1 className="text-3xl md:text-[42px] font-normal text-white mb-4 leading-snug" style={{ fontFamily: 'Georgia, serif' }}>
           Escolha seu plano
         </h1>
-        <p style={{ fontSize: '17px', color: 'rgba(255,255,255,0.5)', margin: 0, maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
+        <p className="text-base md:text-[17px] text-[rgba(255,255,255,0.5)] max-w-[500px] mx-auto">
           Comece grátis por 7 dias. Depois, pague apenas se quiser continuar. Cancele quando quiser.
         </p>
-
-        {/* Garantia */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '32px', flexWrap: 'wrap' }}>
+        <div className="flex justify-center gap-6 md:gap-8 mt-8 flex-wrap">
           {[['🔒', 'Pagamento 100% seguro'], ['↩', 'Cancele a qualquer momento'], ['⚡', 'Ativação imediata']].map(([icon, text]) => (
-            <div key={text as string} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
+            <div key={text as string} className="flex items-center gap-1.5 text-[rgba(255,255,255,0.4)] text-sm">
               <span>{icon}</span><span>{text}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Cards: trial + planos pagos */}
-      <div style={{ maxWidth: '1300px', margin: '-40px auto 0', padding: '0 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+      {/* Cards */}
+      <div className="max-w-[1300px] mx-auto -mt-10 px-4 md:px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
 
         {/* Card trial */}
-        <div style={{ background: 'white', border: '2px solid #C9A65A', borderRadius: '20px', padding: '32px 28px', position: 'relative', boxShadow: '0 4px 20px rgba(201,166,90,0.12)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '11px', fontWeight: 800, padding: '5px 16px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+        <div className="bg-white border-2 border-[#C9A65A] rounded-[20px] p-7 relative shadow-[0_4px_20px_rgba(201,166,90,0.12)] flex flex-col">
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
             🎁 GRÁTIS
           </div>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9AA0A6', marginBottom: '6px' }}>Período de Teste</div>
-          <div style={{ fontSize: '13px', color: '#9AA0A6', marginBottom: '20px' }}>Experimente sem compromisso</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '44px', fontWeight: 800, color: '#1A1A1C', lineHeight: 1 }}>7 dias</span>
+          <div className="text-[11px] font-bold tracking-widest uppercase text-[#9AA0A6] mb-1.5 text-center">Período de Teste</div>
+          <div className="text-sm text-[#9AA0A6] mb-5 text-center">Experimente sem compromisso</div>
+          <div className="flex items-end justify-center gap-1 mb-1">
+            <span className="text-[44px] font-black text-[#1A1A1C] leading-none">7 dias</span>
           </div>
-          <div style={{ fontSize: '13px', color: '#9AA0A6', marginBottom: '28px' }}>grátis · sem cartão de crédito</div>
-          <div style={{ height: '1px', background: '#F0EDE8', marginBottom: '24px' }} />
-          <div style={{ marginBottom: '28px' }}>
+          <div className="text-sm text-[#9AA0A6] mb-7 text-center">grátis · sem cartão de crédito</div>
+          <div className="h-px bg-[#F0EDE8] mb-6" />
+          <div className="flex-1 mb-7">
             {['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'].map(item => (
-              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(201,166,90,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: '10px', color: '#C9A65A', fontWeight: 700 }}>✓</span>
+              <div key={item} className="flex items-center gap-2.5 mb-2.5">
+                <div className="w-[18px] h-[18px] rounded-full bg-[rgba(201,166,90,0.12)] flex items-center justify-center shrink-0">
+                  <span className="text-[10px] text-[#C9A65A] font-bold">✓</span>
                 </div>
-                <span style={{ fontSize: '14px', color: '#4a4a4d' }}>{item}</span>
+                <span className="text-sm text-[#4a4a4d]">{item}</span>
               </div>
             ))}
           </div>
-          <Link
-            href="/cadastro"
-            style={{ display: 'block', width: '100%', padding: '14px', borderRadius: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700, background: '#C9A65A', color: '#1A1A1C', textDecoration: 'none', boxSizing: 'border-box', marginTop: 'auto' }}
-          >
+          <Link href="/cadastro" className="block w-full py-3.5 rounded-xl text-center text-[15px] font-bold bg-[#C9A65A] text-[#1A1A1C] no-underline mt-auto">
             Começar grátis →
           </Link>
         </div>
+
+        {/* Cards pagos */}
         {PLANOS.map(p => (
           <div
             key={p.id}
-            style={{
-              background: p.destaque ? '#6B0F1A' : 'white',
-              border: p.destaque ? '2px solid #C9A65A' : '1px solid #D5D2C8',
-              borderRadius: '20px',
-              padding: '32px 28px',
-              position: 'relative',
-              boxShadow: p.destaque ? '0 20px 60px rgba(107,15,26,0.3)' : '0 4px 20px rgba(0,0,0,0.06)',
-              transform: p.destaque ? 'translateY(-8px)' : 'none',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            className={`rounded-[20px] p-7 relative flex flex-col ${
+              p.destaque
+                ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_20px_60px_rgba(107,15,26,0.3)] lg:-translate-y-2'
+                : 'bg-white border border-[#D5D2C8] shadow-[0_4px_20px_rgba(0,0,0,0.06)]'
+            }`}
           >
             {p.destaque && (
-              <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '11px', fontWeight: 800, padding: '5px 16px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
                 ⭐ MAIS POPULAR
               </div>
             )}
 
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: p.destaque ? '#C9A65A' : '#9AA0A6', marginBottom: '6px', textAlign: 'center' }}>{p.nome}</div>
-            <div style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.6)' : '#9AA0A6', marginBottom: '20px', textAlign: 'center' }}>{p.descricao}</div>
+            <div className={`text-[11px] font-bold tracking-widest uppercase mb-1.5 text-center ${p.destaque ? 'text-[#C9A65A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
+            <div className={`text-sm mb-5 text-center ${p.destaque ? 'text-[rgba(255,255,255,0.6)]' : 'text-[#9AA0A6]'}`}>{p.descricao}</div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '4px', marginBottom: '28px' }}>
-              <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.5)' : '#9AA0A6', fontWeight: 500, marginBottom: '6px' }}>R$</span>
-              <span style={{ fontSize: '44px', fontWeight: 800, color: p.destaque ? 'white' : '#1A1A1C', lineHeight: 1 }}>
+            <div className="flex items-end justify-center gap-1 mb-7">
+              <span className={`text-sm font-medium mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
+              <span className={`text-[44px] font-black leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
                 {p.preco.split(',')[0]}
                 {p.preco.includes(',') && (
-                  <span style={{ fontSize: '24px', fontWeight: 800 }}>,{p.preco.split(',')[1]}</span>
+                  <span className="text-2xl font-black">,{p.preco.split(',')[1]}</span>
                 )}
               </span>
-              <span style={{ fontSize: '13px', color: p.destaque ? 'rgba(255,255,255,0.4)' : '#9AA0A6', marginBottom: '6px' }}>/mês</span>
+              <span className={`text-sm mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.4)]' : 'text-[#9AA0A6]'}`}>/mês</span>
             </div>
 
-            <div style={{ height: '1px', background: p.destaque ? 'rgba(201,166,90,0.2)' : '#F0EDE8', marginBottom: '24px' }} />
+            <div className={`h-px mb-6 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#F0EDE8]'}`} />
 
-            <div style={{ marginBottom: '28px', flex: 1 }}>
+            <div className="flex-1 mb-7">
               {p.itens.map(item => (
-                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '10px', color: p.destaque ? '#C9A65A' : '#6B0F1A', fontWeight: 700 }}>✓</span>
+                <div key={item} className="flex items-center gap-2.5 mb-2.5">
+                  <div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[rgba(107,15,26,0.08)]'}`}>
+                    <span className={`text-[10px] font-bold ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
                   </div>
-                  <span style={{ fontSize: '14px', color: p.destaque ? 'rgba(255,255,255,0.85)' : '#4a4a4d' }}>{item}</span>
+                  <span className={`text-sm ${p.destaque ? 'text-[rgba(255,255,255,0.85)]' : 'text-[#4a4a4d]'}`}>{item}</span>
                 </div>
               ))}
             </div>
@@ -197,19 +176,9 @@ export default function AssinarPage() {
             <button
               onClick={() => handleAssinar(p.id)}
               disabled={loadingPlano === p.id}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '12px',
-                border: 'none',
-                cursor: loadingPlano === p.id ? 'not-allowed' : 'pointer',
-                fontSize: '15px',
-                fontWeight: 700,
-                background: p.destaque ? '#C9A65A' : '#6B0F1A',
-                color: p.destaque ? '#1A1A1C' : 'white',
-                opacity: loadingPlano === p.id ? 0.7 : 1,
-                transition: 'opacity 0.2s',
-              }}
+              className={`w-full py-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer transition-opacity ${
+                p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
+              } ${loadingPlano === p.id ? 'opacity-70 cursor-not-allowed' : 'opacity-100'}`}
             >
               {loadingPlano === p.id ? 'Aguarde...' : 'Assinar agora →'}
             </button>
@@ -218,56 +187,56 @@ export default function AssinarPage() {
       </div>
 
       {erro && (
-        <div style={{ maxWidth: '600px', margin: '-40px auto 40px', padding: '0 24px' }}>
-          <div style={{ background: 'rgba(185,28,28,0.08)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', color: '#b91c1c', textAlign: 'center' }}>{erro}</div>
+        <div className="max-w-[600px] mx-auto -mt-10 mb-10 px-6">
+          <div className="bg-[rgba(185,28,28,0.08)] border border-[rgba(185,28,28,0.2)] rounded-xl px-5 py-3.5 text-sm text-[#b91c1c] text-center">{erro}</div>
         </div>
       )}
 
-      {/* Prova social */}
-      <div style={{ background: 'white', borderTop: '1px solid #D5D2C8', padding: '60px 40px' }}>
-        <p style={{ textAlign: 'center', fontSize: '13px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9AA0A6', marginBottom: '40px' }}>Por que empresas escolhem o Monitor</p>
-        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+      {/* Depoimentos */}
+      <div className="bg-white border-t border-[#D5D2C8] px-6 md:px-10 py-16">
+        <p className="text-center text-[11px] font-bold tracking-[0.08em] uppercase text-[#9AA0A6] mb-10">Por que empresas escolhem o Monitor</p>
+        <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { texto: '"Antes perdíamos editais por falta de informação. Agora recebemos alertas toda manhã e chegamos na frente."', autor: 'Distribuidora de móveis, MG' },
+            { texto: '"Antes perdíamos editais por falta de informação. Agora recebemos alertas em tempo real e chegamos na frente."', autor: 'Distribuidora de móveis, MG' },
             { texto: '"Configurei em 5 minutos e no segundo dia já tinha uma licitação de notebook do estado que não sabia que existia."', autor: 'Empresa de TI, SP' },
             { texto: '"R$ 197/mês é barato demais comparado com o que ganhamos nas licitações que encontramos pelo sistema."', autor: 'Fornecedor de limpeza, RJ' },
           ].map((t, i) => (
-            <div key={i} style={{ background: '#FAF6F0', borderRadius: '16px', padding: '24px', border: '1px solid #D5D2C8' }}>
-              <div style={{ fontSize: '28px', color: '#C9A65A', marginBottom: '12px' }}>❝</div>
-              <p style={{ fontSize: '14px', color: '#4a4a4d', lineHeight: 1.7, margin: '0 0 16px', fontStyle: 'italic' }}>{t.texto}</p>
-              <p style={{ fontSize: '12px', color: '#9AA0A6', margin: 0, fontWeight: 600 }}>{t.autor}</p>
+            <div key={i} className="bg-[#FAF6F0] rounded-2xl p-6 border border-[#D5D2C8]">
+              <div className="text-[28px] text-[#C9A65A] mb-3">❝</div>
+              <p className="text-sm text-[#4a4a4d] leading-[1.7] mb-4 italic">{t.texto}</p>
+              <p className="text-xs text-[#9AA0A6] font-bold m-0">{t.autor}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* FAQ rápido */}
-      <div style={{ padding: '60px 40px', maxWidth: '700px', margin: '0 auto' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 400, textAlign: 'center', marginBottom: '40px', fontFamily: 'Georgia, serif', color: '#1A1A1C' }}>Dúvidas frequentes</h2>
+      {/* FAQ */}
+      <div className="px-6 md:px-10 py-16 max-w-[700px] mx-auto">
+        <h2 className="text-2xl md:text-[28px] font-normal text-center mb-10 text-[#1A1A1C]" style={{ fontFamily: 'Georgia, serif' }}>Dúvidas frequentes</h2>
         {[
           ['Preciso de cartão de crédito para testar?', 'Não. Os 7 dias de teste são 100% gratuitos. Você só é cobrado se decidir continuar.'],
           ['Como funciona o cancelamento?', 'Você pode cancelar a qualquer momento diretamente pelo painel, sem multas ou burocracia.'],
           ['Posso mudar de plano depois?', 'Sim. Você pode fazer upgrade ou downgrade do seu plano quando quiser.'],
         ].map(([q, a]) => (
-          <div key={q as string} style={{ borderBottom: '1px solid #D5D2C8', padding: '20px 0' }}>
-            <details>
-              <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '15px', color: '#1A1A1C', listStyle: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                {q} <span style={{ color: '#6B0F1A' }}>+</span>
-              </summary>
-              <p style={{ marginTop: '12px', fontSize: '14px', color: '#9AA0A6', lineHeight: 1.7 }}>{a}</p>
-            </details>
-          </div>
+          <details key={q as string} className="border-b border-[#D5D2C8]">
+            <summary className="py-5 cursor-pointer font-semibold text-[15px] text-[#1A1A1C] list-none flex justify-between items-center">
+              {q} <span className="text-[#6B0F1A] text-xl font-light shrink-0 ml-4">+</span>
+            </summary>
+            <p className="pb-5 m-0 text-sm text-[#9AA0A6] leading-[1.7]">{a}</p>
+          </details>
         ))}
       </div>
 
       {/* Footer */}
-      <div style={{ background: '#1A1A1C', padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>© {new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
-        <div style={{ display: 'flex', gap: '24px' }}>
-          <Link href="/" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Início</Link>
-          <Link href="/login" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Entrar</Link>
+      <footer className="bg-[#1A1A1C] px-6 md:px-10 py-6 flex flex-col sm:flex-row justify-between items-center gap-3 flex-wrap">
+        <span className="text-sm text-[rgba(255,255,255,0.3)]">© {new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
+        <div className="flex gap-6">
+          <Link href="/" className="text-sm text-[rgba(255,255,255,0.4)] no-underline">Início</Link>
+          <Link href="/login" className="text-sm text-[rgba(255,255,255,0.4)] no-underline">Entrar</Link>
+          <Link href="/privacidade" className="text-sm text-[rgba(255,255,255,0.4)] no-underline">Privacidade</Link>
+          <Link href="/termos" className="text-sm text-[rgba(255,255,255,0.4)] no-underline">Termos</Link>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }
