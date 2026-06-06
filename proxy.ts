@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Rotas públicas — não precisam de autenticação
-const PUBLIC_PATHS = ['/', '/login', '/cadastro', '/assinar', '/expirado', '/auth', '/privacidade', '/termos', '/convite']
+const PUBLIC_PATHS = ['/', '/login', '/cadastro', '/assinar', '/expirado', '/auth', '/privacidade', '/termos', '/convite', '/completar-cadastro']
 
 function isPublic(pathname: string): boolean {
   if (pathname.startsWith('/api/')) return true
