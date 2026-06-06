@@ -101,7 +101,7 @@ function LoginForm() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d]">Senha</label>
-                <Link href="/auth/update-password" className="text-xs text-[#6B0F1A] font-medium no-underline">
+                <Link href="/auth/esqueci-senha" className="text-xs text-[#6B0F1A] font-medium no-underline">
                   Esqueci minha senha
                 </Link>
               </div>
