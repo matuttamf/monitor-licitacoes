@@ -31,19 +31,29 @@ export async function encontrarMatchesDetalhado(
   for (let i = 0; i < licitacoes.length; i += 10) {
     const lote = licitacoes.slice(i, i + 10)
 
-    const prompt = `Você é um especialista em licitações públicas brasileiras. Analise cada licitação e identifique quais palavras-chave correspondem ao que está sendo COMPRADO/ADQUIRIDO pela licitação.
+    const prompt = `Você é um especialista em licitações públicas brasileiras. Analise cada licitação e identifique quais palavras-chave correspondem ao que está sendo COMPRADO/ADQUIRIDO diretamente pela licitação.
 
-REGRA PRINCIPAL: A palavra-chave deve ser o OBJETO PRINCIPAL da compra — o item que o órgão público quer adquirir ou contratar.
+REGRA PRINCIPAL: A palavra-chave deve ser o OBJETO PRINCIPAL e ESPECÍFICO da compra. Quando há dúvida, retorne keywords vazia [].
 
-INCLUA quando:
-- O órgão está comprando/adquirindo o produto diretamente (ex: "aquisição de ar condicionado", "compra de bebedouros")
-- Registro de preços para fornecimento do produto
-- Locação do equipamento
+INCLUA apenas quando:
+- O órgão está comprando/adquirindo o produto diretamente (ex: "aquisição de bebedouros", "compra de notebooks")
+- SRP (Registro de preços) para FORNECIMENTO do produto específico (ex: "SRP para fornecimento de ar condicionado")
+- Locação do equipamento específico (ex: "locação de geradores")
 
-EXCLUA quando:
-- O produto aparece apenas como ferramenta de um SERVIÇO (ex: "prestação de serviço de TI que utiliza videomonitoramento", "manutenção de sistema que usa catracas")
-- O objeto principal é um serviço de engenharia, TI, limpeza, vigilância, consultoria etc.
-- O produto é apenas mencionado no contexto, mas não é o que está sendo comprado
+EXCLUA obrigatoriamente quando:
+- O objeto começa ou é "PRESTAÇÃO DE SERVIÇOS" e o produto aparece apenas como atividade do serviço
+  Exemplos a EXCLUIR: "SRP para prestação de serviços de locação, montagem e operação", "prestação de serviços de manutenção", "contratação de empresa para prestação de serviços"
+- O objeto principal é serviço de engenharia, limpeza, vigilância, TI, consultoria, operação, manutenção
+- SRP genérico para "futura e eventual contratação de empresa na prestação de serviços" — SEMPRE EXCLUIR, mesmo que liste produtos nas atividades
+- O produto aparece como instrumento/ferramenta de execução de um serviço
+- Obras de construção/reforma onde materiais são citados
+
+EXEMPLOS PRÁTICOS:
+✅ INCLUIR: "Aquisição de ar condicionado split 12.000 BTUs" → keyword: "ar condicionado"
+✅ INCLUIR: "SRP para fornecimento de bebedouros" → keyword: "bebedouro"
+❌ EXCLUIR: "SRP para prestação de serviços de locação, montagem, desmontagem e operação" → keywords: []
+❌ EXCLUIR: "Contratação de empresa para prestação de serviços de manutenção" → keywords: []
+❌ EXCLUIR: "Serviços de limpeza e conservação" → keywords: []
 
 Palavras-chave: ${termosTexto}
 

@@ -95,14 +95,29 @@ export async function GET(request: Request) {
   const termos = keywords.map(k => k.termo.toLowerCase())
   const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
 
-  const { data: candidatos } = await supabase
+  const { data: candidatosBrutos } = await supabase
     .from('licitacoes')
     .select('id, objeto')
     .gte('coletado_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
     .or(filtroOr)
-    .limit(200)
+    .limit(300)
 
-  console.log(`${candidatos?.length ?? 0} candidatos após pré-filtro de texto (de ${todasLicitacoes.length} coletadas)`)
+  // Excluir objetos cujo tema principal é "prestação de serviços" genérica
+  // (o Gemini também barra, mas remover aqui economiza tokens e evita falsos positivos)
+  const PADROES_SERVICO_GENERICO = [
+    /^SRP.{0,60}prest[aã][çc][aã]o de servi[çc]os/i,
+    /^contrata[çc][aã]o.{0,30}empresa.{0,30}prest[aã][çc][aã]o de servi[çc]os/i,
+    /^prest[aã][çc][aã]o de servi[çc]os de (manuten[çc][aã]o|limpeza|vigilância|conserva[çc][aã]o|opera[çc][aã]o|consultoria)/i,
+    /^servi[çc]os de (limpeza|conserva[çc][aã]o|vigilância|manuten[çc][aã]o|opera[çc][aã]o)/i,
+    /^contrata[çc][aã]o de empresa.{0,50}servi[çc]os/i,
+  ]
+
+  const candidatos = (candidatosBrutos ?? []).filter(l => {
+    const obj = (l.objeto ?? '').trim()
+    return !PADROES_SERVICO_GENERICO.some(regex => regex.test(obj))
+  })
+
+  console.log(`${candidatos.length} candidatos após pré-filtro de texto (${(candidatosBrutos?.length ?? 0) - candidatos.length} genéricos descartados de ${todasLicitacoes.length} coletadas)`)
 
   if (!candidatos?.length) {
     return NextResponse.json({ ok: true, salvas, matches: 0, debug: 'sem candidatos no pré-filtro' })
