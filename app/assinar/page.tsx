@@ -114,64 +114,38 @@ export default function AssinarPage() {
         </div>
       </div>
 
-      {/* Card de teste gratuito */}
-      <div style={{ maxWidth: '600px', margin: '-40px auto 0', padding: '0 24px 32px' }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #1A1A1C 0%, #2d1a1d 100%)',
-          border: '2px solid #C9A65A',
-          borderRadius: '20px',
-          padding: '36px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          boxShadow: '0 20px 60px rgba(201,166,90,0.15)',
-          position: 'relative',
-        }}>
-          <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '11px', fontWeight: 800, padding: '5px 20px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-            🎁 COMECE GRÁTIS
+      {/* Cards: trial + planos pagos */}
+      <div style={{ maxWidth: '1300px', margin: '-40px auto 0', padding: '0 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+
+        {/* Card trial */}
+        <div style={{ background: 'white', border: '2px solid #C9A65A', borderRadius: '20px', padding: '32px 28px', position: 'relative', boxShadow: '0 4px 20px rgba(201,166,90,0.12)' }}>
+          <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#C9A65A', color: '#1A1A1C', fontSize: '11px', fontWeight: 800, padding: '5px 16px', borderRadius: '999px', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+            🎁 GRÁTIS
           </div>
-          <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '8px' }}>Período de Teste</div>
-          <div style={{ fontSize: '44px', fontWeight: 800, color: 'white', lineHeight: 1, marginBottom: '4px' }}>7 dias</div>
-          <div style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', marginBottom: '24px' }}>grátis · sem cartão de crédito</div>
-          <div style={{ display: 'flex', gap: '28px', marginBottom: '28px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {['20 palavras-chave', 'Alertas por e-mail', 'Busca no painel'].map(item => (
-              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
-                <span style={{ color: '#C9A65A', fontWeight: 700 }}>✓</span> {item}
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9AA0A6', marginBottom: '6px' }}>Período de Teste</div>
+          <div style={{ fontSize: '13px', color: '#9AA0A6', marginBottom: '20px' }}>Experimente sem compromisso</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
+            <span style={{ fontSize: '44px', fontWeight: 800, color: '#1A1A1C', lineHeight: 1 }}>7 dias</span>
+          </div>
+          <div style={{ fontSize: '13px', color: '#9AA0A6', marginBottom: '28px' }}>grátis · sem cartão de crédito</div>
+          <div style={{ height: '1px', background: '#F0EDE8', marginBottom: '24px' }} />
+          <div style={{ marginBottom: '28px' }}>
+            {['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'].map(item => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(201,166,90,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '10px', color: '#C9A65A', fontWeight: 700 }}>✓</span>
+                </div>
+                <span style={{ fontSize: '14px', color: '#4a4a4d' }}>{item}</span>
               </div>
             ))}
           </div>
           <Link
             href="/cadastro"
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              fontSize: '16px',
-              fontWeight: 700,
-              background: '#C9A65A',
-              color: '#1A1A1C',
-              textDecoration: 'none',
-            }}
+            style={{ display: 'block', width: '100%', padding: '14px', borderRadius: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700, background: '#C9A65A', color: '#1A1A1C', textDecoration: 'none', boxSizing: 'border-box' }}
           >
-            Começar 7 dias grátis →
+            Começar grátis →
           </Link>
         </div>
-      </div>
-
-      {/* Divisor planos pagos */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '20px 24px 12px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ flex: 1, height: '1px', background: '#D5D2C8' }} />
-          <span style={{ fontSize: '13px', color: '#9AA0A6', fontWeight: 600, whiteSpace: 'nowrap' }}>OU ASSINE DIRETAMENTE</span>
-          <div style={{ flex: 1, height: '1px', background: '#D5D2C8' }} />
-        </div>
-      </div>
-
-      {/* Cards de planos pagos */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
         {PLANOS.map(p => (
           <div
             key={p.id}
