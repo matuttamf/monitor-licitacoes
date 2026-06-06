@@ -11,15 +11,15 @@ function CadastroConteudo() {
   const searchParams  = useSearchParams()
   const conviteToken  = searchParams.get('convite')
 
-  const [email, setEmail]                       = useState('')
-  const [senha, setSenha]                       = useState('')
-  const [confirmarSenha, setConfirmarSenha]     = useState('')
-  const [erro, setErro]                         = useState('')
-  const [sucesso, setSucesso]                   = useState(false)
-  const [carregando, setCarregando]             = useState(false)
-  const [convite, setConvite]                   = useState<ConviteInfo>(null)
-  const [conviteErro, setConviteErro]           = useState('')
-  const [carregandoConvite, setCarregandoConvite] = useState(!!conviteToken)
+  const [email, setEmail]                           = useState('')
+  const [senha, setSenha]                           = useState('')
+  const [confirmarSenha, setConfirmarSenha]         = useState('')
+  const [erro, setErro]                             = useState('')
+  const [sucesso, setSucesso]                       = useState(false)
+  const [carregando, setCarregando]                 = useState(false)
+  const [convite, setConvite]                       = useState<ConviteInfo>(null)
+  const [conviteErro, setConviteErro]               = useState('')
+  const [carregandoConvite, setCarregandoConvite]   = useState(!!conviteToken)
 
   useEffect(() => {
     if (!conviteToken) return
@@ -37,7 +37,6 @@ function CadastroConteudo() {
     if (senha.length < 8)         { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     setCarregando(true)
 
-    // Anti-abuso: verificar e-mail normalizado + domínio descartável
     if (!conviteToken) {
       const verificacao = await fetch('/api/auth/verificar-trial', {
         method:  'POST',
@@ -56,9 +55,7 @@ function CadastroConteudo() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: {
-        emailRedirectTo: `${window.location.origin}/completar-cadastro`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/completar-cadastro` },
     })
 
     if (error) {
@@ -102,29 +99,15 @@ function CadastroConteudo() {
     setCarregando(false)
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '13px 16px', borderRadius: '12px',
-    border: '1.5px solid #D5D2C8', background: 'white',
-    fontSize: '14px', color: '#1A1A1C', outline: 'none',
-    boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif',
-  }
-  const fieldFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = '#6B0F1A'
-    e.target.style.boxShadow   = '0 0 0 3px rgba(107,15,26,0.1)'
-  }
-  const fieldBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = '#D5D2C8'
-    e.target.style.boxShadow   = 'none'
-  }
-
+  /* ── Estado: convite inválido ── */
   if (conviteToken && !carregandoConvite && conviteErro) {
     return (
-      <div style={{ minHeight: '100vh', background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ maxWidth: '400px', width: '100%', background: 'white', borderRadius: '24px', padding: '48px 40px', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.08)', border: '1px solid #D5D2C8' }}>
-          <div style={{ fontSize: '40px', marginBottom: '20px' }}>⚠️</div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 12px' }}>Convite inválido</h2>
-          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 28px' }}>{conviteErro}</p>
-          <Link href="/login" style={{ display: 'block', padding: '13px', borderRadius: '12px', background: '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, textDecoration: 'none', textAlign: 'center' }}>
+      <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center p-10 font-sans">
+        <div className="max-w-[400px] w-full bg-white rounded-3xl px-10 py-12 text-center shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-[#D5D2C8]">
+          <div className="text-[40px] mb-5">⚠️</div>
+          <h2 className="text-[22px] font-bold text-[#1A1A1C] mb-3">Convite inválido</h2>
+          <p className="text-sm text-[#9AA0A6] mb-7">{conviteErro}</p>
+          <Link href="/login" className="block py-3.5 rounded-xl bg-[#6B0F1A] text-white text-sm font-bold text-center no-underline">
             Ir para o login →
           </Link>
         </div>
@@ -132,35 +115,36 @@ function CadastroConteudo() {
     )
   }
 
+  /* ── Estado: sucesso ── */
   if (sucesso) {
     return (
-      <div style={{ minHeight: '100vh', background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ maxWidth: '480px', width: '100%', background: 'white', borderRadius: '24px', padding: '48px 40px', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.08)', border: '1px solid #D5D2C8' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(107,15,26,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '28px' }}>
+      <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center p-10 font-sans">
+        <div className="max-w-[480px] w-full bg-white rounded-3xl px-10 py-12 text-center shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-[#D5D2C8]">
+          <div className="w-16 h-16 rounded-full bg-[rgba(107,15,26,0.08)] flex items-center justify-center mx-auto mb-6 text-[28px]">
             {conviteToken ? '✅' : '✉'}
           </div>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1A1A1C', margin: '0 0 12px' }}>
+          <h2 className="text-2xl font-bold text-[#1A1A1C] mb-3">
             {conviteToken ? 'Conta criada com sucesso!' : 'Verifique seu e-mail'}
           </h2>
-          <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: 1.7, margin: '0 0 8px' }}>
+          <p className="text-[15px] text-[#9AA0A6] leading-relaxed mb-2">
             {conviteToken
-              ? <>Sua conta foi criada e vinculada à equipe de <strong style={{ color: '#1A1A1C' }}>{convite?.owner}</strong>. Você já pode fazer login.</>
-              : <>Enviamos um link de confirmação para <strong style={{ color: '#1A1A1C' }}>{email}</strong></>
+              ? <><span>Sua conta foi criada e vinculada à equipe de </span><strong className="text-[#1A1A1C]">{convite?.owner}</strong>. Você já pode fazer login.</>
+              : <><span>Enviamos um link de confirmação para </span><strong className="text-[#1A1A1C]">{email}</strong></>
             }
           </p>
           {!conviteToken && (
-            <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 32px' }}>
-              Clique no link para ativar sua conta. Você será direcionado para completar os dados da empresa.
-            </p>
-          )}
-          {!conviteToken && (
-            <div style={{ background: '#FAF6F0', borderRadius: '14px', padding: '20px', border: '1px solid #D5D2C8', marginBottom: '24px' }}>
-              <p style={{ fontSize: '13px', color: '#4a4a4d', margin: 0, lineHeight: 1.6 }}>
-                💡 <strong>Não encontrou o e-mail?</strong> Verifique a pasta de spam ou lixo eletrônico.
+            <>
+              <p className="text-sm text-[#9AA0A6] mb-8">
+                Clique no link para ativar sua conta. Você será direcionado para completar os dados da empresa.
               </p>
-            </div>
+              <div className="bg-[#FAF6F0] rounded-2xl p-5 border border-[#D5D2C8] mb-6 text-left">
+                <p className="text-[13px] text-[#4a4a4d] m-0 leading-relaxed">
+                  💡 <strong>Não encontrou o e-mail?</strong> Verifique a pasta de spam ou lixo eletrônico.
+                </p>
+              </div>
+            </>
           )}
-          <Link href="/login" style={{ display: 'block', padding: '13px', borderRadius: '12px', background: '#6B0F1A', color: 'white', fontSize: '14px', fontWeight: 700, textDecoration: 'none', textAlign: 'center' }}>
+          <Link href="/login" className="block py-3.5 rounded-xl bg-[#6B0F1A] text-white text-sm font-bold text-center no-underline">
             Ir para o login →
           </Link>
         </div>
@@ -168,148 +152,168 @@ function CadastroConteudo() {
     )
   }
 
+  /* ── Formulário principal ── */
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="min-h-screen flex font-sans">
 
-      {/* Painel esquerdo */}
-      <div style={{ width: '45%', background: '#1A1A1C', padding: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, #6B0F1A 0%, transparent 70%)', opacity: 0.2, filter: 'blur(60px)' }} />
-        <div style={{ position: 'absolute', bottom: '0%', left: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, #C9A65A 0%, transparent 70%)', opacity: 0.08, filter: 'blur(80px)' }} />
+      {/* Painel esquerdo — oculto em mobile */}
+      <div className="hidden lg:flex w-[45%] flex-col justify-between p-12 bg-[#1A1A1C] relative overflow-hidden">
+        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#6B0F1A] opacity-20 blur-[60px]" />
+        <div className="absolute bottom-0 left-[-10%] w-[50%] h-[50%] rounded-full bg-[#C9A65A] opacity-[0.08] blur-[80px]" />
 
-        <div style={{ position: 'relative' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px', border: '1px solid rgba(201,166,90,0.3)' }}>ML</div>
-            <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>Monitor de Licitações</span>
+        {/* Logo */}
+        <div className="relative">
+          <Link href="/" className="flex items-center gap-3 no-underline">
+            <div className="w-[38px] h-[38px] rounded-[10px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-[12px] border border-[rgba(201,166,90,0.3)]">ML</div>
+            <span className="text-white font-semibold text-[15px]">Monitor de Licitações</span>
           </Link>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9A65A', marginBottom: '16px' }}>
+        {/* Headline */}
+        <div className="relative">
+          <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#C9A65A] mb-4">
             {convite ? `Convidado por ${convite.owner}` : 'Sete dias grátis · sem cartão de crédito'}
           </div>
-          <h2 style={{ fontSize: '38px', fontWeight: 400, color: 'white', lineHeight: 1.25, margin: '0 0 8px', fontFamily: 'Georgia, serif' }}>
+          <h2 className="text-[38px] font-normal text-white leading-snug mb-2" style={{ fontFamily: 'Georgia, serif' }}>
             O governo compra o que você vende.
-            <br /><span style={{ color: '#C9A65A', fontStyle: 'italic' }}>Saiba quando, antes de todos.</span>
+            <br /><span className="text-[#C9A65A] italic">Saiba quando, antes de todos.</span>
           </h2>
-          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', margin: '0 0 28px', lineHeight: 1.6 }}>
+          <p className="text-sm text-[rgba(255,255,255,0.4)] mb-7 leading-relaxed">
             {convite
               ? 'Você foi convidado para o Monitor de Licitações. Crie sua senha para entrar.'
               : 'Cadastre-se agora e amanhã já recebe as primeiras oportunidades cruzadas com o perfil da sua empresa.'
             }
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="flex flex-col gap-4">
             {[
               { icon: '🔀', titulo: 'Cruzamento inteligente de dados', desc: 'Cruzamos automaticamente o que o governo publica em todos os portais com o perfil de produtos da sua empresa.' },
-              { icon: '📬', titulo: 'Alertas todos os dias úteis', desc: 'Sua equipe recebe por e-mail e Telegram as oportunidades filtradas — dentro do horário comercial.' },
+              { icon: '📬', titulo: 'Alertas todos os dias úteis', desc: 'Sua equipe recebe por e-mail, Telegram e WhatsApp as oportunidades filtradas — dentro do horário comercial.' },
               { icon: '🏛️', titulo: 'Cobertura nacional completa', desc: 'Prefeituras, estados, governo federal — mais de 5.500 municípios rastreados diariamente.' },
               { icon: '⚡', titulo: 'Pronto em dois minutos', desc: 'Cadastre-se, informe o que sua empresa vende e o monitoramento começa imediatamente.' },
             ].map(b => (
-              <div key={b.titulo} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(201,166,90,0.1)', border: '1px solid rgba(201,166,90,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>{b.icon}</div>
+              <div key={b.titulo} className="flex gap-3.5 items-start">
+                <div className="w-9 h-9 rounded-[10px] bg-[rgba(201,166,90,0.1)] border border-[rgba(201,166,90,0.15)] flex items-center justify-center text-base shrink-0">{b.icon}</div>
                 <div>
-                  <div style={{ color: 'white', fontWeight: 600, fontSize: '14px', marginBottom: '2px' }}>{b.titulo}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', lineHeight: 1.5 }}>{b.desc}</div>
+                  <div className="text-white font-semibold text-sm mb-0.5">{b.titulo}</div>
+                  <div className="text-[rgba(255,255,255,0.4)] text-[13px] leading-relaxed">{b.desc}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ position: 'relative', padding: '20px', background: 'rgba(201,166,90,0.06)', border: '1px solid rgba(201,166,90,0.15)', borderRadius: '14px' }}>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px' }}>
-            "O sistema cruzou nosso catálogo com os editais do estado e encontrou uma licitação de R$85.000 em notebooks que nunca teríamos visto. Fechamos o contrato em oito dias."
+        {/* Depoimento */}
+        <div className="relative p-5 bg-[rgba(201,166,90,0.06)] border border-[rgba(201,166,90,0.15)] rounded-2xl">
+          <p className="text-[rgba(255,255,255,0.6)] text-[13px] italic leading-relaxed mb-2.5">
+            &ldquo;O sistema cruzou nosso catálogo com os editais do estado e encontrou uma licitação de R$85.000 em notebooks que nunca teríamos visto. Fechamos o contrato em oito dias.&rdquo;
           </p>
-          <span style={{ color: '#C9A65A', fontSize: '12px', fontWeight: 600 }}>Distribuidora de TI — Belo Horizonte, MG</span>
+          <span className="text-[#C9A65A] text-xs font-semibold">Distribuidora de TI — Belo Horizonte, MG</span>
         </div>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6B0F1A, #C9A65A, transparent)' }} />
+
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6B0F1A] via-[#C9A65A] to-transparent" />
       </div>
 
-      {/* Painel direito */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 40px', background: '#FAF6F0' }}>
-        <div style={{ width: '100%', maxWidth: '400px' }}>
+      {/* Painel direito — formulário */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-[#FAF6F0]">
+        <div className="w-full max-w-[400px]">
+
+          {/* Logo mobile */}
+          <Link href="/" className="flex items-center gap-2.5 mb-8 lg:hidden no-underline">
+            <div className="w-9 h-9 rounded-[10px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-xs">ML</div>
+            <span className="font-bold text-[15px] text-[#1A1A1C]">Monitor de Licitações</span>
+          </Link>
 
           {convite && (
-            <div style={{ background: 'rgba(107,15,26,0.06)', border: '1px solid rgba(107,15,26,0.15)', borderRadius: '14px', padding: '16px 20px', marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '22px', flexShrink: 0 }}>👋</span>
+            <div className="bg-[rgba(107,15,26,0.06)] border border-[rgba(107,15,26,0.15)] rounded-2xl px-5 py-4 mb-6 flex gap-3 items-start">
+              <span className="text-[22px] shrink-0">👋</span>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#6B0F1A', marginBottom: '2px' }}>Você foi convidado!</div>
-                <div style={{ fontSize: '13px', color: '#4a4a4d', lineHeight: 1.5 }}>
+                <div className="text-[13px] font-bold text-[#6B0F1A] mb-0.5">Você foi convidado!</div>
+                <div className="text-[13px] text-[#4a4a4d] leading-relaxed">
                   <strong>{convite.owner}</strong> te convidou para acessar o Monitor de Licitações. Crie sua senha abaixo.
                 </div>
               </div>
             </div>
           )}
 
-          <div style={{ marginBottom: '28px' }}>
-            <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#1A1A1C', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+          <div className="mb-7">
+            <h1 className="text-[26px] font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">
               {convite ? 'Criar sua senha' : 'Comece a monitorar agora'}
             </h1>
-            <p style={{ fontSize: '14px', color: '#9AA0A6', margin: 0, lineHeight: 1.5 }}>
+            <p className="text-sm text-[#9AA0A6] leading-relaxed">
               {convite ? 'Defina uma senha para acessar sua conta.' : 'Sete dias grátis · sem cartão · cancele quando quiser'}
             </p>
           </div>
 
           {carregandoConvite ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#9AA0A6' }}>Validando convite…</div>
+            <div className="text-center py-10 text-[#9AA0A6]">Validando convite…</div>
           ) : (
-            <form onSubmit={handleCadastro}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>E-mail</label>
-                <input type="email" value={email} onChange={e => !convite && setEmail(e.target.value)}
+            <form onSubmit={handleCadastro} className="flex flex-col gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">E-mail</label>
+                <input
+                  type="email" value={email}
+                  onChange={e => !convite && setEmail(e.target.value)}
                   placeholder="seu@email.com" required readOnly={!!convite}
-                  style={{ ...inputStyle, background: convite ? '#F5F2EE' : 'white', cursor: convite ? 'default' : 'text' }}
-                  onFocus={fieldFocus} onBlur={fieldBlur} />
+                  className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)] ${convite ? 'bg-[#F5F2EE] cursor-default' : 'bg-white'}`}
+                />
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Senha</label>
-                <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-                  placeholder="Mínimo 8 caracteres" required style={inputStyle}
-                  onFocus={fieldFocus} onBlur={fieldBlur} />
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">Senha</label>
+                <input
+                  type="password" value={senha} onChange={e => setSenha(e.target.value)}
+                  placeholder="Mínimo 8 caracteres" required
+                  className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>Confirmar senha</label>
-                <input type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)}
-                  placeholder="Repita a senha" required style={inputStyle}
-                  onFocus={fieldFocus} onBlur={fieldBlur} />
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">Confirmar senha</label>
+                <input
+                  type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)}
+                  placeholder="Repita a senha" required
+                  className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                />
               </div>
 
               {erro && (
-                <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
+                <div className="bg-[rgba(185,28,28,0.06)] border border-[rgba(185,28,28,0.2)] rounded-xl px-4 py-3 text-sm text-[#b91c1c]">
                   ⚠ {erro}
                 </div>
               )}
 
               {!convite && (
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <div className="flex gap-4 flex-wrap">
                   {[['🔒', 'Dados seguros'], ['↩', 'Cancele sempre'], ['⚡', 'Ativação imediata']].map(([icon, text]) => (
-                    <div key={text as string} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#9AA0A6' }}>
+                    <div key={text} className="flex items-center gap-1 text-xs text-[#9AA0A6]">
                       <span>{icon}</span><span>{text}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              <button type="submit" disabled={carregando}
-                style={{ width: '100%', padding: '15px', borderRadius: '12px', background: carregando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '16px', fontWeight: 700, border: 'none', cursor: carregando ? 'not-allowed' : 'pointer' }}>
+              <button
+                type="submit" disabled={carregando}
+                className="w-full py-4 rounded-xl text-white text-base font-bold border-none mt-1"
+                style={{ background: carregando ? '#9AA0A6' : '#6B0F1A', cursor: carregando ? 'not-allowed' : 'pointer' }}
+              >
                 {carregando ? 'Criando conta...' : convite ? 'Criar conta e entrar →' : 'Criar conta gratuita →'}
               </button>
             </form>
           )}
 
-          <p style={{ textAlign: 'center', fontSize: '13px', color: '#9AA0A6', marginTop: '20px' }}>
+          <p className="text-center mt-5 text-[13px] text-[#9AA0A6]">
             Já tem uma conta?{' '}
-            <Link href="/login" style={{ color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Entrar →</Link>
+            <Link href="/login" className="text-[#6B0F1A] font-semibold no-underline">Entrar →</Link>
           </p>
 
           {!convite && (
-            <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(107,15,26,0.04)', borderRadius: '12px', border: '1px solid rgba(107,15,26,0.08)' }}>
-              <p style={{ fontSize: '12px', color: '#9AA0A6', margin: 0, textAlign: 'center', lineHeight: 1.6 }}>
+            <div className="mt-8 p-4 bg-[rgba(107,15,26,0.04)] rounded-xl border border-[rgba(107,15,26,0.08)]">
+              <p className="text-xs text-[#9AA0A6] m-0 text-center leading-relaxed">
                 Ao criar sua conta, você concorda com nossos{' '}
-                <Link href="/termos" style={{ color: '#6B0F1A', fontWeight: 600 }}>Termos de Uso</Link>
+                <Link href="/termos" className="text-[#6B0F1A] font-semibold no-underline">Termos de Uso</Link>
                 {' '}e{' '}
-                <Link href="/privacidade" style={{ color: '#6B0F1A', fontWeight: 600 }}>Política de Privacidade</Link>.
+                <Link href="/privacidade" className="text-[#6B0F1A] font-semibold no-underline">Política de Privacidade</Link>.
                 {' '}Após os sete dias de teste, assine a partir de R$49,90/mês ou cancele sem nenhum custo.
               </p>
             </div>
@@ -322,11 +326,7 @@ function CadastroConteudo() {
 
 export default function CadastroPage() {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight: '100vh', background: '#FAF6F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#9AA0A6', fontSize: '14px' }}>Carregando…</div>
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF6F0]" />}>
       <CadastroConteudo />
     </Suspense>
   )
