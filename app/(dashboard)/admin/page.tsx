@@ -27,7 +27,6 @@ type Alerta  = {
     orgao: string
     valor_estimado?: number
     data_abertura?: string
-    modalidade?: string
   } | null
 }
 type SubUsuario = { id: string; nome: string | null; email: string }
@@ -461,7 +460,6 @@ export default function AdminPage() {
                               </p>
                               <div className="flex gap-3 flex-wrap mt-1">
                                 {lic?.orgao && <span className="text-xs" style={{ color: 'var(--cinza)' }}>🏛 {lic.orgao}</span>}
-                                {lic?.modalidade && <span className="text-xs" style={{ color: 'var(--cinza)' }}>📋 {lic.modalidade}</span>}
                                 {lic?.valor_estimado && <span className="text-xs" style={{ color: 'var(--cinza)' }}>💰 {moeda(lic.valor_estimado)}</span>}
                                 {lic?.data_abertura && <span className="text-xs" style={{ color: 'var(--cinza)' }}>📅 {fmt(lic.data_abertura)}</span>}
                               </div>

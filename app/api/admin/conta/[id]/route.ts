@@ -30,7 +30,7 @@ export async function GET(
   // Alertas recentes do usuário (com dados da licitação)
   const { data: alertas } = await service
     .from('alertas')
-    .select('id, criado_em, canais, licitacoes(objeto, orgao, valor_estimado, data_abertura, modalidade)')
+    .select('id, criado_em, canais, licitacoes(objeto, orgao, valor_estimado, data_abertura)')
     .eq('user_id', id)
     .order('criado_em', { ascending: false })
     .limit(20)

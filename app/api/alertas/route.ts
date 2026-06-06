@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     .from('alertas')
     .select(`
       id, enviado_em, canais,
-      licitacoes(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura, modalidade),
+      licitacoes(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura),
       keywords(termo)
     `, { count: 'exact' })
     .order('enviado_em', { ascending: false })

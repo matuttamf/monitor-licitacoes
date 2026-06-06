@@ -10,7 +10,6 @@ type Licitacao = {
   cidade?: string
   valor_estimado?: number
   data_abertura?: string
-  modalidade?: string
 }
 
 type Alerta = {
@@ -254,9 +253,6 @@ export default function AlertasPage() {
 
                       {/* Metadados */}
                       <div className="flex gap-4 mt-2 flex-wrap">
-                        {lic?.modalidade && (
-                          <span className="text-xs" style={{ color: 'var(--cinza)' }}>📋 {lic.modalidade}</span>
-                        )}
                         {lic?.valor_estimado && (
                           <span className="text-xs font-semibold" style={{ color: 'var(--preto)' }}>
                             💰 {moeda(lic.valor_estimado)}
