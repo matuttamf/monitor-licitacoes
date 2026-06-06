@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy — instanciado dentro da função para não quebrar no build (env vars só existem em runtime)
+function getResend() { return new Resend(process.env.RESEND_API_KEY!) }
 
 export async function enviarEmailConvite({
   emailConvidado,
@@ -62,7 +63,7 @@ export async function enviarEmailConvite({
 </body>
 </html>`
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: remetente,
     to: emailConvidado,
     subject: `${quemConvidou} te convidou para o Monitor de Licitações`,
