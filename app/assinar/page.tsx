@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 const PLANOS = [
@@ -46,10 +47,19 @@ export default function AssinarPage() {
     setLoadingPlano(planoId)
     setErro('')
     try {
+      // Verifica sessão client-side antes de chamar a API
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        window.location.href = `/checkout?plano=${planoId}`
+        return
+      }
+
       const res = await fetch('/api/assinatura/criar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plano: planoId }),
+        method:      'POST',
+        credentials: 'same-origin',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({ plano: planoId }),
       })
       if (!res.ok) {
         const data = await res.json()

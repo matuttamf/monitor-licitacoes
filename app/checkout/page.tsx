@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 const NOMES: Record<string, string> = {
@@ -27,10 +28,20 @@ function CheckoutConteudo() {
 
     async function iniciarCheckout() {
       try {
+        // Verifica sessão no cliente antes de chamar a API
+        const supabase = createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session) {
+          setStatus('nao-autenticado')
+          return
+        }
+
         const res = await fetch('/api/assinatura/criar', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ plano }),
+          method:      'POST',
+          credentials: 'same-origin',
+          headers:     { 'Content-Type': 'application/json' },
+          body:        JSON.stringify({ plano }),
         })
 
         if (res.status === 401) {
