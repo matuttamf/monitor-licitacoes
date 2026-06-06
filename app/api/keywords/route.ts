@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from('keywords')
-    .insert({ termo: termo.trim().toLowerCase(), user_id: user.id, regiao: regiao ?? 'brasil' })
+    .insert({ termo: termo.trim().toLowerCase(), user_id: user.id, regiao: regiao ?? ['brasil'] })
     .select()
     .single()
 

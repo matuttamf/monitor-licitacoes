@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const busca   = sp.get('busca')?.trim() ?? ''
   const kwTermo = sp.get('keyword') ?? ''
   const canal   = sp.get('canal') ?? ''
+  const estado  = sp.get('estado') ?? ''
 
   const from = (pagina - 1) * POR_PAGINA
   const to   = from + POR_PAGINA - 1
@@ -40,8 +41,14 @@ export async function GET(request: NextRequest) {
   const { data, count, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Filtro de busca texto (client-side pós-fetch, campo vem do join)
+  // Filtros client-side (campos vêm do join)
   let resultado = data ?? []
+  if (estado) {
+    resultado = resultado.filter(a => {
+      const lic = a.licitacoes as unknown as { estado?: string } | null
+      return lic?.estado?.toUpperCase() === estado.toUpperCase()
+    })
+  }
   if (busca) {
     const termo = busca.toLowerCase()
     resultado = resultado.filter(a => {

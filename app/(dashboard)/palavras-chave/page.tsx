@@ -1,67 +1,184 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import {
+  ESTADOS_POR_REGIAO,
+  NOME_UF,
+  LABEL_REGIAO,
+  adicionarRegiao,
+  removerRegiao,
+  jaCoberto,
+  labelSelecao,
+} from '@/lib/regioes'
 
 type Keyword = {
   id: string
   termo: string
   ativo: boolean
-  regiao: string
+  regiao: string[]
   criado_em: string
 }
 
-const REGIOES = [
-  { value: 'brasil',       label: '🌎 Brasil (qualquer região)' },
-  { value: 'norte',        label: '🌿 Norte',        estados: 'AC, AM, AP, PA, RO, RR, TO' },
-  { value: 'nordeste',     label: '☀️ Nordeste',     estados: 'AL, BA, CE, MA, PB, PE, PI, RN, SE' },
-  { value: 'sudeste',      label: '🏙️ Sudeste',      estados: 'ES, MG, RJ, SP' },
-  { value: 'sul',          label: '❄️ Sul',           estados: 'PR, RS, SC' },
-  { value: 'centro_oeste', label: '🌾 Centro-Oeste', estados: 'DF, GO, MS, MT' },
-  { value: 'SP', label: 'Estado: São Paulo' },
-  { value: 'RJ', label: 'Estado: Rio de Janeiro' },
-  { value: 'MG', label: 'Estado: Minas Gerais' },
-  { value: 'RS', label: 'Estado: Rio Grande do Sul' },
-  { value: 'PR', label: 'Estado: Paraná' },
-  { value: 'BA', label: 'Estado: Bahia' },
-  { value: 'SC', label: 'Estado: Santa Catarina' },
-  { value: 'GO', label: 'Estado: Goiás' },
-  { value: 'PE', label: 'Estado: Pernambuco' },
-  { value: 'CE', label: 'Estado: Ceará' },
-  { value: 'PA', label: 'Estado: Pará' },
-  { value: 'MT', label: 'Estado: Mato Grosso' },
-  { value: 'MS', label: 'Estado: Mato Grosso do Sul' },
-  { value: 'AM', label: 'Estado: Amazonas' },
-  { value: 'DF', label: 'Estado: Distrito Federal' },
-  { value: 'ES', label: 'Estado: Espírito Santo' },
-  { value: 'MA', label: 'Estado: Maranhão' },
-  { value: 'RN', label: 'Estado: Rio Grande do Norte' },
-  { value: 'PB', label: 'Estado: Paraíba' },
-  { value: 'AL', label: 'Estado: Alagoas' },
-  { value: 'PI', label: 'Estado: Piauí' },
-  { value: 'SE', label: 'Estado: Sergipe' },
-  { value: 'TO', label: 'Estado: Tocantins' },
-  { value: 'RO', label: 'Estado: Rondônia' },
-  { value: 'AC', label: 'Estado: Acre' },
-  { value: 'AP', label: 'Estado: Amapá' },
-  { value: 'RR', label: 'Estado: Roraima' },
+// ─── Seletor de múltiplas regiões ──────────────────────────────────────────
+
+const GRUPOS = [
+  {
+    titulo: 'Brasil',
+    itens: [{ value: 'brasil', label: '🌎 Brasil (qualquer região)' }],
+  },
+  {
+    titulo: 'Regiões',
+    itens: [
+      { value: 'norte',        label: '🌿 Norte' },
+      { value: 'nordeste',     label: '☀️ Nordeste' },
+      { value: 'sudeste',      label: '🏙️ Sudeste' },
+      { value: 'sul',          label: '❄️ Sul' },
+      { value: 'centro_oeste', label: '🌾 Centro-Oeste' },
+    ],
+  },
+  {
+    titulo: 'Estados',
+    itens: Object.keys(NOME_UF)
+      .sort()
+      .map(uf => ({ value: uf, label: `${uf} — ${NOME_UF[uf]}` })),
+  },
 ]
 
-function labelRegiao(value: string): string {
-  return REGIOES.find(r => r.value === value)?.label ?? value
+function RegiaoSelector({
+  value,
+  onChange,
+}: {
+  value: string[]
+  onChange: (novas: string[]) => void
+}) {
+  const [aberto, setAberto] = useState(false)
+  const selecionadas = value.length === 0 ? ['brasil'] : value
+
+  function toggle(item: string) {
+    if (selecionadas.includes(item)) {
+      onChange(removerRegiao(item, selecionadas))
+    } else {
+      onChange(adicionarRegiao(item, selecionadas))
+    }
+  }
+
+  const resumo = selecionadas.includes('brasil')
+    ? '🌎 Brasil (qualquer região)'
+    : selecionadas.map(labelSelecao).join(', ')
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setAberto(v => !v)}
+        className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center justify-between gap-2"
+        style={{
+          border: '1.5px solid var(--cinza-light)',
+          background: 'white',
+          color: 'var(--preto)',
+          cursor: 'pointer',
+        }}
+      >
+        <span className="truncate text-xs" style={{ maxWidth: '280px' }}>{resumo}</span>
+        <span style={{ color: 'var(--cinza)', flexShrink: 0 }}>{aberto ? '▲' : '▼'}</span>
+      </button>
+
+      {aberto && (
+        <div
+          className="absolute z-50 mt-1 w-full rounded-xl overflow-y-auto shadow-lg"
+          style={{
+            background: 'white',
+            border: '1px solid var(--cinza-light)',
+            maxHeight: '260px',
+          }}
+        >
+          {GRUPOS.map(grupo => (
+            <div key={grupo.titulo}>
+              <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider sticky top-0"
+                style={{ background: 'var(--surface-2)', color: 'var(--cinza)', borderBottom: '1px solid var(--cinza-light)' }}>
+                {grupo.titulo}
+              </div>
+              {grupo.itens.map(item => {
+                const coberto = jaCoberto(item.value, selecionadas) && !selecionadas.includes(item.value)
+                const selecionado = selecionadas.includes(item.value)
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    disabled={coberto}
+                    onClick={() => toggle(item.value)}
+                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors"
+                    style={{
+                      color: coberto ? 'var(--cinza)' : 'var(--preto)',
+                      opacity: coberto ? 0.45 : 1,
+                      background: selecionado ? 'rgba(107,15,26,0.06)' : 'transparent',
+                      cursor: coberto ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                    }}
+                  >
+                    <span className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 text-white text-xs"
+                      style={{ background: selecionado ? 'var(--vinho)' : 'var(--cinza-light)' }}>
+                      {selecionado ? '✓' : coberto ? '—' : ''}
+                    </span>
+                    <span className="text-xs">{item.label}</span>
+                    {coberto && <span className="text-xs ml-auto" style={{ color: 'var(--cinza)' }}>já coberto</span>}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
+
+// ─── Chips das regiões selecionadas ─────────────────────────────────────────
+
+function RegiaoChips({ regioes, onRemove }: { regioes: string[]; onRemove: (r: string) => void }) {
+  const lista = regioes.length === 0 ? ['brasil'] : regioes
+  if (lista.includes('brasil')) {
+    return <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>🌎 Brasil</span>
+  }
+  return (
+    <div className="flex flex-wrap gap-1 mt-1.5">
+      {lista.map(r => (
+        <span key={r} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+          style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
+          {labelSelecao(r)}
+          <button type="button" onClick={() => onRemove(r)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--vinho)', lineHeight: 1 }}>
+            ×
+          </button>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ─── Página principal ────────────────────────────────────────────────────────
 
 export default function PalavrasChavePage() {
   const [keywords, setKeywords]     = useState<Keyword[]>([])
   const [novoTermo, setNovoTermo]   = useState('')
-  const [novaRegiao, setNovaRegiao] = useState('brasil')
+  const [novasRegioes, setNovasRegioes] = useState<string[]>(['brasil'])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro]             = useState('')
   const [salvando, setSalvando]     = useState<string | null>(null)
+  const [editandoRegiao, setEditandoRegiao] = useState<string | null>(null)
+  const [regiaoEdit, setRegiaoEdit] = useState<string[]>(['brasil'])
 
   async function carregar() {
     setCarregando(true)
     const res = await fetch('/api/keywords')
-    if (res.ok) setKeywords(await res.json())
+    if (res.ok) {
+      const data = await res.json()
+      // Normaliza regiao: se vier como string (legado), transforma em array
+      setKeywords(data.map((k: Keyword & { regiao: string | string[] }) => ({
+        ...k,
+        regiao: Array.isArray(k.regiao) ? k.regiao : [k.regiao ?? 'brasil'],
+      })))
+    }
     setCarregando(false)
   }
 
@@ -73,7 +190,7 @@ export default function PalavrasChavePage() {
     const res = await fetch('/api/keywords', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termo: novoTermo, regiao: novaRegiao }),
+      body: JSON.stringify({ termo: novoTermo, regiao: novasRegioes }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -81,7 +198,7 @@ export default function PalavrasChavePage() {
       return
     }
     setNovoTermo('')
-    setNovaRegiao('brasil')
+    setNovasRegioes(['brasil'])
     carregar()
   }
 
@@ -94,7 +211,7 @@ export default function PalavrasChavePage() {
     carregar()
   }
 
-  async function salvarRegiao(id: string, regiao: string) {
+  async function salvarRegiao(id: string, regiao: string[]) {
     setSalvando(id)
     await fetch('/api/keywords', {
       method: 'PATCH',
@@ -102,6 +219,7 @@ export default function PalavrasChavePage() {
       body: JSON.stringify({ id, regiao }),
     })
     setSalvando(null)
+    setEditandoRegiao(null)
     carregar()
   }
 
@@ -121,7 +239,7 @@ export default function PalavrasChavePage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>Palavras-chave</h1>
         <p className="text-sm" style={{ color: 'var(--cinza)' }}>
-          Configure os termos que deseja monitorar e a região de interesse de cada um.
+          Configure os termos que deseja monitorar e as regiões de interesse de cada um.
         </p>
       </div>
 
@@ -133,9 +251,9 @@ export default function PalavrasChavePage() {
           Nova palavra-chave
         </h2>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex flex-col gap-3">
           {/* Termo */}
-          <div className="flex-1">
+          <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
               style={{ color: 'var(--cinza)' }}>Termo</label>
             <input
@@ -150,26 +268,18 @@ export default function PalavrasChavePage() {
             />
           </div>
 
-          {/* Região */}
-          <div className="sm:w-60">
+          {/* Regiões */}
+          <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
-              style={{ color: 'var(--cinza)' }}>Região</label>
-            <select
-              value={novaRegiao}
-              onChange={e => setNovaRegiao(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
-            >
-              {REGIOES.map(r => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
+              style={{ color: 'var(--cinza)' }}>Regiões de interesse</label>
+            <RegiaoSelector value={novasRegioes} onChange={setNovasRegioes} />
+            <RegiaoChips regioes={novasRegioes} onRemove={r => setNovasRegioes(removerRegiao(r, novasRegioes))} />
           </div>
 
           {/* Botão */}
           <button
             type="submit"
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold self-start"
             style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}
           >
             + Adicionar
@@ -214,80 +324,69 @@ export default function PalavrasChavePage() {
           </div>
 
           {keywords.map((kw, idx) => (
-            <div
-              key={kw.id}
-              className="px-5 py-4"
+            <div key={kw.id} className="px-5 py-4"
               style={{
                 borderBottom: idx < keywords.length - 1 ? '1px solid var(--cinza-light)' : undefined,
                 opacity: kw.ativo ? 1 : 0.55,
-              }}
-            >
-              <div className="flex items-center gap-3 flex-wrap">
+              }}>
+
+              <div className="flex items-start gap-3 flex-wrap">
                 {/* Termo */}
-                <span className="text-sm font-semibold flex-1 min-w-0"
+                <span className="text-sm font-semibold flex-1 min-w-0 pt-0.5"
                   style={{ color: 'var(--preto)', textDecoration: kw.ativo ? 'none' : 'line-through' }}>
                   {kw.termo}
                 </span>
 
-                {/* Seletor de região inline */}
-                <div className="flex items-center gap-1.5">
-                  <select
-                    value={kw.regiao ?? 'brasil'}
-                    onChange={e => salvarRegiao(kw.id, e.target.value)}
-                    disabled={salvando === kw.id}
-                    className="text-xs px-2 py-1.5 rounded-lg"
-                    style={{
-                      border: '1px solid var(--cinza-light)',
-                      background: 'var(--surface-2)',
-                      color: 'var(--cinza)',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      maxWidth: '190px',
-                    }}
-                  >
-                    {REGIOES.map(r => (
-                      <option key={r.value} value={r.value}>{r.label}</option>
-                    ))}
-                  </select>
-                  {salvando === kw.id && (
-                    <span className="text-xs animate-pulse" style={{ color: 'var(--cinza)' }}>✓</span>
-                  )}
+                {/* Ações direita */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <button onClick={() => toggleAtivo(kw.id, kw.ativo)}
+                    className="text-xs font-medium"
+                    style={{ color: 'var(--vinho)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    {kw.ativo ? 'Desativar' : 'Ativar'}
+                  </button>
+                  <button onClick={() => remover(kw.id)}
+                    className="text-xs font-medium"
+                    style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    Remover
+                  </button>
                 </div>
-
-                {/* Badge status */}
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style={{
-                    background: kw.ativo ? 'rgba(34,197,94,0.1)' : 'var(--surface-2)',
-                    color: kw.ativo ? '#16a34a' : 'var(--cinza)',
-                  }}>
-                  {kw.ativo ? 'ativa' : 'inativa'}
-                </span>
-
-                {/* Ações */}
-                <button onClick={() => toggleAtivo(kw.id, kw.ativo)}
-                  className="text-xs font-medium"
-                  style={{ color: 'var(--vinho)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  {kw.ativo ? 'Desativar' : 'Ativar'}
-                </button>
-                <button onClick={() => remover(kw.id)}
-                  className="text-xs font-medium"
-                  style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  Remover
-                </button>
               </div>
 
-              {/* Detalhe da região (se não for Brasil todo) */}
-              {kw.regiao && kw.regiao !== 'brasil' && (
-                <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--cinza)' }}>
-                  <span>📍</span>
-                  <span>
-                    Filtrando: {labelRegiao(kw.regiao)}
-                    {(() => {
-                      const r = REGIOES.find(r => r.value === kw.regiao)
-                      return r && 'estados' in r ? ` — ${r.estados}` : ''
-                    })()}
-                  </span>
-                </p>
+              {/* Regiões — chips clicáveis para edição inline */}
+              {editandoRegiao === kw.id ? (
+                <div className="mt-2 space-y-2">
+                  <RegiaoSelector
+                    value={regiaoEdit}
+                    onChange={setRegiaoEdit}
+                  />
+                  <RegiaoChips regioes={regiaoEdit} onRemove={r => setRegiaoEdit(removerRegiao(r, regiaoEdit))} />
+                  <div className="flex gap-2 mt-1">
+                    <button type="button"
+                      disabled={salvando === kw.id}
+                      onClick={() => salvarRegiao(kw.id, regiaoEdit)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white"
+                      style={{ background: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
+                      {salvando === kw.id ? 'Salvando…' : 'Salvar'}
+                    </button>
+                    <button type="button"
+                      onClick={() => setEditandoRegiao(null)}
+                      className="text-xs px-3 py-1.5 rounded-lg"
+                      style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className="text-xs" style={{ color: 'var(--cinza)' }}>📍</span>
+                  <RegiaoChips regioes={kw.regiao} onRemove={() => {}} />
+                  <button type="button"
+                    onClick={() => { setEditandoRegiao(kw.id); setRegiaoEdit(kw.regiao) }}
+                    className="text-xs"
+                    style={{ color: 'var(--cinza)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                    editar regiões
+                  </button>
+                </div>
               )}
             </div>
           ))}

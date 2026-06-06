@@ -2,35 +2,9 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { calcularScore, SCORE_MIN_EMAIL } from '@/lib/scoring'
+import { estadoCompativelComRegioes } from '@/lib/regioes'
 
 export const maxDuration = 300
-
-// ─── Filtro de região ─────────────────────────────────────────────────────
-
-const ESTADOS_REGIAO: Record<string, string[]> = {
-  norte:        ['AC', 'AM', 'AP', 'PA', 'RO', 'RR', 'TO'],
-  nordeste:     ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
-  sudeste:      ['ES', 'MG', 'RJ', 'SP'],
-  sul:          ['PR', 'RS', 'SC'],
-  centro_oeste: ['DF', 'GO', 'MS', 'MT'],
-}
-
-function regiaoCompativel(
-  estadoLicitacao: string | null | undefined,
-  regiaoKeyword: string | null | undefined,
-): boolean {
-  if (!regiaoKeyword || regiaoKeyword === 'brasil') return true
-  if (!estadoLicitacao) return true
-
-  const uf    = estadoLicitacao.toUpperCase().trim()
-  const regKw = regiaoKeyword.toLowerCase()
-
-  // UF específica configurada
-  if (!ESTADOS_REGIAO[regKw]) return uf === regKw.toUpperCase()
-
-  // Grande região
-  return ESTADOS_REGIAO[regKw].includes(uf)
-}
 
 // ─── Handler ──────────────────────────────────────────────────────────────
 
@@ -114,7 +88,7 @@ export async function GET(request: Request) {
       if (!kw) continue
 
       // Filtro de região (exclui totalmente se fora)
-      if (!regiaoCompativel(lic.estado, kw.regiao)) continue
+      if (!estadoCompativelComRegioes(lic.estado, kw.regiao)) continue
 
       const minValor = minValorMap[kw.user_id] ?? 0
 

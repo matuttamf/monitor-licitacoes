@@ -16,32 +16,12 @@ export const SCORE_MIN_URGENTE = 80
 /** Máximo de licitações por lote de e-mail */
 export const MAX_POR_EMAIL = 15
 
-// ─── Mapa região → estados ────────────────────────────────────────────────
-
-const ESTADOS_REGIAO: Record<string, string[]> = {
-  norte:        ['AC', 'AM', 'AP', 'PA', 'RO', 'RR', 'TO'],
-  nordeste:     ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
-  sudeste:      ['ES', 'MG', 'RJ', 'SP'],
-  sul:          ['PR', 'RS', 'SC'],
-  centro_oeste: ['DF', 'GO', 'MS', 'MT'],
-}
-
-/** Regiões adjacentes (compartilham fronteira relevante) */
-const ADJACENCIAS: Record<string, string[]> = {
-  norte:        ['nordeste', 'centro_oeste'],
-  nordeste:     ['norte', 'sudeste', 'centro_oeste'],
-  sudeste:      ['nordeste', 'sul', 'centro_oeste'],
-  sul:          ['sudeste', 'centro_oeste'],
-  centro_oeste: ['norte', 'nordeste', 'sudeste', 'sul'],
-}
-
-function regiaoDeUF(uf: string): string | null {
-  const u = uf.toUpperCase()
-  for (const [regiao, estados] of Object.entries(ESTADOS_REGIAO)) {
-    if (estados.includes(u)) return regiao
-  }
-  return null
-}
+import {
+  ESTADOS_POR_REGIAO,
+  ADJACENCIAS,
+  regiaoDeUF,
+  estadoCompativelComRegioes,
+} from '@/lib/regioes'
 
 // ─── Score de KEYWORD (60%) ───────────────────────────────────────────────
 
@@ -70,37 +50,52 @@ export function scoreKeyword(objeto: string, termo: string): number {
 
 // ─── Score de LOCALIZAÇÃO (25%) ──────────────────────────────────────────
 
+/**
+ * Aceita array de regiões/UFs.
+ * Pontua com base na melhor correspondência dentre as regiões selecionadas.
+ */
 export function scoreLocalizacao(
   estadoLicitacao: string | null | undefined,
-  regiaoKeyword: string | null | undefined,
+  regioesKeyword: string[] | string | null | undefined,
 ): number {
-  // Sem filtro de região → neutro positivo (não penaliza)
-  if (!regiaoKeyword || regiaoKeyword === 'brasil') return 80
+  // Normaliza para array
+  const regioes: string[] = !regioesKeyword
+    ? ['brasil']
+    : Array.isArray(regioesKeyword)
+      ? regioesKeyword
+      : [regioesKeyword]
 
-  // Licitação sem estado definido → não penaliza
+  // Sem filtro → neutro positivo
+  if (regioes.length === 0 || regioes.includes('brasil')) return 80
+
+  // Licitação sem estado → não penaliza
   if (!estadoLicitacao) return 70
 
-  const uf     = estadoLicitacao.toUpperCase().trim()
-  const regKw  = regiaoKeyword.toLowerCase()
+  const uf = estadoLicitacao.toUpperCase().trim()
 
-  // Keyword é uma UF específica
-  if (uf.length === 2 && !ESTADOS_REGIAO[regKw]) {
-    return uf === regKw.toUpperCase() ? 100 : 15
+  let melhorScore = 0
+
+  for (const r of regioes) {
+    const estados = ESTADOS_POR_REGIAO[r]
+
+    if (estados) {
+      // É uma grande região
+      if (estados.includes(uf)) { melhorScore = Math.max(melhorScore, 100); break }
+
+      // UF em região adjacente?
+      const regiaoUF = regiaoDeUF(uf)
+      if (regiaoUF && ADJACENCIAS[r]?.includes(regiaoUF)) {
+        melhorScore = Math.max(melhorScore, 50)
+      } else {
+        melhorScore = Math.max(melhorScore, 15)
+      }
+    } else {
+      // É uma UF específica
+      melhorScore = Math.max(melhorScore, uf === r.toUpperCase() ? 100 : 15)
+    }
   }
 
-  // Keyword é uma grande região
-  const estadosDaRegiao = ESTADOS_REGIAO[regKw]
-  if (!estadosDaRegiao) return 70 // valor desconhecido → neutro
-
-  // UF está na região exata
-  if (estadosDaRegiao.includes(uf)) return 100
-
-  // UF está em região adjacente
-  const regiaoUF = regiaoDeUF(uf)
-  if (regiaoUF && ADJACENCIAS[regKw]?.includes(regiaoUF)) return 50
-
-  // Fora da região — não bloqueia, mas pontua baixo
-  return 15
+  return melhorScore || 15
 }
 
 // ─── Score de VALOR (15%) ─────────────────────────────────────────────────
@@ -138,7 +133,7 @@ export function calcularScore(params: {
   objeto:            string
   termo:             string
   estadoLicitacao:   string | null | undefined
-  regiaoKeyword:     string | null | undefined
+  regiaoKeyword:     string[] | string | null | undefined
   valorLicitacao:    number | null | undefined
   minValorInteresse: number
 }): ScoreResult {
