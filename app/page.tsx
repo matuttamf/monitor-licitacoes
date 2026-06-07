@@ -288,7 +288,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
             {PLANOS.map(p => (
-              <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col ${p.destaque ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_16px_48px_rgba(107,15,26,0.25)]' : p.id === 'trial' ? 'bg-[#FAF6F0] border-2 border-[#C9A65A]' : 'bg-[#FAF6F0] border border-[#D5D2C8]'}`}>
+              <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col text-center sm:text-left items-center sm:items-start ${p.destaque ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_16px_48px_rgba(107,15,26,0.25)]' : p.id === 'trial' ? 'bg-[#FAF6F0] border-2 border-[#C9A65A]' : 'bg-[#FAF6F0] border border-[#D5D2C8]'}`}>
                 {p.tag && (
                   <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#C9A65A] text-[#1A1A1C]'}`}>{p.tag}</div>
                 )}
@@ -297,7 +297,7 @@ export default function LandingPage() {
                 <div className={`text-xs mb-4 leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
 
                 {p.preco ? (
-                  <div className="flex items-end gap-1 mb-1">
+                  <div className="flex items-end gap-1 mb-1 justify-center sm:justify-start">
                     <span className={`text-xs font-medium mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
                     <span className={`text-[32px] font-black tracking-tight leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
                       {p.preco.split(',')[0]}
@@ -306,7 +306,7 @@ export default function LandingPage() {
                     <span className={`text-[11px] mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
                   </div>
                 ) : (
-                  <div className="flex items-end gap-1 mb-1">
+                  <div className="flex items-end gap-1 mb-1 justify-center sm:justify-start">
                     <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
                   </div>
                 )}
@@ -317,7 +317,7 @@ export default function LandingPage() {
 
                 <div className="flex-1 mb-5">
                   {[p.keywords, p.usuarios, p.whatsapp ? 'E-mail, Telegram e WhatsApp' : 'Alertas por e-mail', 'Busca manual no painel'].map(item => (
-                    <div key={item} className="flex items-start gap-2 mb-2">
+                    <div key={item} className="flex items-start gap-2 mb-2 justify-center sm:justify-start">
                       <span className={`font-bold text-sm shrink-0 mt-0.5 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
                       <span className={`text-xs leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.8)]' : 'text-[#4a4a4d]'}`}>{item}</span>
                     </div>
@@ -389,7 +389,7 @@ export default function LandingPage() {
       <footer className="bg-[#111113] px-10 py-7 text-center">
         <div className="flex items-center justify-center gap-2.5 mb-4">
           <div className="w-7 h-7 rounded-[7px] bg-[#6B0F1A] flex items-center justify-center text-[10px] font-black text-[#C9A65A]">ML</div>
-          <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2026 Monitor de Licitações · Matutta Soluções Digitais</span>
+          <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2021 Monitor de Licitações · Matutta Soluções Digitais</span>
         </div>
         <div className="flex gap-7 justify-center flex-wrap">
           {[['Início', '/'], ['Planos', '/assinar'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (
