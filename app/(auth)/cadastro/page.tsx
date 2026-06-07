@@ -55,7 +55,7 @@ function CadastroConteudo() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { emailRedirectTo: `${window.location.origin}/completar-cadastro` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/completar-cadastro` },
     })
 
     if (error) {
