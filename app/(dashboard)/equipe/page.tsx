@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-type Membro = { id: string; email: string; nome: string; empresa: string; criado_em: string }
+type Membro = { id: string; email: string; nome: string; empresa: string; criado_em: string; ativo: boolean }
 type Convite = { id: string; email: string; criado_em: string; expira_em: string }
 
 type Equipe = {
@@ -59,8 +59,36 @@ export default function EquipePage() {
   async function removerMembro(id: string, email: string) {
     if (!confirm(`Remover ${email} da equipe? O acesso será revogado imediatamente.`)) return
     const res = await fetch(`/api/equipe/${id}`, { method: 'DELETE' })
-    if (res.ok) carregar()
+    if (res.ok) { setMsg({ tipo: 'ok', texto: `${email} removido da equipe.` }); carregar() }
     else setMsg({ tipo: 'erro', texto: 'Erro ao remover membro.' })
+  }
+
+  async function toggleMembro(id: string, email: string, ativarAgora: boolean) {
+    const res = await fetch(`/api/equipe/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ativo: ativarAgora }),
+    })
+    if (res.ok) {
+      setMsg({ tipo: 'ok', texto: `${email} ${ativarAgora ? 'ativado' : 'desativado'}.` })
+      carregar()
+    } else {
+      setMsg({ tipo: 'erro', texto: 'Erro ao alterar status do membro.' })
+    }
+  }
+
+  async function cancelarConvite(id: string, email: string) {
+    if (!confirm(`Cancelar convite para ${email}?`)) return
+    const res = await fetch(`/api/equipe/convite/${id}`, { method: 'DELETE' })
+    if (res.ok) { setMsg({ tipo: 'ok', texto: 'Convite cancelado.' }); carregar() }
+    else setMsg({ tipo: 'erro', texto: 'Erro ao cancelar convite.' })
+  }
+
+  async function reenviarConvite(id: string, email: string) {
+    setMsg(null)
+    const res = await fetch(`/api/equipe/convite/${id}`, { method: 'POST' })
+    if (res.ok) { setMsg({ tipo: 'ok', texto: `Convite reenviado para ${email}.` }); carregar() }
+    else setMsg({ tipo: 'erro', texto: 'Erro ao reenviar convite.' })
   }
 
   const vagasRestantes = equipe ? equipe.maxUsers - equipe.totalAtual : 0
@@ -173,26 +201,53 @@ export default function EquipePage() {
         ) : (
           <div>
             {equipe.membros.map((m, i) => (
-              <div key={m.id} className="px-6 py-4 flex items-center justify-between" style={{
+              <div key={m.id} className="px-6 py-4" style={{
                 borderBottom: i < equipe.membros.length - 1 ? '1px solid var(--cinza-light)' : 'none',
+                opacity: m.ativo ? 1 : 0.6,
               }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                    style={{ background: 'var(--vinho)' }}>
-                    {(m.nome || m.email).charAt(0).toUpperCase()}
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                      style={{ background: m.ativo ? 'var(--vinho)' : '#9AA0A6' }}>
+                      {(m.nome || m.email).charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium" style={{ color: 'var(--preto)' }}>
+                          {m.nome || m.email}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
+                          background: m.ativo ? 'rgba(16,185,129,0.1)' : 'rgba(156,163,175,0.15)',
+                          color: m.ativo ? '#10b981' : '#6b7280',
+                        }}>
+                          {m.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--cinza)' }}>{m.email}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm font-medium" style={{ color: 'var(--preto)' }}>{m.nome || m.email}</div>
-                    <div className="text-xs" style={{ color: 'var(--cinza)' }}>{m.email}</div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => toggleMembro(m.id, m.email, !m.ativo)}
+                      className="text-xs px-3 py-1.5 rounded-lg"
+                      style={{
+                        background: m.ativo ? 'rgba(107,15,26,0.06)' : 'rgba(16,185,129,0.08)',
+                        color: m.ativo ? 'var(--vinho)' : '#10b981',
+                        border: `1px solid ${m.ativo ? 'rgba(107,15,26,0.15)' : 'rgba(16,185,129,0.2)'}`,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {m.ativo ? '⏸ Desativar' : '▶ Ativar'}
+                    </button>
+                    <button
+                      onClick={() => removerMembro(m.id, m.email)}
+                      className="text-xs px-3 py-1.5 rounded-lg"
+                      style={{ color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', cursor: 'pointer' }}
+                    >
+                      ✕ Remover
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={() => removerMembro(m.id, m.email)}
-                  className="text-xs px-3 py-1.5 rounded-lg transition-colors"
-                  style={{ color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', cursor: 'pointer' }}
-                >
-                  Remover
-                </button>
               </div>
             ))}
           </div>
@@ -206,22 +261,37 @@ export default function EquipePage() {
             <h2 className="text-sm font-semibold" style={{ color: 'var(--preto)' }}>Convites pendentes ({equipe.convitesPendentes.length})</h2>
           </div>
           {equipe.convitesPendentes.map((c, i) => (
-            <div key={c.id} className="px-6 py-4 flex items-center justify-between" style={{
+            <div key={c.id} className="px-6 py-4" style={{
               borderBottom: i < equipe.convitesPendentes.length - 1 ? '1px solid var(--cinza-light)' : 'none',
             }}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0"
-                  style={{ background: 'rgba(201,166,90,0.1)', color: '#92610a' }}>✉</div>
-                <div>
-                  <div className="text-sm font-medium" style={{ color: 'var(--preto)' }}>{c.email}</div>
-                  <div className="text-xs" style={{ color: 'var(--cinza)' }}>
-                    Expira em {new Date(c.expira_em).toLocaleDateString('pt-BR')}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+                    style={{ background: 'rgba(201,166,90,0.1)', color: '#92610a' }}>✉</div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate" style={{ color: 'var(--preto)' }}>{c.email}</div>
+                    <div className="text-xs" style={{ color: 'var(--cinza)' }}>
+                      Expira em {new Date(c.expira_em).toLocaleDateString('pt-BR')}
+                    </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => reenviarConvite(c.id, c.email)}
+                    className="text-xs px-3 py-1.5 rounded-lg"
+                    style={{ background: 'rgba(201,166,90,0.1)', color: '#92610a', border: '1px solid rgba(201,166,90,0.25)', cursor: 'pointer' }}
+                  >
+                    ↩ Reenviar
+                  </button>
+                  <button
+                    onClick={() => cancelarConvite(c.id, c.email)}
+                    className="text-xs px-3 py-1.5 rounded-lg"
+                    style={{ background: 'rgba(239,68,68,0.06)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)', cursor: 'pointer' }}
+                  >
+                    ✕ Cancelar
+                  </button>
+                </div>
               </div>
-              <span className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(201,166,90,0.1)', color: '#92610a' }}>
-                Aguardando
-              </span>
             </div>
           ))}
         </div>

@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plano, owner_id, status, trial_fim, nome, empresa')
+    .select('plano, owner_id, status, trial_fim, nome, empresa, membro_ativo')
     .eq('id', user.id)
     .single()
 
@@ -36,6 +36,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Bloquear acesso ao painel se trial expirado (exceto admin)
   const isAdmin = user.email === ADMIN_EMAIL
   if (!isAdmin && profile) {
+    // Sub-usuário desativado pelo owner
+    if (profile.owner_id && profile.membro_ativo === false) redirect('/expirado')
+
     const expirado =
       profile.status === 'expired' ||
       (profile.status === 'trial' && profile.trial_fim && new Date(profile.trial_fim) < new Date())
