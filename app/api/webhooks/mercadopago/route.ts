@@ -1,6 +1,16 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
+import { getLimites } from '@/lib/planos'
+import { Resend } from 'resend'
+import { emailConfirmacaoAssinatura } from '@/lib/emails/confirmacao-assinatura'
+
+const PRECOS_PLANO: Record<string, number> = {
+  basic:        97,
+  profissional: 197,
+  pro:          297,
+  empresarial:  497,
+}
 
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
@@ -84,25 +94,52 @@ export async function POST(request: Request) {
     const supabase = await createServiceClient()
 
     if (subscription.status === 'authorized') {
-      const maxKeywords = planoId === 'basic' ? 10 : 999999
-      const maxUsuarios = planoId === 'pro' ? 5 : planoId === 'empresarial' ? 999999 : 1
+      const limites = getLimites(planoId)
 
       await supabase.from('profiles').update({
-        status:            'active',
-        plano:             planoId,
+        status:             'active',
+        plano:              planoId,
         mp_subscription_id: subscriptionId,
-        max_keywords:      maxKeywords,
-        max_usuarios:      maxUsuarios,
+        max_keywords:       limites.maxKeywords,
+        max_usuarios:       limites.maxUsers,
       }).eq('id', userId)
 
-      console.log(`[webhook/mp] Assinatura ativada: user=${userId} plano=${planoId}`)
+      console.log(`[webhook/mp] Assinatura ativada: user=${userId} plano=${planoId} keywords=${limites.maxKeywords}`)
+
+      // Enviar e-mail de confirmação (não bloqueante)
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, nome')
+          .eq('id', userId)
+          .maybeSingle()
+
+        if (profile?.email) {
+          const resend = new Resend(process.env.RESEND_API_KEY)
+          const { subject, html, text } = emailConfirmacaoAssinatura({
+            nome:  profile.nome ?? undefined,
+            email: profile.email,
+            plano: planoId,
+            valor: PRECOS_PLANO[planoId] ?? 97,
+          })
+          await resend.emails.send({
+            from: 'Monitor de Licitações <contato@monitordelicitacoes.com.br>',
+            to:   profile.email,
+            subject, html, text,
+          })
+          console.log(`[webhook/mp] E-mail confirmação enviado para ${profile.email}`)
+        }
+      } catch (e) {
+        console.error('[webhook/mp] Erro ao enviar e-mail confirmação:', e)
+      }
 
     } else if (['cancelled', 'paused'].includes(subscription.status)) {
       await supabase.from('profiles').update({
-        status: 'expired',
+        status:            'expired',
+        mp_subscription_id: null,
       }).eq('id', userId)
 
-      console.log(`[webhook/mp] Assinatura expirada: user=${userId} status=${subscription.status}`)
+      console.log(`[webhook/mp] Assinatura cancelada/pausada: user=${userId} status=${subscription.status}`)
     }
   }
 

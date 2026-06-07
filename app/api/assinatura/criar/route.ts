@@ -13,6 +13,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
   }
 
+  // Verificar se o usuário tem dados fiscais completos (CPF ou CNPJ)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('cnpj, cpf')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.cnpj && !profile?.cpf) {
+    return NextResponse.json({ cadastroIncompleto: true }, { status: 200 })
+  }
+
   const checkoutUrl = await criarCheckoutAssinatura(plano, user.id, user.email!)
 
   return NextResponse.json({ url: checkoutUrl })

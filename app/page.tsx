@@ -389,7 +389,7 @@ export default function LandingPage() {
       <footer className="bg-[#111113] px-10 py-7 text-center">
         <div className="flex items-center justify-center gap-2.5 mb-4">
           <div className="w-7 h-7 rounded-[7px] bg-[#6B0F1A] flex items-center justify-center text-[10px] font-black text-[#C9A65A]">ML</div>
-          <span className="text-sm text-[rgba(255,255,255,0.25)]">© {new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
+          <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2021 Monitor de Licitações · Matutta Soluções Digitais</span>
         </div>
         <div className="flex gap-7 justify-center flex-wrap">
           {[['Início', '/'], ['Planos', '/assinar'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (

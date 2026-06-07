@@ -50,11 +50,14 @@ export async function POST(request: Request) {
   }
 
   const rotas: Record<string, string> = {
-    coletar:          `${baseUrl}/api/cron/coletar`,
-    matching:         `${baseUrl}/api/cron/matching`,
-    alertar:          `${baseUrl}/api/cron/alertar`,
-    emails:           `${baseUrl}/api/cron/emails-trial`,
-    'expirar-trials': `${baseUrl}/api/cron/expirar-trials`,
+    coletar:           `${baseUrl}/api/cron/coletar`,
+    matching:          `${baseUrl}/api/cron/matching`,
+    alertar:           `${baseUrl}/api/cron/alertar`,
+    emails:            `${baseUrl}/api/cron/emails-trial`,
+    'expirar-trials':  `${baseUrl}/api/cron/expirar-trials`,
+    'coletar-leads':      `${baseUrl}/api/cron/coletar-leads`,
+    'disparar-leads':     `${baseUrl}/api/cron/disparar-leads`,
+    'reconverter-trials': `${baseUrl}/api/cron/reconverter-trials`,
   }
 
   const url = rotas[acao]

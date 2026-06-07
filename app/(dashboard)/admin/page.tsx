@@ -35,6 +35,7 @@ type Stats = {
   totalUsuarios: number; totalAtivos: number; totalTrial: number; totalExpired: number
   totalKeywords: number; totalAlertas: number; totalLicitacoes: number
   alertasHoje: number; alertas7d: number
+  leadsPendentes: number; leadsEnviados: number; leadsTotal: number
 }
 
 type CronLog = { id: string; job: string; status: string; mensagem: string; detalhes: unknown; criado_em: string }
@@ -196,15 +197,55 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ── KPIs de Leads ── */}
+      {stats && stats.leadsTotal > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { label: 'Leads coletados', value: stats.leadsTotal,      sub: 'total na base',         cor: '#6B0F1A' },
+            { label: 'Aguardando envio', value: stats.leadsPendentes, sub: 'e-mails pendentes',      cor: '#C9A65A' },
+            { label: 'E-mails enviados', value: stats.leadsEnviados,  sub: 'captação disparada',     cor: '#10b981' },
+          ].map(({ label, value, sub, cor }) => (
+            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
+                {value.toLocaleString('pt-BR')}
+              </div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px' }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Sistema de Captação ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #6B0F1A 0%, #3d0a10 100%)', border: '1px solid rgba(201,166,90,0.3)' }}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-white mb-1">🎯 Sistema de Captação</h2>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              Coleta automática de leads via PNCP · Disparo de e-mails · Reconversão de trials expirados · Controle liga/desliga
+            </p>
+          </div>
+          <a
+            href="/admin/captacao"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
+            style={{ background: '#C9A65A', color: '#1A1A1C' }}
+          >
+            Gerenciar captação →
+          </a>
+        </div>
+      </div>
+
       {/* ── Trigger manual ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         <div className="flex gap-2 flex-wrap">
           {[
-            { acao: 'coletar',  label: '🔍 Coletar',   desc: 'Busca novos editais' },
-            { acao: 'matching', label: '🤖 Matching',   desc: 'Gera candidatos' },
-            { acao: 'alertar',  label: '📧 Alertar',    desc: 'Envia alertas' },
-            { acao: 'emails',   label: '📩 E-mails trial', desc: 'Sequência trial' },
+            { acao: 'coletar',        label: '🔍 Coletar',       desc: 'Busca novos editais' },
+            { acao: 'matching',       label: '🤖 Matching',       desc: 'Gera candidatos' },
+            { acao: 'alertar',        label: '📧 Alertar',        desc: 'Envia alertas' },
+            { acao: 'emails',         label: '📩 E-mails trial',  desc: 'Sequência trial' },
+            { acao: 'coletar-leads',  label: '🎯 Coletar leads',  desc: 'Busca CNPJs/PNCP' },
+            { acao: 'disparar-leads', label: '✉️ Disparar leads', desc: 'Envia e-mails captação' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
               style={{

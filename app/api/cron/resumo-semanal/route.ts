@@ -18,7 +18,7 @@ import { temWhatsApp } from '@/lib/planos'
 
 export const maxDuration = 300
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() { return new Resend(process.env.RESEND_API_KEY!) }
 const FROM_EMAIL = process.env.RESEND_FROM ?? 'Monitor de Licitações <alertas@monitordelicitacoes.com.br>'
 
 function inicioSemana(): string {
@@ -237,7 +237,7 @@ export async function GET(request: Request) {
 
     // E-mail — todos os planos
     try {
-      await resend.emails.send({
+      await getResend().emails.send({
         from:    FROM_EMAIL,
         to:      email,
         subject: `📊 Seu resumo semanal — ${dados.totalAlertas} licitaç${dados.totalAlertas !== 1 ? 'ões' : 'ão'} encontrada${dados.totalAlertas !== 1 ? 's' : ''}`,

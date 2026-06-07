@@ -44,6 +44,11 @@ function CheckoutConteudo() {
 
         if (!res.ok) throw new Error(data.error || 'Erro ao iniciar checkout')
 
+        if (data.cadastroIncompleto) {
+          router.replace(`/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${plano}`)}`)
+          return
+        }
+
         // Redireciona direto para o MercadoPago
         window.location.href = data.url
       } catch (e: unknown) {

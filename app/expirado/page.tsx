@@ -51,12 +51,13 @@ export default function ExpiradoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plano: planoId }),
       })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Erro ao criar assinatura')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao criar assinatura')
+      if (data.cadastroIncompleto) {
+        window.location.href = `/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${planoId}`)}`
+        return
       }
-      const { url } = await res.json()
-      window.location.href = url
+      window.location.href = data.url
     } catch (e: unknown) {
       setErro(e instanceof Error ? e.message : 'Erro ao processar. Tente novamente.')
     } finally {

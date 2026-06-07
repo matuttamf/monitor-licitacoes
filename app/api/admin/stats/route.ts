@@ -25,6 +25,15 @@ export async function GET() {
     { count: totalLicitacoes },
     { count: alertasHoje },
     { count: alertas7d },
+    { count: leadsPendentes },
+    { count: leadsEnviados },
+    { count: leadsTotal },
+    { count: leadsErro },
+    { count: leadsInvalido },
+    { count: leadsDescadastrado },
+    { count: reconversaoEnviado },
+    { count: leadsAbriram },
+    { count: leadsClicaram },
   ] = await Promise.all([
     service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId),
     service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId),
@@ -36,6 +45,18 @@ export async function GET() {
       .gte('criado_em', new Date(Date.now() - 86400000).toISOString()),
     service.from('alertas').select('*', { count: 'exact', head: true })
       .gte('criado_em', new Date(Date.now() - 7 * 86400000).toISOString()),
+    // Leads — ignorar erro se tabela ainda não existir
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true })).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'invalido')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'descadastrado')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    // Reconversão — profiles com email de reconversão já enviado
+    Promise.resolve(service.from('profiles').select('*', { count: 'exact', head: true }).not('reconversao_email_em', 'is', null)).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    // Rastreamento — abriram e clicaram
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).not('abriu_em', 'is', null)).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).not('clicou_em', 'is', null)).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
   ])
 
   return NextResponse.json({
@@ -48,5 +69,14 @@ export async function GET() {
     totalLicitacoes: totalLicitacoes ?? 0,
     alertasHoje:     alertasHoje    ?? 0,
     alertas7d:       alertas7d      ?? 0,
+    leadsPendentes:      leadsPendentes   ?? 0,
+    leadsEnviados:       leadsEnviados    ?? 0,
+    leadsTotal:          leadsTotal       ?? 0,
+    leadsErro:           leadsErro        ?? 0,
+    leadsInvalido:       leadsInvalido    ?? 0,
+    leadsDescadastrado:  leadsDescadastrado ?? 0,
+    reconversaoEnviado:  reconversaoEnviado ?? 0,
+    leadsAbriram:        leadsAbriram       ?? 0,
+    leadsClicaram:       leadsClicaram      ?? 0,
   })
 }

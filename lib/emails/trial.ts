@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://monitor-licitacoes-two.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://monitordelicitacoes.com.br'
 const FROM = process.env.EMAIL_REMETENTE || 'onboarding@resend.dev'
 
 function getResend() {

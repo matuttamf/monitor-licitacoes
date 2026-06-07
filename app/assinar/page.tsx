@@ -61,8 +61,12 @@ export default function AssinarPage() {
         }
         throw new Error(data.error || 'Erro ao criar assinatura')
       }
-      const { url } = await res.json()
-      window.location.href = url
+      const data = await res.json()
+      if (data.cadastroIncompleto) {
+        window.location.href = `/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${planoId}`)}`
+        return
+      }
+      window.location.href = data.url
     } catch (e: unknown) {
       setErro(e instanceof Error ? e.message : 'Erro ao processar. Tente novamente.')
     } finally {
@@ -231,7 +235,7 @@ export default function AssinarPage() {
 
       {/* Footer */}
       <footer className="bg-[#1A1A1C] px-6 md:px-10 py-6 flex flex-col sm:flex-row justify-between items-center gap-3 flex-wrap">
-        <span className="text-sm text-[rgba(255,255,255,0.3)]">© {new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
+        <span className="text-sm text-[rgba(255,255,255,0.3)]">© 2021 Monitor de Licitações · Matutta Soluções Digitais</span>
         <div className="flex gap-6">
           <Link href="/" className="text-sm text-[rgba(255,255,255,0.4)] no-underline">Início</Link>
           <Link href="/login" className="text-sm text-[rgba(255,255,255,0.4)] no-underline">Entrar</Link>

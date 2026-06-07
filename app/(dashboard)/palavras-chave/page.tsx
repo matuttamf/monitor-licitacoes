@@ -27,10 +27,16 @@ export default function PalavrasChavePage() {
     const res = await fetch('/api/keywords')
     if (res.ok) {
       const data = await res.json()
-      setKeywords(data.map((k: Keyword & { regiao: string | string[] }) => ({
-        ...k,
-        regiao: Array.isArray(k.regiao) ? k.regiao : [k.regiao ?? 'brasil'],
-      })))
+      setKeywords(data.map((k: Keyword & { regiao: string | string[] | null }) => {
+        let regioes: string[]
+        if (Array.isArray(k.regiao)) {
+          regioes = (k.regiao as (string | null)[]).filter((r): r is string => typeof r === 'string' && r.length > 0)
+        } else {
+          regioes = [typeof k.regiao === 'string' ? k.regiao : 'brasil']
+        }
+        if (regioes.length === 0) regioes = ['brasil']
+        return { ...k, regiao: regioes }
+      }))
     }
     setCarregando(false)
   }

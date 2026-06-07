@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { enviarEmailBoasVindas } from '@/lib/emails/trial'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -27,10 +28,20 @@ export async function GET(request: NextRequest) {
 
   // Fluxo token_hash (links de e-mail: recovery, signup, etc.)
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type })
+    const { data: otpData, error } = await supabase.auth.verifyOtp({ token_hash, type })
     if (!error) {
       if (type === 'recovery') {
         return NextResponse.redirect(new URL('/auth/update-password', request.url))
+      }
+      // Enviar e-mail de boas-vindas ao confirmar cadastro (não bloqueia o redirect)
+      if (type === 'signup' || type === 'email') {
+        const userEmail = otpData?.user?.email
+        const userName  = otpData?.user?.user_metadata?.nome ?? ''
+        if (userEmail) {
+          enviarEmailBoasVindas(userEmail, userName).catch(err =>
+            console.error('[callback] Erro ao enviar e-mail boas-vindas:', err)
+          )
+        }
       }
       // Após confirmação de e-mail → onboarding direto
       return NextResponse.redirect(new URL('/onboarding', request.url))

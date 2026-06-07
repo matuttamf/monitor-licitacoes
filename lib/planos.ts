@@ -13,9 +13,9 @@ export const LIMITES_PLANO: Record<string, LimitesPlano> = {
   empresarial:  { maxKeywords: 99999, maxUsers: 15, nome: 'Empresarial',  maxEmailsPorDia: 10, maxItensPorEmail: 30 },
 }
 
-/** trial = mesmo que basic */
+/** trial = acesso limitado para testar (3 keywords) */
 export function getLimites(plano: string): LimitesPlano {
-  if (plano === 'trial') return LIMITES_PLANO.basic
+  if (plano === 'trial') return { ...LIMITES_PLANO.basic, maxKeywords: 3 }
   return LIMITES_PLANO[plano] ?? LIMITES_PLANO.basic
 }
 

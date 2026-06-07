@@ -2,11 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
+import { MobileNavItem } from './components/MobileNavItem'
 import { temMultiUsuario } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_EMAIL = 'matuttamaquinaseferramentas@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
 const navItems = [
   { href: '/dashboard',      label: 'Dashboard',         icon: '◈' },
@@ -40,11 +41,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Equipe visível apenas para owners de planos Pro/Empresarial
   const exibirEquipe = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
 
+  const allNavItems = [
+    ...navItems,
+    ...(exibirEquipe ? [{ href: '/equipe', label: 'Minha Equipe', icon: '◫' }] : []),
+    ...(user.email === ADMIN_EMAIL ? [{ href: '/admin', label: 'Admin', icon: '⚙' }] : []),
+  ]
+
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--surface-2)' }}>
-      {/* Sidebar */}
+      {/* Sidebar — desktop only */}
       <aside
-        className="w-60 flex-shrink-0 flex flex-col"
+        className="hidden md:flex w-60 flex-shrink-0 flex-col"
         style={{
           background: 'var(--preto)',
           borderRight: '1px solid var(--sidebar-border)',
@@ -53,7 +60,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           height: '100vh',
         }}
       >
-        {/* Logo Matutta */}
+        {/* Logo */}
         <div
           className="px-6 py-5 flex items-center gap-3"
           style={{ borderBottom: '1px solid rgba(201,166,90,0.15)' }}
@@ -82,15 +89,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-0.5">
-          {navItems.map(item => (
+          {allNavItems.map(item => (
             <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))}
-          {exibirEquipe && (
-            <NavItem href="/equipe" label="Minha Equipe" icon="◫" />
-          )}
-          {user.email === ADMIN_EMAIL && (
-            <NavItem href="/admin" label="Admin" icon="⚙" />
-          )}
         </nav>
 
         {/* Usuário */}
@@ -117,9 +118,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
 
       {/* Conteúdo */}
-      <main className="flex-1 min-w-0 p-8 overflow-auto">
+      <main className="flex-1 min-w-0 p-4 md:p-8 overflow-auto pb-20 md:pb-8">
         {children}
       </main>
+
+      {/* Bottom nav — mobile only */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2"
+        style={{
+          background: 'var(--preto)',
+          borderTop: '1px solid rgba(201,166,90,0.15)',
+        }}
+      >
+        {allNavItems.slice(0, 5).map(item => (
+          <MobileNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
+        ))}
+      </nav>
 
       {/* Botão flutuante WhatsApp */}
       <a
@@ -128,11 +142,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         rel="noopener noreferrer"
         style={{
           position: 'fixed',
-          bottom: '24px',
-          right: '24px',
+          bottom: '80px',
+          right: '16px',
           zIndex: 50,
-          width: '52px',
-          height: '52px',
+          width: '48px',
+          height: '48px',
           borderRadius: '50%',
           background: '#25D366',
           display: 'flex',
@@ -141,9 +155,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           boxShadow: '0 4px 20px rgba(37,211,102,0.4)',
           textDecoration: 'none',
         }}
+        className="md:bottom-6 md:right-6 md:w-[52px] md:h-[52px]"
         aria-label="Falar no WhatsApp"
       >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
           <path d="M12 0C5.373 0 0 5.373 0 12c0 2.132.558 4.13 1.532 5.862L.057 23.5a.5.5 0 0 0 .623.603l5.772-1.515A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.9 9.9 0 0 1-5.035-1.368l-.36-.214-3.438.902.917-3.35-.234-.374A9.86 9.86 0 0 1 2.1 12C2.1 6.526 6.526 2.1 12 2.1S21.9 6.526 21.9 12 17.474 21.9 12 21.9z" />
         </svg>
@@ -151,4 +166,3 @@ export default async function DashboardLayout({ children }: { children: React.Re
     </div>
   )
 }
-

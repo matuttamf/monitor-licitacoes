@@ -27,6 +27,13 @@
     { "path": "/api/cron/alertar", "schedule": "0 15 * * 6" },
     { "path": "/api/cron/alertar", "schedule": "0 16 * * 6" },
 
-    { "path": "/api/cron/resumo-semanal",  "schedule": "0 13 * * 5"   }
+    { "path": "/api/cron/resumo-semanal",  "schedule": "0 13 * * 5"   },
+
+    { "path": "/api/cron/coletar-leads",   "schedule": "0 9 * * 1-6"  },
+
+    { "path": "/api/cron/disparar-leads",    "schedule": "0 12 * * 2,3,4" },
+    { "path": "/api/cron/disparar-leads",    "schedule": "0 17 * * 2,3,4" },
+
+    { "path": "/api/cron/reconverter-trials", "schedule": "0 13 * * 2,3,4" }
   ]
 }

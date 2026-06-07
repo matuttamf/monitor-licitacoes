@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 // ─── Máscaras ────────────────────────────────────────────────────────────────
@@ -58,8 +58,11 @@ const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','P
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export default function CompletarCadastroPage() {
+function CompletarCadastroConteudo() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('next') ?? '/onboarding'
+  const fluxoAssinatura = nextUrl.startsWith('/checkout') || nextUrl.startsWith('/assinar')
 
   const [tipoPessoa, setTipoPessoa]       = useState<'PJ' | 'PF'>('PJ')
 
@@ -172,7 +175,7 @@ export default function CompletarCadastroPage() {
       })
       const data = await res.json()
       if (!res.ok) { setErro(data.error ?? 'Erro ao salvar. Tente novamente.'); return }
-      router.push('/onboarding')
+      router.push(nextUrl)
     } catch {
       setErro('Erro de conexão. Tente novamente.')
     } finally {
@@ -195,25 +198,47 @@ export default function CompletarCadastroPage() {
           </div>
 
           {/* Steps */}
-          <div className="flex items-center justify-center gap-2 mb-5">
-            {[
-              { label: 'Conta criada', done: true },
-              { label: 'E-mail confirmado', done: true },
-              { label: 'Dados para NF', done: false, active: true },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                {i > 0 && <div className="w-8 h-0.5 bg-[#D5D2C8]" />}
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${s.done ? 'bg-[#4ade80]' : 'bg-[#6B0F1A]'}`}>
-                    {s.done ? '✓' : '3'}
+          {fluxoAssinatura ? (
+            <div className="flex items-center justify-center gap-2 mb-5">
+              {[
+                { label: 'Plano escolhido', done: true },
+                { label: 'Dados para NF', done: false, active: true },
+                { label: 'Pagamento', done: false },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  {i > 0 && <div className="w-8 h-0.5 bg-[#D5D2C8]" />}
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${s.done ? 'bg-[#4ade80]' : s.active ? 'bg-[#6B0F1A]' : 'bg-[#D5D2C8]'}`}>
+                      {s.done ? '✓' : i + 1}
+                    </div>
+                    <span className={`text-xs ${s.active ? 'text-[#6B0F1A] font-semibold' : 'text-[#9AA0A6]'}`}>{s.label}</span>
                   </div>
-                  <span className={`text-xs ${s.active ? 'text-[#6B0F1A] font-semibold' : 'text-[#9AA0A6]'}`}>{s.label}</span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2 mb-5">
+              {[
+                { label: 'Conta criada', done: true },
+                { label: 'E-mail confirmado', done: true },
+                { label: 'Dados para NF', done: false, active: true },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  {i > 0 && <div className="w-8 h-0.5 bg-[#D5D2C8]" />}
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${s.done ? 'bg-[#4ade80]' : 'bg-[#6B0F1A]'}`}>
+                      {s.done ? '✓' : '3'}
+                    </div>
+                    <span className={`text-xs ${s.active ? 'text-[#6B0F1A] font-semibold' : 'text-[#9AA0A6]'}`}>{s.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">Quase lá! Complete o cadastro para acesso.</h1>
+          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">
+            {fluxoAssinatura ? 'Precisamos dos seus dados fiscais para emitir a NF.' : 'Quase lá! Complete o cadastro para acesso.'}
+          </h1>
         </div>
 
         {/* Card */}
@@ -295,7 +320,7 @@ export default function CompletarCadastroPage() {
               </>
             )}
 
-            <SectionTitle>Endereço da sede</SectionTitle>
+            <SectionTitle>Endereço</SectionTitle>
 
             {/* CEP */}
             <div>
@@ -332,9 +357,9 @@ export default function CompletarCadastroPage() {
                   placeholder="Sala, andar…" className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Bairro</label>
+                <label className={labelCls}>Bairro <span className="font-normal normal-case tracking-normal">(opc.)</span></label>
                 <input type="text" value={bairro} onChange={e => setBairro(e.target.value)}
-                  placeholder="Centro" required className={inputCls} />
+                  placeholder="Centro" className={inputCls} />
               </div>
             </div>
 
@@ -364,7 +389,7 @@ export default function CompletarCadastroPage() {
 
             <button type="submit" disabled={salvando}
               className={`w-full py-4 rounded-xl text-white text-base font-bold border-none mt-1 transition-colors ${salvando ? 'bg-[#9AA0A6] cursor-not-allowed' : 'bg-[#6B0F1A] cursor-pointer hover:bg-[#5a0c16]'}`}>
-              {salvando ? 'Salvando...' : 'Concluir cadastro e começar →'}
+              {salvando ? 'Salvando...' : fluxoAssinatura ? 'Salvar e ir para pagamento →' : 'Concluir cadastro e começar →'}
             </button>
           </form>
 
@@ -375,6 +400,18 @@ export default function CompletarCadastroPage() {
 
       </div>
     </div>
+  )
+}
+
+export default function CompletarCadastroPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#D5D2C8] border-t-[#6B0F1A] rounded-full animate-spin" />
+      </div>
+    }>
+      <CompletarCadastroConteudo />
+    </Suspense>
   )
 }
 
