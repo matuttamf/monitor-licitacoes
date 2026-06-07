@@ -1,7 +1,0 @@
-- generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]: ML
-    - heading "Preparando seu checkout…" [level=1] [ref=e7]
-    - paragraph [ref=e8]: Você será redirecionado para o pagamento em instantes.
-    - paragraph [ref=e9]: Pro — R$197,90/mês
-  - alert [ref=e10]
