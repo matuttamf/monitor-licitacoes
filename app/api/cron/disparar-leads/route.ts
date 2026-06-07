@@ -14,9 +14,83 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { verificarCronAuth } from '@/lib/cron-auth'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
-import { emailCaptacao } from '@/lib/emails/captacao'
+import { emailCaptacao, type LicitacaoResumida } from '@/lib/emails/captacao'
+
+// ─── Palavras-chave por segmento para buscar licitações compatíveis ──────────
+const KEYWORDS_SEGMENTO: Record<string, string[]> = {
+  construção:   ['constru', 'obra', 'reform', 'paviment', 'engenharia', 'instalação elétrica', 'hidráulica'],
+  tecnologia:   ['software', 'tecnologia', 'sistema', 'informática', 'computador', 'licença', 'suporte técnico'],
+  saúde:        ['saúde', 'hospital', 'médico', 'farmacêutico', 'laboratório', 'insumo', 'medicamento'],
+  limpeza:      ['limpeza', 'conservação', 'higienização', 'zeladoria', 'saneamento'],
+  segurança:    ['vigilância', 'segurança patrimonial', 'monitoramento', 'portaria'],
+  transporte:   ['transporte', 'logística', 'frete', 'veículo', 'frota', 'ônibus', 'escolar'],
+  alimentação:  ['alimentação', 'refeição', 'merenda', 'gêneros alimentícios', 'buffet', 'nutrição'],
+  consultoria:  ['consultoria', 'assessoria', 'gestão', 'auditoria', 'planejamento'],
+  educação:     ['treinamento', 'capacitação', 'curso', 'ensino', 'educação'],
+  manutenção:   ['manutenção', 'reparo', 'assistência técnica', 'calibração'],
+  jardinagem:   ['paisagismo', 'jardinagem', 'poda', 'arborização'],
+  gráfica:      ['impressão', 'gráfica', 'material gráfico', 'banner', 'panfleto'],
+  outros:       [], // sem filtro específico — retorna recentes genéricos
+}
+
+async function buscarLicitacoesSegmento(
+  supabase: SupabaseClient,
+  segmento: string | null,
+  uf: string | null,
+): Promise<LicitacaoResumida[]> {
+  try {
+    const keywords = KEYWORDS_SEGMENTO[segmento ?? 'outros'] ?? []
+
+    // Tenta primeiro na UF do lead (mais relevante), com filtro de segmento
+    // Depois fallback: só segmento sem filtro de UF
+    // Por fim: recentes sem filtro nenhum
+    let query = supabase
+      .from('licitacoes')
+      .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
+      .not('objeto', 'is', null)
+      .order('data_abertura', { ascending: false })
+      .limit(3)
+
+    if (keywords.length > 0) {
+      // ilike com OR entre as keywords — pega a primeira que tiver resultado
+      query = query.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
+    }
+
+    if (uf) {
+      query = query.eq('estado', uf)
+    }
+
+    const { data } = await query
+    if (data && data.length >= 1) return data as LicitacaoResumida[]
+
+    // Fallback sem filtro de UF
+    if (uf && keywords.length > 0) {
+      let q2 = supabase
+        .from('licitacoes')
+        .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
+        .not('objeto', 'is', null)
+        .order('data_abertura', { ascending: false })
+        .limit(3)
+      q2 = q2.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
+      const { data: d2 } = await q2
+      if (d2 && d2.length >= 1) return d2 as LicitacaoResumida[]
+    }
+
+    // Último fallback: 3 licitações mais recentes sem filtro
+    const { data: recentes } = await supabase
+      .from('licitacoes')
+      .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
+      .not('objeto', 'is', null)
+      .order('data_abertura', { ascending: false })
+      .limit(3)
+
+    return (recentes ?? []) as LicitacaoResumida[]
+  } catch {
+    return []
+  }
+}
 
 export const maxDuration = 60
 
@@ -60,7 +134,7 @@ export async function GET(req: NextRequest) {
   // Buscar leads pendentes com e-mail
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae')
+    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento')
     .eq('status', 'pendente')
     .not('email', 'is', null)
     .neq('email', '')
@@ -83,6 +157,9 @@ export async function GET(req: NextRequest) {
   let erros = 0
 
   for (const lead of leads) {
+    // Buscar licitações reais do setor para personalizar o e-mail
+    const licitacoes = await buscarLicitacoesSegmento(supabase, lead.segmento, lead.uf)
+
     const { subject, html, text } = emailCaptacao({
       id:           lead.id,
       razaoSocial:  lead.razao_social,
@@ -90,6 +167,7 @@ export async function GET(req: NextRequest) {
       municipio:    lead.municipio,
       uf:           lead.uf,
       cnae:         lead.cnae,
+      licitacoes,
     })
 
     // Substituir token de descadastro pelo ID do lead (UUID não-guessável)

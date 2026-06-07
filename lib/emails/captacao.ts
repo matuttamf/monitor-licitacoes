@@ -14,6 +14,15 @@
  *  9. Tracking de clique no CTA
  */
 
+export interface LicitacaoResumida {
+  objeto:          string
+  orgao:           string
+  valor_estimado?: number | null
+  estado?:         string | null
+  data_abertura?:  string | null
+  link?:           string | null
+}
+
 interface ParamsCaptacao {
   id?: string
   razaoSocial: string
@@ -22,6 +31,7 @@ interface ParamsCaptacao {
   uf?: string
   cnae?: string
   appUrl?: string
+  licitacoes?: LicitacaoResumida[]  // editais reais do setor para personalizar o e-mail
 }
 
 function detectarSetor(cnae?: string): 'construcao' | 'ti' | 'limpeza' | 'vigilancia' | 'saude' | 'transporte' | 'generico' {
@@ -96,6 +106,72 @@ const COPY_POR_SETOR: Record<string, SetorCopy> = {
   },
 }
 
+function fmtValor(v?: number | null): string {
+  if (!v || v <= 0) return ''
+  if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1).replace('.', ',')}M`
+  if (v >= 1_000)    return `R$ ${Math.round(v / 1_000)}k`
+  return `R$ ${v.toLocaleString('pt-BR')}`
+}
+
+function fmtData(iso?: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function buildLicitacoesHtml(lics: LicitacaoResumida[], ctaHref: string): string {
+  if (!lics.length) return ''
+
+  const items = lics.map((lic, i) => {
+    const valor   = fmtValor(lic.valor_estimado)
+    const data    = fmtData(lic.data_abertura)
+    const estado  = lic.estado ? ` · ${lic.estado}` : ''
+    const objeto  = lic.objeto.length > 90 ? lic.objeto.slice(0, 90) + '…' : lic.objeto
+    const orgao   = lic.orgao.length > 55 ? lic.orgao.slice(0, 55) + '…' : lic.orgao
+    const bgColor = i % 2 === 0 ? '#fafafa' : '#fff'
+
+    return `<tr>
+      <td style="padding:12px 14px;background:${bgColor};border-bottom:1px solid #eee;vertical-align:top;">
+        <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">${objeto}</div>
+        <div style="font-size:12px;color:#666;margin-bottom:4px;">${orgao}${estado}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          ${valor ? `<span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:700;">${valor}</span>` : ''}
+          ${data  ? `<span style="font-size:11px;color:#888;">📅 Abertura: ${data}</span>` : ''}
+        </div>
+      </td>
+    </tr>`
+  }).join('')
+
+  return `
+    <div style="margin:24px 0;">
+      <div style="font-size:13px;font-weight:800;color:#6B0F1A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">
+        📋 Licitações abertas agora para empresas como a sua
+      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;border-collapse:collapse;">
+        ${items}
+        <tr>
+          <td style="padding:10px 14px;background:#6B0F1A;text-align:center;">
+            <a href="${ctaHref}" style="font-size:12px;color:#C9A65A;font-weight:700;text-decoration:none;">
+              Ver todas as licitações do seu setor →
+            </a>
+          </td>
+        </tr>
+      </table>
+    </div>`
+}
+
+function buildLicitacoesTxt(lics: LicitacaoResumida[]): string {
+  if (!lics.length) return ''
+  const lines = lics.map((lic, i) => {
+    const valor  = fmtValor(lic.valor_estimado)
+    const data   = fmtData(lic.data_abertura)
+    const objeto = lic.objeto.length > 80 ? lic.objeto.slice(0, 80) + '…' : lic.objeto
+    return `  ${i + 1}. ${objeto}\n     ${lic.orgao}${lic.estado ? ' · ' + lic.estado : ''}${valor ? ' · ' + valor : ''}${data ? ' · Abertura: ' + data : ''}`
+  }).join('\n')
+  return `\nLICITAÇÕES ABERTAS PARA O SEU SETOR:\n${lines}\n`
+}
+
 export function emailCaptacao(p: ParamsCaptacao) {
   const nome = p.nomeFantasia || p.razaoSocial
   const cidade = p.municipio ? `${p.municipio}${p.uf ? '/' + p.uf : ''}` : null
@@ -114,6 +190,10 @@ export function emailCaptacao(p: ParamsCaptacao) {
 
   const subject = copy.subject.replace('{{NOME}}', nome)
   const cidadeHtml = cidade ? `<strong>${cidade}</strong>` : 'sua região'
+
+  const lics = p.licitacoes ?? []
+  const licitacoesHtml = buildLicitacoesHtml(lics, ctaHref)
+  const licitacoesTxt  = buildLicitacoesTxt(lics)
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -238,6 +318,9 @@ export function emailCaptacao(p: ParamsCaptacao) {
       <p class="proof-text">Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p>
     </div>
 
+    <!-- LICITAÇÕES REAIS DO SETOR -->
+    ${licitacoesHtml}
+
     <!-- CTA -->
     <div class="cta-section">
       <p class="cta-pre">Estamos oferecendo um período de teste com suporte para você experimentar a ferramenta sem nenhum risco.</p>
@@ -285,7 +368,7 @@ O Monitor de Licitações resolve isso em 3 passos:
 ${copy.beneficioSetor.replace(/<[^>]+>/g, '')}
 
 Empresas que monitoram licitações participam de 3× mais processos e fecham contratos com valor médio 47% maior.
-
+${licitacoesTxt}
 ▶ TESTE GRÁTIS POR 7 DIAS (sem cartão):
 ${ctaDest}
 
