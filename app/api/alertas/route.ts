@@ -85,31 +85,40 @@ export async function GET(request: NextRequest) {
 
   // Desduplicar por licitação: agrupa keywords quando a mesma licitação
   // aparece várias vezes (uma linha por keyword que deu match)
-  const licitacaoMap = new Map<string, typeof resultado[0] & { _termos: string[] }>()
+  type AlertaDedup = {
+    id: string
+    criado_em: string
+    enviado_em: string | null
+    canais: string[]
+    licitacoes: unknown
+    keywords: string[]
+  }
+  const licitacaoMap = new Map<string, AlertaDedup>()
   for (const a of resultado) {
-    const lic = a.licitacoes as unknown as { orgao: string; objeto: string; url: string; estado: string; cidade: string; valor_estimado: number; data_abertura: string } | null
-    const kw  = a.keywords  as unknown as { termo: string } | null
+    const lic = a.licitacoes as { orgao?: string; objeto?: string } | null
+    const kw  = a.keywords  as { termo?: string } | null
     const licKey = `${lic?.orgao ?? ''}::${lic?.objeto ?? ''}`.slice(0, 100)
+    const termo = kw?.termo ?? null
 
     if (!licitacaoMap.has(licKey)) {
-      licitacaoMap.set(licKey, { ...a, _termos: kw?.termo ? [kw.termo] : [] })
+      licitacaoMap.set(licKey, {
+        id:         a.id,
+        criado_em:  a.criado_em,
+        enviado_em: a.enviado_em,
+        canais:     [...(a.canais ?? [])],
+        licitacoes: a.licitacoes,
+        keywords:   termo ? [termo] : [],
+      })
     } else {
       const existing = licitacaoMap.get(licKey)!
-      if (kw?.termo && !existing._termos.includes(kw.termo)) {
-        existing._termos.push(kw.termo)
-      }
-      // Mantém o mais recente enviado_em
+      if (termo && !existing.keywords.includes(termo)) existing.keywords.push(termo)
       if (a.enviado_em && (!existing.enviado_em || a.enviado_em > existing.enviado_em)) {
         existing.enviado_em = a.enviado_em
       }
     }
   }
 
-  // Constrói resultado final com keywords agregadas
-  const dedup = [...licitacaoMap.values()].map(({ _termos, ...a }) => ({
-    ...a,
-    keywords: _termos,
-  }))
+  const dedup = [...licitacaoMap.values()]
 
   const total   = count ?? 0
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
