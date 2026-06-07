@@ -218,35 +218,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
   }
 
-  // 4. Enriquecer e inserir
+  // 4. Avançar ponteiro ANTES do enriquecimento (evita reprocessar se timeout)
+  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+
+  // 5. Enriquecer e inserir (cap 20 para caber nos 300s)
   let inseridos = 0
-  for (const cnpj of paraEnriquecer.slice(0, 30)) { // cap por execução
+  for (const cnpj of paraEnriquecer.slice(0, 20)) {
     const dados = await enriquecerCnpj(cnpj)
-    await sleep(350)
+    await sleep(500) // ~2 req/s para BrasilAPI free tier
     if (!dados) continue
     if (dados.situacao_cadastral !== '02') continue
-    if (!dados.email?.trim()) continue
 
+    const emailRaw = dados.email?.trim()
     const { error } = await supabase.from('leads').upsert({
       cnpj:          dados.cnpj,
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
-      email:         dados.email.toLowerCase().trim(),
+      email:         emailRaw ? emailRaw.toLowerCase() : null,
       telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? null,
       uf:            dados.uf ?? null,
       situacao:      dados.descricao_situacao_cadastral ?? null,
       porte:         dados.descricao_porte ?? null,
       cnae:          dados.cnae_fiscal_descricao ?? null,
-      status:        'pendente',
+      status:        emailRaw ? 'pendente' : 'sem_email',
       fonte:         'pncp_proposta',
     }, { onConflict: 'cnpj', ignoreDuplicates: true })
 
     if (!error) inseridos++
   }
-
-  // 5. Avançar ponteiro de backfill
-  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
 
   console.log(`[coletar-participantes] ${inseridos} leads inseridos`)
   return NextResponse.json({

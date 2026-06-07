@@ -225,26 +225,28 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
   }
 
-  // ── 4. Enriquecer e inserir ───────────────────────────────────────────────
+  // ── 4. Avançar ponteiro ANTES do enriquecimento (crash-safe) ────────────
+  if (emBackfill) await avancarPonteiro(supabase, dataFim)
+
+  // ── 5. Enriquecer e inserir ───────────────────────────────────────────────
   let inseridos = 0
-  const rows = []
 
   for (const cnpj of paraEnriquecer.slice(0, MAX_ENRIQUECER)) {
     const dados = await enriquecerCnpj(cnpj)
-    await sleep(350) // ~3 req/s — respeita rate limit BrasilAPI
+    await sleep(500) // ~2 req/s — BrasilAPI free tier
 
     if (!dados) continue
     if (dados.situacao_cadastral !== '02') continue // apenas ATIVAS
-    if (!dados.email?.trim()) continue              // apenas com e-mail
 
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
+    const emailRaw = dados.email?.trim()
 
-    rows.push({
+    const { error } = await supabase.from('leads').upsert({
       cnpj:          dados.cnpj,
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
-      email:         dados.email.toLowerCase().trim(),
+      email:         emailRaw ? emailRaw.toLowerCase() : null,
       telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? null,
       uf:            dados.uf ?? null,
@@ -256,21 +258,13 @@ export async function GET(req: NextRequest) {
       objeto:        (contrato.objeto ?? '').slice(0, 200) || null,
       valor:         contrato.valorInicial ?? null,
       data_contrato: contrato.dataAssinatura?.slice(0, 10) ?? null,
-      status:        'pendente',
+      status:        emailRaw ? 'pendente' : 'sem_email',
       fonte:         'portal_transparencia',
-    })
-  }
+    }, { onConflict: 'cnpj', ignoreDuplicates: true })
 
-  if (rows.length) {
-    const { error } = await supabase
-      .from('leads')
-      .upsert(rows, { onConflict: 'cnpj', ignoreDuplicates: true })
     if (error) console.error('[coletar-leads-transparencia] upsert error:', error.message)
-    else inseridos = rows.length
+    else inseridos++
   }
-
-  // ── 5. Avançar ponteiro ───────────────────────────────────────────────────
-  if (emBackfill) await avancarPonteiro(supabase, dataFim)
 
   console.log(`[coletar-leads-transparencia] ${inseridos} leads inseridos`)
   return NextResponse.json({

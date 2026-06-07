@@ -211,60 +211,56 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // ── 4. Enriquecer via BrasilAPI e inserir (lotes de 30) ───────────────────
-  const LOTE = 30
+  // ── 4. Avançar ponteiro ANTES do enriquecimento ──────────────────────────
+  // Garante progresso mesmo que a função estoure o timeout durante o BrasilAPI.
+  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+
+  // ── 5. Enriquecer via BrasilAPI e inserir (até 20 por execução) ───────────
+  const LOTE = 20  // reduzido para caber nos 300s de maxDuration
   let inseridos = 0
 
-  for (let i = 0; i < paraEnriquecer.length; i += LOTE) {
-    const lote = paraEnriquecer.slice(i, i + LOTE)
-    const rows = []
+  for (let i = 0; i < Math.min(paraEnriquecer.length, LOTE); i++) {
+    const cnpj  = paraEnriquecer[i]
+    const dados = await enriquecerCnpj(cnpj)
+    await sleep(500) // ~2 req/s — BrasilAPI free tier
 
-    for (const cnpj of lote) {
-      const dados = await enriquecerCnpj(cnpj)
-      await sleep(350) // ~3 req/s — respeita rate limit BrasilAPI
+    if (!dados) continue
+    if (dados.situacao_cadastral !== '02') continue  // apenas ATIVAS
 
-      if (!dados) continue
-      if (dados.situacao_cadastral !== '02') continue  // apenas ATIVAS
-      if (!dados.email?.trim()) continue               // apenas com e-mail
+    const contrato = cnpjMap.get(cnpj)!
+    const cnae     = dados.cnae_fiscal_descricao ?? null
+    const modalidade = contrato.modalidadeContratacao?.descricao
+                    ?? contrato.tipoContrato?.descricao
+                    ?? null
+    const emailRaw = dados.email?.trim()
 
-      const contrato = cnpjMap.get(cnpj)!
-      const cnae     = dados.cnae_fiscal_descricao ?? null
-      const modalidade = contrato.modalidadeContratacao?.descricao
-                      ?? contrato.tipoContrato?.descricao
-                      ?? null
-
-      rows.push({
-        cnpj:          dados.cnpj,
-        razao_social:  dados.razao_social,
-        nome_fantasia: dados.nome_fantasia ?? null,
-        email:         dados.email.toLowerCase().trim(),
-        telefone:      dados.ddd_telefone_1 ?? null,
-        municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
-        uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-        situacao:      dados.descricao_situacao_cadastral ?? null,
-        porte:         dados.descricao_porte ?? null,
-        cnae,
-        segmento:      mapearSegmento(cnae),
-        modalidade,
-        objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
-        valor:         contrato.valorInicial ?? null,
-        data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
-        status:        'pendente',
-        fonte:         'pncp_contrato',
-      })
+    const row = {
+      cnpj:          dados.cnpj,
+      razao_social:  dados.razao_social,
+      nome_fantasia: dados.nome_fantasia ?? null,
+      email:         emailRaw ? emailRaw.toLowerCase() : null,
+      telefone:      dados.ddd_telefone_1 ?? null,
+      municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
+      uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? null,
+      porte:         dados.descricao_porte ?? null,
+      cnae,
+      segmento:      mapearSegmento(cnae),
+      modalidade,
+      objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
+      valor:         contrato.valorInicial ?? null,
+      data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
+      // Sem e-mail → sem_email (disparo ignora; pode ser enriquecido depois)
+      status:        emailRaw ? 'pendente' : 'sem_email',
+      fonte:         'pncp_contrato',
     }
 
-    if (rows.length) {
-      const { error } = await supabase
-        .from('leads')
-        .upsert(rows, { onConflict: 'cnpj', ignoreDuplicates: true })
-      if (error) console.error('[coletar-leads] upsert error:', error.message)
-      else inseridos += rows.length
-    }
+    const { error } = await supabase
+      .from('leads')
+      .upsert(row, { onConflict: 'cnpj', ignoreDuplicates: true })
+    if (error) console.error('[coletar-leads] upsert error:', error.message)
+    else inseridos++
   }
-
-  // ── 5. Avançar ponteiro de backfill ───────────────────────────────────────
-  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
 
   console.log(`[coletar-leads] ${modoLabel} → ${inseridos} leads inseridos`)
   return NextResponse.json({
