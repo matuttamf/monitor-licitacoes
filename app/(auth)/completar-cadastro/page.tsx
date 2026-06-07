@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Máscaras ────────────────────────────────────────────────────────────────
 
 function mascararCNPJ(v: string) {
   const d = v.replace(/\D/g, '').slice(0, 14)
@@ -15,11 +15,21 @@ function mascararCNPJ(v: string) {
   return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`
 }
 
+function mascararCPF(v: string) {
+  const d = v.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 3)  return d
+  if (d.length <= 6)  return `${d.slice(0,3)}.${d.slice(3)}`
+  if (d.length <= 9)  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`
+}
+
 function mascararCEP(v: string) {
   const d = v.replace(/\D/g, '').slice(0, 8)
   if (d.length <= 5) return d
   return `${d.slice(0,5)}-${d.slice(5)}`
 }
+
+// ─── Validações ───────────────────────────────────────────────────────────────
 
 function validarCNPJ(cnpj: string): boolean {
   const n = cnpj.replace(/\D/g, '')
@@ -32,6 +42,18 @@ function validarCNPJ(cnpj: string): boolean {
   return calc(n, 12) === parseInt(n[12]) && calc(n, 13) === parseInt(n[13])
 }
 
+function validarCPF(cpf: string): boolean {
+  const n = cpf.replace(/\D/g, '')
+  if (n.length !== 11 || /^(\d)\1{10}$/.test(n)) return false
+  const calc = (s: string, len: number) => {
+    let sum = 0
+    for (let i = 0; i < len; i++) sum += parseInt(s[i]) * (len + 1 - i)
+    const r = (sum * 10) % 11
+    return r === 10 || r === 11 ? 0 : r
+  }
+  return calc(n, 9) === parseInt(n[9]) && calc(n, 10) === parseInt(n[10])
+}
+
 const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -39,22 +61,32 @@ const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','P
 export default function CompletarCadastroPage() {
   const router = useRouter()
 
-  const [cnpj, setCnpj]               = useState('')
-  const [cnpjErro, setCnpjErro]       = useState('')
-  const [buscandoCNPJ, setBuscandoCNPJ] = useState(false)
-  const [razaoSocial, setRazaoSocial] = useState('')
-  const [nomefantasia, setNomefantasia] = useState('')
-  const [ie, setIe]                   = useState('')
-  const [cep, setCep]                 = useState('')
-  const [buscandoCEP, setBuscandoCEP] = useState(false)
-  const [logradouro, setLogradouro]   = useState('')
-  const [numero, setNumero]           = useState('')
-  const [complemento, setComplemento] = useState('')
-  const [bairro, setBairro]           = useState('')
-  const [cidade, setCidade]           = useState('')
-  const [estadoUF, setEstadoUF]       = useState('')
-  const [erro, setErro]               = useState('')
-  const [salvando, setSalvando]       = useState(false)
+  const [tipoPessoa, setTipoPessoa]       = useState<'PJ' | 'PF'>('PJ')
+
+  // PJ
+  const [cnpj, setCnpj]                   = useState('')
+  const [cnpjErro, setCnpjErro]           = useState('')
+  const [buscandoCNPJ, setBuscandoCNPJ]   = useState(false)
+  const [razaoSocial, setRazaoSocial]     = useState('')
+  const [nomefantasia, setNomefantasia]   = useState('')
+
+  // PF
+  const [cpf, setCpf]                     = useState('')
+  const [cpfErro, setCpfErro]             = useState('')
+  const [nomeCompleto, setNomeCompleto]   = useState('')
+
+  // Compartilhado
+  const [ie, setIe]                       = useState('')
+  const [cep, setCep]                     = useState('')
+  const [buscandoCEP, setBuscandoCEP]     = useState(false)
+  const [logradouro, setLogradouro]       = useState('')
+  const [numero, setNumero]               = useState('')
+  const [complemento, setComplemento]     = useState('')
+  const [bairro, setBairro]               = useState('')
+  const [cidade, setCidade]               = useState('')
+  const [estadoUF, setEstadoUF]           = useState('')
+  const [erro, setErro]                   = useState('')
+  const [salvando, setSalvando]           = useState(false)
 
   // ── Auto-preencher via CNPJ ─────────────────────────────────────────────
   async function buscarCNPJ(cnpjRaw: string) {
@@ -80,7 +112,7 @@ export default function CompletarCadastroPage() {
         setCidade(est.cidade?.nome ?? '')
         setEstadoUF(est.estado?.sigla ?? '')
       }
-    } catch { /* CNPJ válido mas não encontrado — preencher manualmente */ }
+    } catch { /* preencher manualmente */ }
     finally { setBuscandoCNPJ(false) }
   }
 
@@ -107,22 +139,36 @@ export default function CompletarCadastroPage() {
     e.preventDefault()
     setErro('')
 
-    if (!validarCNPJ(cnpj)) { setErro('CNPJ inválido. Verifique e tente novamente.'); return }
-    if (!razaoSocial.trim()) { setErro('Informe a Razão Social.'); return }
+    // Validações específicas por tipo
+    if (tipoPessoa === 'PJ') {
+      if (!validarCNPJ(cnpj)) { setErro('CNPJ inválido. Verifique e tente novamente.'); return }
+      if (!razaoSocial.trim()) { setErro('Informe a Razão Social.'); return }
+    } else {
+      if (!validarCPF(cpf)) { setErro('CPF inválido. Verifique e tente novamente.'); return }
+      if (!nomeCompleto.trim()) { setErro('Informe o nome completo.'); return }
+    }
+
+    // IE obrigatória para PJ (aceita "Isento")
+    if (tipoPessoa === 'PJ' && !ie.trim()) {
+      setErro('Informe a Inscrição Estadual ou "Isento".'); return
+    }
+
+    // Endereço obrigatório
     if (cep.replace(/\D/g, '').length !== 8) { setErro('CEP inválido.'); return }
     if (!logradouro.trim() || !numero.trim() || !cidade.trim() || !estadoUF) {
-      setErro('Preencha o endereço completo.'); return
+      setErro('Preencha o endereço completo (logradouro, número, cidade e estado).'); return
     }
 
     setSalvando(true)
     try {
+      const body = tipoPessoa === 'PJ'
+        ? { tipo_pessoa: 'PJ', cnpj, razao_social: razaoSocial, nome_fantasia: nomefantasia, ie, cep, logradouro, numero, complemento, bairro, cidade, estado_uf: estadoUF }
+        : { tipo_pessoa: 'PF', cpf, nome_completo: nomeCompleto, ie, cep, logradouro, numero, complemento, bairro, cidade, estado_uf: estadoUF }
+
       const res = await fetch('/api/auth/completar-perfil', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cnpj, razao_social: razaoSocial, nome_fantasia: nomefantasia,
-          ie, cep, logradouro, numero, complemento, bairro, cidade, estado_uf: estadoUF,
-        }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) { setErro(data.error ?? 'Erro ao salvar. Tente novamente.'); return }
@@ -134,184 +180,182 @@ export default function CompletarCadastroPage() {
     }
   }
 
-  // ── Estilos ─────────────────────────────────────────────────────────────
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '12px 14px', borderRadius: '10px',
-    border: '1.5px solid #D5D2C8', background: 'white',
-    fontSize: '14px', color: '#1A1A1C', outline: 'none',
-    boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif',
-  }
-  const labelStyle: React.CSSProperties = {
-    display: 'block', fontSize: '11px', fontWeight: 700,
-    letterSpacing: '0.08em', textTransform: 'uppercase',
-    color: '#4a4a4d', marginBottom: '5px',
-  }
-  const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = '#6B0F1A'
-    e.target.style.boxShadow   = '0 0 0 3px rgba(107,15,26,0.1)'
-  }
-  const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = '#D5D2C8'
-    e.target.style.boxShadow   = 'none'
-  }
+  const inputCls = "w-full px-3.5 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)] transition-colors"
+  const labelCls = "block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5"
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAF6F0', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-      <div style={{ width: '100%', maxWidth: '560px' }}>
+    <div className="min-h-screen bg-[#FAF6F0] font-sans flex items-center justify-center p-5 sm:p-10">
+      <div className="w-full max-w-[560px]">
 
         {/* Cabeçalho */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none', marginBottom: '24px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#6B0F1A', color: '#C9A65A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>ML</div>
-            <span style={{ color: '#1A1A1C', fontWeight: 600, fontSize: '15px' }}>Monitor de Licitações</span>
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2.5 no-underline mb-6">
+            <div className="w-9 h-9 rounded-[10px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-xs">ML</div>
+            <span className="text-[#1A1A1C] font-semibold text-[15px]">Monitor de Licitações</span>
           </Link>
 
-          {/* Progress indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white', fontWeight: 700 }}>✓</div>
-              <span style={{ fontSize: '12px', color: '#9AA0A6' }}>Conta criada</span>
-            </div>
-            <div style={{ width: '40px', height: '2px', background: '#D5D2C8' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white', fontWeight: 700 }}>✓</div>
-              <span style={{ fontSize: '12px', color: '#9AA0A6' }}>E-mail confirmado</span>
-            </div>
-            <div style={{ width: '40px', height: '2px', background: '#D5D2C8' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#6B0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white', fontWeight: 700 }}>3</div>
-              <span style={{ fontSize: '12px', color: '#6B0F1A', fontWeight: 600 }}>Dados da empresa</span>
-            </div>
+          {/* Steps */}
+          <div className="flex items-center justify-center gap-2 mb-5">
+            {[
+              { label: 'Conta criada', done: true },
+              { label: 'E-mail confirmado', done: true },
+              { label: 'Dados da empresa', done: false, active: true },
+            ].map((s, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                {i > 0 && <div className="w-8 h-0.5 bg-[#D5D2C8]" />}
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${s.done ? 'bg-[#4ade80]' : 'bg-[#6B0F1A]'}`}>
+                    {s.done ? '✓' : '3'}
+                  </div>
+                  <span className={`text-xs ${s.active ? 'text-[#6B0F1A] font-semibold' : 'text-[#9AA0A6]'}`}>{s.label}</span>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#1A1A1C', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
-            Quase lá! Dados da empresa
-          </h1>
-          <p style={{ fontSize: '14px', color: '#9AA0A6', margin: 0, lineHeight: 1.6 }}>
-            Precisamos das informações fiscais para emissão de nota fiscal e para personalizar suas licitações.
-          </p>
+          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">Quase lá! Dados para NF</h1>
+          <p className="text-sm text-[#9AA0A6] leading-relaxed">Necessário para emissão de nota fiscal e personalização das licitações.</p>
         </div>
 
-        {/* Card do formulário */}
-        <div style={{ background: 'white', borderRadius: '20px', padding: '36px', boxShadow: '0 8px 32px rgba(0,0,0,0.07)', border: '1px solid #E8E4DF' }}>
-          <form onSubmit={handleSubmit}>
+        {/* Card */}
+        <div className="bg-white rounded-2xl p-8 sm:p-9 shadow-[0_8px_32px_rgba(0,0,0,0.07)] border border-[#E8E4DF]">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-            {/* ── Dados fiscais ─────────────────────────────── */}
+            {/* Toggle PF / PJ */}
+            <div>
+              <label className={labelCls}>Tipo de pessoa</label>
+              <div className="flex gap-2">
+                {(['PJ', 'PF'] as const).map(t => (
+                  <button key={t} type="button"
+                    onClick={() => { setTipoPessoa(t); setErro('') }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-[1.5px] transition-colors ${tipoPessoa === t ? 'bg-[#6B0F1A] text-white border-[#6B0F1A]' : 'bg-white text-[#4a4a4d] border-[#D5D2C8] hover:border-[#6B0F1A]'}`}>
+                    {t === 'PJ' ? '🏢 Pessoa Jurídica' : '👤 Pessoa Física'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <SectionTitle>Dados fiscais</SectionTitle>
 
-            {/* CNPJ */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={labelStyle}>
-                CNPJ <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9AA0A6' }}>— preenchimento automático ao digitar</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input type="text" value={cnpj} inputMode="numeric"
-                  onChange={e => { setCnpj(mascararCNPJ(e.target.value)); setCnpjErro('') }}
-                  onBlur={() => buscarCNPJ(cnpj)}
-                  placeholder="00.000.000/0001-00" required
-                  style={{ ...inputStyle, paddingRight: buscandoCNPJ ? '110px' : '14px' }}
-                  onFocus={onFocus} />
-                {buscandoCNPJ && (
-                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#9AA0A6' }}>
-                    Buscando…
-                  </span>
-                )}
-              </div>
-              {cnpjErro && <p style={{ fontSize: '12px', color: '#b91c1c', margin: '4px 0 0' }}>{cnpjErro}</p>}
-            </div>
+            {tipoPessoa === 'PJ' ? (
+              <>
+                {/* CNPJ */}
+                <div>
+                  <label className={labelCls}>CNPJ <span className="font-normal normal-case tracking-normal text-[#9AA0A6]">— preenchimento automático</span></label>
+                  <div className="relative">
+                    <input type="text" value={cnpj} inputMode="numeric"
+                      onChange={e => { setCnpj(mascararCNPJ(e.target.value)); setCnpjErro('') }}
+                      onBlur={() => buscarCNPJ(cnpj)}
+                      placeholder="00.000.000/0001-00" required
+                      className={inputCls + (buscandoCNPJ ? ' pr-24' : '')} />
+                    {buscandoCNPJ && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#9AA0A6]">Buscando…</span>}
+                  </div>
+                  {cnpjErro && <p className="text-xs text-[#b91c1c] mt-1">{cnpjErro}</p>}
+                </div>
 
-            {/* Razão social */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={labelStyle}>Razão Social</label>
-              <input type="text" value={razaoSocial} onChange={e => setRazaoSocial(e.target.value)}
-                placeholder="Empresa Ltda." required style={inputStyle}
-                onFocus={onFocus} onBlur={onBlur} />
-            </div>
+                {/* Razão Social */}
+                <div>
+                  <label className={labelCls}>Razão Social</label>
+                  <input type="text" value={razaoSocial} onChange={e => setRazaoSocial(e.target.value)}
+                    placeholder="Empresa Ltda." required className={inputCls} />
+                </div>
 
-            {/* Nome fantasia + IE */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-              <div>
-                <label style={labelStyle}>
-                  Nome Fantasia <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opc.)</span>
-                </label>
-                <input type="text" value={nomefantasia} onChange={e => setNomefantasia(e.target.value)}
-                  placeholder="Como é conhecida" style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
-              </div>
-              <div>
-                <label style={labelStyle}>
-                  Insc. Estadual <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opc.)</span>
-                </label>
-                <input type="text" value={ie} onChange={e => setIe(e.target.value)}
-                  placeholder="Isento ou número" style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
-              </div>
-            </div>
+                {/* Nome Fantasia + IE */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Nome Fantasia <span className="font-normal normal-case tracking-normal">(opc.)</span></label>
+                    <input type="text" value={nomefantasia} onChange={e => setNomefantasia(e.target.value)}
+                      placeholder="Como é conhecida" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Insc. Estadual</label>
+                    <input type="text" value={ie} onChange={e => setIe(e.target.value)}
+                      placeholder="Isento ou número" required className={inputCls} />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* CPF */}
+                <div>
+                  <label className={labelCls}>CPF</label>
+                  <input type="text" value={cpf} inputMode="numeric"
+                    onChange={e => { setCpf(mascararCPF(e.target.value)); setCpfErro('') }}
+                    onBlur={() => { if (cpf && !validarCPF(cpf)) setCpfErro('CPF inválido.') }}
+                    placeholder="000.000.000-00" required className={inputCls} />
+                  {cpfErro && <p className="text-xs text-[#b91c1c] mt-1">{cpfErro}</p>}
+                </div>
 
-            {/* ── Endereço ──────────────────────────────────── */}
+                {/* Nome Completo */}
+                <div>
+                  <label className={labelCls}>Nome Completo</label>
+                  <input type="text" value={nomeCompleto} onChange={e => setNomeCompleto(e.target.value)}
+                    placeholder="Seu nome completo" required className={inputCls} />
+                </div>
+
+                {/* IE para PF */}
+                <div>
+                  <label className={labelCls}>Insc. Estadual <span className="font-normal normal-case tracking-normal">(opc.)</span></label>
+                  <input type="text" value={ie} onChange={e => setIe(e.target.value)}
+                    placeholder="Isento ou número" className={inputCls} />
+                </div>
+              </>
+            )}
+
             <SectionTitle>Endereço da sede</SectionTitle>
 
             {/* CEP */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={labelStyle}>CEP</label>
-              <div style={{ position: 'relative', maxWidth: '200px' }}>
+            <div>
+              <label className={labelCls}>CEP</label>
+              <div className="relative max-w-[200px]">
                 <input type="text" value={cep} inputMode="numeric"
                   onChange={e => setCep(mascararCEP(e.target.value))}
                   onBlur={() => buscarCEP(cep)}
                   placeholder="00000-000" required
-                  style={{ ...inputStyle, paddingRight: buscandoCEP ? '100px' : '14px' }}
-                  onFocus={onFocus} />
-                {buscandoCEP && (
-                  <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#9AA0A6' }}>Buscando…</span>
-                )}
+                  className={inputCls + (buscandoCEP ? ' pr-24' : '')} />
+                {buscandoCEP && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#9AA0A6]">Buscando…</span>}
               </div>
             </div>
 
             {/* Logradouro + Número */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: '12px', marginBottom: '14px' }}>
+            <div className="grid grid-cols-[1fr_100px] gap-3">
               <div>
-                <label style={labelStyle}>Logradouro</label>
+                <label className={labelCls}>Logradouro</label>
                 <input type="text" value={logradouro} onChange={e => setLogradouro(e.target.value)}
-                  placeholder="Rua, Avenida…" required style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
+                  placeholder="Rua, Avenida…" required className={inputCls} />
               </div>
               <div>
-                <label style={labelStyle}>Número</label>
+                <label className={labelCls}>Número</label>
                 <input type="text" value={numero} onChange={e => setNumero(e.target.value)}
-                  placeholder="123" required style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
+                  placeholder="123" required className={inputCls} />
               </div>
             </div>
 
             {/* Complemento + Bairro */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label style={labelStyle}>Complemento <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opc.)</span></label>
+                <label className={labelCls}>Complemento <span className="font-normal normal-case tracking-normal">(opc.)</span></label>
                 <input type="text" value={complemento} onChange={e => setComplemento(e.target.value)}
-                  placeholder="Sala, andar…" style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
+                  placeholder="Sala, andar…" className={inputCls} />
               </div>
               <div>
-                <label style={labelStyle}>Bairro</label>
+                <label className={labelCls}>Bairro</label>
                 <input type="text" value={bairro} onChange={e => setBairro(e.target.value)}
-                  placeholder="Centro" required style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
+                  placeholder="Centro" required className={inputCls} />
               </div>
             </div>
 
             {/* Cidade + Estado */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: '12px', marginBottom: '24px' }}>
+            <div className="grid grid-cols-[1fr_110px] gap-3">
               <div>
-                <label style={labelStyle}>Cidade</label>
+                <label className={labelCls}>Cidade</label>
                 <input type="text" value={cidade} onChange={e => setCidade(e.target.value)}
-                  placeholder="São Paulo" required style={inputStyle}
-                  onFocus={onFocus} onBlur={onBlur} />
+                  placeholder="São Paulo" required className={inputCls} />
               </div>
               <div>
-                <label style={labelStyle}>Estado</label>
+                <label className={labelCls}>Estado</label>
                 <select value={estadoUF} onChange={e => setEstadoUF(e.target.value)} required
-                  style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}
-                  onFocus={onFocus} onBlur={onBlur}>
+                  className={inputCls + ' cursor-pointer'}>
                   <option value="">UF</option>
                   {UFS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
                 </select>
@@ -320,25 +364,25 @@ export default function CompletarCadastroPage() {
 
             {/* Erro */}
             {erro && (
-              <div style={{ background: 'rgba(185,28,28,0.06)', border: '1px solid rgba(185,28,28,0.2)', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', color: '#b91c1c', marginBottom: '16px' }}>
+              <div className="bg-[rgba(185,28,28,0.06)] border border-[rgba(185,28,28,0.2)] rounded-xl px-4 py-3 text-sm text-[#b91c1c]">
                 ⚠ {erro}
               </div>
             )}
 
             <button type="submit" disabled={salvando}
-              style={{ width: '100%', padding: '15px', borderRadius: '12px', background: salvando ? '#9AA0A6' : '#6B0F1A', color: 'white', fontSize: '16px', fontWeight: 700, border: 'none', cursor: salvando ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}>
+              className={`w-full py-4 rounded-xl text-white text-base font-bold border-none mt-1 transition-colors ${salvando ? 'bg-[#9AA0A6] cursor-not-allowed' : 'bg-[#6B0F1A] cursor-pointer hover:bg-[#5a0c16]'}`}>
               {salvando ? 'Salvando...' : 'Concluir cadastro e começar →'}
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', fontSize: '12px', color: '#9AA0A6', margin: '16px 0 0', lineHeight: 1.5 }}>
+          <p className="text-center text-xs text-[#9AA0A6] mt-4 leading-relaxed">
             🔒 Seus dados são criptografados e usados exclusivamente para emissão de NF e personalização do serviço.
           </p>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '13px', color: '#9AA0A6', marginTop: '20px' }}>
+        <p className="text-center text-[13px] text-[#9AA0A6] mt-5">
           Prefere preencher depois?{' '}
-          <Link href="/dashboard" style={{ color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>
+          <Link href="/dashboard" className="text-[#6B0F1A] font-semibold no-underline">
             Ir para o painel →
           </Link>
         </p>
@@ -349,9 +393,9 @@ export default function CompletarCadastroPage() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '4px 0 14px' }}>
-      <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B0F1A', whiteSpace: 'nowrap' }}>{children}</span>
-      <div style={{ flex: 1, height: '1px', background: 'rgba(107,15,26,0.12)' }} />
+    <div className="flex items-center gap-2.5 my-1">
+      <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#6B0F1A] whitespace-nowrap">{children}</span>
+      <div className="flex-1 h-px bg-[rgba(107,15,26,0.12)]" />
     </div>
   )
 }
