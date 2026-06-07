@@ -235,6 +235,25 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* ── Painel de Inteligência ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2040 100%)', border: '1px solid rgba(59,130,246,0.3)' }}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-white mb-1">📊 Painel de Inteligência</h2>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              Licitações por estado · Por fonte · Timeline 30 dias · Top órgãos · Distribuição de valores · Leads por segmento e UF
+            </p>
+          </div>
+          <a
+            href="/admin/inteligencia"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
+            style={{ background: '#3b82f6', color: '#fff' }}
+          >
+            Ver inteligência →
+          </a>
+        </div>
+      </div>
+
       {/* ── Trigger manual ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
