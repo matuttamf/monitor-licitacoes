@@ -13,22 +13,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'E-mail inválido' }, { status: 400 })
     }
 
+    const normalizado = email.toLowerCase().trim()
     const supabase = await createServiceClient()
 
-    // Consulta auth.users diretamente com service role
-    const { data, error } = await supabase
-      .schema('auth')
-      .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase().trim())
-      .maybeSingle()
+    // listUsers é paginado — para SaaS pequeno, 1000 cobre todos os usuários
+    // Busca em páginas até encontrar o e-mail ou esgotar os resultados
+    let page = 1
+    const perPage = 1000
+    let found = false
 
-    if (error) {
-      console.error('[verificar-email]', error.message)
-      return NextResponse.json({ exists: true }) // fail-open: não bloqueia o usuário legítimo
+    while (true) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage })
+
+      if (error || !data?.users?.length) break
+
+      found = data.users.some(u => u.email?.toLowerCase() === normalizado)
+      if (found) break
+
+      // Se retornou menos que perPage, não há mais páginas
+      if (data.users.length < perPage) break
+      page++
     }
 
-    return NextResponse.json({ exists: !!data })
+    return NextResponse.json({ exists: found })
   } catch (e) {
     console.error('[verificar-email]', e)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
