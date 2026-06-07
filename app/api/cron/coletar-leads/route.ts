@@ -26,7 +26,7 @@ export const maxDuration = 300
 const PNCP_BASE  = 'https://pncp.gov.br/api/pncp/v1'
 const BRASIL_API = 'https://brasilapi.com.br/api/cnpj/v1'
 
-const BACKFILL_INICIO = '2022-01-01'
+const BACKFILL_INICIO = '2000-01-01'
 const JANELA_BACKFILL = 30  // dias por execução durante o backfill
 const JANELA_CONTINUA = 2   // ontem + hoje no modo contínuo (evita redundância com 10min)
 

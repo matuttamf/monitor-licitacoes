@@ -33,7 +33,7 @@ const JANELA_BACKFILL = 3
 // Janela no modo contínuo (últimos N dias)
 const JANELA_CONTINUA = 7
 // Data de início do backfill
-const BACKFILL_INICIO = '2022-01-01'
+const BACKFILL_INICIO = '2000-01-01'
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
