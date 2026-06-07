@@ -213,8 +213,7 @@ export default function CompletarCadastroPage() {
             ))}
           </div>
 
-          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">Quase lá! Dados da empresa</h1>
-          <p className="text-sm text-[#9AA0A6] leading-relaxed">Personalize sua experiência informando os dados da sua empresa ou pessoa.</p>
+          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">Quase lá! Complete o cadastro para acesso.</h1>
         </div>
 
         {/* Card */}
