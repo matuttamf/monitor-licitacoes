@@ -597,7 +597,7 @@ export default function DashboardPage() {
               cor: 'var(--vinho)',
             },
             {
-              label: 'Volume estimado (página)',
+              label: 'Volume estimado (total)',
               valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'),
               cor: 'var(--dourado)',
             },
