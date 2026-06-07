@@ -1,0 +1,54 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - main [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - heading "Busca manual" [level=1] [ref=e6]
+          - paragraph [ref=e7]: Pesquise no banco de licitações coletadas — independente das suas palavras-chave
+        - generic [ref=e8]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Buscar por objeto / descrição
+            - 'textbox "Ex: notebook, cadeira, retroescavadeira, serviços de limpeza..." [ref=e11]'
+          - generic [ref=e12]:
+            - generic [ref=e13]:
+              - generic [ref=e14]: Região / Estado
+              - button "Todos ▼" [ref=e16] [cursor=pointer]:
+                - generic [ref=e17]: Todos
+                - generic [ref=e18]: ▼
+            - generic [ref=e19]:
+              - generic [ref=e20]: Abertura a partir de
+              - textbox [ref=e21]
+            - generic [ref=e22]:
+              - generic [ref=e23]: Valor mín. (R$)
+              - spinbutton [ref=e24]
+            - generic [ref=e25]:
+              - generic [ref=e26]: Valor máx. (R$)
+              - spinbutton [ref=e27]
+          - generic [ref=e28]:
+            - button "Buscar no banco" [ref=e29] [cursor=pointer]
+            - button "🔄 Buscar agora nas fontes" [ref=e30] [cursor=pointer]
+    - navigation [ref=e31]:
+      - link "◈ Dashboard" [ref=e32] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e33]: ◈
+        - generic [ref=e34]: Dashboard
+      - link "⊕ Busca" [ref=e35] [cursor=pointer]:
+        - /url: /busca
+        - generic [ref=e36]: ⊕
+        - generic [ref=e37]: Busca
+      - link "◎ Palavras-chave" [ref=e38] [cursor=pointer]:
+        - /url: /palavras-chave
+        - generic [ref=e39]: ◎
+        - generic [ref=e40]: Palavras-chave
+      - link "◉ Alertas" [ref=e41] [cursor=pointer]:
+        - /url: /alertas
+        - generic [ref=e42]: ◉
+        - generic [ref=e43]: Alertas
+      - link "◑ Meu Perfil" [ref=e44] [cursor=pointer]:
+        - /url: /perfil
+        - generic [ref=e45]: ◑
+        - generic [ref=e46]: Meu Perfil
+    - link "Falar no WhatsApp" [ref=e47] [cursor=pointer]:
+      - /url: https://wa.me/5531998317066?text=Olá! Preciso de ajuda com o Monitor de Licitações.
+      - img [ref=e48]
+  - alert [ref=e51]

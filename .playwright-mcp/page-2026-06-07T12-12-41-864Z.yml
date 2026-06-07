@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - main [ref=e3]
+    - navigation [ref=e8]:
+      - link "◈ Dashboard" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e10]: ◈
+        - generic [ref=e11]: Dashboard
+      - link "⊕ Busca" [ref=e12] [cursor=pointer]:
+        - /url: /busca
+        - generic [ref=e13]: ⊕
+        - generic [ref=e14]: Busca
+      - link "◎ Palavras-chave" [ref=e15] [cursor=pointer]:
+        - /url: /palavras-chave
+        - generic [ref=e16]: ◎
+        - generic [ref=e17]: Palavras-chave
+      - link "◉ Alertas" [ref=e18] [cursor=pointer]:
+        - /url: /alertas
+        - generic [ref=e19]: ◉
+        - generic [ref=e20]: Alertas
+      - link "◑ Meu Perfil" [ref=e21] [cursor=pointer]:
+        - /url: /perfil
+        - generic [ref=e22]: ◑
+        - generic [ref=e23]: Meu Perfil
+    - link "Falar no WhatsApp" [ref=e24] [cursor=pointer]:
+      - /url: https://wa.me/5531998317066?text=Olá! Preciso de ajuda com o Monitor de Licitações.
+      - img [ref=e25]
+  - alert [ref=e28]

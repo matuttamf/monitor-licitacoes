@@ -1,0 +1,42 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "ML Monitor de Licitações" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e8]: ML
+        - generic [ref=e9]: Monitor de Licitações
+      - generic [ref=e10]:
+        - generic [ref=e11]: Monitor de Licitações
+        - heading "Encontre editais antes de todos." [level=1] [ref=e12]:
+          - text: Encontre editais
+          - text: antes de todos.
+        - paragraph [ref=e13]: Editais, dispensas e contratos públicos e privados de todo o Brasil — monitorados em tempo real.
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: 346 fontes
+          - generic [ref=e17]: Monitoradas
+        - generic [ref=e18]:
+          - generic [ref=e19]: Público + Privado
+          - generic [ref=e20]: Setores
+        - generic [ref=e21]:
+          - generic [ref=e22]: IA
+          - generic [ref=e23]: Cruzamento
+    - generic [ref=e26]:
+      - heading "Bem-vindo de volta" [level=2] [ref=e27]
+      - paragraph [ref=e28]: Acesse sua conta para ver os alertas
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]: E-mail
+          - textbox [ref=e32]
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - generic [ref=e35]: Senha
+            - link "Esqueci minha senha" [ref=e36] [cursor=pointer]:
+              - /url: /auth/esqueci-senha
+          - textbox [ref=e37]
+        - button "Entrar" [ref=e38] [cursor=pointer]
+      - paragraph [ref=e39]:
+        - text: Não tem conta?
+        - link "Começar grátis →" [ref=e40] [cursor=pointer]:
+          - /url: /cadastro
+  - alert [ref=e42]

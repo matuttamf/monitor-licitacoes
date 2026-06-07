@@ -1,0 +1,2 @@
+[  482840ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://www.monitordelicitacoes.com.br/login:0
+[  503571ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://xuclrhjygwrclxnddibz.supabase.co/auth/v1/token?grant_type=password:0

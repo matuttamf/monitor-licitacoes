@@ -1,0 +1,75 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ML
+        - generic [ref=e6]:
+          - generic [ref=e7]: Monitor de
+          - generic [ref=e8]: Licitações
+      - navigation [ref=e10]:
+        - link "◈ Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e12]: ◈
+          - generic [ref=e13]: Dashboard
+        - link "⊕ Busca" [ref=e14] [cursor=pointer]:
+          - /url: /busca
+          - generic [ref=e15]: ⊕
+          - generic [ref=e16]: Busca
+        - link "◎ Palavras-chave" [ref=e17] [cursor=pointer]:
+          - /url: /palavras-chave
+          - generic [ref=e18]: ◎
+          - generic [ref=e19]: Palavras-chave
+        - link "◉ Alertas" [ref=e20] [cursor=pointer]:
+          - /url: /alertas
+          - generic [ref=e21]: ◉
+          - generic [ref=e22]: Alertas
+        - link "◑ Meu Perfil" [ref=e23] [cursor=pointer]:
+          - /url: /perfil
+          - generic [ref=e24]: ◑
+          - generic [ref=e25]: Meu Perfil
+        - link "◫ Minha Equipe" [ref=e26] [cursor=pointer]:
+          - /url: /equipe
+          - generic [ref=e27]: ◫
+          - generic [ref=e28]: Minha Equipe
+        - link "⚙ Admin" [ref=e29] [cursor=pointer]:
+          - /url: /admin
+          - generic [ref=e30]: ⚙
+          - generic [ref=e31]: Admin
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: M
+          - generic [ref=e35]:
+            - generic [ref=e36]: matuttamaquinaseferramentas
+            - generic [ref=e37]: Matutta Soluções Digitais
+        - button "Sair da conta" [ref=e38] [cursor=pointer]
+    - main [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - heading "Busca manual" [level=1] [ref=e42]
+          - paragraph [ref=e43]: Pesquise no banco de licitações coletadas — independente das suas palavras-chave
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: Buscar por objeto / descrição
+            - 'textbox "Ex: notebook, cadeira, retroescavadeira, serviços de limpeza..." [ref=e47]'
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: Região / Estado
+              - button "Todos ▼" [ref=e52] [cursor=pointer]:
+                - generic [ref=e53]: Todos
+                - generic [ref=e54]: ▼
+            - generic [ref=e55]:
+              - generic [ref=e56]: Abertura a partir de
+              - textbox [ref=e57]
+            - generic [ref=e58]:
+              - generic [ref=e59]: Valor mín. (R$)
+              - spinbutton [ref=e60]
+            - generic [ref=e61]:
+              - generic [ref=e62]: Valor máx. (R$)
+              - spinbutton [ref=e63]
+          - generic [ref=e64]:
+            - button "Buscar no banco" [ref=e65] [cursor=pointer]
+            - button "🔄 Buscar agora nas fontes" [ref=e66] [cursor=pointer]
+    - link "Falar no WhatsApp" [ref=e67] [cursor=pointer]:
+      - /url: https://wa.me/5531998317066?text=Olá! Preciso de ajuda com o Monitor de Licitações.
+      - img [ref=e68]
+  - alert [ref=e71]

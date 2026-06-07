@@ -259,7 +259,8 @@ export async function GET(req: NextRequest) {
   })
 }
 
-async function avancarPonteiro(supabase: ReturnType<typeof createSupabase>, dataFinalFmt: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function avancarPonteiro(supabase: any, dataFinalFmt: string) {
   const d = new Date(dataFinalFmt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
   d.setDate(d.getDate() + 1)
   const proximo = d.toISOString().slice(0, 10)

@@ -1,0 +1,332 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: ML
+        - generic [ref=e6]: Monitor de Licitações
+      - navigation [ref=e7]:
+        - link "Como funciona" [ref=e8] [cursor=pointer]:
+          - /url: "#como-funciona"
+        - link "Planos" [ref=e9] [cursor=pointer]:
+          - /url: /assinar
+        - link "Entrar" [ref=e10] [cursor=pointer]:
+          - /url: /login
+        - link "Começar grátis" [ref=e11] [cursor=pointer]:
+          - /url: /cadastro
+    - generic [ref=e13]:
+      - generic [ref=e16]: Novo · Saiba o que o governo vai comprar antes do edital existir
+      - heading "Cada edital publicado sem você saber é dinheiro direto no bolso do seu concorrente." [level=1] [ref=e17]
+      - paragraph [ref=e18]:
+        - text: O Monitor rastreia tudo que o setor público publica — editais, dispensas, contratos, avisos no Diário Oficial — e entrega as oportunidades que combinam com o que sua empresa vende,
+        - strong [ref=e19]: antes que o prazo comece a correr.
+      - paragraph [ref=e20]: Do governo federal à Petrobras. Das prefeituras do interior às maiores capitais do país. Nenhum contrato público passa despercebido.
+      - generic [ref=e21]:
+        - link "Quero receber alertas agora →" [ref=e22] [cursor=pointer]:
+          - /url: /cadastro
+        - generic [ref=e23]:
+          - generic [ref=e24]: ✓ Sete dias completamente grátis
+          - generic [ref=e25]: ✓ Sem cartão de crédito agora
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: R$ 2 tri
+          - generic [ref=e29]: em licitações por ano no Brasil
+        - generic [ref=e30]:
+          - generic [ref=e31]: Todo dia útil
+          - generic [ref=e32]: novos editais chegam antes das 9h
+        - generic [ref=e33]:
+          - generic [ref=e34]: < 5 dias
+          - generic [ref=e35]: tempo médio de vida de um edital
+        - generic [ref=e36]:
+          - generic [ref=e37]: 24h
+          - generic [ref=e38]: para chegar o seu primeiro alerta
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]: Reconhece essa situação?
+        - heading "Você está perdendo contratos que eram seus por direito." [level=2] [ref=e43]:
+          - text: Você está perdendo contratos
+          - text: que eram seus por direito.
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: 😰
+          - generic [ref=e47]: "\"Descobri o edital depois do prazo\""
+          - paragraph [ref=e48]: A licitação foi publicada, abriu e fechou em cinco dias. Você ficou sabendo uma semana depois — tarde demais.
+        - generic [ref=e49]:
+          - generic [ref=e50]: 😤
+          - generic [ref=e51]: "\"Meu concorrente ganhou sem eu saber\""
+          - paragraph [ref=e52]: O contrato foi entregue. Você descobriu depois. O que você venderia tranquilamente foi parar no caixa de outra empresa.
+        - generic [ref=e53]:
+          - generic [ref=e54]: 😩
+          - generic [ref=e55]: "\"Não tenho tempo de verificar tudo\""
+          - paragraph [ref=e56]: Cada estado tem um sistema. Cada prefeitura usa uma plataforma diferente. O Diário Oficial tem três seções. Monitorar tudo isso sozinho é humanamente impossível.
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - paragraph [ref=e59]: Isso não é azar. É falta de informação a tempo.
+          - paragraph [ref=e60]: O Monitor faz o trabalho de uma equipe inteira — governo federal, todos os estados, as maiores cidades, Petrobras e Caixa — e entrega só o que importa para o seu negócio.
+        - link "Resolver isso agora →" [ref=e61] [cursor=pointer]:
+          - /url: /cadastro
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e65]: Simples. Automático. Eficaz.
+        - heading "Configure uma vez. Receba oportunidades para sempre." [level=2] [ref=e66]:
+          - text: Configure uma vez.
+          - text: Receba oportunidades para sempre.
+        - paragraph [ref=e67]: Você define o que sua empresa vende. Nós monitoramos tudo e avisamos quando o governo quer comprar.
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]: "01"
+          - generic [ref=e71]: ⚡
+          - generic [ref=e72]: Cadastre-se em dois minutos
+          - generic [ref=e73]: Sete dias grátis, sem cartão de crédito. Você começa a monitorar imediatamente após o cadastro.
+        - generic [ref=e74]:
+          - generic [ref=e75]: "02"
+          - generic [ref=e76]: 🎯
+          - generic [ref=e77]: Informe o que você vende ou fornece
+          - generic [ref=e78]: Produtos, serviços, locações, obras, consultorias, TI — qualquer objeto de contratação pública, dos municípios do interior às maiores estatais do Brasil.
+        - generic [ref=e79]:
+          - generic [ref=e80]: "03"
+          - generic [ref=e81]: 📬
+          - generic [ref=e82]: Receba alertas em tempo real
+          - generic [ref=e83]: Sempre que identificamos uma licitação compatível com seu perfil, o alerta chega por e-mail, Telegram ou WhatsApp — sem esperar o dia seguinte.
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]: Inteligência a seu favor
+          - heading "O sistema entende o que você vende — não apenas o que você escreveu." [level=3] [ref=e87]
+          - paragraph [ref=e88]:
+            - text: Diferente dos buscadores comuns, nosso sistema interpreta contexto. Quem monitora
+            - strong [ref=e89]: "\"notebook\""
+            - text: recebe alertas de
+            - emphasis [ref=e90]: "\"equipamentos de informática\""
+            - text: ","
+            - emphasis [ref=e91]: "\"computadores portáteis\""
+            - text: e
+            - emphasis [ref=e92]: "\"material de tecnologia\""
+            - text: também.
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]: notebook
+            - generic [ref=e96]: 37 editais encontrados esta semana
+          - generic [ref=e97]:
+            - generic [ref=e98]: cadeira
+            - generic [ref=e99]: 52 editais encontrados esta semana
+          - generic [ref=e100]:
+            - generic [ref=e101]: ar condicionado
+            - generic [ref=e102]: 28 editais encontrados esta semana
+    - generic [ref=e104]:
+      - generic [ref=e105]:
+        - generic [ref=e106]: Resultados de quem chegou primeiro
+        - heading "Quem monitora, vende mais para o governo." [level=2] [ref=e107]
+        - paragraph [ref=e108]: "A diferença entre ganhar ou perder um contrato público quase sempre se resume a uma coisa: quem soube primeiro."
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - generic [ref=e111]: 💻
+          - generic [ref=e112]: R$ 127.000
+          - generic [ref=e113]: Contrato de notebooks para prefeitura do interior de MG
+          - paragraph [ref=e114]: "\"O alerta chegou na segunda-feira. Na sexta já tínhamos enviado a proposta. Ganhamos o contrato. Sem o Monitor, nunca saberíamos que esse edital existia.\""
+          - generic [ref=e115]: Distribuidora de TI — Belo Horizonte, MG
+        - generic [ref=e116]:
+          - generic [ref=e117]: 🪑
+          - generic [ref=e118]: R$ 84.500
+          - generic [ref=e119]: Fornecimento de cadeiras para escola estadual de SP
+          - paragraph [ref=e120]: "\"Faturamos quase R$ 85 mil em um contrato que nem sabíamos que existia. O sistema me avisou antes de qualquer concorrente. Agora renovo todo mês.\""
+          - generic [ref=e121]: Fabricante de móveis — Ubá, MG
+        - generic [ref=e122]:
+          - generic [ref=e123]: 🧴
+          - generic [ref=e124]: R$ 43.200
+          - generic [ref=e125]: Material de higiene para câmara municipal de RJ
+          - paragraph [ref=e126]: "\"Pensava que licitação era coisa de empresa grande. Com o Monitor, ganhei meu primeiro contrato com o governo em menos de 30 dias.\""
+          - generic [ref=e127]: Distribuidora de limpeza — Rio de Janeiro, RJ
+      - generic [ref=e128]:
+        - generic [ref=e129]: ⏱
+        - paragraph [ref=e130]:
+          - strong [ref=e131]: Editais fecham em média em cinco dias.
+          - text: Cada dia sem monitoramento é uma janela de oportunidade que fecha sem você. Empresas que começaram a monitorar esta semana já têm vantagem sobre as que vão começar na semana que vem.
+    - generic [ref=e133]:
+      - generic [ref=e134]:
+        - generic [ref=e135]: Investimento mínimo. Retorno ilimitado.
+        - heading "A partir de R$1,66 por dia para nunca mais perder um contrato." [level=2] [ref=e136]
+        - paragraph [ref=e137]: Escolha o plano ideal. Comece com 7 dias grátis — sem cartão de crédito.
+      - generic [ref=e138]:
+        - generic [ref=e139]:
+          - generic [ref=e140]: 🎁 GRÁTIS
+          - generic [ref=e141]: Período de Teste
+          - generic [ref=e142]: Experimente sem compromisso
+          - generic [ref=e144]: 7 dias
+          - generic [ref=e145]: Grátis
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]: ✓
+              - generic [ref=e149]: Até 20 palavras-chave
+            - generic [ref=e150]:
+              - generic [ref=e151]: ✓
+              - generic [ref=e152]: 1 usuário
+            - generic [ref=e153]:
+              - generic [ref=e154]: ✓
+              - generic [ref=e155]: Alertas por e-mail
+            - generic [ref=e156]:
+              - generic [ref=e157]: ✓
+              - generic [ref=e158]: Busca manual no painel
+          - link "Começar 7 dias grátis" [ref=e159] [cursor=pointer]:
+            - /url: /cadastro
+          - paragraph [ref=e160]: Sem cartão de crédito
+        - generic [ref=e161]:
+          - generic [ref=e162]: Basic
+          - generic [ref=e163]: Para quem está começando no setor público
+          - generic [ref=e164]:
+            - generic [ref=e165]: R$
+            - generic [ref=e166]:
+              - text: "49"
+              - generic [ref=e167]: ",90"
+            - generic [ref=e168]: /mês
+          - generic [ref=e169]: R$1,66/dia
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - generic [ref=e172]: ✓
+              - generic [ref=e173]: Até 20 palavras-chave
+            - generic [ref=e174]:
+              - generic [ref=e175]: ✓
+              - generic [ref=e176]: 1 usuário
+            - generic [ref=e177]:
+              - generic [ref=e178]: ✓
+              - generic [ref=e179]: Alertas por e-mail
+            - generic [ref=e180]:
+              - generic [ref=e181]: ✓
+              - generic [ref=e182]: Busca manual no painel
+          - link "Assinar agora →" [ref=e183] [cursor=pointer]:
+            - /url: /checkout?plano=basic
+          - paragraph [ref=e184]: Ou teste 7 dias grátis antes
+        - generic [ref=e185]:
+          - generic [ref=e186]: Profissional
+          - generic [ref=e187]: Para quem fornece ativamente para o governo
+          - generic [ref=e188]:
+            - generic [ref=e189]: R$
+            - generic [ref=e190]:
+              - text: "97"
+              - generic [ref=e191]: ",90"
+            - generic [ref=e192]: /mês
+          - generic [ref=e193]: R$3,26/dia
+          - generic [ref=e194]:
+            - generic [ref=e195]:
+              - generic [ref=e196]: ✓
+              - generic [ref=e197]: Ilimitadas
+            - generic [ref=e198]:
+              - generic [ref=e199]: ✓
+              - generic [ref=e200]: 1 usuário
+            - generic [ref=e201]:
+              - generic [ref=e202]: ✓
+              - generic [ref=e203]: E-mail, Telegram e WhatsApp
+            - generic [ref=e204]:
+              - generic [ref=e205]: ✓
+              - generic [ref=e206]: Busca manual no painel
+          - link "Assinar agora →" [ref=e207] [cursor=pointer]:
+            - /url: /checkout?plano=profissional
+          - paragraph [ref=e208]: Ou teste 7 dias grátis antes
+        - generic [ref=e209]:
+          - generic [ref=e210]: ⭐ MAIS POPULAR
+          - generic [ref=e211]: Pro
+          - generic [ref=e212]: Para equipes comerciais que querem crescer
+          - generic [ref=e213]:
+            - generic [ref=e214]: R$
+            - generic [ref=e215]:
+              - text: "197"
+              - generic [ref=e216]: ",90"
+            - generic [ref=e217]: /mês
+          - generic [ref=e218]: R$6,60/dia
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - generic [ref=e221]: ✓
+              - generic [ref=e222]: Ilimitadas
+            - generic [ref=e223]:
+              - generic [ref=e224]: ✓
+              - generic [ref=e225]: Até 5 usuários
+            - generic [ref=e226]:
+              - generic [ref=e227]: ✓
+              - generic [ref=e228]: E-mail, Telegram e WhatsApp
+            - generic [ref=e229]:
+              - generic [ref=e230]: ✓
+              - generic [ref=e231]: Busca manual no painel
+          - link "Assinar agora →" [ref=e232] [cursor=pointer]:
+            - /url: /checkout?plano=pro
+          - paragraph [ref=e233]: Ou teste 7 dias grátis antes
+        - generic [ref=e234]:
+          - generic [ref=e235]: Empresarial
+          - generic [ref=e236]: Para operações que dependem do setor público
+          - generic [ref=e237]:
+            - generic [ref=e238]: R$
+            - generic [ref=e239]:
+              - text: "497"
+              - generic [ref=e240]: ",00"
+            - generic [ref=e241]: /mês
+          - generic [ref=e242]: R$16,57/dia
+          - generic [ref=e243]:
+            - generic [ref=e244]:
+              - generic [ref=e245]: ✓
+              - generic [ref=e246]: Ilimitadas
+            - generic [ref=e247]:
+              - generic [ref=e248]: ✓
+              - generic [ref=e249]: Até 15 usuários
+            - generic [ref=e250]:
+              - generic [ref=e251]: ✓
+              - generic [ref=e252]: E-mail, Telegram e WhatsApp
+            - generic [ref=e253]:
+              - generic [ref=e254]: ✓
+              - generic [ref=e255]: Busca manual no painel
+          - link "Assinar agora →" [ref=e256] [cursor=pointer]:
+            - /url: /checkout?plano=empresarial
+          - paragraph [ref=e257]: Ou teste 7 dias grátis antes
+      - link "Ver comparação detalhada dos planos →" [ref=e259] [cursor=pointer]:
+        - /url: /assinar
+    - generic [ref=e261]:
+      - heading "Dúvidas frequentes" [level=2] [ref=e262]
+      - paragraph [ref=e263]: Respondemos as principais dúvidas de quem está considerando monitorar licitações.
+      - group [ref=e264]:
+        - generic "Preciso de cartão de crédito para começar? +" [ref=e265] [cursor=pointer]:
+          - text: Preciso de cartão de crédito para começar?
+          - generic [ref=e266]: +
+      - group [ref=e267]:
+        - generic "Minha empresa é pequena. Isso funciona para mim? +" [ref=e268] [cursor=pointer]:
+          - text: Minha empresa é pequena. Isso funciona para mim?
+          - generic [ref=e269]: +
+      - group [ref=e270]:
+        - generic "Como o sistema sabe quais editais combinam com meu negócio? +" [ref=e271] [cursor=pointer]:
+          - text: Como o sistema sabe quais editais combinam com meu negócio?
+          - generic [ref=e272]: +
+      - group [ref=e273]:
+        - generic "Com que frequência recebo alertas? +" [ref=e274] [cursor=pointer]:
+          - text: Com que frequência recebo alertas?
+          - generic [ref=e275]: +
+      - group [ref=e276]:
+        - generic "Vocês monitoram empresas como Petrobras, Correios e Caixa? +" [ref=e277] [cursor=pointer]:
+          - text: Vocês monitoram empresas como Petrobras, Correios e Caixa?
+          - generic [ref=e278]: +
+      - group [ref=e279]:
+        - generic "Posso cancelar se não for o que esperava? +" [ref=e280] [cursor=pointer]:
+          - text: Posso cancelar se não for o que esperava?
+          - generic [ref=e281]: +
+    - generic [ref=e283]:
+      - generic [ref=e284]: Sua decisão. Agora.
+      - heading "O governo vai publicar novos editais amanhã de manhã. Você vai saber?" [level=2] [ref=e285]:
+        - text: O governo vai publicar novos editais amanhã de manhã.
+        - emphasis [ref=e286]: Você vai saber?
+      - paragraph [ref=e287]: Cada dia sem monitoramento é um dia em que seu concorrente leva vantagem. Configure o Monitor agora e receba os primeiros alertas — de graça, sem cartão, sem compromisso.
+      - paragraph [ref=e288]: Do governo federal à Petrobras — cobertura nacional completa. Sete dias inteiramente grátis, sem cartão.
+      - link "Quero meu acesso gratuito agora →" [ref=e289] [cursor=pointer]:
+        - /url: /cadastro
+      - paragraph [ref=e290]: Cadastro em dois minutos · Sem cartão de crédito · Cancele quando quiser
+    - contentinfo [ref=e291]:
+      - generic [ref=e292]:
+        - generic [ref=e293]: ML
+        - generic [ref=e294]: © 2021 Monitor de Licitações · Matutta Soluções Digitais
+      - generic [ref=e295]:
+        - link "Início" [ref=e296] [cursor=pointer]:
+          - /url: /
+        - link "Planos" [ref=e297] [cursor=pointer]:
+          - /url: /assinar
+        - link "Entrar" [ref=e298] [cursor=pointer]:
+          - /url: /login
+        - link "Cadastrar" [ref=e299] [cursor=pointer]:
+          - /url: /cadastro
+        - link "Privacidade" [ref=e300] [cursor=pointer]:
+          - /url: /privacidade
+        - link "Termos de Uso" [ref=e301] [cursor=pointer]:
+          - /url: /termos
+  - alert [ref=e302]

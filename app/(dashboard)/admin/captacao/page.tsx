@@ -56,9 +56,11 @@ function exportarCSV(leads: Lead[]) {
 
 export default function CaptacaoPage() {
   // Sistema
-  const [captacaoAtiva, setCaptacaoAtiva] = useState<boolean | null>(null)
-  const [toggling, setToggling]           = useState(false)
-  const [stats, setStats]                 = useState<Stats | null>(null)
+  const [captacaoAtiva, setCaptacaoAtiva]   = useState<boolean | null>(null)
+  const [disparoAtivo, setDisparoAtivo]     = useState<boolean>(false)
+  const [toggling, setToggling]             = useState(false)
+  const [togglingDisparo, setTogglingDisparo] = useState(false)
+  const [stats, setStats]                   = useState<Stats | null>(null)
 
   // Tabela leads DB
   const [leadsDB, setLeadsDB]             = useState<LeadDB[]>([])
@@ -101,13 +103,18 @@ export default function CaptacaoPage() {
   // ─── Carregamento ─────────────────────────────────────────────────────────
 
   const carregarStats = useCallback(async () => {
-    const [cfgRes, statsRes, bfRes] = await Promise.all([
+    const [cfgRes, statsRes, bfRes, disparoRes] = await Promise.all([
       fetch('/api/admin/captacao-config'),
       fetch('/api/admin/stats'),
       fetch('/api/admin/captacao-config?chave=captacao_backfill_data'),
+      fetch('/api/admin/captacao-config?chave=captacao_disparo_ativo'),
     ])
-    if (cfgRes.ok)   setCaptacaoAtiva((await cfgRes.json()).captacao_ativa)
-    if (bfRes.ok)    setBackfillData((await bfRes.json()).valor ?? null)
+    if (cfgRes.ok)     setCaptacaoAtiva((await cfgRes.json()).captacao_ativa)
+    if (bfRes.ok)      setBackfillData((await bfRes.json()).valor ?? null)
+    if (disparoRes.ok) {
+      const d = await disparoRes.json()
+      setDisparoAtivo(d.valor === true || d.valor === 'true')
+    }
     if (statsRes.ok) {
       const s = await statsRes.json()
       setStats({
@@ -153,6 +160,17 @@ export default function CaptacaoPage() {
   }, [carregarLeadsDB])
 
   // ─── Ações ────────────────────────────────────────────────────────────────
+
+  async function toggleDisparo() {
+    setTogglingDisparo(true)
+    const novoValor = !disparoAtivo
+    const res = await fetch('/api/admin/captacao-config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chave: 'captacao_disparo_ativo', valor: novoValor }),
+    })
+    if (res.ok) setDisparoAtivo(novoValor)
+    setTogglingDisparo(false)
+  }
 
   async function toggleSistema() {
     if (captacaoAtiva === null) return
@@ -254,11 +272,26 @@ export default function CaptacaoPage() {
             Coleta PNCP → Enriquecimento Receita Federal → Disparo e-mails → Reconversão de trials
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+
+          {/* Toggle disparo de e-mails */}
+          <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{ background: disparoAtivo ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.08)', border: `1px solid ${disparoAtivo ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.3)'}` }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: disparoAtivo ? '#065f46' : '#92400e' }}>
+              {disparoAtivo ? '✉️ Disparo ativo' : '⏸ Disparo pausado'}
+            </span>
+            <button onClick={toggleDisparo} disabled={togglingDisparo}
+              className="px-3 py-1 rounded-lg text-xs font-bold"
+              style={{ background: disparoAtivo ? '#f59e0b' : '#10b981', color: 'white', border: 'none', cursor: togglingDisparo ? 'not-allowed' : 'pointer' }}>
+              {togglingDisparo ? '…' : disparoAtivo ? 'Pausar' : '▶ Liberar'}
+            </button>
+          </div>
+
+          {/* Toggle sistema de coleta */}
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
             style={{ background: ativo ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.08)', color: ativo ? '#10b981' : '#ef4444', border: `1px solid ${ativo ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.2)'}` }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: ativo ? '#10b981' : '#ef4444', display: 'inline-block' }} />
-            {captacaoAtiva === null ? '…' : ativo ? 'Sistema ativo' : 'Sistema pausado'}
+            {captacaoAtiva === null ? '…' : ativo ? 'Coleta ativa' : 'Coleta pausada'}
           </div>
           <button onClick={toggleSistema} disabled={toggling || captacaoAtiva === null}
             className="px-5 py-2 rounded-xl text-sm font-bold"

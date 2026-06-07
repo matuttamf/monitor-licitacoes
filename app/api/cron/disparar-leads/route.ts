@@ -44,6 +44,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'sistema pausado' })
   }
 
+  // Verificar se disparo de e-mails está habilitado (padrão: desabilitado)
+  const { data: cfgDisparo } = await supabase
+    .from('configuracoes')
+    .select('valor')
+    .eq('chave', 'captacao_disparo_ativo')
+    .maybeSingle()
+  const disparoAtivo = cfgDisparo?.valor === true || cfgDisparo?.valor === 'true'
+  if (!disparoAtivo) {
+    return NextResponse.json({ ok: true, enviados: 0, motivo: 'disparo pausado pelo admin' })
+  }
+
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   // Buscar leads pendentes com e-mail

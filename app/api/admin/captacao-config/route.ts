@@ -45,9 +45,19 @@ export async function POST(req: NextRequest) {
   const user = await checarAdmin()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const { ativo } = await req.json() as { ativo: boolean }
+  const body = await req.json() as { ativo?: boolean; chave?: string; valor?: unknown }
   const service = await createServiceClient()
 
+  // Modo genérico: { chave, valor }
+  if (body.chave) {
+    await service
+      .from('configuracoes')
+      .upsert({ chave: body.chave, valor: body.valor }, { onConflict: 'chave' })
+    return NextResponse.json({ chave: body.chave, valor: body.valor })
+  }
+
+  // Compatibilidade legada: { ativo }
+  const ativo = body.ativo ?? false
   await service
     .from('configuracoes')
     .upsert({ chave: 'captacao_ativa', valor: ativo }, { onConflict: 'chave' })
