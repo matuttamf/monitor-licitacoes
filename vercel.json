@@ -29,11 +29,7 @@
 
     { "path": "/api/cron/resumo-semanal",  "schedule": "0 13 * * 5"   },
 
-    { "path": "/api/cron/coletar-leads", "schedule": "0 6  * * 1-6" },
-    { "path": "/api/cron/coletar-leads", "schedule": "0 9  * * 1-6" },
-    { "path": "/api/cron/coletar-leads", "schedule": "0 12 * * 1-6" },
-    { "path": "/api/cron/coletar-leads", "schedule": "0 15 * * 1-6" },
-    { "path": "/api/cron/coletar-leads", "schedule": "0 18 * * 1-6" },
+    { "path": "/api/cron/coletar-leads", "schedule": "*/10 * * * *" },
     { "path": "/api/cron/coletar-participantes", "schedule": "0 7 * * 0" },
 
     { "path": "/api/cron/disparar-leads", "schedule": "0 8  * * 1-5" },

@@ -1,16 +1,20 @@
 /**
  * Cron: coletar-leads
- * Horário: diário às 6h (segunda a sábado)
+ * Horário: a cada 10 minutos, 24/7
  *
  * Fluxo:
- *  1. Busca contratos do dia anterior no PNCP
- *  2. Extrai CNPJs fornecedores (apenas CNPJ, não CPF)
+ *  1. Busca contratos publicados no PNCP no período
+ *  2. Extrai CNPJs de fornecedores (apenas empresas — 14 dígitos)
  *  3. Ignora CNPJs já presentes na tabela leads
- *  4. Enriquece via BrasilAPI (e-mail, porte, situação…)
- *  5. Filtra: apenas empresas ativas e com e-mail
- *  6. Insere novos leads com status 'pendente'
+ *  4. Enriquece via BrasilAPI
+ *  5. Filtra: apenas empresas ATIVAS (situacao_cadastral = '02') com e-mail
+ *  6. Classifica em segmento via CNAE
+ *  7. Insere novos leads com fonte='pncp_contrato'
  *
- * Deduplicação garantida pelo UNIQUE(cnpj) — INSERT ON CONFLICT DO NOTHING
+ * Backfill progressivo:
+ *  - Chave 'captacao_backfill_data' em configuracoes guarda próximo dia
+ *  - Janela de 30 dias por execução → ~4h para cobrir 2022–hoje
+ *  - Após backfill: modo contínuo (ontem + hoje)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -22,34 +26,63 @@ export const maxDuration = 300
 const PNCP_BASE  = 'https://pncp.gov.br/api/pncp/v1'
 const BRASIL_API = 'https://brasilapi.com.br/api/cnpj/v1'
 
-function sleep(ms: number) {
-  return new Promise(r => setTimeout(r, ms))
+const BACKFILL_INICIO = '2022-01-01'
+const JANELA_BACKFILL = 30  // dias por execução durante o backfill
+const JANELA_CONTINUA = 2   // ontem + hoje no modo contínuo (evita redundância com 10min)
+
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
+const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
+const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
+
+// ─── Segmentação por CNAE ─────────────────────────────────────────────────────
+function mapearSegmento(cnae: string | null | undefined): string {
+  if (!cnae) return 'outros'
+  const c = cnae.toLowerCase()
+  if (/constru|engenharia|obra|reform|pavimentaç/.test(c))          return 'construção'
+  if (/tecnolog|informátic|software|sistema|hardware|ti\b|dados/.test(c)) return 'tecnologia'
+  if (/saúde|hospital|médic|farmac|laborat|clínic|enfermag/.test(c)) return 'saúde'
+  if (/limpeza|conservaç|higienizaç|saneament|desinfeç/.test(c))     return 'limpeza'
+  if (/vigilânc|segurança|monitoram|portaria|armado/.test(c))        return 'segurança'
+  if (/transport|logístic|frete|mudança|veícul|frota/.test(c))       return 'transporte'
+  if (/aliment|nutriç|refeição|caterinг|merenda|buffet/.test(c))     return 'alimentação'
+  if (/consult|assessor|gestão|planejam|auditoria/.test(c))          return 'consultoria'
+  if (/educaç|treinament|capacitaç|ensino|curso|escola/.test(c))     return 'educação'
+  if (/manutençã|reparo|instalação|calibraç|assistência técn/.test(c)) return 'manutenção'
+  if (/paisag|jardim|arborizaç|verde/.test(c))                       return 'jardinagem'
+  if (/gráfic|impres|copiaç|editoraç/.test(c))                       return 'gráfica'
+  return 'outros'
 }
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 interface PncpContrato {
   numeroCpfCnpjFornecedor?: string
   objetoContrato?:           string
   valorInicial?:             number
   dataPublicacaoPncp?:       string
-  unidadeOrgao?: { ufSigla?: string; municipioNome?: string }
+  tipoContrato?:             { descricao?: string }
+  modalidadeContratacao?:    { descricao?: string }
+  unidadeOrgao?:             { ufSigla?: string; municipioNome?: string }
 }
 
 interface BrasilApiCnpj {
-  cnpj:                        string
-  razao_social:                string
-  nome_fantasia?:              string
-  situacao_cadastral:          string
+  cnpj:                         string
+  razao_social:                 string
+  nome_fantasia?:               string
+  situacao_cadastral:           string
   descricao_situacao_cadastral: string
-  email?:                      string
-  ddd_telefone_1?:             string
-  municipio?:                  string
-  uf?:                         string
-  descricao_porte?:            string
-  cnae_fiscal_descricao?:      string
+  email?:                       string
+  ddd_telefone_1?:              string
+  municipio?:                   string
+  uf?:                          string
+  descricao_porte?:             string
+  cnae_fiscal_descricao?:       string
 }
 
+// ─── Busca PNCP ───────────────────────────────────────────────────────────────
+
 async function buscarContratosPNCP(
-  dataInicial: string, dataFinal: string, paginas = 10
+  dataInicial: string, dataFinal: string, paginas = 5
 ): Promise<{ contratos: PncpContrato[]; debug: string[] }> {
   const todos: PncpContrato[] = []
   const debug: string[] = []
@@ -59,17 +92,14 @@ async function buscarContratosPNCP(
       const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
       debug.push(`p${p}: HTTP ${res.status}`)
       if (!res.ok) {
-        const txt = await res.text().catch(() => '')
-        debug.push(`p${p} erro: ${txt.slice(0, 200)}`)
+        debug.push(`p${p} erro: ${(await res.text().catch(() => '')).slice(0, 200)}`)
         break
       }
       const json = await res.json()
       const itens: PncpContrato[] = json.data ?? json ?? []
-      debug.push(`p${p}: ${itens.length} itens, totalRegistros=${json.totalRegistros ?? '?'}`)
+      debug.push(`p${p}: ${itens.length} itens, total=${json.totalRegistros ?? '?'}`)
       if (!itens.length) break
-      const comCnpj = itens.filter(c => c.numeroCpfCnpjFornecedor)
-      todos.push(...comCnpj)
-      debug.push(`p${p}: ${comCnpj.length} com CPF/CNPJ fornecedor`)
+      todos.push(...itens.filter(c => c.numeroCpfCnpjFornecedor))
       if (itens.length < 50) break
     } catch (e) {
       debug.push(`p${p}: exception ${String(e)}`)
@@ -89,6 +119,8 @@ async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
     return await res.json()
   } catch { return null }
 }
+
+// ─── Handler ──────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
@@ -110,20 +142,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'sistema pausado' })
   }
 
-  // ── Backfill progressivo ─────────────────────────────────────────────────
-  // Chave 'captacao_backfill_data' guarda o próximo dia a processar (ISO 'YYYY-MM-DD').
-  // Enquanto houver histórico pendente, processa 30 dias por execução.
-  // Quando chegar hoje, volta ao modo contínuo (últimos 7 dias).
-  const BACKFILL_INICIO = '2022-01-01'
-  const JANELA_BACKFILL = 30 // dias por execução durante o backfill
-  const JANELA_CONTINUA = 7  // dias no modo contínuo
+  // ── Determinar período ────────────────────────────────────────────────────
+  const hoje    = new Date()
+  const hojeIso = fmtIso(hoje)
 
-  const fmt      = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
-  const fmtIso   = (d: Date) => d.toISOString().slice(0, 10)
-  const hoje     = new Date()
-  const hojeIso  = fmtIso(hoje)
-
-  // Ler ponteiro de backfill
   const { data: cfgBf } = await supabase
     .from('configuracoes')
     .select('valor')
@@ -138,63 +160,58 @@ export async function GET(req: NextRequest) {
   let modoLabel:   string
 
   if (emBackfill) {
-    // Modo backfill: janela de 30 dias a partir do ponteiro
     const inicioDate = new Date(ponteiro)
     const fimDate    = new Date(inicioDate)
     fimDate.setDate(fimDate.getDate() + JANELA_BACKFILL - 1)
     if (fimDate > hoje) fimDate.setTime(hoje.getTime())
     dataInicial = fmt(inicioDate)
     dataFinal   = fmt(fimDate)
-    modoLabel   = `backfill (${ponteiro} → ${fimDate.toISOString().slice(0, 10)})`
+    modoLabel   = `backfill (${ponteiro} → ${fmtIso(fimDate)})`
   } else {
-    // Modo contínuo: últimos 7 dias
     const inicioDate = new Date(hoje)
     inicioDate.setDate(inicioDate.getDate() - JANELA_CONTINUA)
     dataInicial = fmt(inicioDate)
     dataFinal   = fmt(hoje)
-    modoLabel   = `contínuo (últimos ${JANELA_CONTINUA} dias)`
+    modoLabel   = `contínuo`
   }
 
-  console.log(`[coletar-leads] modo=${modoLabel} período ${dataInicial} → ${dataFinal}`)
-
-  // 1. Buscar contratos PNCP
-  // 5 páginas × 50 = 250 contratos → ~50 CNPJs únicos para enriquecer
+  // ── 1. Buscar contratos PNCP ──────────────────────────────────────────────
   const { contratos, debug: debugPncp } = await buscarContratosPNCP(dataInicial, dataFinal, 5)
-  console.log(`[coletar-leads] PNCP debug:`, debugPncp)
-  console.log(`[coletar-leads] ${contratos.length} contratos com fornecedor`)
 
-  // 2. Desduplicar CNPJs (apenas 14 dígitos = empresa, não CPF)
-  const cnpjMap = new Map<string, PncpContrato>()
-  for (const c of contratos) {
-    const raw  = c.numeroCpfCnpjFornecedor!.replace(/\D/g, '')
-    if (raw.length === 14 && !cnpjMap.has(raw)) cnpjMap.set(raw, c)
-  }
-  const cnpjsNovos = [...cnpjMap.keys()]
-  console.log(`[coletar-leads] ${cnpjsNovos.length} CNPJs únicos (14 dígitos)`)
-
-  if (!cnpjsNovos.length) {
+  if (!contratos.length) {
+    if (emBackfill) await avancarPonteiro(supabase, dataFinal)
     return NextResponse.json({
-      ok: true, novos: 0,
-      mensagem: 'Nenhum CNPJ de empresa encontrado no período',
-      pncp_debug: debugPncp,
-      total_contratos_pncp: contratos.length,
+      ok: true, novos: 0, modo: modoLabel,
+      mensagem: 'Nenhum contrato encontrado no período', pncp_debug: debugPncp,
     })
   }
 
-  // 3. Verificar quais já existem no banco
+  // ── 2. Desduplicar CNPJs (apenas 14 dígitos = empresa) ───────────────────
+  const cnpjMap = new Map<string, PncpContrato>()
+  for (const c of contratos) {
+    const raw = c.numeroCpfCnpjFornecedor!.replace(/\D/g, '')
+    if (raw.length === 14 && !cnpjMap.has(raw)) cnpjMap.set(raw, c)
+  }
+  const cnpjsNovos = [...cnpjMap.keys()]
+
+  // ── 3. Filtrar quais já existem no banco ──────────────────────────────────
   const { data: existentes } = await supabase
     .from('leads')
     .select('cnpj')
     .in('cnpj', cnpjsNovos)
   const setExistentes = new Set((existentes ?? []).map((r: { cnpj: string }) => r.cnpj))
   const paraEnriquecer = cnpjsNovos.filter(c => !setExistentes.has(c))
-  console.log(`[coletar-leads] ${setExistentes.size} já existem, ${paraEnriquecer.length} novos para enriquecer`)
 
   if (!paraEnriquecer.length) {
-    return NextResponse.json({ ok: true, novos: 0, mensagem: 'Todos os CNPJs já estão na base' })
+    if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+    return NextResponse.json({
+      ok: true, novos: 0, modo: modoLabel,
+      mensagem: 'Todos os CNPJs já estão na base',
+      total_contratos_pncp: contratos.length,
+    })
   }
 
-  // 4. Enriquecer e inserir (em lotes de 30 para respeitar rate limit)
+  // ── 4. Enriquecer via BrasilAPI e inserir (lotes de 30) ───────────────────
   const LOTE = 30
   let inseridos = 0
 
@@ -204,29 +221,36 @@ export async function GET(req: NextRequest) {
 
     for (const cnpj of lote) {
       const dados = await enriquecerCnpj(cnpj)
-      await sleep(350) // ~3 req/s
+      await sleep(350) // ~3 req/s — respeita rate limit BrasilAPI
 
       if (!dados) continue
-      if (dados.situacao_cadastral !== '02') continue // apenas ativas
-      if (!dados.email?.trim()) continue              // apenas com e-mail
+      if (dados.situacao_cadastral !== '02') continue  // apenas ATIVAS
+      if (!dados.email?.trim()) continue               // apenas com e-mail
 
       const contrato = cnpjMap.get(cnpj)!
+      const cnae     = dados.cnae_fiscal_descricao ?? null
+      const modalidade = contrato.modalidadeContratacao?.descricao
+                      ?? contrato.tipoContrato?.descricao
+                      ?? null
+
       rows.push({
-        cnpj:         dados.cnpj,
-        razao_social: dados.razao_social,
+        cnpj:          dados.cnpj,
+        razao_social:  dados.razao_social,
         nome_fantasia: dados.nome_fantasia ?? null,
-        email:        dados.email.toLowerCase().trim(),
-        telefone:     dados.ddd_telefone_1 ?? null,
-        municipio:    dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
-        uf:           dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-        situacao:     dados.descricao_situacao_cadastral ?? null,
-        porte:        dados.descricao_porte ?? null,
-        cnae:         dados.cnae_fiscal_descricao ?? null,
-        objeto:       (contrato.objetoContrato ?? '').slice(0, 200) || null,
-        valor:        contrato.valorInicial ?? null,
+        email:         dados.email.toLowerCase().trim(),
+        telefone:      dados.ddd_telefone_1 ?? null,
+        municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
+        uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
+        situacao:      dados.descricao_situacao_cadastral ?? null,
+        porte:         dados.descricao_porte ?? null,
+        cnae,
+        segmento:      mapearSegmento(cnae),
+        modalidade,
+        objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
+        valor:         contrato.valorInicial ?? null,
         data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
-        status:       'pendente',
-        fonte:        'pncp_contrato',
+        status:        'pendente',
+        fonte:         'pncp_contrato',
       })
     }
 
@@ -239,26 +263,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Avançar ponteiro de backfill
-  if (emBackfill) {
-    const proximoDate = new Date(dataFinal.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
-    proximoDate.setDate(proximoDate.getDate() + 1)
-    const proximo = proximoDate.toISOString().slice(0, 10)
-    await supabase.from('configuracoes').upsert(
-      { chave: 'captacao_backfill_data', valor: proximo },
-      { onConflict: 'chave' }
-    )
-    console.log(`[coletar-leads] backfill ponteiro avançado para ${proximo}`)
-  }
+  // ── 5. Avançar ponteiro de backfill ───────────────────────────────────────
+  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
 
-  console.log(`[coletar-leads] ${inseridos} leads inseridos`)
+  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} leads inseridos`)
   return NextResponse.json({
     ok: true,
     modo: modoLabel,
     novos: inseridos,
-    total_processados: paraEnriquecer.length,
     total_contratos_pncp: contratos.length,
     total_cnpjs_unicos: cnpjsNovos.length,
+    para_enriquecer: paraEnriquecer.length,
     pncp_debug: debugPncp,
     backfill_proximo: emBackfill ? (() => {
       const d = new Date(dataFinal.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
@@ -266,4 +281,17 @@ export async function GET(req: NextRequest) {
       return d.toISOString().slice(0, 10)
     })() : null,
   })
+}
+
+async function avancarPonteiro(
+  supabase: ReturnType<typeof createSupabase>,
+  dataFinalFmt: string
+) {
+  const d = new Date(dataFinalFmt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+  d.setDate(d.getDate() + 1)
+  const proximo = d.toISOString().slice(0, 10)
+  await supabase.from('configuracoes').upsert(
+    { chave: 'captacao_backfill_data', valor: proximo },
+    { onConflict: 'chave' }
+  )
 }
