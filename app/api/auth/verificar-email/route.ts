@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
 
 /**
  * POST /api/auth/verificar-email
- * Verifica se um e-mail está cadastrado (via service role → auth.users).
+ * Verifica se um e-mail está cadastrado em auth.users via Supabase Admin REST API.
  * Retorna apenas { exists: boolean } — não expõe dados do usuário.
  */
 export async function POST(req: NextRequest) {
@@ -13,19 +12,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'E-mail inválido' }, { status: 400 })
     }
 
-    const supabase = await createServiceClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    // getUserByEmail é o método direto da admin API do Supabase
-    const { data, error } = await supabase.auth.admin.getUserByEmail(
-      email.toLowerCase().trim()
+    const res = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email.toLowerCase().trim())}`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      }
     )
 
-    if (error || !data?.user) {
-      return NextResponse.json({ exists: false })
+    if (!res.ok) {
+      console.error('[verificar-email] admin API error:', res.status)
+      return NextResponse.json({ exists: true }) // fail-open
     }
 
-    return NextResponse.json({ exists: true })
-  } catch {
+    const json = await res.json()
+    const exists = Array.isArray(json.users) && json.users.length > 0
+
+    return NextResponse.json({ exists })
+  } catch (e) {
+    console.error('[verificar-email]', e)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
