@@ -589,29 +589,29 @@ export default function DashboardPage() {
 
       {/* Stats — só exibe se já carregou e tem dados */}
       {!semResultados && (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-3 mb-8">
           {[
             {
-              label: 'Licitações encontradas',
+              label: 'Encontradas',
               valor: carregando ? '—' : (resposta?.total ?? 0).toString(),
               cor: 'var(--vinho)',
             },
             {
-              label: 'Volume estimado (total)',
+              label: 'Volume total',
               valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'),
               cor: 'var(--dourado)',
             },
             {
-              label: 'Página atual',
-              valor: carregando ? '—' : `${resposta?.pagina ?? 1} / ${resposta?.paginas ?? 1}`,
+              label: 'Página',
+              valor: carregando ? '—' : `${resposta?.pagina ?? 1}/${resposta?.paginas ?? 1}`,
               cor: 'var(--bordo)',
             },
           ].map(stat => (
-            <div key={stat.label} className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-              <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>
+            <div key={stat.label} className="rounded-2xl p-3 sm:p-5 overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>
                 {stat.label}
               </p>
-              <p className="text-2xl font-semibold" style={{ color: stat.cor }}>
+              <p className="text-base sm:text-2xl font-semibold leading-tight break-all" style={{ color: stat.cor }}>
                 {stat.valor}
               </p>
             </div>
@@ -784,29 +784,37 @@ export default function DashboardPage() {
                   className="rounded-2xl p-5"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${cfg.cor}` }}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
-                          {l.fonte}
-                        </span>
-                        {l.alertas?.map((a, i) => (
-                          <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
-                            {a.keywords?.termo}
-                          </span>
-                        ))}
-                        {l.cidade && (
-                          <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                            {l.cidade}{l.estado ? `/${l.estado}` : ''}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
-                        {l.objeto.length > 160 ? l.objeto.substring(0, 160) + '…' : l.objeto}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                  {/* Tags + localização */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
+                      {l.fonte}
+                    </span>
+                    {l.alertas?.map((a, i) => (
+                      <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
+                        {a.keywords?.termo}
+                      </span>
+                    ))}
+                    {l.cidade && (
+                      <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                        {l.cidade}{l.estado ? `/${l.estado}` : ''}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Órgão */}
+                  <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
+
+                  {/* Objeto — capitaliza a primeira letra para reduzir impacto do all-caps */}
+                  <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-2)' }}>
+                    {(() => {
+                      const txt = l.objeto.length > 160 ? l.objeto.substring(0, 160) + '…' : l.objeto
+                      return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+                    })()}
+                  </p>
+
+                  {/* Rodapé: valor + data + botão — alinhados na horizontal */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-3">
                       {l.valor_estimado && (
                         <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatarValor(l.valor_estimado)}</p>
                       )}
@@ -815,16 +823,16 @@ export default function DashboardPage() {
                           Abertura: {new Date(l.data_abertura).toLocaleDateString('pt-BR')}
                         </p>
                       )}
-                      <a
-                        href={l.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                        style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
-                      >
-                        Ver edital →
-                      </a>
                     </div>
+                    <a
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0"
+                      style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
+                    >
+                      Ver edital →
+                    </a>
                   </div>
                 </div>
               )
