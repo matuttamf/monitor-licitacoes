@@ -67,13 +67,18 @@ export async function POST(request: Request) {
   const fireAndForget = acao === 'matching'
 
   if (fireAndForget) {
-    fetch(url, { headers: { Authorization: `Bearer ${secret}` } }).catch(console.error)
+    fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error)
     return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg: 'Matching disparado em background. Verifique Alertas em ~60s.' } })
   }
 
   try {
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${secret}` },
+      headers: {
+        // Vercel pode remover Authorization em chamadas server-to-server internas.
+        // Enviamos o secret nos dois headers; o cron aceita qualquer um dos dois.
+        'Authorization':  `Bearer ${secret}`,
+        'X-Cron-Secret':  secret ?? '',
+      },
       signal: AbortSignal.timeout(55000), // 55s timeout para não travar o botão
     })
     const texto = await res.text()

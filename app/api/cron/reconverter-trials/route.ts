@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { verificarCronAuth } from '@/lib/cron-auth'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { emailReconversao } from '@/lib/emails/reconversao'
@@ -19,8 +20,7 @@ export const maxDuration = 60
 const MAX_LOTE = 15
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 

@@ -20,7 +20,7 @@ type Alerta = {
   enviado_em: string | null
   canais: string[]
   licitacoes: Licitacao | null
-  keywords: { termo: string } | null
+  keywords: string[]  // termos agregados (pode haver múltiplas keywords por licitação)
 }
 
 type Resposta = {
@@ -306,12 +306,12 @@ export default function AlertasPage() {
                             ✦ Novo
                           </span>
                         )}
-                        {a.keywords?.termo && (
-                          <span className="text-xs font-medium px-2.5 py-1 rounded-lg"
+                        {(a.keywords ?? []).map(termo => (
+                          <span key={termo} className="text-xs font-medium px-2.5 py-1 rounded-lg"
                             style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
-                            {a.keywords.termo}
+                            {termo}
                           </span>
-                        )}
+                        ))}
                         {a.canais.map(c => {
                           const cfg = canalConfig[c] ?? { label: c, cor: '#64748b', bg: 'rgba(100,116,139,0.1)' }
                           return (

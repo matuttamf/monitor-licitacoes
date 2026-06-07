@@ -92,6 +92,24 @@ export async function GET(request: NextRequest) {
   const total   = count ?? 0
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
 
+  // Volume total de TODAS as licitações do usuário (não só da página)
+  // Faz query leve buscando só valor_estimado de todos os IDs
+  let volumeTotal = 0
+  if (licitacaoIds.length > 0) {
+    let volQuery = supabase
+      .from('licitacoes')
+      .select('valor_estimado')
+      .in('id', licitacaoIds)
+      .not('valor_estimado', 'is', null)
+    const ufsVol = expandirParaUFs(regioes)
+    if (ufsVol) volQuery = volQuery.in('estado', ufsVol) as typeof volQuery
+    if (searchParams.get('valor_min')) volQuery = volQuery.gte('valor_estimado', Number(searchParams.get('valor_min')))
+    if (searchParams.get('valor_max')) volQuery = volQuery.lte('valor_estimado', Number(searchParams.get('valor_max')))
+
+    const { data: volRows } = await volQuery
+    volumeTotal = (volRows ?? []).reduce((acc, r) => acc + (r.valor_estimado || 0), 0)
+  }
+
   const resultado = (licitacoes ?? []).map(l => ({
     ...l,
     alertas: (keywordsPorLicitacao.get(l.id) ?? []).map(termo => ({
@@ -99,5 +117,5 @@ export async function GET(request: NextRequest) {
     }))
   }))
 
-  return NextResponse.json({ data: resultado, total, pagina, paginas })
+  return NextResponse.json({ data: resultado, total, pagina, paginas, volumeTotal })
 }

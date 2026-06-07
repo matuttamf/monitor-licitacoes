@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
+import { verificarCronAuth } from '@/lib/cron-auth'
 
 export const maxDuration = 300
 
@@ -76,9 +77,7 @@ async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
 }
 
 export async function GET(req: NextRequest) {
-  // Verificar token do cron
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 

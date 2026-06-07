@@ -23,6 +23,7 @@ type Resposta = {
   total: number
   pagina: number
   paginas: number
+  volumeTotal: number
 }
 
 const fonteConfig: Record<string, { cor: string; bg: string }> = {
@@ -483,7 +484,7 @@ export default function DashboardPage() {
   }, [pagina, carregar])
 
   const licitacoes  = resposta?.data ?? []
-  const totalValor  = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
+  const totalValor  = resposta?.volumeTotal ?? 0
   const semFiltros  = filtroRegioes.length === 0 && !filtroValorMin && !filtroValorMax
   const semResultados = !carregando && !primeiraVez && resposta?.total === 0 && semFiltros
 

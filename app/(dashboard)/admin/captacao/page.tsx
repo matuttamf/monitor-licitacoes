@@ -72,6 +72,7 @@ export default function CaptacaoPage() {
   const [selecionados, setSelecionados]   = useState<Set<string>>(new Set())
   const [acaoBulk, setAcaoBulk]          = useState('')
   const [salvandoBulk, setSalvandoBulk]  = useState(false)
+  const [expandido, setExpandido]        = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Ações cron
@@ -464,7 +465,7 @@ export default function CaptacaoPage() {
                       <input type="checkbox" checked={selecionados.size === leadsDB.length && leadsDB.length > 0}
                         onChange={toggleTodos} />
                     </th>
-                    {['Empresa','E-mail','Cidade/UF','Setor (CNAE)','Status','Enviado em','Ações'].map(h => (
+                    {['','Empresa','E-mail','Cidade/UF','Setor (CNAE)','Status','Enviado em','Ações'].map(h => (
                       <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider whitespace-nowrap"
                         style={{ color: 'var(--cinza)' }}>{h}</th>
                     ))}
@@ -473,10 +474,20 @@ export default function CaptacaoPage() {
                 <tbody>
                   {leadsDB.map((l, i) => {
                     const sc = STATUS_COR[l.status] ?? STATUS_COR.pendente
+                    const aberto = expandido === l.id
+                    const rowBg = selecionados.has(l.id) ? 'rgba(107,15,26,0.04)' : i % 2 === 0 ? 'white' : 'var(--surface-2)'
                     return (
-                      <tr key={l.id} style={{ borderBottom: '1px solid var(--cinza-light)', background: selecionados.has(l.id) ? 'rgba(107,15,26,0.04)' : i % 2 === 0 ? 'white' : 'var(--surface-2)' }}>
+                      <>
+                      <tr key={l.id} style={{ borderBottom: aberto ? 'none' : '1px solid var(--cinza-light)', background: rowBg }}>
                         <td className="px-3 py-2">
                           <input type="checkbox" checked={selecionados.has(l.id)} onChange={() => toggleSel(l.id)} />
+                        </td>
+                        <td className="px-2 py-2 w-6">
+                          <button onClick={() => setExpandido(aberto ? null : l.id)}
+                            title={aberto ? 'Fechar detalhes' : 'Ver contrato de origem'}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--cinza)', fontSize: 12, padding: '2px 4px', borderRadius: 4, transition: 'transform 0.15s', transform: aberto ? 'rotate(90deg)' : 'none' }}>
+                            ▶
+                          </button>
                         </td>
                         <td className="px-3 py-2 max-w-[160px]">
                           <div className="font-semibold truncate" style={{ color: 'var(--preto)' }} title={l.razao_social}>
@@ -526,6 +537,43 @@ export default function CaptacaoPage() {
                           </div>
                         </td>
                       </tr>
+                      {aberto && (
+                        <tr key={`${l.id}-detail`} style={{ borderBottom: '1px solid var(--cinza-light)', background: rowBg }}>
+                          <td colSpan={9} className="px-6 pb-3 pt-1">
+                            <div className="rounded-xl p-4 text-xs" style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+                              <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Contrato de origem</div>
+                                  <div style={{ color: 'var(--preto)', lineHeight: 1.5 }}>{l.objeto || '—'}</div>
+                                </div>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Valor do contrato</div>
+                                  <div style={{ color: 'var(--vinho)', fontWeight: 700, fontSize: 14 }}>
+                                    {l.valor ? `R$ ${l.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Data do contrato</div>
+                                  <div style={{ color: 'var(--preto)' }}>{l.data_contrato ? new Date(l.data_contrato).toLocaleDateString('pt-BR') : '—'}</div>
+                                </div>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Porte</div>
+                                  <div style={{ color: 'var(--preto)' }}>{l.porte ? l.porte.replace('EMPRESA DE ', '').replace('DEMAIS', 'Grande') : '—'}</div>
+                                </div>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Situação na RF</div>
+                                  <div style={{ color: l.situacao === 'ATIVA' ? '#059669' : '#6b7280', fontWeight: 600 }}>{l.situacao || '—'}</div>
+                                </div>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Telefone</div>
+                                  <div style={{ color: 'var(--preto)' }}>{l.telefone || '—'}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </>
                     )
                   })}
                 </tbody>
