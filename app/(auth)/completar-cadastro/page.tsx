@@ -189,10 +189,10 @@ export default function CompletarCadastroPage() {
 
         {/* Cabeçalho */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5 no-underline mb-6">
+          <div className="inline-flex items-center gap-2.5 mb-6">
             <div className="w-9 h-9 rounded-[10px] bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-xs">ML</div>
             <span className="text-[#1A1A1C] font-semibold text-[15px]">Monitor de Licitações</span>
-          </Link>
+          </div>
 
           {/* Steps */}
           <div className="flex items-center justify-center gap-2 mb-5">
@@ -373,12 +373,6 @@ export default function CompletarCadastroPage() {
           </p>
         </div>
 
-        <p className="text-center text-[13px] text-[#9AA0A6] mt-5">
-          Prefere preencher depois?{' '}
-          <Link href="/dashboard" className="text-[#6B0F1A] font-semibold no-underline">
-            Ir para o painel →
-          </Link>
-        </p>
       </div>
     </div>
   )
