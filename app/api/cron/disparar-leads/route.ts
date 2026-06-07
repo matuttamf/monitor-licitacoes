@@ -81,8 +81,13 @@ export async function GET(req: NextRequest) {
       cnae:         lead.cnae,
     })
 
-    // Substituir placeholder de descadastro pelo e-mail real
-    const htmlFinal = html.replace('{{EMAIL}}', encodeURIComponent(lead.email))
+    // Substituir token de descadastro pelo ID do lead (UUID não-guessável)
+    const htmlFinal = html
+      .replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id)
+      .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email)) // compatibilidade legada
+    const textFinal = text
+      .replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id)
+      .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
 
     try {
       const { error: sendError } = await resend.emails.send({
@@ -90,7 +95,7 @@ export async function GET(req: NextRequest) {
         to:   lead.email,
         subject,
         html: htmlFinal,
-        text,
+        text: textFinal,
       })
 
       if (sendError) throw new Error(sendError.message)

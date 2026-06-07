@@ -261,7 +261,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
     <p>
       <strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>
       Você recebeu este e-mail porque <strong>${nome}</strong> consta como fornecedora em contratos públicos no PNCP.<br>
-      Não quer mais receber? <a href="${url}/descadastrar?email={{EMAIL}}">Clique aqui para se descadastrar</a>
+      Não quer mais receber? <a href="${url}/descadastrar?token={{UNSUB_TOKEN}}">Clique aqui para se descadastrar</a>
     </p>
   </div>
 
@@ -298,7 +298,7 @@ Responda este e-mail para falar com nossa equipe.
 
 --
 Monitor de Licitações · Matutta Soluções Digitais
-Descadastrar: ${url}/descadastrar`
+Descadastrar: ${url}/descadastrar?token={{UNSUB_TOKEN}}`
 
   return { subject, html, text }
 }
