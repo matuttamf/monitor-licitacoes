@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://monitordelicitacoes.com.br'
-const FROM = process.env.EMAIL_REMETENTE || 'onboarding@resend.dev'
+const FROM = process.env.EMAIL_REMETENTE || 'Monitor de Licitações <noreply@monitordelicitacoes.com.br>'
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)

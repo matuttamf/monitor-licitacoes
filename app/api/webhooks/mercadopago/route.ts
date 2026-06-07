@@ -123,7 +123,7 @@ export async function POST(request: Request) {
             valor: PRECOS_PLANO[planoId] ?? 97,
           })
           await resend.emails.send({
-            from: 'Monitor de Licitações <contato@monitordelicitacoes.com.br>',
+            from: 'Monitor de Licitações <noreply@monitordelicitacoes.com.br>',
             to:   profile.email,
             subject, html, text,
           })

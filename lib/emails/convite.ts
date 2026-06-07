@@ -16,7 +16,7 @@ export async function enviarEmailConvite({
 }): Promise<boolean> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitor-licitacoes-two.vercel.app'
   const link = `${appUrl}/cadastro?convite=${token}`
-  const remetente = process.env.EMAIL_REMETENTE ?? 'alertas@monitorlicitacoes.com.br'
+  const remetente = process.env.EMAIL_REMETENTE ?? 'Monitor de Licitações <noreply@monitordelicitacoes.com.br>'
   const quemConvidou = empresaOwner || nomeOwner || 'um usuário'
 
   const html = `

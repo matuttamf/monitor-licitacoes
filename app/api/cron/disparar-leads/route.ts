@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
 
     try {
       const { error: sendError } = await resend.emails.send({
-        from: 'Monitor de Licitações <contato@monitordelicitacoes.com.br>',
+        from: 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
         to:   lead.email,
         subject,
         html: htmlFinal,
