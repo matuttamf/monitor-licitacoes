@@ -370,6 +370,13 @@ function formatarValor(valor?: number) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 }
 
+function formatarValorCurto(valor: number): string {
+  if (valor >= 1_000_000_000) return `R$ ${(valor / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
+  if (valor >= 1_000_000)     return `R$ ${(valor / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+  if (valor >= 1_000)         return `R$ ${(valor / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+  return formatarValor(valor) ?? '—'
+}
+
 function Paginacao({ pagina, paginas, onChange }: { pagina: number; paginas: number; onChange: (p: number) => void }) {
   if (paginas <= 1) return null
 
@@ -502,9 +509,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Filtros */}
-        <div className="flex items-end gap-3 flex-wrap">
+        <div className="w-full sm:w-auto flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
           {/* Região */}
-          <div className="min-w-[200px]">
+          <div className="w-full sm:min-w-[200px]">
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Região / Estado</label>
             <RegiaoSelector
               value={filtroRegioes}
@@ -516,42 +523,40 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Valor mínimo */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Valor mín. (R$)</label>
-            <input
-              type="number"
-              value={filtroValorMin}
-              onChange={e => setFiltroValorMin(e.target.value)}
-              placeholder="0"
-              className="text-sm rounded-xl px-3 py-2.5 outline-none w-32"
-              style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
-            />
+          {/* Valor mín + máx lado a lado */}
+          <div className="flex gap-2 items-end">
+            <div className="flex-1 sm:flex-none">
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Valor mín.</label>
+              <input
+                type="number"
+                value={filtroValorMin}
+                onChange={e => setFiltroValorMin(e.target.value)}
+                placeholder="0"
+                className="text-sm rounded-xl px-3 py-2.5 outline-none w-full sm:w-28"
+                style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
+              />
+            </div>
+            <div className="flex-1 sm:flex-none">
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Valor máx.</label>
+              <input
+                type="number"
+                value={filtroValorMax}
+                onChange={e => setFiltroValorMax(e.target.value)}
+                placeholder="Sem limite"
+                className="text-sm rounded-xl px-3 py-2.5 outline-none w-full sm:w-28"
+                style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
+              />
+            </div>
+            {!semFiltros && (
+              <button
+                onClick={() => { setFiltroRegioes([]); setFiltroValorMin(''); setFiltroValorMax('') }}
+                className="text-sm rounded-xl px-3 py-2.5 flex-shrink-0"
+                style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            )}
           </div>
-
-          {/* Valor máximo */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Valor máx. (R$)</label>
-            <input
-              type="number"
-              value={filtroValorMax}
-              onChange={e => setFiltroValorMax(e.target.value)}
-              placeholder="Sem limite"
-              className="text-sm rounded-xl px-3 py-2.5 outline-none w-32"
-              style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
-            />
-          </div>
-
-          {/* Limpar filtros */}
-          {!semFiltros && (
-            <button
-              onClick={() => { setFiltroRegioes([]); setFiltroValorMin(''); setFiltroValorMax('') }}
-              className="text-sm rounded-xl px-3 py-2.5"
-              style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer' }}
-            >
-              ✕ Limpar
-            </button>
-          )}
         </div>
       </div>
 
@@ -598,7 +603,7 @@ export default function DashboardPage() {
             },
             {
               label: 'Volume total',
-              valor: carregando ? '—' : (totalValor > 0 ? formatarValor(totalValor)! : '—'),
+              valor: carregando ? '—' : (totalValor > 0 ? formatarValorCurto(totalValor) : '—'),
               cor: 'var(--dourado)',
             },
             {
@@ -611,7 +616,7 @@ export default function DashboardPage() {
               <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>
                 {stat.label}
               </p>
-              <p className="text-base sm:text-2xl font-semibold leading-tight break-all" style={{ color: stat.cor }}>
+              <p className="text-lg sm:text-2xl font-semibold leading-tight" style={{ color: stat.cor }}>
                 {stat.valor}
               </p>
             </div>
