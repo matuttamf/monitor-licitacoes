@@ -213,8 +213,8 @@ export default function CompletarCadastroPage() {
             ))}
           </div>
 
-          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">Quase lá! Dados para NF</h1>
-          <p className="text-sm text-[#9AA0A6] leading-relaxed">Necessário para emissão de nota fiscal e personalização das licitações.</p>
+          <h1 className="text-2xl font-extrabold text-[#1A1A1C] mb-1.5 tracking-tight">Quase lá! Dados da empresa</h1>
+          <p className="text-sm text-[#9AA0A6] leading-relaxed">Personalize sua experiência informando os dados da sua empresa ou pessoa.</p>
         </div>
 
         {/* Card */}
@@ -293,12 +293,6 @@ export default function CompletarCadastroPage() {
                     placeholder="Seu nome completo" required className={inputCls} />
                 </div>
 
-                {/* IE para PF */}
-                <div>
-                  <label className={labelCls}>Insc. Estadual <span className="font-normal normal-case tracking-normal">(opc.)</span></label>
-                  <input type="text" value={ie} onChange={e => setIe(e.target.value)}
-                    placeholder="Isento ou número" className={inputCls} />
-                </div>
               </>
             )}
 
