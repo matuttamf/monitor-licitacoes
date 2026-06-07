@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — E-mails de Captação (Alta Conversão)</title>
+<style>
+  body { margin: 0; padding: 24px; background: #1a1a1a; font-family: -apple-system, sans-serif; }
+  .nav { position: sticky; top: 0; z-index: 100; background: #111; border-radius: 12px; padding: 12px 16px; margin-bottom: 32px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .nav-title { color: #666; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 8px; }
+  .nav a { color: #C9A65A; font-size: 12px; font-weight: 700; text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(201,166,90,0.3); white-space: nowrap; }
+  .nav a:hover { background: rgba(201,166,90,0.1); }
+  .section { margin-bottom: 72px; }
+  .meta { margin-bottom: 12px; }
+  .tag { display: inline-block; background: #222; color: #C9A65A; font-size: 10px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; margin-bottom: 8px; }
+  .subject-line { background: #2a2a2a; border-radius: 8px 8px 0 0; padding: 12px 16px; color: #fff; font-size: 14px; border-bottom: 1px solid #333; }
+  .subject-line .label { color: #555; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 3px; }
+  .from-line { background: #242424; border-radius: 0 0 8px 8px; padding: 8px 16px; color: #888; font-size: 12px; margin-bottom: 16px; }
+  .from-line .label { color: #555; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-right: 6px; }
+
+  /* ─── Email styles ─── */
+  * { box-sizing: border-box; }
+  .wrap { max-width: 580px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 32px rgba(0,0,0,0.4); }
+  .header { background: linear-gradient(135deg, #6B0F1A 0%, #8B1525 100%); padding: 32px 40px 24px; }
+  .logo-row { display: flex; align-items: center; gap: 12px; }
+  .logo-badge { background: #C9A65A; color: #6B0F1A; font-size: 13px; font-weight: 900; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; letter-spacing: 0.05em; flex-shrink: 0; }
+  .logo-text { color: #fff; font-size: 16px; font-weight: 700; }
+  .logo-sub { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 1px; }
+  .urgency { background: #C9A65A; padding: 10px 40px; text-align: center; }
+  .urgency span { color: #6B0F1A; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .body { padding: 36px 40px 28px; }
+  .greeting { font-size: 22px; font-weight: 700; color: #1a1a1a; margin: 0 0 24px; line-height: 1.3; }
+  .greeting .name { color: #6B0F1A; }
+  p { margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: #3a3a3a; }
+  strong { color: #1a1a1a; }
+  .pain-box { background: #fff8f8; border: 1px solid #fcd5d5; border-left: 4px solid #dc2626; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; }
+  .pain-box p { margin: 0; font-size: 14px; color: #7f1d1d; line-height: 1.6; }
+  .steps { margin: 24px 0; }
+  .step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+  .step-num { background: #6B0F1A; color: #C9A65A; font-size: 12px; font-weight: 900; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-text { font-size: 14px; color: #333; line-height: 1.5; }
+  .step-text strong { color: #1a1a1a; display: block; margin-bottom: 2px; }
+  .setor-badge { background: #fdf9f0; border: 1px solid #e8d9b0; border-radius: 8px; padding: 14px 18px; margin: 20px 0; font-size: 14px; color: #333; line-height: 1.5; }
+  .proof { background: #f8fffe; border: 1px solid #d1fae5; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+  .proof-text { font-size: 14px; color: #065f46; line-height: 1.6; margin: 0; }
+  .cta-section { background: linear-gradient(135deg, #6B0F1A 0%, #8B1525 100%); border-radius: 12px; padding: 28px 32px; margin: 28px 0; text-align: center; }
+  .cta-pre { color: rgba(255,255,255,0.8); font-size: 13px; margin: 0 0 16px; }
+  .cta-btn { display: inline-block; background: #C9A65A; color: #6B0F1A !important; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-size: 16px; font-weight: 900; letter-spacing: 0.02em; }
+  .cta-sub { color: rgba(255,255,255,0.65); font-size: 12px; margin: 12px 0 0; }
+  .ps-box { background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0; }
+  .ps-box p { margin: 0; font-size: 13px; color: #78350f; line-height: 1.6; }
+  .footer { padding: 20px 40px; border-top: 1px solid #eee; text-align: center; background: #fafafa; }
+  .footer p { font-size: 11px; color: #bbb; margin: 0; line-height: 1.8; }
+  .footer a { color: #bbb; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">Setor:</span>
+  <a href="#construcao">🏗️ Construção</a>
+  <a href="#ti">💻 TI</a>
+  <a href="#limpeza">🧹 Limpeza</a>
+  <a href="#vigilancia">🔒 Vigilância</a>
+  <a href="#saude">🏥 Saúde</a>
+  <a href="#transporte">🚛 Transporte</a>
+  <a href="#generico">🎯 Genérico</a>
+</div>
+
+<!-- ═══ CONSTRUÇÃO ═══ -->
+<div class="section" id="construcao">
+  <div class="meta">
+    <div class="tag">🏗️ Construção Civil</div>
+    <div class="subject-line"><span class="label">Assunto</span>Construtora Silva Ltda, quanto custou o último edital que você não viu?</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">Construtora Silva</span> —</p>
+      <p>Cada semana, prefeituras e órgãos públicos abrem <strong>dezenas de licitações de obras e reformas</strong> no PNCP, ComprasNet e Diários Oficiais. A maioria das construtoras sequer fica sabendo.</p>
+      <div class="pain-box"><p>🔴 Enquanto isso, seus concorrentes que monitoram o mercado <strong>já estão elaborando as propostas</strong>. E quando você descobre o edital, já está quase no prazo — ou pior, já encerrou.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>Belo Horizonte/MG</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">🏗️ <strong>Obras e reformas filtradas</strong> — só editais compatíveis com seu porte e especialidade, direto no seu e-mail.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> No mês passado foram publicados mais de 12.000 contratos de construção e obras no PNCP. Quantos você viu?</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>Construtora Silva Ltda</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ TI ═══ -->
+<div class="section" id="ti">
+  <div class="meta">
+    <div class="tag">💻 Tecnologia da Informação</div>
+    <div class="subject-line"><span class="label">Assunto</span>TechSoft Soluções, o governo abriu centenas de pregões de TI este mês — sua empresa está participando?</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">TechSoft Soluções</span> —</p>
+      <p>O setor público é o <strong>maior comprador de tecnologia do Brasil</strong> — sistemas, licenças, suporte, desenvolvimento, infraestrutura. Há editais abertos o tempo todo, em todos os estados.</p>
+      <div class="pain-box"><p>🔴 O problema: esses pregões são publicados em <strong>mais de 30 portais diferentes</strong>. Sem monitoramento automatizado, você descobre tarde demais — ou não descobre.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>São Paulo/SP</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">💻 <strong>Pregões de TI categorizados por tipo</strong> — software, hardware, suporte, desenvolvimento e cloud. Só o que é relevante para o seu portfólio.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> Empresas de TI que monitoram licitações ativamente faturam, em média, 3× mais em contratos públicos do que as que dependem de indicação.</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>TechSoft Soluções</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ LIMPEZA ═══ -->
+<div class="section" id="limpeza">
+  <div class="meta">
+    <div class="tag">🧹 Limpeza e Conservação</div>
+    <div class="subject-line"><span class="label">Assunto</span>Limpadora Modelo, tem pregão de limpeza aberto perto de você — e o prazo está acabando</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">Limpadora Modelo</span> —</p>
+      <p>Prefeituras, autarquias, hospitais públicos e órgãos federais <strong>licitam limpeza e conservação o ano inteiro</strong>, sem parar. São contratos longos, recorrentes e com alto volume.</p>
+      <div class="pain-box"><p>🔴 Mas esses pregões aparecem e somem rápido. Quem não tem um sistema de alerta <strong>chega sempre atrasado</strong> — e vê o contrato ir para o concorrente que estava de olho.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>Curitiba/PR</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">🧹 <strong>Alertas de pregões de limpeza, conservação e zeladoria</strong> — receba no e-mail e no Telegram assim que abrirem, com prazo e valor estimado.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> Um único contrato público de limpeza pode garantir faturamento recorrente por 12, 24 ou até 48 meses. Vale monitorar.</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>Limpadora Modelo</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ VIGILÂNCIA ═══ -->
+<div class="section" id="vigilancia">
+  <div class="meta">
+    <div class="tag">🔒 Vigilância e Segurança</div>
+    <div class="subject-line"><span class="label">Assunto</span>Segurança Total Ltda, contratos de vigilância patrimonial foram publicados hoje — você vai propor?</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">Segurança Total</span> —</p>
+      <p>O mercado de segurança patrimonial pública <strong>movimenta bilhões por ano</strong> em licitações. Órgãos federais, estaduais e municipais renovam contratos continuamente.</p>
+      <div class="pain-box"><p>🔴 <strong>A disputa é acirrada</strong> — e quem não monitora o mercado fica fora dos processos mais lucrativos. Seu concorrente já tem alertas configurados.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>Brasília/DF</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">🔒 <strong>Editais de vigilância armada, desarmada e eletrônica</strong> — filtrados por região e valor, enviados no momento da publicação.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> Empresas de vigilância perdem em média 4 a 6 contratos por ano por falta de monitoramento. Cada contrato perdido representa meses de faturamento.</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>Segurança Total Ltda</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ SAÚDE ═══ -->
+<div class="section" id="saude">
+  <div class="meta">
+    <div class="tag">🏥 Saúde</div>
+    <div class="subject-line"><span class="label">Assunto</span>MedSupply Distribuidora, há licitações de saúde abertas agora — e o prazo é curto</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">MedSupply</span> —</p>
+      <p>Hospitais, UPAs, secretarias de saúde e farmácias públicas <strong>licitam insumos, medicamentos, equipamentos e serviços semana a semana</strong>. O volume é imenso.</p>
+      <div class="pain-box"><p>🔴 Mas os prazos são curtíssimos — às vezes menos de 5 dias úteis. Sem um sistema de alerta em tempo real, <strong>você fica de fora antes mesmo de saber que o edital existia</strong>.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>Porto Alegre/RS</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">🏥 <strong>Pregões de saúde filtrados por categoria</strong> — insumos, medicamentos, equipamentos, serviços laboratoriais e hospitalares.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> O Ministério da Saúde e as secretarias estaduais publicam novos pregões todos os dias úteis. Sua empresa precisa estar no radar.</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>MedSupply Distribuidora</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ TRANSPORTE ═══ -->
+<div class="section" id="transporte">
+  <div class="meta">
+    <div class="tag">🚛 Transporte e Logística</div>
+    <div class="subject-line"><span class="label">Assunto</span>Transportadora Rápida, contratos de transporte público foram abertos na sua região — você está na disputa?</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">Transportadora Rápida</span> —</p>
+      <p>Transporte escolar, de pacientes, de cargas e logística de distribuição são <strong>licitados o ano inteiro por prefeituras e órgãos estaduais</strong>. Contratos longos, valores altos.</p>
+      <div class="pain-box"><p>🔴 O desafio é que esses editais aparecem de surpresa — e quem não tem monitoramento <strong>fica sabendo pela concorrência depois que perdeu</strong>.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>Campinas/SP</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">🚛 <strong>Editais de transporte filtrados por tipo e região</strong> — escolar, hospitalar, cargas, logística. Sua frota pode estar trabalhando mais.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> Um único contrato de transporte escolar municipal pode garantir faturamento estável por 2 a 4 anos. Vale 7 minutos de configuração.</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>Transportadora Rápida</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ GENÉRICO ═══ -->
+<div class="section" id="generico">
+  <div class="meta">
+    <div class="tag">🎯 Genérico (CNAE não identificado)</div>
+    <div class="subject-line"><span class="label">Assunto</span>Comércio ABC, encontramos licitações para a sua empresa — e sua concorrente já está de olho</div>
+    <div class="from-line"><span class="label">De</span>Monitor de Licitações &lt;comercial@monitordelicitacoes.com.br&gt;</div>
+  </div>
+  <div class="wrap">
+    <div class="header"><div class="logo-row"><div class="logo-badge">ML</div><div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div></div></div>
+    <div class="urgency"><span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span></div>
+    <div class="body">
+      <p class="greeting">Olá, <span class="name">Comércio ABC</span> —</p>
+      <p>Todo dia, mais de <strong>2.000 novos editais são publicados</strong> no PNCP, ComprasNet, BLL e Diários Oficiais de todo o Brasil. A maioria das empresas fornecedoras sequer fica sabendo.</p>
+      <div class="pain-box"><p>🔴 Enquanto você não monitora, seus concorrentes que têm alertas configurados <strong>já estão elaborando as propostas</strong>. O edital perfeito para a sua empresa pode ter sido publicado ontem.</p></div>
+      <p>O <strong>Monitor de Licitações</strong> foi criado exatamente para isso. Empresas em <strong>Recife/PE</strong> já usam nossa plataforma para não perder nenhum edital relevante.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Você define suas palavras-chave</strong>Configure o que sua empresa fornece — leva menos de 5 minutos.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Você recebe o alerta na hora</strong>E-mail + Telegram assim que o edital for publicado — antes da concorrência.</div></div>
+      </div>
+      <div class="setor-badge">🎯 <strong>Matching inteligente com IA</strong> — nosso sistema aprende o perfil da sua empresa e só te avisa quando surge algo realmente relevante.</div>
+      <div class="proof"><p class="proof-text">❝ Empresas que monitoram licitações ativamente participam de <strong>3× mais processos</strong> e fecham contratos com valor médio <strong>47% maior</strong> do que as que fazem busca manual.</p></div>
+      <div class="cta-section">
+        <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
+        <a href="#" class="cta-btn">Quero meus 7 dias grátis →</a>
+        <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </div>
+      <div class="ps-box"><p>⚠️ <strong>P.S.:</strong> Empresas que monitoram licitações ativamente participam de 3× mais processos do que as que dependem de busca manual. O trial é gratuito — o custo é não tentar.</p></div>
+      <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail se quiser falar com nossa equipe. Retornamos em até 1 dia útil.</p>
+    </div>
+    <div class="footer"><p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>Você recebeu este e-mail porque <strong>Comércio ABC</strong> consta como fornecedora em contratos públicos no PNCP.<br>Não quer mais receber? <a href="#">Clique aqui para se descadastrar</a></p></div>
+  </div>
+</div>
+
+</body>
+</html>
