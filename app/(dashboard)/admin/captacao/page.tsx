@@ -368,7 +368,7 @@ export default function CaptacaoPage() {
         </div>
         {/* Progresso do backfill */}
         {(() => {
-          const inicio = new Date('2022-01-01').getTime()
+          const inicio = new Date('2000-01-01').getTime()
           const hoje   = new Date().getTime()
           const atual  = backfillData ? new Date(backfillData).getTime() : inicio
           const pct    = Math.min(100, Math.round(((atual - inicio) / (hoje - inicio)) * 100))
@@ -385,7 +385,7 @@ export default function CaptacaoPage() {
                 <div style={{ height: '100%', width: `${pct}%`, background: emBackfill ? '#C9A65A' : '#10b981', borderRadius: 99, transition: 'width 0.5s' }} />
               </div>
               <div className="flex justify-between mt-1">
-                <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Jan 2022</span>
+                <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Jan 2000</span>
                 <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Hoje</span>
               </div>
             </div>
