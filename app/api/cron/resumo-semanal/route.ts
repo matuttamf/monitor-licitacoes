@@ -19,7 +19,7 @@ import { temWhatsApp } from '@/lib/planos'
 export const maxDuration = 300
 
 function getResend() { return new Resend(process.env.RESEND_API_KEY!) }
-const FROM_EMAIL = process.env.RESEND_FROM ?? 'Monitor de Licitações <noreply@monitordelicitacoes.com.br>'
+const FROM_EMAIL = process.env.RESEND_FROM ?? 'Monitor de Licitações <alertas@monitordelicitacoes.com.br>'
 
 function inicioSemana(): string {
   const d = new Date()
