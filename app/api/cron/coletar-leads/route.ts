@@ -110,14 +110,52 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'sistema pausado' })
   }
 
-  // Período: últimos 7 dias (amplo para capturar contratos com atraso de publicação)
-  const hoje  = new Date()
-  const inicio = new Date(hoje); inicio.setDate(inicio.getDate() - 7)
-  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
-  const dataInicial = fmt(inicio)
-  const dataFinal   = fmt(hoje)
+  // ── Backfill progressivo ─────────────────────────────────────────────────
+  // Chave 'captacao_backfill_data' guarda o próximo dia a processar (ISO 'YYYY-MM-DD').
+  // Enquanto houver histórico pendente, processa 30 dias por execução.
+  // Quando chegar hoje, volta ao modo contínuo (últimos 7 dias).
+  const BACKFILL_INICIO = '2022-01-01'
+  const JANELA_BACKFILL = 30 // dias por execução durante o backfill
+  const JANELA_CONTINUA = 7  // dias no modo contínuo
 
-  console.log(`[coletar-leads] período ${dataInicial} → ${dataFinal}`)
+  const fmt      = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
+  const fmtIso   = (d: Date) => d.toISOString().slice(0, 10)
+  const hoje     = new Date()
+  const hojeIso  = fmtIso(hoje)
+
+  // Ler ponteiro de backfill
+  const { data: cfgBf } = await supabase
+    .from('configuracoes')
+    .select('valor')
+    .eq('chave', 'captacao_backfill_data')
+    .maybeSingle()
+
+  let ponteiro: string = (cfgBf?.valor as string) || BACKFILL_INICIO
+  const emBackfill = ponteiro < hojeIso
+
+  let dataInicial: string
+  let dataFinal:   string
+  let modoLabel:   string
+
+  if (emBackfill) {
+    // Modo backfill: janela de 30 dias a partir do ponteiro
+    const inicioDate = new Date(ponteiro)
+    const fimDate    = new Date(inicioDate)
+    fimDate.setDate(fimDate.getDate() + JANELA_BACKFILL - 1)
+    if (fimDate > hoje) fimDate.setTime(hoje.getTime())
+    dataInicial = fmt(inicioDate)
+    dataFinal   = fmt(fimDate)
+    modoLabel   = `backfill (${ponteiro} → ${fimDate.toISOString().slice(0, 10)})`
+  } else {
+    // Modo contínuo: últimos 7 dias
+    const inicioDate = new Date(hoje)
+    inicioDate.setDate(inicioDate.getDate() - JANELA_CONTINUA)
+    dataInicial = fmt(inicioDate)
+    dataFinal   = fmt(hoje)
+    modoLabel   = `contínuo (últimos ${JANELA_CONTINUA} dias)`
+  }
+
+  console.log(`[coletar-leads] modo=${modoLabel} período ${dataInicial} → ${dataFinal}`)
 
   // 1. Buscar contratos PNCP
   // 5 páginas × 50 = 250 contratos → ~50 CNPJs únicos para enriquecer
@@ -200,13 +238,31 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Avançar ponteiro de backfill
+  if (emBackfill) {
+    const proximoDate = new Date(dataFinal.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+    proximoDate.setDate(proximoDate.getDate() + 1)
+    const proximo = proximoDate.toISOString().slice(0, 10)
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_backfill_data', valor: proximo },
+      { onConflict: 'chave' }
+    )
+    console.log(`[coletar-leads] backfill ponteiro avançado para ${proximo}`)
+  }
+
   console.log(`[coletar-leads] ${inseridos} leads inseridos`)
   return NextResponse.json({
     ok: true,
+    modo: modoLabel,
     novos: inseridos,
     total_processados: paraEnriquecer.length,
     total_contratos_pncp: contratos.length,
     total_cnpjs_unicos: cnpjsNovos.length,
     pncp_debug: debugPncp,
+    backfill_proximo: emBackfill ? (() => {
+      const d = new Date(dataFinal.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+      d.setDate(d.getDate() + 1)
+      return d.toISOString().slice(0, 10)
+    })() : null,
   })
 }

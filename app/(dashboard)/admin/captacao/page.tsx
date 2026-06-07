@@ -91,15 +91,22 @@ export default function CaptacaoPage() {
   const [resultadoBusca, setResultadoBusca] = useState<{ total_contratos: number; total_cnpjs: number; total_leads: number; leads: Lead[] } | null>(null)
   const [erroBusca, setErroBusca]         = useState('')
   const [filtroEmailBusca, setFiltroEmailBusca] = useState('')
+  const [importando, setImportando]           = useState(false)
+  const [resultadoImport, setResultadoImport] = useState<{ importados: number } | null>(null)
+
+  // Backfill progress
+  const [backfillData, setBackfillData]       = useState<string | null>(null)
 
   // ─── Carregamento ─────────────────────────────────────────────────────────
 
   const carregarStats = useCallback(async () => {
-    const [cfgRes, statsRes] = await Promise.all([
+    const [cfgRes, statsRes, bfRes] = await Promise.all([
       fetch('/api/admin/captacao-config'),
       fetch('/api/admin/stats'),
+      fetch('/api/admin/captacao-config?chave=captacao_backfill_data'),
     ])
     if (cfgRes.ok)   setCaptacaoAtiva((await cfgRes.json()).captacao_ativa)
+    if (bfRes.ok)    setBackfillData((await bfRes.json()).valor ?? null)
     if (statsRes.ok) {
       const s = await statsRes.json()
       setStats({
@@ -189,8 +196,25 @@ export default function CaptacaoPage() {
     carregarLeadsDB(paginaDB); carregarStats()
   }
 
+  async function importarLeads() {
+    if (!resultadoBusca?.leads.length) return
+    setImportando(true); setResultadoImport(null)
+    try {
+      const res = await fetch('/api/admin/leads-importar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leads: resultadoBusca.leads }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erro')
+      setResultadoImport(data)
+      carregarStats(); carregarLeadsDB(1)
+    } catch (e: unknown) {
+      setErroBusca(e instanceof Error ? e.message : 'Erro ao importar')
+    } finally { setImportando(false) }
+  }
+
   async function buscarLeadsPNCP() {
-    setBuscando(true); setErroBusca(''); setResultadoBusca(null)
+    setBuscando(true); setErroBusca(''); setResultadoBusca(null); setResultadoImport(null)
     try {
       const res = await fetch('/api/admin/leads', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -340,6 +364,31 @@ export default function CaptacaoPage() {
             </div>
           ))}
         </div>
+        {/* Progresso do backfill */}
+        {(() => {
+          const inicio = new Date('2022-01-01').getTime()
+          const hoje   = new Date().getTime()
+          const atual  = backfillData ? new Date(backfillData).getTime() : inicio
+          const pct    = Math.min(100, Math.round(((atual - inicio) / (hoje - inicio)) * 100))
+          const emBackfill = backfillData && backfillData < new Date().toISOString().slice(0, 10)
+          return (
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--cinza-light)' }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold" style={{ color: 'var(--cinza)' }}>
+                  {emBackfill ? `⏳ Backfill em progresso — próximo: ${backfillData}` : '✅ Backfill completo (modo contínuo)'}
+                </span>
+                <span className="text-xs font-bold" style={{ color: 'var(--vinho)' }}>{pct}%</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--cinza-light)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: emBackfill ? '#C9A65A' : '#10b981', borderRadius: 99, transition: 'width 0.5s' }} />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Jan 2022</span>
+                <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Hoje</span>
+              </div>
+            </div>
+          )
+        })()}
         {resultadoCron && (
           <div className="mt-3 px-4 py-3 rounded-xl text-xs font-mono break-all"
             style={{ background: resultadoCron.ok ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${resultadoCron.ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`, color: resultadoCron.ok ? '#065f46' : '#991b1b' }}>
@@ -684,11 +733,25 @@ export default function CaptacaoPage() {
                     className="px-3 py-1.5 rounded-lg text-xs"
                     style={{ border: '1px solid var(--cinza-light)', background: 'white', width: 180 }} />
                 </div>
-                <button onClick={() => exportarCSV(leadsFiltradosBusca)}
-                  className="px-4 py-1.5 rounded-lg text-xs font-bold"
-                  style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
-                  ⬇ Exportar CSV ({leadsFiltradosBusca.length})
-                </button>
+                <div className="flex items-center gap-2">
+                  {resultadoImport ? (
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ background: 'rgba(16,185,129,0.1)', color: '#065f46', border: '1px solid rgba(16,185,129,0.2)' }}>
+                      ✅ {resultadoImport.importados} importados
+                    </span>
+                  ) : (
+                    <button onClick={importarLeads} disabled={importando}
+                      className="px-4 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: importando ? 'var(--cinza-light)' : '#10b981', color: importando ? 'var(--cinza)' : 'white', border: 'none', cursor: importando ? 'not-allowed' : 'pointer' }}>
+                      {importando ? '⏳ Importando…' : `⬆ Importar para base (${leadsFiltradosBusca.length})`}
+                    </button>
+                  )}
+                  <button onClick={() => exportarCSV(leadsFiltradosBusca)}
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold"
+                    style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
+                    ⬇ CSV
+                  </button>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">

@@ -13,11 +13,23 @@ async function checarAdmin() {
   return user?.email === ADMIN_EMAIL ? user : null
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await checarAdmin()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
+  const chave = req.nextUrl.searchParams.get('chave')
   const service = await createServiceClient()
+
+  // Consulta de chave arbitrária (ex: captacao_backfill_data)
+  if (chave && chave !== 'captacao_ativa') {
+    const { data } = await service
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', chave)
+      .maybeSingle()
+    return NextResponse.json({ chave, valor: data?.valor ?? null })
+  }
+
   const { data } = await service
     .from('configuracoes')
     .select('valor')
