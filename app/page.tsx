@@ -11,6 +11,7 @@ const PLANOS = [
     usuarios: '1 usuário',
     destaque: false,
     tag: '🎁 GRÁTIS',
+    telegram: true,
     whatsapp: false,
     href: '/cadastro',
     btnText: 'Começar 7 dias grátis',
@@ -26,6 +27,7 @@ const PLANOS = [
     usuarios: '1 usuário',
     destaque: false,
     tag: null,
+    telegram: true,
     whatsapp: false,
     href: '/checkout?plano=basic',
     btnText: 'Assinar agora →',
@@ -41,6 +43,7 @@ const PLANOS = [
     usuarios: '1 usuário',
     destaque: false,
     tag: null,
+    telegram: true,
     whatsapp: true,
     href: '/checkout?plano=profissional',
     btnText: 'Assinar agora →',
@@ -56,6 +59,7 @@ const PLANOS = [
     usuarios: 'Até 5 usuários',
     destaque: true,
     tag: '⭐ MAIS POPULAR',
+    telegram: true,
     whatsapp: true,
     href: '/checkout?plano=pro',
     btnText: 'Assinar agora →',
@@ -71,6 +75,7 @@ const PLANOS = [
     usuarios: 'Até 15 usuários',
     destaque: false,
     tag: null,
+    telegram: true,
     whatsapp: true,
     href: '/checkout?plano=empresarial',
     btnText: 'Assinar agora →',
@@ -316,7 +321,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="flex-1 mb-5">
-                  {[p.keywords, p.usuarios, p.whatsapp ? 'E-mail, Telegram e WhatsApp' : 'Alertas por e-mail', 'Busca manual no painel'].map(item => (
+                  {[p.keywords, p.usuarios, p.whatsapp ? 'E-mail, Telegram e WhatsApp' : p.telegram ? 'Alertas por e-mail e Telegram' : 'Alertas por e-mail', 'Busca manual no painel'].map(item => (
                     <div key={item} className="flex items-start gap-2 mb-2 justify-center sm:justify-start">
                       <span className={`font-bold text-sm shrink-0 mt-0.5 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
                       <span className={`text-xs leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.8)]' : 'text-[#4a4a4d]'}`}>{item}</span>

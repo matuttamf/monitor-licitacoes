@@ -11,7 +11,7 @@ const PLANOS = [
     preco: '49,90',
     destaque: false,
     descricao: 'Ideal para começar',
-    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
     id: 'profissional',
@@ -122,7 +122,7 @@ export default function AssinarPage() {
           <div className="text-sm text-[#9AA0A6] mb-7 text-center">grátis · sem cartão de crédito</div>
           <div className="h-px bg-[#F0EDE8] mb-6" />
           <div className="flex-1 mb-7">
-            {['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'].map(item => (
+            {['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'].map(item => (
               <div key={item} className="flex items-center gap-2.5 mb-2.5">
                 <div className="w-[18px] h-[18px] rounded-full bg-[rgba(201,166,90,0.12)] flex items-center justify-center shrink-0">
                   <span className="text-[10px] text-[#C9A65A] font-bold">✓</span>
