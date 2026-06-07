@@ -11,7 +11,7 @@ type LeadDB = {
   situacao: string | null; porte: string | null; cnae: string | null
   objeto: string | null; valor: number | null; data_contrato: string | null
   status: 'pendente' | 'enviado' | 'erro' | 'invalido' | 'descadastrado'
-  fonte: 'pncp_contrato' | 'pncp_proposta' | 'busca_manual' | null
+  fonte: 'pncp_contrato' | 'pncp_proposta' | 'portal_transparencia' | 'busca_manual' | null
   enviado_em: string | null; erro_msg: string | null; created_at: string
 }
 
@@ -98,19 +98,22 @@ export default function CaptacaoPage() {
   const [resultadoImport, setResultadoImport] = useState<{ importados: number } | null>(null)
 
   // Backfill progress
-  const [backfillData, setBackfillData]       = useState<string | null>(null)
+  const [backfillData, setBackfillData]                     = useState<string | null>(null)
+  const [backfillTransparenciaData, setBackfillTransparenciaData] = useState<string | null>(null)
 
   // ─── Carregamento ─────────────────────────────────────────────────────────
 
   const carregarStats = useCallback(async () => {
-    const [cfgRes, statsRes, bfRes, disparoRes] = await Promise.all([
+    const [cfgRes, statsRes, bfRes, bfTransRes, disparoRes] = await Promise.all([
       fetch('/api/admin/captacao-config'),
       fetch('/api/admin/stats'),
       fetch('/api/admin/captacao-config?chave=captacao_backfill_data'),
+      fetch('/api/admin/captacao-config?chave=captacao_transparencia_backfill_data'),
       fetch('/api/admin/captacao-config?chave=captacao_disparo_ativo'),
     ])
     if (cfgRes.ok)     setCaptacaoAtiva((await cfgRes.json()).captacao_ativa)
     if (bfRes.ok)      setBackfillData((await bfRes.json()).valor ?? null)
+    if (bfTransRes.ok) setBackfillTransparenciaData((await bfTransRes.json()).valor ?? null)
     if (disparoRes.ok) {
       const d = await disparoRes.json()
       setDisparoAtivo(d.valor === true || d.valor === 'true')
@@ -384,10 +387,11 @@ export default function CaptacaoPage() {
         <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         <div className="flex gap-3 flex-wrap items-start">
           {([
-            { acao: 'coletar-leads',         label: '🏆 Coletar vencedores',    desc: 'Diário · contratos assinados PNCP' },
-            { acao: 'coletar-participantes', label: '👥 Coletar participantes',  desc: 'Semanal · todos os proponentes PNCP' },
-            { acao: 'disparar-leads',        label: '✉️ Disparar leads',        desc: '~5s · até 20 e-mails captação' },
-            { acao: 'reconverter-trials',    label: '🔄 Reconverter trials',     desc: '~5s · até 15 e-mails reativação' },
+            { acao: 'coletar-leads',               label: '🏆 Coletar PNCP',          desc: '~17s · contratos assinados PNCP' },
+            { acao: 'coletar-participantes',        label: '👥 Coletar participantes',  desc: 'Diário · todos os proponentes PNCP' },
+            { acao: 'coletar-leads-transparencia',  label: '🏛️ Portal Transparência',  desc: 'Diário · contratos federais gov.br' },
+            { acao: 'disparar-leads',               label: '✉️ Disparar leads',        desc: '~5s · até 20 e-mails captação' },
+            { acao: 'reconverter-trials',           label: '🔄 Reconverter trials',     desc: '~5s · até 15 e-mails reativação' },
           ] as const).map(({ acao, label, desc }) => (
             <div key={acao}>
               <button onClick={() => acionarCron(acao)} disabled={disparando !== null}
@@ -399,28 +403,41 @@ export default function CaptacaoPage() {
             </div>
           ))}
         </div>
-        {/* Progresso do backfill */}
+        {/* Progresso dos backfills */}
         {(() => {
           const inicio = new Date('2000-01-01').getTime()
           const hoje   = new Date().getTime()
-          const atual  = backfillData ? new Date(backfillData).getTime() : inicio
-          const pct    = Math.min(100, Math.round(((atual - inicio) / (hoje - inicio)) * 100))
-          const emBackfill = backfillData && backfillData < new Date().toISOString().slice(0, 10)
+          const hojeIso = new Date().toISOString().slice(0, 10)
+
+          const barras = [
+            { label: '🏆 PNCP contratos/proponentes', data: backfillData,               cor: '#C9A65A', corOk: '#10b981' },
+            { label: '🏛️ Portal Transparência',       data: backfillTransparenciaData,  cor: '#3b82f6', corOk: '#10b981' },
+          ]
+
           return (
-            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--cinza-light)' }}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold" style={{ color: 'var(--cinza)' }}>
-                  {emBackfill ? `⏳ Backfill em progresso — próximo: ${backfillData}` : '✅ Backfill completo (modo contínuo)'}
-                </span>
-                <span className="text-xs font-bold" style={{ color: 'var(--vinho)' }}>{pct}%</span>
-              </div>
-              <div style={{ height: 6, background: 'var(--cinza-light)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: emBackfill ? '#C9A65A' : '#10b981', borderRadius: 99, transition: 'width 0.5s' }} />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Jan 2000</span>
-                <span style={{ fontSize: 10, color: 'var(--cinza)' }}>Hoje</span>
-              </div>
+            <div className="mt-4 pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--cinza-light)' }}>
+              {barras.map(({ label, data, cor, corOk }) => {
+                const atual  = data ? new Date(data).getTime() : inicio
+                const pct    = Math.min(100, Math.max(0, Math.round(((atual - inicio) / (hoje - inicio)) * 100)))
+                const emBf   = data && data < hojeIso
+                return (
+                  <div key={label}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold" style={{ color: 'var(--cinza)' }}>
+                        {label} — {emBf ? `próximo: ${data}` : '✅ modo contínuo'}
+                      </span>
+                      <span className="text-xs font-bold" style={{ color: emBf ? cor : corOk }}>{pct}%</span>
+                    </div>
+                    <div style={{ height: 5, background: 'var(--cinza-light)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: emBf ? cor : corOk, borderRadius: 99, transition: 'width 0.5s' }} />
+                    </div>
+                    <div className="flex justify-between mt-0.5">
+                      <span style={{ fontSize: 9, color: 'var(--cinza)' }}>Jan 2000</span>
+                      <span style={{ fontSize: 9, color: 'var(--cinza)' }}>Hoje</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )
         })()}
@@ -598,9 +615,10 @@ export default function CaptacaoPage() {
                           {(() => {
                             const fonte = l.fonte
                             const map: Record<string, { label: string; bg: string; color: string }> = {
-                              pncp_contrato:  { label: '🏆 Contrato',     bg: 'rgba(107,15,26,0.08)',   color: '#6B0F1A' },
-                              pncp_proposta:  { label: '👥 Proponente',   bg: 'rgba(59,130,246,0.08)',  color: '#1e40af' },
-                              busca_manual:   { label: '🔍 Manual',       bg: 'rgba(107,114,128,0.1)', color: '#374151' },
+                              pncp_contrato:        { label: '🏆 Contrato',       bg: 'rgba(107,15,26,0.08)',  color: '#6B0F1A' },
+                              pncp_proposta:        { label: '👥 Proponente',     bg: 'rgba(59,130,246,0.08)', color: '#1e40af' },
+                              portal_transparencia: { label: '🏛️ Transparência', bg: 'rgba(139,92,246,0.08)', color: '#5b21b6' },
+                              busca_manual:         { label: '🔍 Manual',         bg: 'rgba(107,114,128,0.1)', color: '#374151' },
                             }
                             const f = map[fonte ?? ''] ?? { label: fonte ?? '—', bg: 'rgba(107,114,128,0.1)', color: '#374151' }
                             return (
