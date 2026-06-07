@@ -14,6 +14,20 @@ export default function EsqueciSenhaPage() {
     e.preventDefault()
     setCarregando(true)
     setErro('')
+
+    // Verifica se o e-mail está cadastrado antes de disparar o reset
+    const check = await fetch('/api/auth/verificar-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    const { exists } = await check.json()
+    if (!exists) {
+      setErro('Nenhuma conta encontrada com esse e-mail. Verifique o endereço ou crie uma conta.')
+      setCarregando(false)
+      return
+    }
+
     const supabase = createClient()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/update-password`,

@@ -25,9 +25,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plano, owner_id, status, trial_fim')
+    .select('plano, owner_id, status, trial_fim, nome, empresa')
     .eq('id', user.id)
     .single()
+
+  const nomeExibido = profile?.nome?.trim() || emailPrefix
+  const empresaExibida = profile?.empresa?.trim() || 'Monitor de Licitações'
+  const inicialExibida = nomeExibido.charAt(0).toUpperCase()
 
   // Bloquear acesso ao painel se trial expirado (exceto admin)
   const isAdmin = user.email === ADMIN_EMAIL
@@ -104,13 +108,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
               style={{ background: 'var(--vinho)' }}
             >
-              {emailPrefix.charAt(0).toUpperCase()}
+              {inicialExibida}
             </div>
             <div className="min-w-0">
               <div className="text-sm font-medium truncate" style={{ color: 'white' }}>
-                {emailPrefix}
+                {nomeExibido}
               </div>
-              <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>Matutta Soluções Digitais</div>
+              <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>{empresaExibida}</div>
             </div>
           </div>
           <LogoutButton />
