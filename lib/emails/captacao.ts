@@ -219,7 +219,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
     <!-- SOLUÇÃO -->
     <p>
       O <strong>Monitor de Licitações</strong> foi criado exatamente para isso.
-      ${cidade ? `Empresas em ${cidadeHtml} já usam nossa plataforma para não perder nenhum edital relevante.` : 'Nossa plataforma varre o Brasil inteiro — federal, estadual e municipal — em tempo real.'}
+      Empresas de todo o Brasil já usam nossa plataforma para não perder nenhum edital relevante.
     </p>
 
     <!-- COMO FUNCIONA -->
