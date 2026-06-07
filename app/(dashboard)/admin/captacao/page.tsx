@@ -410,15 +410,15 @@ export default function CaptacaoPage() {
           const hojeIso = new Date().toISOString().slice(0, 10)
 
           const barras = [
-            { label: '🏆 PNCP contratos/proponentes', data: backfillData,               cor: '#C9A65A', corOk: '#10b981' },
-            { label: '🏛️ Portal Transparência',       data: backfillTransparenciaData,  cor: '#3b82f6', corOk: '#10b981' },
+            { label: '🏆 PNCP contratos/proponentes', data: backfillData,              cor: '#C9A65A', corOk: '#10b981', inicio: new Date('2021-01-01').getTime(), labelInicio: 'Jan 2021' },
+            { label: '🏛️ Portal Transparência',       data: backfillTransparenciaData, cor: '#3b82f6', corOk: '#10b981', inicio: new Date('2014-01-01').getTime(), labelInicio: 'Jan 2014' },
           ]
 
           return (
             <div className="mt-4 pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--cinza-light)' }}>
-              {barras.map(({ label, data, cor, corOk }) => {
-                const atual  = data ? new Date(data).getTime() : inicio
-                const pct    = Math.min(100, Math.max(0, Math.round(((atual - inicio) / (hoje - inicio)) * 100)))
+              {barras.map(({ label, data, cor, corOk, inicio: inicioBar, labelInicio }) => {
+                const atual  = data ? new Date(data).getTime() : inicioBar
+                const pct    = Math.min(100, Math.max(0, Math.round(((atual - inicioBar) / (hoje - inicioBar)) * 100)))
                 const emBf   = data && data < hojeIso
                 return (
                   <div key={label}>
@@ -432,7 +432,7 @@ export default function CaptacaoPage() {
                       <div style={{ height: '100%', width: `${pct}%`, background: emBf ? cor : corOk, borderRadius: 99, transition: 'width 0.5s' }} />
                     </div>
                     <div className="flex justify-between mt-0.5">
-                      <span style={{ fontSize: 9, color: 'var(--cinza)' }}>Jan 2000</span>
+                      <span style={{ fontSize: 9, color: 'var(--cinza)' }}>{labelInicio}</span>
                       <span style={{ fontSize: 9, color: 'var(--cinza)' }}>Hoje</span>
                     </div>
                   </div>
