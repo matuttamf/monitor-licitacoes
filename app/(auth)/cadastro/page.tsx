@@ -252,7 +252,8 @@ function CadastroConteudo() {
                 <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">E-mail</label>
                 <input
                   type="email" value={email}
-                  onChange={e => !convite && setEmail(e.target.value)}
+                  onChange={e => { !convite && setEmail(e.target.value); e.target.setCustomValidity('') }}
+                  onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('Digite um e-mail válido')}
                   placeholder="seu@email.com" required readOnly={!!convite}
                   className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)] ${convite ? 'bg-[#F5F2EE] cursor-default' : 'bg-white'}`}
                 />
