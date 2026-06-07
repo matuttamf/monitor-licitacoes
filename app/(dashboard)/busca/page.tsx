@@ -282,48 +282,56 @@ export default function BuscaPage() {
                       className="rounded-2xl p-5"
                       style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${cfg.cor}` }}
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-2">
-                            <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
-                              {l.fonte}
-                            </span>
-                            {l._semantico && (
-                              <span className="text-xs font-medium px-2.5 py-1 rounded-lg"
-                                style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
-                                🤖 Correspondência inteligente
-                              </span>
-                            )}
-                            {l.cidade && (
-                              <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                                {l.cidade}{l.estado ? `/${l.estado}` : ''}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
-                          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
-                            {l.objeto.length > 160 ? l.objeto.substring(0, 160) + '…' : l.objeto}
-                          </p>
-                        </div>
-                        <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                          {l.valor_estimado && (
+                      {/* Tags */}
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{ background: cfg.bg, color: cfg.cor }}>
+                          {l.fonte}
+                        </span>
+                        {l._semantico && (
+                          <span className="text-xs font-medium px-2.5 py-1 rounded-lg"
+                            style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
+                            🤖 Correspondência inteligente
+                          </span>
+                        )}
+                        {l.cidade && (
+                          <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                            {l.cidade}{l.estado ? `/${l.estado}` : ''}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Órgão */}
+                      <p className="text-sm font-semibold mb-1 truncate" style={{ color: 'var(--text-1)' }}>{l.orgao}</p>
+
+                      {/* Objeto capitalizado */}
+                      <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-2)' }}>
+                        {(() => {
+                          const txt = l.objeto.length > 160 ? l.objeto.substring(0, 160) + '…' : l.objeto
+                          return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+                        })()}
+                      </p>
+
+                      {/* Rodapé: valor + data + botão */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-3">
+                          {l.valor_estimado ? (
                             <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{formatarValor(l.valor_estimado)}</p>
-                          )}
+                          ) : null}
                           {l.data_abertura && (
                             <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                               Abertura: {new Date(l.data_abertura + 'T12:00:00').toLocaleDateString('pt-BR')}
                             </p>
                           )}
-                          <a
-                            href={l.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                            style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
-                          >
-                            Ver edital →
-                          </a>
                         </div>
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0"
+                          style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
+                        >
+                          Ver edital →
+                        </a>
                       </div>
                     </div>
                   )
