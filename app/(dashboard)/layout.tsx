@@ -134,9 +134,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
           borderTop: '1px solid rgba(201,166,90,0.15)',
         }}
       >
-        {allNavItems.slice(0, 5).map(item => (
-          <MobileNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
-        ))}
+        {(() => {
+          // Itens fixos do nav mobile (sem Admin)
+          const base = [
+            { href: '/dashboard',      label: 'Dashboard',      icon: '◈' },
+            { href: '/busca',          label: 'Busca',          icon: '⊕' },
+            { href: '/palavras-chave', label: 'Palavras-chave', icon: '◎' },
+            { href: '/alertas',        label: 'Alertas',        icon: '◉' },
+          ]
+          // Se tiver equipe, mostra Equipe; senão, mostra Perfil
+          const ultimo = exibirEquipe
+            ? { href: '/equipe', label: 'Equipe', icon: '◫' }
+            : { href: '/perfil', label: 'Perfil',  icon: '◑' }
+          return [...base, ultimo].map(item => (
+            <MobileNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
+          ))
+        })()}
       </nav>
 
       {/* Botão flutuante WhatsApp */}
