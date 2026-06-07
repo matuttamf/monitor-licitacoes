@@ -122,7 +122,7 @@ export default function LandingPage() {
             O Monitor rastreia tudo que o setor público publica — editais, dispensas, contratos, avisos no Diário Oficial — e entrega as oportunidades que combinam com o que sua empresa vende, <strong className="text-[rgba(255,255,255,0.85)]">antes que o prazo comece a correr.</strong>
           </p>
           <p className="text-sm md:text-base text-[rgba(255,255,255,0.35)] leading-relaxed mb-12 max-w-[580px]">
-            Do governo federal à Petrobras. Das prefeituras do interior às maiores capitais do país. Nenhum contrato público passa despercebido.
+            Do Governo Federal à Petrobras. Das prefeituras do interior às maiores capitais do país. Nenhum contrato público passa despercebido.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-16">
@@ -178,7 +178,7 @@ export default function LandingPage() {
           <div className="bg-[#6B0F1A] rounded-[18px] p-8 md:p-9 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <p className="text-lg md:text-[22px] font-bold text-white m-0 mb-1.5 leading-snug">Isso não é azar. É falta de informação a tempo.</p>
-              <p className="text-sm md:text-[15px] text-[rgba(255,255,255,0.55)] m-0">O Monitor faz o trabalho de uma equipe inteira — governo federal, todos os estados, as maiores cidades, Petrobras e Caixa — e entrega só o que importa para o seu negócio.</p>
+              <p className="text-sm md:text-[15px] text-[rgba(255,255,255,0.55)] m-0">O Monitor faz o trabalho de uma equipe inteira — Governo Federal, todos os estados, as maiores cidades, Petrobras e Caixa — e entrega só o que importa para o seu negócio.</p>
             </div>
             <Link href="/cadastro" className="shrink-0 px-7 py-3.5 rounded-[10px] bg-[#C9A65A] text-[#1A1A1C] font-bold text-[15px] no-underline whitespace-nowrap">
               Resolver isso agora →
@@ -379,7 +379,7 @@ export default function LandingPage() {
             Cada dia sem monitoramento é um dia em que seu concorrente leva vantagem. Configure o Monitor agora e receba os primeiros alertas — de graça, sem cartão, sem compromisso.
           </p>
           <p className="text-sm text-[rgba(255,255,255,0.25)] mb-12">
-            Do governo federal à Petrobras — cobertura nacional completa. Sete dias inteiramente grátis, sem cartão.
+            Do Governo Federal à Petrobras — cobertura nacional completa. Sete dias inteiramente grátis, sem cartão.
           </p>
           <Link href="/cadastro" className="inline-flex items-center gap-2.5 px-10 py-5 rounded-[14px] bg-[#6B0F1A] text-white text-base md:text-[17px] font-bold no-underline shadow-[0_12px_40px_rgba(107,15,26,0.55)]">
             Quero meu acesso gratuito agora →
