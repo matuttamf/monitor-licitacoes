@@ -133,9 +133,6 @@ export function emailCaptacao(p: ParamsCaptacao) {
   .logo-text { color: #fff; font-size: 16px; font-weight: 700; }
   .logo-sub { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 1px; }
 
-  /* Urgency banner */
-  .urgency { background: #C9A65A; padding: 10px 40px; text-align: center; }
-  .urgency span { color: #6B0F1A; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; }
 
   /* Body */
   .body { padding: 36px 40px 28px; }
@@ -196,11 +193,6 @@ export function emailCaptacao(p: ParamsCaptacao) {
         <div class="logo-sub">Inteligência em licitações públicas</div>
       </div>
     </div>
-  </div>
-
-  <!-- Trial bar -->
-  <div class="urgency">
-    <span>✉️ Estamos oferecendo um período de teste gratuito com suporte — sem cartão, sem compromisso</span>
   </div>
 
   <!-- Body -->
