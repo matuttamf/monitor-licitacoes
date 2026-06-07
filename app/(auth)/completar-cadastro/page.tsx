@@ -199,7 +199,7 @@ export default function CompletarCadastroPage() {
             {[
               { label: 'Conta criada', done: true },
               { label: 'E-mail confirmado', done: true },
-              { label: 'Dados da empresa', done: false, active: true },
+              { label: 'Dados para NF', done: false, active: true },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-1.5">
                 {i > 0 && <div className="w-8 h-0.5 bg-[#D5D2C8]" />}
