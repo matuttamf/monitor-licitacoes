@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'E-mail inválido' }, { status: 400 })
     }
 
-    const supabase = createServiceClient()
+    const supabase = await createServiceClient()
 
     // getUserByEmail é o método direto da admin API do Supabase
     const { data, error } = await supabase.auth.admin.getUserByEmail(
