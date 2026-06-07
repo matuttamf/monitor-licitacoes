@@ -295,88 +295,82 @@ export default function AlertasPage() {
                   className="p-5"
                   style={{ borderBottom: idx < alertas.length - 1 ? '1px solid var(--cinza-light)' : undefined }}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      {/* Tags */}
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        {/* Badge Novo */}
-                        {novo && (
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                            style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
-                            ✦ Novo
-                          </span>
-                        )}
-                        {(a.keywords ?? []).map(termo => (
-                          <span key={termo} className="text-xs font-medium px-2.5 py-1 rounded-lg"
-                            style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
-                            {termo}
-                          </span>
-                        ))}
-                        {a.canais.map(c => {
-                          const cfg = canalConfig[c] ?? { label: c, cor: '#64748b', bg: 'rgba(100,116,139,0.1)' }
-                          return (
-                            <span key={c} className="text-xs font-medium px-2.5 py-1 rounded-lg"
-                              style={{ background: cfg.bg, color: cfg.cor }}>
-                              {cfg.label}
-                            </span>
-                          )
-                        })}
-                        {lic?.estado && (
-                          <span className="text-xs" style={{ color: 'var(--cinza)' }}>
-                            {lic.cidade ? `${lic.cidade}/` : ''}{lic.estado}
-                          </span>
-                        )}
-                      </div>
+                  {/* Tags */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {novo && (
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                        style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
+                        ✦ Novo
+                      </span>
+                    )}
+                    {(a.keywords ?? []).map(termo => (
+                      <span key={termo} className="text-xs font-medium px-2.5 py-1 rounded-lg"
+                        style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
+                        {termo}
+                      </span>
+                    ))}
+                    {a.canais.map(c => {
+                      const cfg = canalConfig[c] ?? { label: c, cor: '#64748b', bg: 'rgba(100,116,139,0.1)' }
+                      return (
+                        <span key={c} className="text-xs font-medium px-2.5 py-1 rounded-lg"
+                          style={{ background: cfg.bg, color: cfg.cor }}>
+                          {cfg.label}
+                        </span>
+                      )
+                    })}
+                    {lic?.estado && (
+                      <span className="text-xs" style={{ color: 'var(--cinza)' }}>
+                        {lic.cidade ? `${lic.cidade}/` : ''}{lic.estado}
+                      </span>
+                    )}
+                  </div>
 
-                      {/* Órgão + objeto */}
-                      <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--preto)' }}>
-                        {lic?.orgao ?? '—'}
-                      </p>
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--cinza)' }}>
-                        {lic?.objeto ? (lic.objeto.length > 150 ? lic.objeto.substring(0, 150) + '…' : lic.objeto) : '—'}
-                      </p>
+                  {/* Órgão */}
+                  <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--preto)' }}>
+                    {lic?.orgao ?? '—'}
+                  </p>
 
-                      {/* Metadados */}
-                      <div className="flex gap-4 mt-2 flex-wrap">
-                        {lic?.valor_estimado != null && lic.valor_estimado > 0 ? (
-                          <span className="text-xs font-semibold" style={{ color: 'var(--preto)' }}>
-                            💰 {moeda(lic.valor_estimado)}
-                          </span>
-                        ) : (
-                          <span className="text-xs" style={{ color: 'var(--cinza)' }}>
-                            💰 Valor não informado
-                          </span>
-                        )}
-                        {lic?.data_abertura && (
-                          <span className="text-xs" style={{ color: 'var(--cinza)' }}>
-                            📅 {new Date(lic.data_abertura).toLocaleDateString('pt-BR')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                  {/* Objeto capitalizado */}
+                  <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--cinza)' }}>
+                    {lic?.objeto ? (() => {
+                      const txt = lic.objeto.length > 150 ? lic.objeto.substring(0, 150) + '…' : lic.objeto
+                      return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+                    })() : '—'}
+                  </p>
 
-                    {/* Lado direito */}
-                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                  {/* Rodapé: metadados + data envio + botão */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {lic?.valor_estimado != null && lic.valor_estimado > 0 ? (
+                        <span className="text-xs font-semibold" style={{ color: 'var(--preto)' }}>
+                          💰 {moeda(lic.valor_estimado)}
+                        </span>
+                      ) : null}
+                      {lic?.data_abertura && (
+                        <span className="text-xs" style={{ color: 'var(--cinza)' }}>
+                          📅 {new Date(lic.data_abertura).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
                       {a.enviado_em && (
-                        <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-                          {new Date(a.enviado_em).toLocaleString('pt-BR', {
-                            day: '2-digit', month: '2-digit', year: 'numeric',
+                        <span className="text-xs" style={{ color: 'var(--cinza)' }}>
+                          Enviado: {new Date(a.enviado_em).toLocaleString('pt-BR', {
+                            day: '2-digit', month: '2-digit',
                             hour: '2-digit', minute: '2-digit',
                           })}
-                        </p>
-                      )}
-                      {lic?.url && (
-                        <a
-                          href={lic.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                          style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
-                        >
-                          Ver edital →
-                        </a>
+                        </span>
                       )}
                     </div>
+                    {lic?.url && (
+                      <a
+                        href={lic.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0"
+                        style={{ background: 'var(--vinho)', color: 'white', textDecoration: 'none' }}
+                      >
+                        Ver edital →
+                      </a>
+                    )}
                   </div>
                 </div>
               )
