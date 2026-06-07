@@ -135,7 +135,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
 
   /* Urgency banner */
   .urgency { background: #C9A65A; padding: 10px 40px; text-align: center; }
-  .urgency span { color: #6B0F1A; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .urgency span { color: #6B0F1A; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; }
 
   /* Body */
   .body { padding: 36px 40px 28px; }
@@ -198,9 +198,9 @@ export function emailCaptacao(p: ParamsCaptacao) {
     </div>
   </div>
 
-  <!-- Urgency bar -->
+  <!-- Trial bar -->
   <div class="urgency">
-    <span>⏱ Oferta por tempo limitado — 7 dias gratuitos, sem cartão</span>
+    <span>✉️ Estamos oferecendo um período de teste gratuito com suporte — sem cartão, sem compromisso</span>
   </div>
 
   <!-- Body -->
@@ -248,9 +248,9 @@ export function emailCaptacao(p: ParamsCaptacao) {
 
     <!-- CTA -->
     <div class="cta-section">
-      <p class="cta-pre">Teste agora — sem compromisso, sem cartão de crédito</p>
-      <a href="${ctaHref}" class="cta-btn">Quero meus 7 dias grátis →</a>
-      <p class="cta-sub">✓ Ativação imediata &nbsp;·&nbsp; ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      <p class="cta-pre">Estamos oferecendo um período de teste com suporte para você experimentar a ferramenta sem nenhum risco.</p>
+      <a href="${ctaHref}" class="cta-btn">Começar meu período de teste →</a>
+      <p class="cta-sub">✓ 7 dias gratuitos &nbsp;·&nbsp; ✓ Sem cartão &nbsp;·&nbsp; ✓ Suporte durante todo o teste</p>
     </div>
 
     <!-- P.S. -->
