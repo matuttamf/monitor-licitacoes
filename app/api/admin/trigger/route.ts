@@ -55,9 +55,10 @@ export async function POST(request: Request) {
     alertar:           `${baseUrl}/api/cron/alertar`,
     emails:            `${baseUrl}/api/cron/emails-trial`,
     'expirar-trials':  `${baseUrl}/api/cron/expirar-trials`,
-    'coletar-leads':      `${baseUrl}/api/cron/coletar-leads`,
-    'disparar-leads':     `${baseUrl}/api/cron/disparar-leads`,
-    'reconverter-trials': `${baseUrl}/api/cron/reconverter-trials`,
+    'coletar-leads':         `${baseUrl}/api/cron/coletar-leads`,
+    'coletar-participantes': `${baseUrl}/api/cron/coletar-participantes`,
+    'disparar-leads':        `${baseUrl}/api/cron/disparar-leads`,
+    'reconverter-trials':    `${baseUrl}/api/cron/reconverter-trials`,
   }
 
   const url = rotas[acao]

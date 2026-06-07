@@ -29,7 +29,8 @@
 
     { "path": "/api/cron/resumo-semanal",  "schedule": "0 13 * * 5"   },
 
-    { "path": "/api/cron/coletar-leads",   "schedule": "0 9 * * 1-6"  },
+    { "path": "/api/cron/coletar-leads",         "schedule": "0 9 * * 1-6"  },
+    { "path": "/api/cron/coletar-participantes", "schedule": "0 7 * * 0"    },
 
     { "path": "/api/cron/disparar-leads",    "schedule": "0 12 * * 2,3,4" },
     { "path": "/api/cron/disparar-leads",    "schedule": "0 17 * * 2,3,4" },

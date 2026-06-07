@@ -11,6 +11,7 @@ type LeadDB = {
   situacao: string | null; porte: string | null; cnae: string | null
   objeto: string | null; valor: number | null; data_contrato: string | null
   status: 'pendente' | 'enviado' | 'erro' | 'invalido' | 'descadastrado'
+  fonte: 'pncp_contrato' | 'pncp_proposta' | 'busca_manual' | null
   enviado_em: string | null; erro_msg: string | null; created_at: string
 }
 
@@ -350,9 +351,10 @@ export default function CaptacaoPage() {
         <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         <div className="flex gap-3 flex-wrap items-start">
           {([
-            { acao: 'coletar-leads',      label: '🎯 Coletar leads',      desc: '~17s · 250 contratos → ~50 CNPJs' },
-            { acao: 'disparar-leads',     label: '✉️ Disparar leads',     desc: '~5s · até 20 e-mails captação' },
-            { acao: 'reconverter-trials', label: '🔄 Reconverter trials',  desc: '~5s · até 15 e-mails reativação' },
+            { acao: 'coletar-leads',         label: '🏆 Coletar vencedores',    desc: 'Diário · contratos assinados PNCP' },
+            { acao: 'coletar-participantes', label: '👥 Coletar participantes',  desc: 'Semanal · todos os proponentes PNCP' },
+            { acao: 'disparar-leads',        label: '✉️ Disparar leads',        desc: '~5s · até 20 e-mails captação' },
+            { acao: 'reconverter-trials',    label: '🔄 Reconverter trials',     desc: '~5s · até 15 e-mails reativação' },
           ] as const).map(({ acao, label, desc }) => (
             <div key={acao}>
               <button onClick={() => acionarCron(acao)} disabled={disparando !== null}
@@ -514,7 +516,7 @@ export default function CaptacaoPage() {
                       <input type="checkbox" checked={selecionados.size === leadsDB.length && leadsDB.length > 0}
                         onChange={toggleTodos} />
                     </th>
-                    {['','Empresa','E-mail','Cidade/UF','Setor (CNAE)','Status','Enviado em','Ações'].map(h => (
+                    {['','Empresa','E-mail','Cidade/UF','Setor (CNAE)','Fonte','Status','Enviado em','Ações'].map(h => (
                       <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider whitespace-nowrap"
                         style={{ color: 'var(--cinza)' }}>{h}</th>
                     ))}
@@ -558,6 +560,21 @@ export default function CaptacaoPage() {
                           <span className="truncate block" title={l.cnae ?? ''} style={{ color: 'var(--cinza)' }}>
                             {l.cnae ? l.cnae.slice(0, 45) + (l.cnae.length > 45 ? '…' : '') : '—'}
                           </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {(() => {
+                            const fonte = l.fonte
+                            const map: Record<string, { label: string; bg: string; color: string }> = {
+                              pncp_contrato:  { label: '🏆 Contrato',     bg: 'rgba(107,15,26,0.08)',   color: '#6B0F1A' },
+                              pncp_proposta:  { label: '👥 Proponente',   bg: 'rgba(59,130,246,0.08)',  color: '#1e40af' },
+                              busca_manual:   { label: '🔍 Manual',       bg: 'rgba(107,114,128,0.1)', color: '#374151' },
+                            }
+                            const f = map[fonte ?? ''] ?? { label: fonte ?? '—', bg: 'rgba(107,114,128,0.1)', color: '#374151' }
+                            return (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                                style={{ background: f.bg, color: f.color }}>{f.label}</span>
+                            )
+                          })()}
                         </td>
                         <td className="px-3 py-2">
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap"

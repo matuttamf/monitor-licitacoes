@@ -226,6 +226,7 @@ export async function GET(req: NextRequest) {
         valor:        contrato.valorInicial ?? null,
         data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
         status:       'pendente',
+        fonte:        'pncp_contrato',
       })
     }
 

@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       valor:         l.valor ?? null,
       data_contrato: l.data_contrato ?? null,
       status:        'pendente',
+      fonte:         'busca_manual',
     }))
 
   const { error } = await service
