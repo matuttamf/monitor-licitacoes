@@ -48,21 +48,35 @@ interface BrasilApiCnpj {
   cnae_fiscal_descricao?:      string
 }
 
-async function buscarContratosPNCP(dataInicial: string, dataFinal: string, paginas = 10): Promise<PncpContrato[]> {
+async function buscarContratosPNCP(
+  dataInicial: string, dataFinal: string, paginas = 10
+): Promise<{ contratos: PncpContrato[]; debug: string[] }> {
   const todos: PncpContrato[] = []
+  const debug: string[] = []
   for (let p = 1; p <= paginas; p++) {
     try {
       const url = `${PNCP_BASE}/contratos/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
       const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
-      if (!res.ok) break
+      debug.push(`p${p}: HTTP ${res.status}`)
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        debug.push(`p${p} erro: ${txt.slice(0, 200)}`)
+        break
+      }
       const json = await res.json()
-      const itens: PncpContrato[] = json.data ?? []
+      const itens: PncpContrato[] = json.data ?? json ?? []
+      debug.push(`p${p}: ${itens.length} itens, totalRegistros=${json.totalRegistros ?? '?'}`)
       if (!itens.length) break
-      todos.push(...itens.filter(c => c.numeroCpfCnpjFornecedor))
+      const comCnpj = itens.filter(c => c.numeroCpfCnpjFornecedor)
+      todos.push(...comCnpj)
+      debug.push(`p${p}: ${comCnpj.length} com CPF/CNPJ fornecedor`)
       if (itens.length < 50) break
-    } catch { break }
+    } catch (e) {
+      debug.push(`p${p}: exception ${String(e)}`)
+      break
+    }
   }
-  return todos
+  return { contratos: todos, debug }
 }
 
 async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
@@ -96,9 +110,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'sistema pausado' })
   }
 
-  // Período: últimos 2 dias (buffer para falhas do dia anterior)
+  // Período: últimos 7 dias (amplo para capturar contratos com atraso de publicação)
   const hoje  = new Date()
-  const inicio = new Date(hoje); inicio.setDate(inicio.getDate() - 2)
+  const inicio = new Date(hoje); inicio.setDate(inicio.getDate() - 7)
   const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
   const dataInicial = fmt(inicio)
   const dataFinal   = fmt(hoje)
@@ -106,10 +120,10 @@ export async function GET(req: NextRequest) {
   console.log(`[coletar-leads] período ${dataInicial} → ${dataFinal}`)
 
   // 1. Buscar contratos PNCP
-  // Limite conservador: 5 páginas × 50 = 250 contratos → ~50 CNPJs únicos para enriquecer
-  // BrasilAPI: ~3 req/s → 50 × 350ms = ~17s. Seguro dentro do maxDuration=300.
-  const contratos = await buscarContratosPNCP(dataInicial, dataFinal, 5)
-  console.log(`[coletar-leads] ${contratos.length} contratos encontrados`)
+  // 5 páginas × 50 = 250 contratos → ~50 CNPJs únicos para enriquecer
+  const { contratos, debug: debugPncp } = await buscarContratosPNCP(dataInicial, dataFinal, 5)
+  console.log(`[coletar-leads] PNCP debug:`, debugPncp)
+  console.log(`[coletar-leads] ${contratos.length} contratos com fornecedor`)
 
   // 2. Desduplicar CNPJs (apenas 14 dígitos = empresa, não CPF)
   const cnpjMap = new Map<string, PncpContrato>()
@@ -118,10 +132,15 @@ export async function GET(req: NextRequest) {
     if (raw.length === 14 && !cnpjMap.has(raw)) cnpjMap.set(raw, c)
   }
   const cnpjsNovos = [...cnpjMap.keys()]
-  console.log(`[coletar-leads] ${cnpjsNovos.length} CNPJs únicos`)
+  console.log(`[coletar-leads] ${cnpjsNovos.length} CNPJs únicos (14 dígitos)`)
 
   if (!cnpjsNovos.length) {
-    return NextResponse.json({ ok: true, novos: 0, mensagem: 'Nenhum CNPJ novo encontrado' })
+    return NextResponse.json({
+      ok: true, novos: 0,
+      mensagem: 'Nenhum CNPJ de empresa encontrado no período',
+      pncp_debug: debugPncp,
+      total_contratos_pncp: contratos.length,
+    })
   }
 
   // 3. Verificar quais já existem no banco
@@ -182,5 +201,12 @@ export async function GET(req: NextRequest) {
   }
 
   console.log(`[coletar-leads] ${inseridos} leads inseridos`)
-  return NextResponse.json({ ok: true, novos: inseridos, total_processados: paraEnriquecer.length })
+  return NextResponse.json({
+    ok: true,
+    novos: inseridos,
+    total_processados: paraEnriquecer.length,
+    total_contratos_pncp: contratos.length,
+    total_cnpjs_unicos: cnpjsNovos.length,
+    pncp_debug: debugPncp,
+  })
 }
