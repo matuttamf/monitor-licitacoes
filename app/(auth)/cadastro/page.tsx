@@ -188,7 +188,7 @@ function CadastroConteudo() {
             {[
               { icon: '🔀', titulo: 'Cruzamento inteligente de dados', desc: 'Cruzamos automaticamente o que o governo publica em todos os portais com o perfil de produtos da sua empresa.' },
               { icon: '📬', titulo: 'Alertas todos os dias úteis', desc: 'Sua equipe recebe por e-mail, Telegram e WhatsApp as oportunidades filtradas — dentro do horário comercial.' },
-              { icon: '🏛️', titulo: 'Cobertura nacional completa', desc: 'Prefeituras, estados, governo federal — mais de 5.500 municípios rastreados diariamente.' },
+              { icon: '🏛️', titulo: 'Cobertura nacional completa', desc: 'Prefeituras, Estados, Governo Federal — mais de 5.500 municípios rastreados diariamente.' },
               { icon: '⚡', titulo: 'Pronto em dois minutos', desc: 'Cadastre-se, informe o que sua empresa vende e o monitoramento começa imediatamente.' },
             ].map(b => (
               <div key={b.titulo} className="flex gap-3.5 items-start">
