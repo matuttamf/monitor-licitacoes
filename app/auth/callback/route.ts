@@ -25,24 +25,6 @@ export async function GET(request: NextRequest) {
     }
   )
 
-  // Helper: descobre para onde redirecionar após confirmar e-mail
-  async function redirectAposConfirmacao() {
-    // Se next foi passado explicitamente (ex: recovery), usa ele
-    if (next !== '/dashboard') return new URL(next, request.url)
-
-    // Verifica se o perfil já tem CNPJ (completar-cadastro já foi feito)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('cnpj')
-        .eq('id', user.id)
-        .single()
-      if (!profile?.cnpj) return new URL('/completar-cadastro', request.url)
-    }
-    return new URL('/dashboard', request.url)
-  }
-
   // Fluxo token_hash (links de e-mail: recovery, signup, etc.)
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
@@ -50,7 +32,8 @@ export async function GET(request: NextRequest) {
       if (type === 'recovery') {
         return NextResponse.redirect(new URL('/auth/update-password', request.url))
       }
-      return NextResponse.redirect(await redirectAposConfirmacao())
+      // Após confirmação de e-mail → onboarding direto
+      return NextResponse.redirect(new URL('/onboarding', request.url))
     }
     return NextResponse.redirect(new URL('/login?erro=link_expirado', request.url))
   }
@@ -59,7 +42,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(await redirectAposConfirmacao())
+      return NextResponse.redirect(new URL(next, request.url))
     }
   }
 
