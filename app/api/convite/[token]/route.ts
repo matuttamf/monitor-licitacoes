@@ -1,13 +1,14 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 // GET — info pública do convite (para pré-preencher cadastro)
+// Usa createAdminClient (sem cookies) pois o convidado ainda não está autenticado
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   const { data: convite } = await service
     .from('invites')
@@ -41,7 +42,7 @@ export async function POST(
   const { userId } = await request.json()
   if (!userId) return NextResponse.json({ error: 'userId obrigatório.' }, { status: 400 })
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   const { data: convite } = await service
     .from('invites')
