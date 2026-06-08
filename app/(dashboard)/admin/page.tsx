@@ -194,9 +194,9 @@ export default function AdminPage() {
 
       {/* ── KPI Cards ── */}
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '10px', marginBottom: '24px' }}>
           {[
-            { label: 'Usuários',         value: stats.totalUsuarios,   sub: `owners + membros`,               cor: '#6B0F1A' },
+            { label: 'Usuários',         value: stats.totalAtivos + stats.totalTrial + stats.totalExpired + stats.totalMembros,   sub: `owners + membros`,               cor: '#6B0F1A' },
             { label: 'Ativos',           value: stats.totalAtivos,     sub: 'assinantes pagos',               cor: '#10b981' },
             { label: 'Em trial',         value: stats.totalTrial,      sub: 'período grátis',                 cor: '#C9A65A' },
             { label: 'Membros equipe',   value: stats.totalMembros,    sub: 'sub-usuários ativos',            cor: '#8b5cf6' },
@@ -205,12 +205,12 @@ export default function AdminPage() {
             { label: 'Total alertas',    value: stats.totalAlertas,    sub: 'desde o início',                 cor: '#6B0F1A' },
             { label: 'Licitações',       value: stats.totalLicitacoes, sub: 'no banco',                       cor: '#0ea5e9' },
           ].map(({ label, value, sub, cor }) => (
-            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', padding: '16px 20px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
+            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '12px', padding: '12px 14px' }}>
+              <div style={{ fontSize: '20px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
                 {value.toLocaleString('pt-BR')}
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
-              <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px' }}>{sub}</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
+              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{sub}</div>
             </div>
           ))}
         </div>
@@ -224,12 +224,12 @@ export default function AdminPage() {
             { label: 'Aguardando envio', value: stats.leadsPendentes, sub: 'e-mails pendentes',      cor: '#C9A65A' },
             { label: 'E-mails enviados', value: stats.leadsEnviados,  sub: 'captação disparada',     cor: '#10b981' },
           ].map(({ label, value, sub, cor }) => (
-            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', padding: '16px 20px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
+            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '12px', padding: '12px 14px' }}>
+              <div style={{ fontSize: '20px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
                 {value.toLocaleString('pt-BR')}
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
-              <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px' }}>{sub}</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
+              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{sub}</div>
             </div>
           ))}
         </div>

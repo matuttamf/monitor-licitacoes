@@ -70,7 +70,7 @@ export async function GET() {
     totalAtivos:     totalAtivos    ?? 0,
     totalTrial:      totalTrial     ?? 0,
     totalMembros:    totalMembros   ?? 0,
-    totalExpired:    (totalUsuarios ?? 0) - (totalAtivos ?? 0) - (totalTrial ?? 0) - (totalMembros ?? 0),
+    totalExpired:    (totalUsuarios ?? 0) - (totalAtivos ?? 0) - (totalTrial ?? 0) - (totalMembros ?? 0) < 0 ? 0 : (totalUsuarios ?? 0) - (totalAtivos ?? 0) - (totalTrial ?? 0) - (totalMembros ?? 0),
     totalKeywords:   totalKeywords  ?? 0,
     totalAlertas:    totalAlertas   ?? 0,
     totalLicitacoes: totalLicitacoes ?? 0,
