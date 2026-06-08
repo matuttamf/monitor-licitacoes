@@ -35,9 +35,10 @@ export async function GET() {
     { count: leadsAbriram },
     { count: leadsClicaram },
   ] = await Promise.all([
-    service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId),
-    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId),
-    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial').neq('id', adminId),
+    // Contar apenas owners (não sub-usuários de equipes)
+    service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId).is('owner_id', null),
+    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId).is('owner_id', null),
+    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial').neq('id', adminId).is('owner_id', null),
     service.from('keywords').select('*', { count: 'exact', head: true }).eq('ativo', true),
     service.from('alertas').select('*', { count: 'exact', head: true }),
     service.from('licitacoes').select('*', { count: 'exact', head: true }),

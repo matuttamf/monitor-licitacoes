@@ -19,7 +19,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano')
+    .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, owner_id')
     .order('criado_em', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

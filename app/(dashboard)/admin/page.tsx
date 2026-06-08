@@ -21,6 +21,7 @@ type Usuario = {
   keyword_count: number
   alerta_count: number
   ultimo_alerta: string | null
+  owner_id?: string | null
 }
 
 type Keyword    = { id: string; termo: string; ativo: boolean; criado_em: string }
@@ -147,8 +148,15 @@ export default function AdminPage() {
     carregar() // atualiza logs
   }
 
-  // Filtragem
-  const usuariosFiltrados = usuarios.filter(u => {
+  // Separar owners e sub-usuários
+  const owners    = usuarios.filter(u => !u.owner_id)
+  const subUsers  = usuarios.filter(u => !!u.owner_id)
+
+  // Mapa owner_id → nome para exibir no badge do sub-usuário
+  const ownerNomeMap = Object.fromEntries(owners.map(o => [o.id, o.nome || o.email]))
+
+  // Filtragem — aplicada apenas nos owners; sub-usuários aparecem junto do seu owner
+  const ownersFiltrados = owners.filter(u => {
     const statusEfetivo = (u.trial_expirado && u.status === 'trial') ? 'expired' : u.status
     if (filtroStatus !== 'todos' && statusEfetivo !== filtroStatus) return false
     if (busca) {
@@ -157,6 +165,15 @@ export default function AdminPage() {
     }
     return true
   })
+
+  // Lista final: cada owner seguido dos seus sub-usuários
+  type RowItem = Usuario & { isSubUser: boolean; ownerNome?: string }
+  const usuariosFiltrados: RowItem[] = ownersFiltrados.flatMap(owner => [
+    { ...owner, isSubUser: false },
+    ...subUsers
+      .filter(s => s.owner_id === owner.id)
+      .map(s => ({ ...s, isSubUser: true, ownerNome: ownerNomeMap[owner.id] })),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -304,7 +321,7 @@ export default function AdminPage() {
               color: aba === a ? 'white' : 'var(--cinza)',
               border: aba === a ? 'none' : '1px solid var(--cinza-light)',
             } as React.CSSProperties}>
-            {a === 'usuarios' ? `Usuários (${usuarios.length})` : 'Cron logs'}
+            {a === 'usuarios' ? `Usuários (${owners.length})` : 'Cron logs'}
           </button>
         ))}
       </div>
@@ -358,17 +375,40 @@ export default function AdminPage() {
                     const statusEfetivo = expirado ? 'expired' : u.status
                     const cfg = statusConfig[statusEfetivo]
                     return (
-                      <tr key={u.id} style={{ borderBottom: '1px solid var(--cinza-light)' }}
+                      <tr key={u.id}
+                        style={{
+                          borderBottom: '1px solid var(--cinza-light)',
+                          background: u.isSubUser ? 'rgba(107,15,26,0.02)' : undefined,
+                        }}
                         className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <div className="font-medium" style={{ color: 'var(--preto)' }}>{u.nome || '—'}</div>
-                          <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>{u.email}</div>
-                          {u.empresa && <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.empresa}</div>}
+                          {/* Indentação visual para sub-usuários */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                            {u.isSubUser && (
+                              <div style={{ paddingTop: '3px', color: 'var(--cinza-light)', fontSize: '14px', flexShrink: 0 }}>↳</div>
+                            )}
+                            <div>
+                              <div className="font-medium" style={{ color: 'var(--preto)' }}>{u.nome || '—'}</div>
+                              <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>{u.email}</div>
+                              {u.isSubUser && u.ownerNome && (
+                                <div className="text-xs mt-0.5" style={{ color: '#C9A65A' }}>
+                                  👥 Equipe de {u.ownerNome}
+                                </div>
+                              )}
+                              {!u.isSubUser && u.empresa && (
+                                <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.empresa}</div>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           {u.is_admin ? (
                             <span className="text-xs font-bold px-2 py-1 rounded-lg inline-block" style={{ background: 'rgba(107,15,26,0.12)', color: 'var(--vinho)', letterSpacing: '0.04em' }}>
                               🛡 Admin
+                            </span>
+                          ) : u.isSubUser ? (
+                            <span className="text-xs font-medium px-2 py-1 rounded-lg inline-block" style={{ background: 'rgba(201,166,90,0.1)', color: '#92610a' }}>
+                              👥 Membro equipe
                             </span>
                           ) : (
                             <>
@@ -402,7 +442,7 @@ export default function AdminPage() {
                               style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}>
                               Ver
                             </button>
-                            {!u.is_admin && (
+                            {!u.is_admin && !u.isSubUser && (
                               <>
                                 <button onClick={() => setEditando({ ...u })}
                                   style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
