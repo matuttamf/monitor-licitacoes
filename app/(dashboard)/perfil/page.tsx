@@ -167,12 +167,60 @@ export default function PerfilPage() {
     color: 'var(--preto)',
   }
 
+  const diasRestantes = perfil.trial_fim
+    ? Math.max(0, Math.ceil((new Date(perfil.trial_fim).getTime() - Date.now()) / 86400000))
+    : 0
+
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>Meu perfil</h1>
         <p className="text-sm" style={{ color: 'var(--cinza)' }}>Mantenha seus dados atualizados para receber alertas corretamente.</p>
       </div>
+
+      {/* ── Banner trial → assinar ── */}
+      {perfil.status === 'trial' && (
+        <div className="rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          style={{ background: 'linear-gradient(135deg, #6B0F1A 0%, #9B1B2A 100%)', border: '1px solid rgba(201,166,90,0.3)' }}>
+          <div>
+            <div className="text-white font-bold text-base mb-0.5">
+              {diasRestantes > 0 ? `⏳ Trial: ${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}` : '⚠️ Trial expirando hoje'}
+            </div>
+            <div className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              Assine agora e mantenha o monitoramento sem interrupção.
+            </div>
+          </div>
+          <a href="/assinar"
+            className="flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold no-underline whitespace-nowrap"
+            style={{ background: '#C9A65A', color: '#1A1A1C' }}>
+            Ver planos →
+          </a>
+        </div>
+      )}
+
+      {/* ── Card plano ativo → upgrade ── */}
+      {perfil.status === 'active' && (
+        <div className="rounded-2xl p-5 flex items-center justify-between gap-4"
+          style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
+              style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
+              ★
+            </div>
+            <div>
+              <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>
+                Plano {getLimites(perfil.plano).nome}
+              </div>
+              <div className="text-xs" style={{ color: 'var(--cinza)' }}>Assinatura ativa</div>
+            </div>
+          </div>
+          <a href="/assinar"
+            className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold no-underline"
+            style={{ background: 'var(--surface-2)', color: 'var(--vinho)', border: '1.5px solid var(--cinza-light)' }}>
+            Fazer upgrade
+          </a>
+        </div>
+      )}
 
       {/* Dados gerais */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
