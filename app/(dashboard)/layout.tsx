@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
 import { MobileNavItem } from './components/MobileNavItem'
+import { MobileLogoutButton } from './components/MobileLogoutButton'
 import { temMultiUsuario } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
@@ -153,6 +154,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <MobileNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))
         })()}
+        <MobileLogoutButton />
       </nav>
 
       {/* Botão flutuante WhatsApp */}
