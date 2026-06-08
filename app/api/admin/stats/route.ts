@@ -20,6 +20,7 @@ export async function GET() {
     { count: totalUsuarios },
     { count: totalAtivos },
     { count: totalTrial },
+    { count: totalMembros },
     { count: totalKeywords },
     { count: totalAlertas },
     { count: totalLicitacoes },
@@ -35,10 +36,14 @@ export async function GET() {
     { count: leadsAbriram },
     { count: leadsClicaram },
   ] = await Promise.all([
-    // Contar apenas owners (não sub-usuários de equipes)
-    service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId).is('owner_id', null),
+    // Total geral — todos os usuários (owners + membros), exceto admin
+    service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId),
+    // Ativos pagos — apenas owners com status active
     service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId).is('owner_id', null),
+    // Em trial — apenas owners
     service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial').neq('id', adminId).is('owner_id', null),
+    // Membros de equipe (sub-usuários)
+    service.from('profiles').select('*', { count: 'exact', head: true }).not('owner_id', 'is', null),
     service.from('keywords').select('*', { count: 'exact', head: true }).eq('ativo', true),
     service.from('alertas').select('*', { count: 'exact', head: true }),
     service.from('licitacoes').select('*', { count: 'exact', head: true }),
@@ -64,7 +69,8 @@ export async function GET() {
     totalUsuarios:   totalUsuarios  ?? 0,
     totalAtivos:     totalAtivos    ?? 0,
     totalTrial:      totalTrial     ?? 0,
-    totalExpired:    (totalUsuarios ?? 0) - (totalAtivos ?? 0) - (totalTrial ?? 0),
+    totalMembros:    totalMembros   ?? 0,
+    totalExpired:    (totalUsuarios ?? 0) - (totalAtivos ?? 0) - (totalTrial ?? 0) - (totalMembros ?? 0),
     totalKeywords:   totalKeywords  ?? 0,
     totalAlertas:    totalAlertas   ?? 0,
     totalLicitacoes: totalLicitacoes ?? 0,

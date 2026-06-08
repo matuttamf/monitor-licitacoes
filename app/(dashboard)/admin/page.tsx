@@ -34,6 +34,7 @@ type ContaDetalhe = { keywords: Keyword[]; alertas: Alerta[]; subUsuarios: SubUs
 
 type Stats = {
   totalUsuarios: number; totalAtivos: number; totalTrial: number; totalExpired: number
+  totalMembros: number
   totalKeywords: number; totalAlertas: number; totalLicitacoes: number
   alertasHoje: number; alertas7d: number
   leadsPendentes: number; leadsEnviados: number; leadsTotal: number
@@ -195,13 +196,14 @@ export default function AdminPage() {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Usuários',      value: stats.totalUsuarios,   sub: `${stats.totalAtivos} ativos`,     cor: '#6B0F1A' },
-            { label: 'Ativos',        value: stats.totalAtivos,     sub: 'assinantes pagos',                cor: '#10b981' },
-            { label: 'Em trial',      value: stats.totalTrial,      sub: 'período grátis',                  cor: '#C9A65A' },
-            { label: 'Keywords ativas', value: stats.totalKeywords, sub: 'monitoradas',                    cor: '#3b82f6' },
-            { label: 'Alertas hoje',  value: stats.alertasHoje,     sub: `${stats.alertas7d} nos 7 dias`,   cor: '#8b5cf6' },
-            { label: 'Total alertas', value: stats.totalAlertas,    sub: 'desde o início',                  cor: '#6B0F1A' },
-            { label: 'Licitações',    value: stats.totalLicitacoes, sub: 'no banco',                        cor: '#0ea5e9' },
+            { label: 'Usuários',         value: stats.totalUsuarios,   sub: `owners + membros`,               cor: '#6B0F1A' },
+            { label: 'Ativos',           value: stats.totalAtivos,     sub: 'assinantes pagos',               cor: '#10b981' },
+            { label: 'Em trial',         value: stats.totalTrial,      sub: 'período grátis',                 cor: '#C9A65A' },
+            { label: 'Membros equipe',   value: stats.totalMembros,    sub: 'sub-usuários ativos',            cor: '#8b5cf6' },
+            { label: 'Keywords ativas',  value: stats.totalKeywords,   sub: 'monitoradas',                    cor: '#3b82f6' },
+            { label: 'Alertas hoje',     value: stats.alertasHoje,     sub: `${stats.alertas7d} nos 7 dias`,  cor: '#8b5cf6' },
+            { label: 'Total alertas',    value: stats.totalAlertas,    sub: 'desde o início',                 cor: '#6B0F1A' },
+            { label: 'Licitações',       value: stats.totalLicitacoes, sub: 'no banco',                       cor: '#0ea5e9' },
           ].map(({ label, value, sub, cor }) => (
             <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '16px', padding: '16px 20px' }}>
               <div style={{ fontSize: '24px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
