@@ -1,4 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'matuttamaquinaseferramentas@gmail.com'
@@ -9,7 +9,7 @@ export async function GET() {
   if (!user || user.email !== ADMIN_EMAIL)
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Obter ID do admin para excluí-lo das métricas
   const { data: adminAuth } = await service.auth.admin.listUsers()

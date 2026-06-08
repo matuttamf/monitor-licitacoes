@@ -6,7 +6,7 @@
  *      → { ids, status } altera múltiplos leads de uma vez
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 const PAGE_SIZE   = 50
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const uf     = sp.get('uf') ?? 'todos'
   const cnae   = (sp.get('cnae') ?? '').trim()
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
   const from    = (page - 1) * PAGE_SIZE
   const to      = from + PAGE_SIZE - 1
 
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
   const body = await req.json() as { id?: string; ids?: string[]; status: string }
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   const ids = body.ids ?? (body.id ? [body.id] : [])
   if (!ids.length) return NextResponse.json({ error: 'Nenhum id informado' }, { status: 400 })

@@ -3,7 +3,7 @@
  * POST → { ativo: boolean } → altera estado
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
   const chave = req.nextUrl.searchParams.get('chave')
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Consulta de chave arbitrária (ex: captacao_backfill_data)
   if (chave && chave !== 'captacao_ativa') {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
   const body = await req.json() as { ativo?: boolean; chave?: string; valor?: unknown }
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Modo genérico: { chave, valor }
   if (body.chave) {

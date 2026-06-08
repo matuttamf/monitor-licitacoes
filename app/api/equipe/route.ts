@@ -1,4 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { getLimites, temMultiUsuario } from '@/lib/planos'
 import { enviarEmailConvite } from '@/lib/emails/convite'
@@ -25,7 +25,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Seu plano não inclui múltiplos usuários.' }, { status: 403 })
   }
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Buscar sub-usuários
   const { data: subProfiles } = await service
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Seu plano não inclui múltiplos usuários.' }, { status: 403 })
   }
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Verificar limite de usuários
   const { count: subCount } = await service

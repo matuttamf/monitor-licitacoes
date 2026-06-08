@@ -1,4 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'matuttamaquinaseferramentas@gmail.com'
@@ -15,7 +15,7 @@ export async function GET() {
   const admin = await verificarAdmin()
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const supabase = await createServiceClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('profiles')
@@ -71,7 +71,7 @@ export async function PATCH(request: Request) {
   const admin = await verificarAdmin()
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const supabase = await createServiceClient()
+  const supabase = createAdminClient()
 
   const { id, status, nome, telefone, whatsapp, empresa, plano } = await request.json()
 

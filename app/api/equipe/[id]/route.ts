@@ -1,4 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 // DELETE — remover membro da equipe (desvincula, não deleta a conta)
@@ -12,7 +12,7 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   const { data: membroPerfil } = await service
     .from('profiles')
@@ -46,7 +46,7 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   const { data: membroPerfil } = await service
     .from('profiles')

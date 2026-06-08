@@ -1,4 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { enviarEmailConvite } from '@/lib/emails/convite'
 
@@ -12,7 +12,7 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Confirmar que o convite pertence ao owner
   const { data: convite } = await service
@@ -41,7 +41,7 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   const { data: convite } = await service
     .from('invites')

@@ -4,7 +4,7 @@
  * Acesso restrito ao admin.
  */
 import { NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
@@ -15,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
   }
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
 
   // Janelas de tempo
   const hoje    = new Date()
