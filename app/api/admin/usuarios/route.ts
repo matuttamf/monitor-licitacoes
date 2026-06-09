@@ -40,15 +40,17 @@ export async function GET() {
     kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
   }
 
-  // Contagem + último alerta por usuário
+  // Contagem + último alerta por usuário — join via keywords (alertas não tem user_id direto)
   const { data: alertaCounts } = await supabase
     .from('alertas')
-    .select('user_id, enviado_em')
+    .select('enviado_em, keywords!inner(user_id)')
     .order('enviado_em', { ascending: false })
   const alertaPorUser: Record<string, { count: number; ultimo: string | null }> = {}
   for (const a of alertaCounts ?? []) {
-    if (!alertaPorUser[a.user_id]) alertaPorUser[a.user_id] = { count: 0, ultimo: a.enviado_em }
-    alertaPorUser[a.user_id].count++
+    const uid = (a.keywords as unknown as { user_id: string } | null)?.user_id
+    if (!uid) continue
+    if (!alertaPorUser[uid]) alertaPorUser[uid] = { count: 0, ultimo: a.enviado_em }
+    alertaPorUser[uid].count++
   }
 
   const usuarios = data?.map(p => {
