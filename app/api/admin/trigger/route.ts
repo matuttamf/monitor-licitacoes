@@ -1,10 +1,11 @@
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-const ADMIN_EMAIL = 'matuttamaquinaseferramentas@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
 export async function POST(request: Request) {
-  const supabase = createAdminClient()
+  // Verifica sessão via cookies (createClient lê cookies, createAdminClient não)
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.email !== ADMIN_EMAIL) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })

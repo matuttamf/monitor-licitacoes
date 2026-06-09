@@ -2,8 +2,9 @@
  * /api/cron/alertar-urgente
  *
  * Roda a cada 5 minutos durante o horário comercial (BRT 7-17h seg-sex, 7-15h sáb).
- * Envia UMA mensagem urgente (score ≥ 80) por usuário por execução via Telegram e WhatsApp.
- * O espaçamento natural de 5 min entre execuções é o intervalo entre mensagens.
+ * Envia TODOS os alertas pendentes por usuário (sem threshold de score), ordenados por
+ * score desc — um batch via Telegram e outro via WhatsApp (se configurado), simultaneamente.
+ * A mesma licitação vai para os dois canais ao mesmo tempo.
  */
 
 import { NextResponse } from 'next/server'
@@ -11,8 +12,6 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
 import { enviarAlertaWhatsApp } from '@/lib/alerts/whatsapp'
 import { registrarCronLog } from '@/lib/cron-log'
-import { temWhatsApp } from '@/lib/planos'
-import { SCORE_MIN_URGENTE } from '@/lib/scoring'
 
 export const maxDuration = 60
 
@@ -36,11 +35,10 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createServiceClient()
-  const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const hoje     = new Date().toISOString().substring(0, 10)
 
-  // Busca alertas urgentes pendentes (ainda não enviados via telegram/whatsapp)
-  // Ordena por score desc, pega os mais relevantes primeiro
+  // Busca TODOS os alertas pendentes (não enviados via telegram/whatsapp)
+  // Sem threshold de score — todos os matches são enviados, priorizados por score desc
   const { data: alertas, error } = await supabase
     .from('alertas')
     .select(`
@@ -48,11 +46,10 @@ export async function GET(request: Request) {
       licitacoes!inner (orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
       keywords (termo, user_id)
     `)
-    .gte('score', SCORE_MIN_URGENTE)
-    .eq('canais', '{}')                                          // ainda não enviado
+    .not('canais', 'cs', '{"telegram"}')   // ainda não enviado via telegram
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
-    .limit(200)
+    .limit(500)
 
   if (error) {
     console.error('alertar-urgente erro:', error.message)
@@ -63,79 +60,94 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, enviados: 0 })
   }
 
-  // Agrupar por usuário — pegar apenas O PRIMEIRO (mais relevante) de cada um
-  const porUsuario = new Map<string, typeof alertas[0]>()
+  // Agrupar TODOS os alertas por usuário (não apenas o primeiro)
+  const porUsuario = new Map<string, typeof alertas>()
   for (const a of alertas) {
     const uid = (a.keywords as any)?.user_id
-    if (!uid || porUsuario.has(uid)) continue
-    porUsuario.set(uid, a)
+    if (!uid) continue
+    if (!porUsuario.has(uid)) porUsuario.set(uid, [])
+    porUsuario.get(uid)!.push(a)
   }
 
   const userIds = [...porUsuario.keys()]
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, status, plano, telegram_chat_id, whatsapp, telegram_pausado_ate, whatsapp_pausado_ate')
+    .select('id, status, telegram_chat_id, whatsapp, telegram_pausado_ate, whatsapp_pausado_ate')
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
-  for (const [userId, alerta] of porUsuario.entries()) {
+  for (const [userId, alertasDoUsuario] of porUsuario.entries()) {
     const perfil = profileMap[userId]
     if (!perfil || perfil.status === 'expired') continue
 
-    const plano = perfil.plano ?? 'basic'
-    const lic   = alerta.licitacoes as any
+    const agora = new Date()
+    const telegramPausado  = perfil.telegram_pausado_ate  && new Date(perfil.telegram_pausado_ate)  > agora
+    const whatsappPausado  = perfil.whatsapp_pausado_ate  && new Date(perfil.whatsapp_pausado_ate)  > agora
 
-    const licitacao = {
-      orgao:          lic.orgao,
-      objeto:         lic.objeto,
-      valor_estimado: lic.valor_estimado,
-      data_abertura:  lic.data_abertura,
-      url:            lic.url,
-      estado:         lic.estado,
-      cidade:         lic.cidade,
-      keyword:        (alerta.keywords as any).termo,
-    }
+    const temTelegram  = !!perfil.telegram_chat_id && !telegramPausado
+    const temWhatsApp  = !!perfil.whatsapp         && !whatsappPausado
+
+    if (!temTelegram && !temWhatsApp) continue
+
+    // Montar lista de licitações para envio em batch
+    const licitacoes = alertasDoUsuario.map(a => ({
+      orgao:          (a.licitacoes as any).orgao,
+      objeto:         (a.licitacoes as any).objeto,
+      valor_estimado: (a.licitacoes as any).valor_estimado,
+      data_abertura:  (a.licitacoes as any).data_abertura,
+      url:            (a.licitacoes as any).url,
+      estado:         (a.licitacoes as any).estado,
+      cidade:         (a.licitacoes as any).cidade,
+      keyword:        (a.keywords as any).termo,
+    }))
 
     const canaisEnviados: string[] = []
 
-    const agora = new Date()
+    // Envia para Telegram e WhatsApp simultaneamente (mesmas licitações para os dois)
+    const [telegramOk, whatsappOk] = await Promise.all([
+      temTelegram
+        ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)
+        : Promise.resolve(false),
+      temWhatsApp
+        ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)
+        : Promise.resolve(false),
+    ])
 
-    // Telegram
-    const telegramPausado = perfil.telegram_pausado_ate && new Date(perfil.telegram_pausado_ate) > agora
-    if (perfil.telegram_chat_id && !telegramPausado) {
-      const ok = await enviarAlertaTelegram([licitacao], perfil.telegram_chat_id)
-      if (ok) canaisEnviados.push('telegram')
-    }
-
-    // WhatsApp (Profissional+)
-    const whatsappPausado = perfil.whatsapp_pausado_ate && new Date(perfil.whatsapp_pausado_ate) > agora
-    if (temWhatsApp(plano) && perfil.whatsapp && !whatsappPausado) {
-      const ok = await enviarAlertaWhatsApp([licitacao], perfil.whatsapp)
-      if (ok) canaisEnviados.push('whatsapp')
-    }
+    if (telegramOk) canaisEnviados.push('telegram')
+    if (whatsappOk) canaisEnviados.push('whatsapp')
 
     if (canaisEnviados.length > 0) {
-      // Marca o canal enviado sem sobrescrever canais futuros (email ainda pode vir)
-      // Usa array_cat para adicionar aos canais existentes
-      const { data: atual } = await supabase
+      // Atualiza todos os alertas do usuário como enviados
+      const ids = alertasDoUsuario.map(a => a.id)
+
+      // Lê canais atuais e faz merge
+      const { data: atuais } = await supabase
         .from('alertas')
-        .select('canais')
-        .eq('id', alerta.id)
-        .single()
+        .select('id, canais')
+        .in('id', ids)
 
-      const canaisAtuais: string[] = atual?.canais ?? []
-      const canaisNovos  = [...new Set([...canaisAtuais, ...canaisEnviados])]
+      // Atualiza cada alerta adicionando os novos canais
+      await Promise.all(
+        (atuais ?? []).map(atual => {
+          const canaisAtuais: string[] = atual.canais ?? []
+          const canaisNovos = [...new Set([...canaisAtuais, ...canaisEnviados])]
+          return supabase
+            .from('alertas')
+            .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
+            .eq('id', atual.id)
+        })
+      )
 
-      await supabase
-        .from('alertas')
-        .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
-        .eq('id', alerta.id)
-
-      enviados++
-      resultado[userId] = { canais: canaisEnviados, score: alerta.score }
+      enviados += alertasDoUsuario.length
+      resultado[userId] = {
+        alertas:  alertasDoUsuario.length,
+        canais:   canaisEnviados,
+        telegram: telegramOk,
+        whatsapp: whatsappOk,
+      }
     }
   }
 
@@ -143,10 +155,10 @@ export async function GET(request: Request) {
     await registrarCronLog({
       job:      'alertar-urgente',
       status:   'ok',
-      mensagem: `${enviados} urgente(s) via Telegram/WA`,
+      mensagem: `${enviados} alerta(s) via Telegram/WA para ${Object.keys(resultado).length} usuário(s)`,
       detalhes: resultado,
     })
   }
 
-  return NextResponse.json({ ok: true, enviados, detalhes: resultado })
+  return NextResponse.json({ ok: true, enviados, usuarios: Object.keys(resultado).length, detalhes: resultado })
 }

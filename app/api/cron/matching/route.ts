@@ -31,13 +31,14 @@ export async function GET(request: Request) {
   const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
   const hoje     = new Date().toISOString().substring(0, 10)
 
+  // Busca TODAS as licitações abertas (sem filtro de data de coleta)
+  // O upsert por (licitacao_id, keyword_id) garante idempotência
   const { data: candidatos } = await supabase
     .from('licitacoes')
     .select('id, objeto, data_abertura, estado, valor_estimado')
-    .gte('coletado_em', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
     .or(filtroOr)
-    .limit(200)
+    .limit(500)
 
   if (!candidatos?.length) {
     return NextResponse.json({ ok: true, matches: 0, candidatos: 0 })
