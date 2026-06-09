@@ -93,14 +93,19 @@ function AssinarConteudo() {
 
       {/* Hero */}
       <div className="bg-[#1A1A1C] px-6 md:px-10 py-14 md:py-20 text-center">
-        <div className="inline-block px-3.5 py-1 rounded-full bg-[rgba(201,166,90,0.1)] border border-[rgba(201,166,90,0.2)] text-[#C9A65A] text-xs font-semibold tracking-wider mb-5">
-          7 DIAS GRÁTIS · SEM CARTÃO DE CRÉDITO
-        </div>
+        {!veioDoPainel && (
+          <div className="inline-block px-3.5 py-1 rounded-full bg-[rgba(201,166,90,0.1)] border border-[rgba(201,166,90,0.2)] text-[#C9A65A] text-xs font-semibold tracking-wider mb-5">
+            7 DIAS GRÁTIS · SEM CARTÃO DE CRÉDITO
+          </div>
+        )}
         <h1 className="text-3xl md:text-[42px] font-normal text-white mb-4 leading-snug" style={{ fontFamily: 'Georgia, serif' }}>
-          Escolha seu plano
+          {veioDoPainel ? 'Escolha seu novo plano' : 'Escolha seu plano'}
         </h1>
         <p className="text-base md:text-[17px] text-[rgba(255,255,255,0.5)] max-w-[500px] mx-auto">
-          Comece grátis por 7 dias. Depois, pague apenas se quiser continuar. Cancele quando quiser.
+          {veioDoPainel
+            ? 'Faça upgrade e desbloqueie mais recursos. A mudança é imediata e o valor é proporcional ao ciclo atual.'
+            : 'Comece grátis por 7 dias. Depois, pague apenas se quiser continuar. Cancele quando quiser.'
+          }
         </p>
         <div className="flex justify-center gap-6 md:gap-8 mt-8 flex-wrap">
           {[['🔒', 'Pagamento 100% seguro'], ['↩', 'Cancele a qualquer momento'], ['⚡', 'Ativação imediata']].map(([icon, text]) => (
@@ -112,10 +117,10 @@ function AssinarConteudo() {
       </div>
 
       {/* Cards */}
-      <div className="max-w-[1300px] mx-auto -mt-10 px-4 md:px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className={`max-w-[1300px] mx-auto -mt-10 px-4 md:px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 gap-5 ${veioDoPainel ? 'lg:grid-cols-4' : 'lg:grid-cols-5'}`}>
 
-        {/* Card trial */}
-        <div className="bg-white border-2 border-[#C9A65A] rounded-[20px] p-7 relative shadow-[0_4px_20px_rgba(201,166,90,0.12)] flex flex-col">
+        {/* Card trial — oculto para quem já tem conta */}
+        {!veioDoPainel && <div className="bg-white border-2 border-[#C9A65A] rounded-[20px] p-7 relative shadow-[0_4px_20px_rgba(201,166,90,0.12)] flex flex-col">
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
             🎁 GRÁTIS
           </div>
@@ -139,7 +144,7 @@ function AssinarConteudo() {
           <Link href="/cadastro" className="block w-full py-3.5 rounded-xl text-center text-[15px] font-bold bg-[#C9A65A] text-[#1A1A1C] no-underline mt-auto">
             Começar grátis →
           </Link>
-        </div>
+        </div>}
 
         {/* Cards pagos */}
         {PLANOS.map(p => (
