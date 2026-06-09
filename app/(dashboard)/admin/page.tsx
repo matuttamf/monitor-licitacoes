@@ -418,7 +418,7 @@ export default function AdminPage() {
                                 {expirado ? 'Expirado' : cfg.label}
                                 {u.status === 'trial' && !expirado && ` (${diasAte(u.trial_fim)}d)`}
                               </span>
-                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{u.plano || 'basic'}</div>
+                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{(['basic','profissional','pro','empresarial'].includes(u.plano) ? u.plano : 'basic')}</div>
                             </>
                           )}
                         </td>

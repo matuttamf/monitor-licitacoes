@@ -190,7 +190,7 @@ export default function PerfilPage() {
               Assine agora e mantenha o monitoramento sem interrupção.
             </div>
           </div>
-          <a href="/assinar"
+          <a href="/assinar?from=painel"
             className="flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold no-underline whitespace-nowrap"
             style={{ background: '#C9A65A', color: '#1A1A1C' }}>
             Ver planos →
@@ -214,7 +214,7 @@ export default function PerfilPage() {
               <div className="text-xs" style={{ color: 'var(--cinza)' }}>Assinatura ativa</div>
             </div>
           </div>
-          <a href="/assinar"
+          <a href="/assinar?from=painel"
             className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold no-underline"
             style={{ background: 'var(--surface-2)', color: 'var(--vinho)', border: '1.5px solid var(--cinza-light)' }}>
             Fazer upgrade

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 const PLANOS = [
@@ -39,7 +39,9 @@ const PLANOS = [
   },
 ]
 
-export default function AssinarPage() {
+function AssinarConteudo() {
+  const searchParams = useSearchParams()
+  const veioDoPainel = searchParams.get('from') === 'painel'
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null)
   const [erro, setErro] = useState('')
 
@@ -83,7 +85,10 @@ export default function AssinarPage() {
           <div className="w-8 h-8 rounded-lg bg-[#6B0F1A] text-[#C9A65A] flex items-center justify-center font-bold text-[11px]">ML</div>
           <span className="font-bold text-[15px] text-[#1A1A1C] hidden sm:block">Monitor de Licitações</span>
         </Link>
-        <Link href="/login" className="text-sm text-[#6B0F1A] font-semibold no-underline">Já tenho conta →</Link>
+        {veioDoPainel
+          ? <Link href="/perfil" className="text-sm text-[#6B0F1A] font-semibold no-underline">← Voltar ao painel</Link>
+          : <Link href="/login" className="text-sm text-[#6B0F1A] font-semibold no-underline">Já tenho conta →</Link>
+        }
       </header>
 
       {/* Hero */}
@@ -244,5 +249,17 @@ export default function AssinarPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function AssinarPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#D5D2C8] border-t-[#6B0F1A] rounded-full animate-spin" />
+      </div>
+    }>
+      <AssinarConteudo />
+    </Suspense>
   )
 }
