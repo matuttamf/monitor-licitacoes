@@ -88,7 +88,7 @@ async function buscarContratosPNCP(
   const debug: string[] = []
   for (let p = 1; p <= paginas; p++) {
     try {
-      const url = `${PNCP_BASE}/contratos/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
+      const url = `${PNCP_BASE}/contratos?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
       const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
       debug.push(`p${p}: HTTP ${res.status}`)
       if (!res.ok) {

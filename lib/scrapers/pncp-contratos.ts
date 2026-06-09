@@ -41,7 +41,7 @@ async function coletarContratos(dataInicio: string, dataFim: string): Promise<Li
 
   while (pagina <= 5) { // máximo 5 páginas de contratos por vez
     try {
-      const url = `${BASE}/contratos/publicacao?dataInicial=${formatarData(dataInicio)}&dataFinal=${formatarData(dataFim)}&pagina=${pagina}&tamanhoPagina=50`
+      const url = `${BASE}/contratos?dataInicial=${formatarData(dataInicio)}&dataFinal=${formatarData(dataFim)}&pagina=${pagina}&tamanhoPagina=50`
       const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
       if (!res.ok) break
 
@@ -84,7 +84,7 @@ async function coletarAtas(dataInicio: string, dataFim: string): Promise<Licitac
 
   while (pagina <= 5) {
     try {
-      const url = `${BASE}/atas/publicacao?dataInicial=${formatarData(dataInicio)}&dataFinal=${formatarData(dataFim)}&pagina=${pagina}&tamanhoPagina=50`
+      const url = `${BASE}/atas?dataInicial=${formatarData(dataInicio)}&dataFinal=${formatarData(dataFim)}&pagina=${pagina}&tamanhoPagina=50`
       const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
       if (!res.ok) break
 
