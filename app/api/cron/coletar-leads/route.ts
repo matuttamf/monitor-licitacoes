@@ -23,7 +23,7 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 
 export const maxDuration = 300
 
-const PNCP_BASE  = 'https://pncp.gov.br/api/pncp/v1'
+const PNCP_BASE  = 'https://pncp.gov.br/api/consulta/v1'
 const BRASIL_API = 'https://brasilapi.com.br/api/cnpj/v1'
 
 const BACKFILL_INICIO = '2000-01-01'

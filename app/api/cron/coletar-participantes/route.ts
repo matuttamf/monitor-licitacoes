@@ -23,8 +23,9 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 
 export const maxDuration = 300
 
-const PNCP_BASE  = 'https://pncp.gov.br/api/pncp/v1'
-const BRASIL_API = 'https://brasilapi.com.br/api/cnpj/v1'
+const PNCP_CONSULTA = 'https://pncp.gov.br/api/consulta/v1'  // busca por data
+const PNCP_BASE     = 'https://pncp.gov.br/api/pncp/v1'       // recursos por orgão/CNPJ
+const BRASIL_API    = 'https://brasilapi.com.br/api/cnpj/v1'
 
 // Quantos processos inspecionar por execução (cada um gera ~N chamadas de API)
 const MAX_PROCESSOS = 8
@@ -80,7 +81,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 }
 
 async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<Contratacao[]> {
-  const url = `${PNCP_BASE}/contratacoes/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
+  const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
   const json = await fetchJson<{ data?: Contratacao[] }>(url)
   const itens = json?.data ?? []
   return itens.filter(c => c.cnpjOrgao && c.anoCompra && c.sequencialCompra)
