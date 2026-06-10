@@ -378,11 +378,11 @@ export async function GET(req: NextRequest) {
     .select('id, cnpj, razao_social, municipio, uf, porte')
     .is('email', null)
     .eq('status', 'invalido')
-    .eq('situacao', 'ATIVA')   // só busca e-mail para empresas confirmadas como ativas
+    .eq('situacao', 'ATIVA')
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
     .gte('data_contrato', vinteAnosAtras)
     .order('data_contrato', { ascending: false })
-    .limit(30)  // reduzido de 50→30 para caber nos 300s; roda a cada hora, suficiente
+    .limit(60)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!leads?.length) return NextResponse.json({
@@ -393,15 +393,20 @@ export async function GET(req: NextRequest) {
   let enriquecidos = 0
   const detalhes: Record<string, { email?: string; metodo?: string; debug: string[] }> = {}
 
-  for (const lead of leads) {
+  // Processa leads em paralelo com concorrência 3 — ~3× mais throughput
+  const CONCORRENCIA_EMAIL = 3
+  const lotesEmail: typeof leads[] = []
+  for (let i = 0; i < leads.length; i += CONCORRENCIA_EMAIL) {
+    lotesEmail.push(leads.slice(i, i + CONCORRENCIA_EMAIL))
+  }
+
+  async function processarLead(lead: typeof leads[0]) {
     const query    = `"${lead.razao_social.slice(0, 45)}" ${lead.municipio ?? ''} ${lead.uf ?? ''} email contato`
     const debugLog: string[] = []
     let emailFinal: string | null = null
     let metodo = ''
 
-    // 0. Domínio deduzido — gratuito, zero queries de API ────────────────────
-    // Tenta deduzir o site da empresa pelo nome e buscar e-mail lá diretamente.
-    // Se funcionar, economiza toda a chamada de busca abaixo.
+    // 0. Domínio deduzido — gratuito, zero queries de API
     const emailsDom0 = await buscarEmailPorDominio(lead.razao_social)
     emailFinal = melhorEmail(emailsDom0)
     if (emailFinal) {
@@ -411,25 +416,24 @@ export async function GET(req: NextRequest) {
       debugLog.push('dominio: sem resultado')
     }
 
-    // 1. Google Custom Search (principal — JSON confiável, 100/dia grátis) ────
+    // 1. Google Custom Search (principal — JSON confiável, 100/dia grátis)
     if (!emailFinal) {
       const google = await buscarGoogle(query)
       debugLog.push(google.debug)
       emailFinal = melhorEmail(google.emails)
       if (emailFinal) { metodo = 'google_snippet' }
 
-      // Site via URLs do Google
       if (!emailFinal && google.urls.length) {
         for (const url of google.urls) {
           const es = await buscarEmailNaSite(url)
           emailFinal = melhorEmail(es)
           if (emailFinal) { metodo = 'google_site'; break }
-          await sleep(300)
+          await sleep(200)
         }
       }
     }
 
-    // 2. SearXNG (fallback gratuito se cota Google atingida) ──────────────────
+    // 2. SearXNG (fallback gratuito se cota Google atingida)
     if (!emailFinal) {
       const searx = await buscarSearX(query)
       debugLog.push(searx.debug)
@@ -441,14 +445,14 @@ export async function GET(req: NextRequest) {
           const es = await buscarEmailNaSite(url)
           emailFinal = melhorEmail(es)
           if (emailFinal) { metodo = 'searx_site'; break }
-          await sleep(300)
+          await sleep(200)
         }
       }
     }
 
-    // 3. Bing (fallback HTML) ──────────────────────────────────────────────────
+    // 3. Bing (fallback HTML)
     if (!emailFinal) {
-      await sleep(1000)
+      await sleep(500)
       const bing = await buscarBing(query)
       debugLog.push(bing.debug)
       emailFinal = melhorEmail(bing.emails)
@@ -459,12 +463,11 @@ export async function GET(req: NextRequest) {
           const es = await buscarEmailNaSite(url)
           emailFinal = melhorEmail(es)
           if (emailFinal) { metodo = 'bing_site'; break }
-          await sleep(300)
+          await sleep(200)
         }
       }
     }
 
-    // Atualiza o lead ─────────────────────────────────────────────────────────
     const update: Record<string, unknown> = { email_buscado_em: new Date().toISOString() }
     if (emailFinal) {
       update.email  = emailFinal
@@ -474,16 +477,17 @@ export async function GET(req: NextRequest) {
     } else {
       detalhes[lead.cnpj] = { debug: debugLog }
     }
-
     await supabase.from('leads').update(update).eq('id', lead.id)
+  }
 
-    // Saída antecipada: para com segurança se já gastou 250s (margem de 50s)
-    if (Date.now() - inicioEtapa1 > 250_000) {
+  for (const lote of lotesEmail) {
+    // Saída antecipada: para com segurança se já gastou 230s
+    if (Date.now() - inicioEtapa1 > 230_000) {
       console.log('[enriquecer-emails] tempo limite atingido, saindo antes do fim do lote')
       break
     }
-
-    await sleep(800)
+    await Promise.all(lote.map(lead => processarLead(lead)))
+    await sleep(400)
   }
 
   const resultado = {
