@@ -76,7 +76,35 @@ function slugDominio(razao: string): string {
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
-// ── Estratégia 1: SearXNG (instâncias públicas, JSON) ────────────────────────
+// ── Estratégia 1: Google Custom Search JSON API ───────────────────────────────
+async function buscarGoogle(query: string): Promise<{ emails: string[]; urls: string[]; debug: string }> {
+  const apiKey = process.env.GOOGLE_SEARCH_API_KEY
+  const cx     = process.env.GOOGLE_SEARCH_ENGINE_ID
+  if (!apiKey || !cx) return { emails: [], urls: [], debug: 'google: sem credenciais configuradas' }
+
+  try {
+    const q   = encodeURIComponent(query)
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${q}&gl=br&hl=pt&num=10`
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+
+    if (res.status === 429) return { emails: [], urls: [], debug: 'google: cota diária atingida (100/dia)' }
+    if (!res.ok) return { emails: [], urls: [], debug: `google: HTTP ${res.status}` }
+
+    const json = await res.json() as {
+      items?: { link?: string; snippet?: string; title?: string }[]
+    }
+    const items = json.items ?? []
+    // Extrai emails dos snippets e títulos
+    const texto = items.map(i => `${i.title ?? ''} ${i.snippet ?? ''} ${i.link ?? ''}`).join(' ')
+    const emails = extrairEmails(texto)
+    const urls   = items.map(i => i.link ?? '').filter(u => u.startsWith('http')).slice(0, 4)
+    return { emails, urls, debug: `google: ok (${items.length} resultados, ${emails.length} emails nos snippets)` }
+  } catch (e) {
+    return { emails: [], urls: [], debug: `google: ${String(e).slice(0, 80)}` }
+  }
+}
+
+// ── Estratégia 2 (fallback): SearXNG (instâncias públicas, JSON) ──────────────
 const SEARX_INSTANCES = [
   'https://searx.be',
   'https://search.inetol.net',
@@ -280,14 +308,31 @@ export async function GET(req: NextRequest) {
       debugLog.push('dominio: sem resultado')
     }
 
-    // 1. SearXNG ──────────────────────────────────────────────────────────────
+    // 1. Google Custom Search (principal — JSON confiável, 100/dia grátis) ────
+    if (!emailFinal) {
+      const google = await buscarGoogle(query)
+      debugLog.push(google.debug)
+      emailFinal = melhorEmail(google.emails)
+      if (emailFinal) { metodo = 'google_snippet' }
+
+      // Site via URLs do Google
+      if (!emailFinal && google.urls.length) {
+        for (const url of google.urls) {
+          const es = await buscarEmailNaSite(url)
+          emailFinal = melhorEmail(es)
+          if (emailFinal) { metodo = 'google_site'; break }
+          await sleep(300)
+        }
+      }
+    }
+
+    // 2. SearXNG (fallback gratuito se cota Google atingida) ──────────────────
     if (!emailFinal) {
       const searx = await buscarSearX(query)
       debugLog.push(searx.debug)
       emailFinal = melhorEmail(searx.emails)
       if (emailFinal) { metodo = 'searx_snippet' }
 
-      // Site via URLs do SearX
       if (!emailFinal && searx.urls.length) {
         for (const url of searx.urls) {
           const es = await buscarEmailNaSite(url)
@@ -298,7 +343,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. Bing ─────────────────────────────────────────────────────────────────
+    // 3. Bing (fallback HTML) ──────────────────────────────────────────────────
     if (!emailFinal) {
       await sleep(1000)
       const bing = await buscarBing(query)
@@ -306,31 +351,11 @@ export async function GET(req: NextRequest) {
       emailFinal = melhorEmail(bing.emails)
       if (emailFinal) { metodo = 'bing_snippet' }
 
-      // Site via URLs do Bing
       if (!emailFinal && bing.urls.length) {
         for (const url of bing.urls) {
           const es = await buscarEmailNaSite(url)
           emailFinal = melhorEmail(es)
           if (emailFinal) { metodo = 'bing_site'; break }
-          await sleep(300)
-        }
-      }
-    }
-
-    // 3. DDG ──────────────────────────────────────────────────────────────────
-    if (!emailFinal) {
-      await sleep(1500)
-      const ddg = await buscarDDG(query)
-      debugLog.push(ddg.debug)
-      emailFinal = melhorEmail(ddg.emails)
-      if (emailFinal) { metodo = 'ddg_snippet' }
-
-      // Site via URLs do DDG
-      if (!emailFinal && ddg.urls.length) {
-        for (const url of ddg.urls) {
-          const es = await buscarEmailNaSite(url)
-          emailFinal = melhorEmail(es)
-          if (emailFinal) { metodo = 'ddg_site'; break }
           await sleep(300)
         }
       }
