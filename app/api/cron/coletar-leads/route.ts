@@ -56,12 +56,14 @@ function mapearSegmento(cnae: string | null | undefined): string {
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
 interface PncpContrato {
-  numeroCpfCnpjFornecedor?: string
+  niFornecedor?:             string   // CPF ou CNPJ do fornecedor (campo correto na API PNCP)
+  nomeRazaoSocialFornecedor?: string
+  tipoPessoa?:               string   // 'PJ' | 'PF' | 'PE'
   objetoContrato?:           string
   valorInicial?:             number
   dataPublicacaoPncp?:       string
-  tipoContrato?:             { descricao?: string }
-  modalidadeContratacao?:    { descricao?: string }
+  tipoContrato?:             { id?: number; nome?: string; descricao?: string }
+  modalidadeContratacao?:    { id?: number; nome?: string; descricao?: string }
   unidadeOrgao?:             { ufSigla?: string; municipioNome?: string }
 }
 
@@ -99,7 +101,7 @@ async function buscarContratosPNCP(
       const itens: PncpContrato[] = json.data ?? json ?? []
       debug.push(`p${p}: ${itens.length} itens, total=${json.totalRegistros ?? '?'}`)
       if (!itens.length) break
-      todos.push(...itens.filter(c => c.numeroCpfCnpjFornecedor))
+      todos.push(...itens.filter(c => c.niFornecedor))
       if (itens.length < 50) break
     } catch (e) {
       debug.push(`p${p}: exception ${String(e)}`)
@@ -189,7 +191,7 @@ export async function GET(req: NextRequest) {
   // ── 2. Desduplicar CNPJs (apenas 14 dígitos = empresa) ───────────────────
   const cnpjMap = new Map<string, PncpContrato>()
   for (const c of contratos) {
-    const raw = c.numeroCpfCnpjFornecedor!.replace(/\D/g, '')
+    const raw = c.niFornecedor!.replace(/\D/g, '')
     if (raw.length === 14 && !cnpjMap.has(raw)) cnpjMap.set(raw, c)
   }
   const cnpjsNovos = [...cnpjMap.keys()]
@@ -229,7 +231,9 @@ export async function GET(req: NextRequest) {
 
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
-    const modalidade = contrato.modalidadeContratacao?.descricao
+    const modalidade = contrato.modalidadeContratacao?.nome
+                    ?? contrato.modalidadeContratacao?.descricao
+                    ?? contrato.tipoContrato?.nome
                     ?? contrato.tipoContrato?.descricao
                     ?? null
     const emailRaw = dados.email?.trim()
