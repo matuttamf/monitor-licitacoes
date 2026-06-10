@@ -23,6 +23,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { salvarResultadoCron } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -333,15 +334,15 @@ export async function GET(req: NextRequest) {
     if (!error) enriquecidos++
   }
 
-  return NextResponse.json({
+  const resultado = {
     ok: true,
     modo:                 modoLabel,
     salvos,
     enriquecidos,
     orgaos_com_contratos: debugOrgaos.length,
-    cnpjs_unicos:         cnpjsTotal.length,
-    novos_para_salvar:    paraEnriquecer.length,
+    cnpjs_novos:          paraEnriquecer.length,
     janela_concluida:     janelaConcluida,
-    debug_orgaos:         debugOrgaos.slice(0, 10),
-  })
+  }
+  await salvarResultadoCron(supabase, 'coletar-leads-transparencia', resultado)
+  return NextResponse.json({ ...resultado, debug_orgaos: debugOrgaos.slice(0, 10) })
 }

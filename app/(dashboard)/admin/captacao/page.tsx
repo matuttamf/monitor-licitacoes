@@ -117,15 +117,28 @@ export default function CaptacaoPage() {
   const [backfillData, setBackfillData]                     = useState<string | null>(null)
   const [backfillTransparenciaData, setBackfillTransparenciaData] = useState<string | null>(null)
 
+  // Últimos resultados dos crons (gravados por salvarResultadoCron)
+  const [ultimosResultados, setUltimosResultados] = useState<Record<string, Record<string, unknown>>>({})
+
+  const CRONS_MONITORADOS = [
+    'coletar-leads',
+    'coletar-participantes',
+    'coletar-leads-transparencia',
+    'enriquecer-emails',
+  ] as const
+
   // ─── Carregamento ─────────────────────────────────────────────────────────
 
   const carregarStats = useCallback(async () => {
-    const [cfgRes, statsRes, bfRes, bfTransRes, disparoRes] = await Promise.all([
+    const [cfgRes, statsRes, bfRes, bfTransRes, disparoRes, ...cronRes] = await Promise.all([
       fetch('/api/admin/captacao-config'),
       fetch('/api/admin/stats'),
       fetch('/api/admin/captacao-config?chave=captacao_backfill_data'),
       fetch('/api/admin/captacao-config?chave=captacao_transparencia_backfill_data'),
       fetch('/api/admin/captacao-config?chave=captacao_disparo_ativo'),
+      ...CRONS_MONITORADOS.map(id =>
+        fetch(`/api/admin/captacao-config?chave=ultimo_resultado_${id}`)
+      ),
     ])
     if (cfgRes.ok)     setCaptacaoAtiva((await cfgRes.json()).captacao_ativa)
     if (bfRes.ok)      setBackfillData((await bfRes.json()).valor ?? null)
@@ -134,6 +147,16 @@ export default function CaptacaoPage() {
       const d = await disparoRes.json()
       setDisparoAtivo(d.valor === true || d.valor === 'true')
     }
+    const novosResultados: Record<string, Record<string, unknown>> = {}
+    for (let i = 0; i < CRONS_MONITORADOS.length; i++) {
+      if (cronRes[i].ok) {
+        const d = await cronRes[i].json()
+        if (d.valor) {
+          try { novosResultados[CRONS_MONITORADOS[i]] = JSON.parse(d.valor) } catch { /* ignore */ }
+        }
+      }
+    }
+    setUltimosResultados(novosResultados)
     if (statsRes.ok) {
       const s = await statsRes.json()
       setStats({
@@ -458,6 +481,45 @@ export default function CaptacaoPage() {
             </div>
           )
         })()}
+        {/* Últimas execuções automáticas dos crons */}
+        {Object.keys(ultimosResultados).length > 0 && (
+          <div className="mt-4 pt-4 flex flex-col gap-2" style={{ borderTop: '1px solid var(--cinza-light)' }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)' }}>Última execução automática</h3>
+            {CRONS_MONITORADOS.map(id => {
+              const r = ultimosResultados[id]
+              if (!r) return null
+              const ts  = r.ts as string | undefined
+              const ok  = r.ok !== false
+              const ago = ts ? (() => {
+                const d = Math.round((Date.now() - new Date(ts).getTime()) / 60000)
+                if (d < 60) return `${d}min atrás`
+                if (d < 1440) return `${Math.round(d/60)}h atrás`
+                return `${Math.round(d/1440)}d atrás`
+              })() : '—'
+
+              // Monta resumo legível sem ts/ok/modo
+              const { ok: _ok, ts: _ts, modo, ...rest } = r
+              const resumo = Object.entries(rest)
+                .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(' · ')
+
+              return (
+                <div key={id} className="flex items-start gap-2 px-3 py-2 rounded-lg text-xs"
+                  style={{ background: ok ? 'rgba(16,185,129,0.05)' : 'rgba(239,68,68,0.07)', border: `1px solid ${ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.2)'}` }}>
+                  <span style={{ color: ok ? '#059669' : '#dc2626', fontWeight: 700, minWidth: 14 }}>{ok ? '✓' : '✗'}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold" style={{ color: 'var(--escuro)' }}>{id}</span>
+                    {modo && <span style={{ color: 'var(--cinza)', marginLeft: 6 }}>{String(modo).slice(0, 60)}</span>}
+                    {resumo && <div style={{ color: ok ? '#065f46' : '#991b1b', marginTop: 1 }}>{resumo}</div>}
+                  </div>
+                  <span style={{ color: 'var(--cinza)', whiteSpace: 'nowrap', flexShrink: 0 }}>{ago}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {resultadoCron && (
           <div className="mt-3 px-4 py-3 rounded-xl text-xs font-mono break-all"
             style={{ background: resultadoCron.ok ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${resultadoCron.ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`, color: resultadoCron.ok ? '#065f46' : '#991b1b' }}>

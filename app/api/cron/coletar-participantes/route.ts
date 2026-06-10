@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { salvarResultadoCron } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -326,7 +327,7 @@ export async function GET(req: NextRequest) {
   }
 
   console.log(`[coletar-participantes] salvos=${salvos} enriquecidos=${enriquecidos}`)
-  return NextResponse.json({
+  const resultado = {
     ok: true,
     modo: modoLabel,
     salvos,
@@ -334,7 +335,9 @@ export async function GET(req: NextRequest) {
     processos: processos.length,
     proponentes_coletados: cnpjSet.size,
     cnpjs_novos: paraEnriquecer.length,
-  })
+  }
+  await salvarResultadoCron(supabase, 'coletar-participantes', resultado)
+  return NextResponse.json(resultado)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

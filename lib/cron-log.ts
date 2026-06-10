@@ -1,26 +1,17 @@
-import { createServiceClient } from '@/lib/supabase/server'
+/**
+ * Salva o resultado da última execução de um cron em `configuracoes`.
+ * O painel admin lê essas chaves para exibir status de cada cron.
+ *
+ * Chave: `ultimo_resultado_<cronId>`
+ * Valor: JSON { ok, ts, erro?, ...demais campos do resultado }
+ */
 
-export type CronJob = 'coletar' | 'matching' | 'alertar' | 'alertar-urgente' | 'emails-trial' | 'expirar-trials' | 'resumo-semanal'
-export type CronStatus = 'ok' | 'erro' | 'ignorado'
-
-export interface CronLogEntry {
-  job:      CronJob
-  status:   CronStatus
-  mensagem: string
-  detalhes?: Record<string, unknown>
-}
-
-export async function registrarCronLog(entry: CronLogEntry): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function salvarResultadoCron(supabase: any, cronId: string, resultado: Record<string, unknown>) {
   try {
-    const supabase = await createServiceClient()
-    await supabase.from('cron_logs').insert({
-      job:      entry.job,
-      status:   entry.status,
-      mensagem: entry.mensagem,
-      detalhes: entry.detalhes ?? null,
-    })
-  } catch (err) {
-    // Nunca deixar o log travar o cron principal
-    console.error('[cron-log] Falha ao registrar log:', err)
-  }
+    await supabase.from('configuracoes').upsert(
+      { chave: `ultimo_resultado_${cronId}`, valor: JSON.stringify({ ...resultado, ts: new Date().toISOString() }) },
+      { onConflict: 'chave' }
+    )
+  } catch { /* não deixa falha de log derrubar o cron */ }
 }
