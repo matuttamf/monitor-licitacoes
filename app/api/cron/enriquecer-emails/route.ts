@@ -301,7 +301,7 @@ export async function GET(req: NextRequest) {
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
     .gte('data_contrato', vinteAnosAtras)
     .order('data_contrato', { ascending: false })   // mais recentes primeiro
-    .limit(10)
+    .limit(25)  // 4 rodadas/dia × 25 = 100 queries Google CSE (free tier exato)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!leads?.length) return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis' })

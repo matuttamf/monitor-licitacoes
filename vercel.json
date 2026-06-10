@@ -16,7 +16,7 @@
     { "path": "/api/cron/coletar-participantes",       "schedule": "0 6 * * *"    },
     { "path": "/api/cron/coletar-leads-transparencia", "schedule": "0 4 * * *"    },
 
-    { "path": "/api/cron/enriquecer-emails",      "schedule": "*/30 * * * *"       },
+    { "path": "/api/cron/enriquecer-emails",      "schedule": "0 */6 * * *"        },
     { "path": "/api/cron/disparar-leads",        "schedule": "0 8-18 * * 1-5"    },
     { "path": "/api/cron/reconverter-trials",    "schedule": "0 8-18 * * 1-5"    }
   ]
