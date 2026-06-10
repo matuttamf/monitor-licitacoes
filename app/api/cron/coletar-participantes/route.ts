@@ -43,7 +43,7 @@ const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
 interface Contratacao {
   // cnpjOrgao NÃO é campo direto — está em orgaoEntidade.cnpj
   orgaoEntidade?: { cnpj?: string }
-  cnpjOrgao?:     string  // presente em alguns formatos de resposta
+  cnpjOrgao:      string  // normalizado em buscarProcessos
   anoCompra:      number
   sequencialCompra: number
 }
