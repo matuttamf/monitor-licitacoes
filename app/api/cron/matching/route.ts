@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { verificarCronAuth } from '@/lib/cron-auth'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
-import { calcularScore, SCORE_MIN_EMAIL } from '@/lib/scoring'
+import { calcularScore } from '@/lib/scoring'
 import { estadoCompativelComRegioes } from '@/lib/regioes'
 
 export const maxDuration = 300
@@ -109,22 +109,20 @@ export async function GET(request: Request) {
       // null = valor acima do máximo → descarta
       if (!s) continue
 
-      // Só salva se score mínimo para e-mail — abaixo disso vai só pro painel (futuro)
-      if (s.score >= SCORE_MIN_EMAIL) {
-        alertasParaSalvar.push({
-          licitacao_id:  m.licitacao_id,
-          keyword_id:    kid,
-          canais:        [],
-          score:         s.score,
-          score_keyword: s.score_keyword,
-          score_local:   s.score_local,
-          score_valor:   s.score_valor,
-        })
-      }
+      // Salva todo match confirmado pelo Gemini (score usado só para ordenação)
+      alertasParaSalvar.push({
+        licitacao_id:  m.licitacao_id,
+        keyword_id:    kid,
+        canais:        [],
+        score:         s.score,
+        score_keyword: s.score_keyword,
+        score_local:   s.score_local,
+        score_valor:   s.score_valor,
+      })
     }
   }
 
-  console.log(`Gemini: ${lotes} lotes, ${lotesComErro} erros, ${matches.length} matches brutos, ${alertasParaSalvar.length} com score ≥ ${SCORE_MIN_EMAIL}`)
+  console.log(`Gemini: ${lotes} lotes, ${lotesComErro} erros, ${matches.length} matches brutos, ${alertasParaSalvar.length} alertas salvos`)
 
   if (alertasParaSalvar.length > 0) {
     // upsert: se já existe (licitacao+keyword), atualiza o score
@@ -146,7 +144,6 @@ export async function GET(request: Request) {
     candidatos:       candidatos.length,
     matchesBrutos:    matches.length,
     alertasSalvos:    alertasParaSalvar.length,
-    scoreMinEmail:    SCORE_MIN_EMAIL,
     gemini: { lotes, lotesComErro, primeiroErro: erros[0] ?? null },
   })
 }
