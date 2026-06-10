@@ -24,7 +24,9 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 export const maxDuration = 300
 
 const PNCP_BASE  = 'https://pncp.gov.br/api/consulta/v1'
-const BRASIL_API = 'https://brasilapi.com.br/api/cnpj/v1'
+// publica.cnpj.ws: sem rate limit, dados da Receita Federal
+// BrasilAPI bloqueia requests da Vercel por IP compartilhado
+const CNPJ_WS    = 'https://publica.cnpj.ws/cnpj'
 
 const BACKFILL_INICIO = '2000-01-01'
 const JANELA_BACKFILL = 30  // dias por execução durante o backfill
@@ -67,18 +69,18 @@ interface PncpContrato {
   unidadeOrgao?:             { ufSigla?: string; municipioNome?: string }
 }
 
-interface BrasilApiCnpj {
-  cnpj:                         string
-  razao_social:                 string
-  nome_fantasia?:               string
-  situacao_cadastral:           string
-  descricao_situacao_cadastral: string
-  email?:                       string
-  ddd_telefone_1?:              string
-  municipio?:                   string
-  uf?:                          string
-  descricao_porte?:             string
-  cnae_fiscal_descricao?:       string
+// Formato do publica.cnpj.ws (substitui BrasilAPI que bloqueia IPs Vercel)
+interface CnpjWs {
+  cnpj:              string
+  razao_social:      string
+  nome_fantasia?:    string
+  situacao_cadastral: { codigo: number; descricao: string }
+  porte?:            { descricao?: string }
+  atividade_principal?: Array<{ codigo: string; descricao: string }>
+  email?:            string
+  telefone_1?:       string
+  municipio?:        string
+  uf?:               string
 }
 
 // ─── Busca PNCP ───────────────────────────────────────────────────────────────
@@ -112,11 +114,11 @@ async function buscarContratosPNCP(
   return { contratos: todos, debug }
 }
 
-async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
+async function enriquecerCnpj(cnpj: string): Promise<CnpjWs | null> {
   try {
-    const res = await fetch(`${BRASIL_API}/${cnpj}`, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(10000),
+    const res = await fetch(`${CNPJ_WS}/${cnpj}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'MonitorLicitacoes/1.0' },
+      signal: AbortSignal.timeout(15000),
     })
     if (!res.ok) return null
     return await res.json()
@@ -230,10 +232,11 @@ export async function GET(req: NextRequest) {
 
     if (!dados) { brasilApiNull++; continue }
     brasilApiOk++
-    if (dados.situacao_cadastral !== '02') { inativas++; continue }  // apenas ATIVAS
+    // cnpj.ws: situacao_cadastral.codigo === 2 = ATIVA
+    if (dados.situacao_cadastral.codigo !== 2) { inativas++; continue }
 
     const contrato = cnpjMap.get(cnpj)!
-    const cnae     = dados.cnae_fiscal_descricao ?? null
+    const cnae     = dados.atividade_principal?.[0]?.descricao ?? null
     const modalidade = contrato.modalidadeContratacao?.nome
                     ?? contrato.modalidadeContratacao?.descricao
                     ?? contrato.tipoContrato?.nome
@@ -246,18 +249,17 @@ export async function GET(req: NextRequest) {
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
       email:         emailRaw ? emailRaw.toLowerCase() : null,
-      telefone:      dados.ddd_telefone_1 ?? null,
+      telefone:      dados.telefone_1 ?? null,
       municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
       uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-      situacao:      dados.descricao_situacao_cadastral ?? null,
-      porte:         dados.descricao_porte ?? null,
+      situacao:      dados.situacao_cadastral.descricao ?? null,
+      porte:         dados.porte?.descricao ?? null,
       cnae,
       segmento:      mapearSegmento(cnae),
       modalidade,
       objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
       valor:         contrato.valorInicial ?? null,
       data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
-      // Sem e-mail → sem_email (disparo ignora; pode ser enriquecido depois)
       status:        emailRaw ? 'pendente' : 'sem_email',
       fonte:         'pncp_contrato',
     }
