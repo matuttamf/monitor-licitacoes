@@ -2,6 +2,7 @@
   "crons": [
     { "path": "/api/cron/expirar-trials",        "schedule": "0 3 * * *"         },
     { "path": "/api/cron/coletar",               "schedule": "0 5,11,17,23 * * 1-6" },
+    { "path": "/api/cron/matching",              "schedule": "30 5,11,17,23 * * 1-6" },
     { "path": "/api/cron/emails-trial",          "schedule": "0 12 * * 1-5"      },
 
     { "path": "/api/cron/alertar-urgente",       "schedule": "*/20 10-20 * * 1-5" },
