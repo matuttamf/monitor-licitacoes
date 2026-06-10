@@ -29,9 +29,9 @@ const BRASIL_API         = 'https://brasilapi.com.br/api/cnpj/v1'
 
 // Portal Transparência tem dados a partir de 2014 (antes disso retorna 0)
 const BACKFILL_INICIO  = '2014-01-01'
-const JANELA_BACKFILL  = 30   // dias por execução durante backfill
+const JANELA_BACKFILL  = 90   // dias por execução durante backfill
 const JANELA_CONTINUA  = 2    // dias no modo contínuo
-const MAX_PAGINAS      = 3    // 3 × 500 = 1.500 contratos/execução
+const MAX_PAGINAS      = 5    // 5 × 100 = 500 contratos/execução
 const MAX_ENRIQUECER   = 30   // cap de enriquecimentos por execução
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
@@ -103,7 +103,7 @@ async function buscarContratos(
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     try {
       // Datas no formato dd/MM/yyyy URL-encoded (%2F)
-      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=500`
+      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=100`
       console.log(`[transparencia] GET ${url}`)
 
       const res = await fetch(url, {
@@ -132,7 +132,11 @@ async function buscarContratos(
       }
 
       if (!data.length) {
-        console.log(`[transparencia] p${pagina}: array vazio — sem contratos no período`)
+        // Log headers para diagnosticar: se x-total-count=0 a API está funcionando mas sem dados;
+        // se ausente, a chave pode estar inválida ou os parâmetros errados
+        const totalCount = res.headers.get('x-total-count') ?? res.headers.get('X-Total-Count') ?? 'ausente'
+        const contentType = res.headers.get('content-type') ?? 'ausente'
+        console.log(`[transparencia] p${pagina}: array vazio — x-total-count=${totalCount} content-type=${contentType} url=${url}`)
         break
       }
 

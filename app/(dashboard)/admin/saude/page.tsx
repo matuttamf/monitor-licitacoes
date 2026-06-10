@@ -168,9 +168,11 @@ function BarraBackfill({ label, pct: p, proximo, fim }: { label: string; pct: nu
 export default function SaudePage() {
   const [data, setData] = useState<SaudeData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [ultimaAtt, setUltimaAtt] = useState<Date | null>(null)
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(async (manual = false) => {
+    if (manual) setRefreshing(true)
     try {
       const res = await fetch('/api/admin/saude')
       if (res.ok) {
@@ -179,12 +181,13 @@ export default function SaudePage() {
       }
     } finally {
       setLoading(false)
+      if (manual) setRefreshing(false)
     }
   }, [])
 
   useEffect(() => {
     carregar()
-    const iv = setInterval(carregar, 60_000) // atualiza a cada 1 min
+    const iv = setInterval(() => carregar(false), 60_000) // atualiza a cada 1 min
     return () => clearInterval(iv)
   }, [carregar])
 
@@ -215,10 +218,11 @@ export default function SaudePage() {
             {globalLabel}
           </span>
           <button
-            onClick={carregar}
-            style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 13, color: '#475569' }}
+            onClick={() => carregar(true)}
+            disabled={refreshing}
+            style={{ background: refreshing ? '#e2e8f0' : '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 14px', cursor: refreshing ? 'not-allowed' : 'pointer', fontSize: 13, color: '#475569', opacity: refreshing ? 0.7 : 1 }}
           >
-            ↻ Atualizar
+            {refreshing ? '⟳ Atualizando…' : '↻ Atualizar'}
           </button>
         </div>
       </div>
