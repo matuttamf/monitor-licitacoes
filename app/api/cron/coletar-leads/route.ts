@@ -29,7 +29,8 @@ const PNCP_BASE  = 'https://pncp.gov.br/api/consulta/v1'
 // BrasilAPI e cnpj.ws bloqueiam IPs compartilhados da Vercel
 const CNPJ_API   = 'https://minhareceita.org'
 
-const BACKFILL_INICIO = '2000-01-01'
+// PNCP tem dados a partir de ~2021 — começar antes desperdiça execuções
+const BACKFILL_INICIO = '2021-01-01'
 const JANELA_BACKFILL = 30  // dias por execução durante o backfill
 const JANELA_CONTINUA = 2   // ontem + hoje no modo contínuo (evita redundância com 10min)
 

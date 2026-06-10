@@ -58,20 +58,30 @@ export async function GET(request: Request) {
     .order('score', { ascending: false })
     .limit(500)
 
-  // 2. Reenvios (enviados há > 7 dias, licitação ainda aberta)
-  const { data: reenvios } = await supabase
-    .from('alertas')
-    .select(SELECT_ALERTAS)
-    .neq('canais', '{}')
-    .lte('enviado_em', umaSemanAAtras)
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
-    .order('score', { ascending: false })
-    .limit(50)
-
   if (error) {
     console.error('Erro ao buscar alertas:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // 2. Reenvios:
+  // - Se há novos pendentes: só reenviar os enviados há > 7 dias (evita duplicação no mesmo e-mail)
+  // - Se fila VAZIA: reciclar TODOS os já enviados para licitações ainda abertas (ciclagem)
+  const filaVazia = !novos?.length
+  let reenviosQuery = supabase
+    .from('alertas')
+    .select(SELECT_ALERTAS)
+    .neq('canais', '{}')
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, FILTRO_DATA)
+    .order('score', { ascending: false })
+    .limit(50)
+
+  if (!filaVazia) {
+    // modo normal: só reenviar os antigos (> 7 dias)
+    reenviosQuery = reenviosQuery.lte('enviado_em', umaSemanAAtras)
+  }
+  // quando filaVazia: sem filtro de data → recicla todos os já enviados para licitações abertas
+
+  const { data: reenvios } = await reenviosQuery
 
   const alertasPendentes = [
     ...(novos ?? []),
@@ -79,7 +89,7 @@ export async function GET(request: Request) {
   ]
 
   if (!alertasPendentes.length) {
-    return NextResponse.json({ ok: true, enviados: 0, pendentes: 0 })
+    return NextResponse.json({ ok: true, enviados: 0, pendentes: 0, filaVazia })
   }
 
   // Agrupar por usuário
@@ -118,11 +128,9 @@ export async function GET(request: Request) {
     const plano   = perfil?.plano ?? 'basic'
     const limites = getLimites(plano)
 
-    // Padrão por plano: todos começam com 5 e-mails/dia;
-    // itens: basic/trial = 10, demais = 20
-    const defaultItens = (plano === 'basic' || plano === 'trial') ? 10 : 20
-    const emailsPorDia  = Math.min(perfil?.emails_por_dia  ?? 5,          limites.maxEmailsPorDia)
-    const itensPorEmail = Math.min(perfil?.itens_por_email ?? defaultItens, limites.maxItensPorEmail)
+    // Padrão por plano: 5 e-mails/dia com 10 itens cada = 50 licitações/dia para todos
+    const emailsPorDia  = Math.min(perfil?.emails_por_dia  ?? 5,  limites.maxEmailsPorDia)
+    const itensPorEmail = Math.min(perfil?.itens_por_email ?? 10, limites.maxItensPorEmail)
 
     // Verificar se este é um horário programado para o usuário
     if (!horarioPermitidoParaUsuario(emailsPorDia, horaBRT)) continue

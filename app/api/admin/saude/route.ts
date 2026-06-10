@@ -108,10 +108,10 @@ export async function GET() {
   const hoje_ = new Date()
   const backfill = {
     pncp: {
-      proximo:  cfg['captacao_backfill_data'] ?? '2000-01-01',
-      inicio:   '2000-01-01',
+      proximo:  cfg['captacao_backfill_data'] ?? '2021-01-01',
+      inicio:   '2021-01-01',
       fim:      hoje_.toISOString().slice(0, 10),
-      pct: calcPct(cfg['captacao_backfill_data'] ?? '2000-01-01', '2000-01-01', hoje_),
+      pct: calcPct(cfg['captacao_backfill_data'] ?? '2021-01-01', '2021-01-01', hoje_),
     },
     transparencia: {
       proximo:  cfg['captacao_transparencia_backfill_data'] ?? '2014-01-01',

@@ -38,7 +38,6 @@ export async function GET(request: Request) {
     .select('id, objeto, data_abertura, estado, valor_estimado')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
     .or(filtroOr)
-    .limit(500)
 
   if (!candidatos?.length) {
     return NextResponse.json({ ok: true, matches: 0, candidatos: 0 })
