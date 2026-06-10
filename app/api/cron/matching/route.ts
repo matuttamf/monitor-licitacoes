@@ -15,6 +15,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
+  try {
+    return await runMatching()
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const stack = err instanceof Error ? err.stack : undefined
+    console.error('MATCHING CRASH:', msg, stack)
+    return NextResponse.json({ ok: false, error: msg, stack }, { status: 500 })
+  }
+}
+
+async function runMatching() {
   const supabase = await createServiceClient()
 
   // Buscar keywords ativas com regiao e tracking de matching
@@ -92,7 +103,7 @@ export async function GET(request: Request) {
     const resultado = { ok: true, matches: 0, candidatos: 0, ...debugBase }
     await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `0 candidatos — ${resultado.erroNovos ?? 'sem erro'}`, detalhes: resultado })
     await supabase.from('configuracoes').upsert(
-      { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
+      { chave: 'ultimo_matching_em', valor: agora },
       { onConflict: 'chave' }
     )
     return NextResponse.json(resultado)
@@ -199,7 +210,7 @@ export async function GET(request: Request) {
 
   // Avançar ponteiro incremental
   await supabase.from('configuracoes').upsert(
-    { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
+    { chave: 'ultimo_matching_em', valor: agora },
     { onConflict: 'chave' }
   )
 
