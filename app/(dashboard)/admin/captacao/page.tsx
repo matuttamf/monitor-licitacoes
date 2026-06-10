@@ -498,10 +498,19 @@ export default function CaptacaoPage() {
               })() : '—'
 
               // Monta resumo legível sem ts/ok/modo
+              // Objetos aninhados (ex: receita: {verificados,ativos,inativas}) são expandidos
               const { ok: _ok, ts: _ts, modo, ...rest } = r
               const resumo = Object.entries(rest)
-                .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
-                .map(([k, v]) => `${k}: ${v}`)
+                .flatMap(([k, v]) => {
+                  if (v === null || v === undefined) return []
+                  if (typeof v === 'object' && !Array.isArray(v)) {
+                    // expande sub-objeto como "k.subk: val"
+                    return Object.entries(v as Record<string, unknown>)
+                      .filter(([, sv]) => sv !== null && sv !== undefined && typeof sv !== 'object')
+                      .map(([sk, sv]) => `${k}.${sk}: ${sv}`)
+                  }
+                  return [`${k}: ${v}`]
+                })
                 .join(' · ')
 
               return (
