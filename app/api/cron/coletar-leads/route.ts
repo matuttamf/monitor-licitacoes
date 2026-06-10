@@ -101,7 +101,8 @@ async function buscarContratosPNCP(
       const itens: PncpContrato[] = json.data ?? json ?? []
       debug.push(`p${p}: ${itens.length} itens, total=${json.totalRegistros ?? '?'}`)
       if (!itens.length) break
-      todos.push(...itens.filter(c => c.niFornecedor))
+      // Apenas PJ (empresas, CNPJ 14 dígitos) — PF tem CPF de 11 dígitos
+      todos.push(...itens.filter(c => c.niFornecedor && c.tipoPessoa !== 'PF'))
       if (itens.length < 50) break
     } catch (e) {
       debug.push(`p${p}: exception ${String(e)}`)
@@ -220,14 +221,16 @@ export async function GET(req: NextRequest) {
   // ── 5. Enriquecer via BrasilAPI e inserir (até 20 por execução) ───────────
   const LOTE = 20  // reduzido para caber nos 300s de maxDuration
   let inseridos = 0
+  let brasilApiOk = 0, brasilApiNull = 0, inativas = 0
 
   for (let i = 0; i < Math.min(paraEnriquecer.length, LOTE); i++) {
     const cnpj  = paraEnriquecer[i]
     const dados = await enriquecerCnpj(cnpj)
     await sleep(500) // ~2 req/s — BrasilAPI free tier
 
-    if (!dados) continue
-    if (dados.situacao_cadastral !== '02') continue  // apenas ATIVAS
+    if (!dados) { brasilApiNull++; continue }
+    brasilApiOk++
+    if (dados.situacao_cadastral !== '02') { inativas++; continue }  // apenas ATIVAS
 
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
@@ -274,6 +277,7 @@ export async function GET(req: NextRequest) {
     total_contratos_pncp: contratos.length,
     total_cnpjs_unicos: cnpjsNovos.length,
     para_enriquecer: paraEnriquecer.length,
+    enriquecimento: { tentativas: Math.min(paraEnriquecer.length, LOTE), brasilapi_ok: brasilApiOk, brasilapi_null: brasilApiNull, inativas },
     pncp_debug: debugPncp,
     backfill_proximo: emBackfill ? (() => {
       const d = new Date(dataFinal.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))

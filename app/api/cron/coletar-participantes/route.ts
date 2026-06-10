@@ -86,12 +86,19 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 // 6=Pregão Eletrônico, 8=Dispensa, 9=Inexigibilidade, 4=Concorrência Eletrônica
 const MODALIDADES = [6, 8, 9, 4]
 
+// Converte YYYYMMDD → YYYY-MM-DD (formato exigido por /contratacoes/publicacao)
+function toIso(d: string): string {
+  return d.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+}
+
 async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<Contratacao[]> {
   const vistos = new Set<string>()
   const resultado: Contratacao[] = []
+  const di = toIso(dataInicial)
+  const df = toIso(dataFinal)
 
   for (const mod of MODALIDADES) {
-    const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
+    const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${di}&dataFinal=${df}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
     const json = await fetchJson<{ data?: Contratacao[] }>(url)
     const itens = json?.data ?? []
 
@@ -179,6 +186,7 @@ export async function GET(req: NextRequest) {
     const fimDate    = new Date(inicioDate)
     fimDate.setDate(fimDate.getDate() + JANELA_BACKFILL - 1)
     if (fimDate > hoje) fimDate.setTime(hoje.getTime())
+    // /contratacoes/publicacao usa YYYYMMDD (sem traços), igual a /contratos
     dataInicial = fmt(inicioDate)
     dataFinal   = fmt(fimDate)
     modoLabel   = `backfill (${ponteiro} → ${fmtIso(fimDate)})`
