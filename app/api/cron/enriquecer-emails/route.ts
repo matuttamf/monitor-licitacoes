@@ -290,19 +290,16 @@ export async function GET(req: NextRequest) {
   }
 
   const retryApos = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  // Filtro 1: leads dos últimos 3 anos (ampliado de 12 meses — maioria dos contratos são 2021-2024)
-  const tresAnosAtras = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  // Filtro: leads dos últimos 20 anos — cobre toda a base histórica disponível
+  const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-  // Filtro 2: ignorar MEI e Micro Empresa (raramente têm e-mail publicado online)
-  // Mantém porte=null (desconhecido) e porte IN ('EMPRESA DE PEQUENO PORTE','DEMAIS')
   const { data: leads, error } = await supabase
     .from('leads')
     .select('id, cnpj, razao_social, municipio, uf, porte')
     .is('email', null)
     .eq('status', 'invalido')
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
-    .gte('data_contrato', tresAnosAtras)                                    // ← filtro 1: últimos 3 anos
-    .or('porte.is.null,porte.not.in.(MEI,MICRO EMPRESA)')                  // ← filtro 2: porte
+    .gte('data_contrato', vinteAnosAtras)
     .order('data_contrato', { ascending: false })   // mais recentes primeiro
     .limit(10)
 

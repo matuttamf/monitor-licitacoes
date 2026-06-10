@@ -102,22 +102,44 @@ async function buscarContratos(
   const todos: Contrato[] = []
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     try {
-      // Datas no formato dd/MM/yyyy — precisam ser URL-encoded (%2F) senão o servidor ignora
+      // Datas no formato dd/MM/yyyy URL-encoded (%2F)
       const url = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=500`
+      console.log(`[transparencia] GET ${url}`)
+
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
         signal: AbortSignal.timeout(20000),
       })
+
+      // Lê o corpo sempre — para debug quando há falha
+      const bodyText = await res.text()
+
       if (!res.ok) {
-        console.warn(`[coletar-leads-transparencia] p${pagina}: HTTP ${res.status}`)
+        console.warn(`[transparencia] p${pagina}: HTTP ${res.status} — body: ${bodyText.slice(0, 300)}`)
         break
       }
-      const data: Contrato[] = await res.json()
-      if (!Array.isArray(data) || !data.length) break
-      todos.push(...data)
+
+      let data: unknown
+      try { data = JSON.parse(bodyText) } catch {
+        console.warn(`[transparencia] p${pagina}: JSON inválido — ${bodyText.slice(0, 200)}`)
+        break
+      }
+
+      // API pode retornar objeto de erro mesmo com status 200
+      if (!Array.isArray(data)) {
+        console.warn(`[transparencia] p${pagina}: resposta não é array — ${JSON.stringify(data).slice(0, 300)}`)
+        break
+      }
+
+      if (!data.length) {
+        console.log(`[transparencia] p${pagina}: array vazio — sem contratos no período`)
+        break
+      }
+
+      todos.push(...(data as Contrato[]))
       if (data.length < 500) break
     } catch (e) {
-      console.warn(`[coletar-leads-transparencia] erro p${pagina}:`, String(e))
+      console.warn(`[transparencia] erro p${pagina}:`, String(e))
       break
     }
   }

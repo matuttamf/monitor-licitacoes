@@ -95,9 +95,10 @@ async function buscarLicitacoesSegmento(
 
 export const maxDuration = 60
 
-// Limite conservador para não estourar o free tier do Resend (3.000/mês)
-// 2x/semana × 3 dias × ~20 leads = ~120 envios/semana → seguro
-const MAX_LOTE = 20
+// Lote por execução — cron roda a cada hora nos dias úteis (8h-18h) = ~11 runs/dia × 5 dias = 55x/sem
+// Com MAX_LOTE=50: até 2.750 e-mails/semana (~11.000/mês) → requer plano pago do Resend
+// Monitore uso em /admin/saude antes de ativar o disparo
+const MAX_LOTE = 50
 
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {

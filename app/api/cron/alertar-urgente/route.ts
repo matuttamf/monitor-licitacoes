@@ -37,8 +37,8 @@ export async function GET(request: Request) {
   const supabase = await createServiceClient()
   const hoje     = new Date().toISOString().substring(0, 10)
 
-  // Busca TODOS os alertas pendentes (não enviados via telegram/whatsapp)
-  // Sem threshold de score — todos os matches são enviados, priorizados por score desc
+  // Busca O alerta de maior score ainda não enviado via telegram/whatsapp
+  // Estratégia: 1 licitação por execução (cron a cada 10 min) — cadência controlada
   const { data: alertas, error } = await supabase
     .from('alertas')
     .select(`
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     .not('canais', 'cs', '{"telegram"}')   // ainda não enviado via telegram
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
-    .limit(500)
+    .limit(1)
 
   if (error) {
     console.error('alertar-urgente erro:', error.message)

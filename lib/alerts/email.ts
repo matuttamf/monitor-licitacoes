@@ -162,13 +162,6 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       ${cards}
 
 
-      ${restantes > 0 ? `<!-- Aviso restantes -->
-      <div style="text-align:center;margin:20px 0;padding:12px 20px;background:#FFF7ED;border:1px solid #FDDCAA;border-radius:10px">
-        <p style="margin:0;font-size:13px;color:#92400E">
-          ⚠️ Há mais <strong>${restantes}</strong> licitaç${restantes !== 1 ? 'ões' : 'ão'} que não coube${restantes !== 1 ? 'ram' : ''} neste e-mail.
-          <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'}/alertas" style="color:#6B0F1A;font-weight:700">Veja todas no painel →</a>
-        </p>
-      </div>` : ''}
 
       <!-- CTA principal -->
       <div style="text-align:center;margin-top:28px;padding-top:24px;border-top:1px solid #E0D8CF">
