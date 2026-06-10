@@ -177,8 +177,11 @@ export async function GET(req: NextRequest) {
   let ponteiro: string = (cfgBf?.valor as string) || BACKFILL_INICIO
   const emBackfill = ponteiro < hojeIso
 
+  // dataInicio/dataFim → formato dd/MM/yyyy para a API do Portal Transparência
+  // dataFimIso → ISO yyyy-MM-dd para o ponteiro de backfill (avancarPonteiro)
   let dataInicio: string
   let dataFim:    string
+  let dataFimIso: string
   let modoLabel:  string
 
   if (emBackfill) {
@@ -188,12 +191,14 @@ export async function GET(req: NextRequest) {
     if (fimDate > hoje) fimDate.setTime(hoje.getTime())
     dataInicio = fmtBr(inicioDate)
     dataFim    = fmtBr(fimDate)
-    modoLabel  = `backfill (${ponteiro} → ${fmtIso(fimDate)})`
+    dataFimIso = fmtIso(fimDate)           // ← ISO para o ponteiro
+    modoLabel  = `backfill (${ponteiro} → ${dataFimIso})`
   } else {
     const inicioDate = new Date(hoje)
     inicioDate.setDate(inicioDate.getDate() - JANELA_CONTINUA)
     dataInicio = fmtBr(inicioDate)
     dataFim    = fmtBr(hoje)
+    dataFimIso = hojeIso
     modoLabel  = 'contínuo'
   }
 
@@ -204,7 +209,7 @@ export async function GET(req: NextRequest) {
   console.log(`[coletar-leads-transparencia] ${contratos.length} contratos`)
 
   if (!contratos.length) {
-    if (emBackfill) await avancarPonteiro(supabase, dataFim)
+    if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
     return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, contratos: 0 })
   }
 
@@ -227,12 +232,12 @@ export async function GET(req: NextRequest) {
   console.log(`[coletar-leads-transparencia] ${setExistentes.size} existentes, ${paraEnriquecer.length} novos`)
 
   if (!paraEnriquecer.length) {
-    if (emBackfill) await avancarPonteiro(supabase, dataFim)
+    if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
     return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
   }
 
   // ── 4. Avançar ponteiro ANTES do enriquecimento (crash-safe) ────────────
-  if (emBackfill) await avancarPonteiro(supabase, dataFim)
+  if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
 
   // ── 5. Enriquecer e inserir ───────────────────────────────────────────────
   let inseridos = 0
