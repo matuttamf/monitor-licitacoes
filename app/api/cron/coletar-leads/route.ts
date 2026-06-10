@@ -217,12 +217,16 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // ── 4. Avançar ponteiro ANTES do enriquecimento ──────────────────────────
-  // Garante progresso mesmo que a função estoure o timeout durante o BrasilAPI.
-  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+  // ── 4. Avançar ponteiro somente se todos os CNPJs cabem no lote ──────────
+  // Se paraEnriquecer > LOTE, fica na mesma janela de datas.
+  // A próxima execução re-busca a mesma janela, mas os já inseridos caem no
+  // setExistentes e são ignorados → processa os próximos 50 naturalmente.
+  // Só avança quando todos os CNPJs da janela forem processados.
+  const LOTE = 50
+  const todosVaoSerProcessados = paraEnriquecer.length <= LOTE
+  if (emBackfill && todosVaoSerProcessados) await avancarPonteiro(supabase, dataFinal)
 
-  // ── 5. Enriquecer via BrasilAPI e inserir (até 50 por execução) ───────────
-  const LOTE = 50  // minhareceita.org é rápida; 50 CNPJs ≈ ~50s dentro dos 300s
+  // ── 5. Enriquecer via minhareceita.org e inserir ─────────────────────────
   let inseridos = 0
   let brasilApiOk = 0, brasilApiNull = 0, inativas = 0
 
