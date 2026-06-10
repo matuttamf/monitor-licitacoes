@@ -52,7 +52,7 @@ export async function GET(request: Request) {
           .from('licitacoes')
           .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
           .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
 
     // Keywords existentes → apenas licitações coletadas desde o último matching
     termosExistentes.length > 0
@@ -65,8 +65,12 @@ export async function GET(request: Request) {
           if (ultimoMatching) q = q.gte('coletado_em', ultimoMatching) as typeof q
           return q
         })()
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
   ])
+
+  // Log erros de query para diagnóstico
+  if (resNovos.error)       console.error('Erro query novos:', resNovos.error)
+  if (resIncrementais.error) console.error('Erro query incrementais:', resIncrementais.error)
 
   // Mescla candidatos sem duplicatas
   const candidatosMap = new Map<string, NonNullable<typeof resNovos.data>[0]>()
@@ -75,15 +79,23 @@ export async function GET(request: Request) {
   }
   const candidatos = [...candidatosMap.values()]
 
+  const debugBase = {
+    kwNovas: kwNovas.length, kwExistentes: kwExistentes.length,
+    queryNovosCount: resNovos.data?.length ?? 0,
+    queryIncrementaisCount: resIncrementais.data?.length ?? 0,
+    erroNovos: resNovos.error ? String(resNovos.error) : null,
+    erroIncrementais: resIncrementais.error ? String(resIncrementais.error) : null,
+    ultimoMatching,
+  }
+
   if (!candidatos.length) {
+    const resultado = { ok: true, matches: 0, candidatos: 0, ...debugBase }
+    await salvarResultadoCron(supabase, 'matching', resultado)
     await supabase.from('configuracoes').upsert(
       { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
       { onConflict: 'chave' }
     )
-    return NextResponse.json({
-      ok: true, matches: 0, candidatos: 0,
-      kwNovas: kwNovas.length, kwExistentes: kwExistentes.length, ultimoMatching,
-    })
+    return NextResponse.json(resultado)
   }
 
   console.log(`Matching: ${candidatos.length} candidatos (${resNovos.data?.length ?? 0} banco total + ${resIncrementais.data?.length ?? 0} incrementais), ${keywords.length} keywords (${kwNovas.length} novas, ${kwExistentes.length} existentes)`)
