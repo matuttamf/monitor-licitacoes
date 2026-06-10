@@ -28,7 +28,9 @@ const PNCP_BASE     = 'https://pncp.gov.br/api/pncp/v1'       // recursos por or
 const CNPJ_API      = 'https://minhareceita.org'               // enriquecimento — sem CF/rate-limit server-side
 
 // Quantos processos inspecionar por execução (cada um gera ~N chamadas de API)
-const MAX_PROCESSOS = 8
+const MAX_PROCESSOS = 10
+// Tamanho de página na API PNCP (mínimo exigido = 10)
+const TAMANHO_PAGINA = 10
 // Janela de datas por execução durante o backfill
 const JANELA_BACKFILL = 3
 // Janela no modo contínuo (últimos N dias)
@@ -112,7 +114,7 @@ async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<
   const df = toIso(dataFinal)
 
   for (const mod of MODALIDADES) {
-    const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${di}&dataFinal=${df}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
+    const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${di}&dataFinal=${df}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${TAMANHO_PAGINA}`
     const { data: json, status, body } = await fetchJson<{ data?: Contratacao[] }>(url)
     debugLogs.push({ url, status, body: body || `ok, itens=${(json?.data ?? []).length}` })
 
