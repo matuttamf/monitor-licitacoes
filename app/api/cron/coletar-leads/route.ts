@@ -261,17 +261,15 @@ export async function GET(req: NextRequest) {
       objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
       valor:         contrato.valorInicial ?? null,
       data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
-      status:        emailRaw ? 'pendente' : 'sem_email',
+      status:        emailRaw ? 'pendente' : 'invalido',
       fonte:         'pncp_contrato',
     }
 
     const { error } = await supabase
       .from('leads')
       .upsert(row, { onConflict: 'cnpj', ignoreDuplicates: true })
-    if (error) {
-      console.error('[coletar-leads] upsert error:', error.message)
-      if (i === 0) return NextResponse.json({ ok: false, erro_upsert: error.message, row_keys: Object.keys(row) }, { status: 500 })
-    } else inseridos++
+    if (error) console.error('[coletar-leads] upsert error:', error.message)
+    else inseridos++
   }
 
   console.log(`[coletar-leads] ${modoLabel} → ${inseridos} leads inseridos`)

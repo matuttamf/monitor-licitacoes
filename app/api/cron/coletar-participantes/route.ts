@@ -275,7 +275,7 @@ export async function GET(req: NextRequest) {
       situacao:      dados.descricao_situacao_cadastral ?? null,
       porte:         dados.porte ?? null,
       cnae,
-      status:        emailRaw ? 'pendente' : 'sem_email',
+      status:        emailRaw ? 'pendente' : 'invalido',
       fonte:         'pncp_proposta',
     }, { onConflict: 'cnpj', ignoreDuplicates: true })
 
