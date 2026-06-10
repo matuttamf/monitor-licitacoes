@@ -304,54 +304,58 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Etapa 0: Receita Federal para leads com situacao IS NULL ─────────────
-  // Leads inseridos pelos crons de coleta chegam com situacao=null porque a
-  // Receita pode ter falhado ou o cap foi atingido. Aqui completamos o check.
-  // Só depois do check de situação o lead vai para busca de e-mail (etapa 1).
+  // Processamento paralelo em lotes de 5 — ~5× mais rápido que sequencial.
   const { data: semReceita } = await supabase
     .from('leads')
     .select('id, cnpj')
     .is('situacao', null)
     .eq('status', 'invalido')
-    .limit(60)
+    .limit(120)
 
   let receitaVerificados = 0, receitaAtivos = 0, receitaInativas = 0
 
-  for (const lead of semReceita ?? []) {
-    const dados = await enriquecerReceita(lead.cnpj)
-    await sleep(400)
-    if (!dados) continue   // API indisponível — tenta na próxima rodada
+  const CONCORRENCIA_RECEITA = 5
+  const lotesSemReceita = []
+  for (let i = 0; i < (semReceita ?? []).length; i += CONCORRENCIA_RECEITA) {
+    lotesSemReceita.push((semReceita ?? []).slice(i, i + CONCORRENCIA_RECEITA))
+  }
 
-    receitaVerificados++
-    const emailRaw = dados.email?.trim()
-    // minhareceita: situacao_cadastral é número (2 = ATIVA)
-    const ativa = dados.situacao_cadastral === 2
+  for (const lote of lotesSemReceita) {
+    await Promise.all(lote.map(async lead => {
+      const dados = await enriquecerReceita(lead.cnpj)
+      if (!dados) return
 
-    if (!ativa) {
-      receitaInativas++
+      receitaVerificados++
+      const emailRaw = dados.email?.trim()
+      const ativa = dados.situacao_cadastral === 2
+
+      if (!ativa) {
+        receitaInativas++
+        await supabase.from('leads').update({
+          razao_social: dados.razao_social ?? lead.cnpj,
+          situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
+          cnae:         dados.cnae_fiscal_descricao ?? null,
+          porte:        dados.porte ?? null,
+          status:       'invalido',
+        }).eq('id', lead.id)
+        return
+      }
+
+      receitaAtivos++
       await supabase.from('leads').update({
-        razao_social: dados.razao_social ?? lead.cnpj,
-        situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
-        cnae:         dados.cnae_fiscal_descricao ?? null,
-        porte:        dados.porte ?? null,
-        status:       'invalido',
+        razao_social:  dados.razao_social,
+        nome_fantasia: dados.nome_fantasia ?? null,
+        email:         emailRaw ? emailRaw.toLowerCase() : null,
+        telefone:      dados.ddd_telefone_1 ?? null,
+        municipio:     dados.municipio ?? null,
+        uf:            dados.uf ?? null,
+        situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
+        porte:         dados.porte ?? null,
+        cnae:          dados.cnae_fiscal_descricao ?? null,
+        status:        emailRaw ? 'pendente' : 'invalido',
       }).eq('id', lead.id)
-      continue
-    }
-
-    receitaAtivos++
-    // Empresa ativa — preenche todos os campos disponíveis
-    await supabase.from('leads').update({
-      razao_social:  dados.razao_social,
-      nome_fantasia: dados.nome_fantasia ?? null,
-      email:         emailRaw ? emailRaw.toLowerCase() : null,
-      telefone:      dados.ddd_telefone_1 ?? null,
-      municipio:     dados.municipio ?? null,
-      uf:            dados.uf ?? null,
-      situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
-      porte:         dados.porte ?? null,
-      cnae:          dados.cnae_fiscal_descricao ?? null,
-      status:        emailRaw ? 'pendente' : 'invalido',
-    }).eq('id', lead.id)
+    }))
+    await sleep(200)   // pausa curta entre lotes para não sobrecarregar a API
   }
 
   // Salva resultado da Etapa 0 imediatamente — garante que Receita stats aparecem
