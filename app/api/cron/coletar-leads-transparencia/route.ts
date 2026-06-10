@@ -103,11 +103,11 @@ async function buscarContratos(
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     try {
       // Datas no formato dd/MM/yyyy URL-encoded (%2F)
-      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=100`
+      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicial=${encodeURIComponent(dataInicio)}&dataFinal=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=100`
       console.log(`[transparencia] GET ${url}`)
 
       const res = await fetch(url, {
-        headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
+        headers: { Accept: 'application/json', 'Authorization': apiKey },
         signal: AbortSignal.timeout(20000),
       })
 
@@ -238,7 +238,7 @@ export async function GET(req: NextRequest) {
   if (!contratos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
     // Retorna URL chamada para diagnóstico visível no painel admin
-    const urlDiag = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=100`
+    const urlDiag = `${TRANSPARENCIA_BASE}/contratos?dataInicial=${encodeURIComponent(dataInicio)}&dataFinal=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=100`
     return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, contratos: 0, url_testada: urlDiag })
   }
 
