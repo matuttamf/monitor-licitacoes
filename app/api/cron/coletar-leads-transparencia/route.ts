@@ -253,7 +253,10 @@ export async function GET(req: NextRequest) {
   console.log(`[coletar-leads-transparencia] ${contratos.length} contratos`)
 
   if (!contratos.length) {
-    if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
+    // Só avança ponteiro se a API respondeu OK (status 200 com array vazio)
+    // HTTP 400/401/403 indica erro de configuração — não desperdiça o backfill
+    const apiOk = apiDebug.http_status === 200
+    if (emBackfill && apiOk) await avancarPonteiro(supabase, dataFimIso)
     return NextResponse.json({
       ok: true, novos: 0, modo: modoLabel, contratos: 0,
       api_debug: apiDebug,

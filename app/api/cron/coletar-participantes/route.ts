@@ -110,8 +110,9 @@ async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<
   const vistos = new Set<string>()
   const resultado: Contratacao[] = []
   const debugLogs: { url: string; status: number; body: string }[] = []
-  const di = toIso(dataInicial)
-  const df = toIso(dataFinal)
+  // API PNCP exige formato YYYYMMDD (sem traços) — dataInicial/dataFinal já chegam nesse formato
+  const di = dataInicial
+  const df = dataFinal
 
   for (const mod of MODALIDADES) {
     const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${di}&dataFinal=${df}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${TAMANHO_PAGINA}`
