@@ -72,7 +72,8 @@ export async function POST(request: Request) {
     'matching':               'Matching disparado em background. Verifique Alertas em ~60s.',
     'enriquecer-emails':      'Busca de e-mails disparada em background. Verifique os leads em ~2min.',
     'coletar':                'Coleta disparada em background (~5 min). Verifique Licitações em breve.',
-    'coletar-participantes':  'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
+    'coletar-participantes':         'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
+    'coletar-leads-transparencia':  'Coleta Portal Transparência disparada em background. Verifique os leads em breve.',
   }
   const fireAndForget = acao in MSGS_BACKGROUND
 

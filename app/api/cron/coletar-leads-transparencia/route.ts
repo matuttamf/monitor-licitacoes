@@ -1,21 +1,23 @@
 /**
  * Cron: coletar-leads-transparencia
- * Horário: todo dia às 4h UTC (1h BRT)
+ * Horário: a cada 6h
  *
- * Complementa o PNCP coletando fornecedores do Portal da Transparência
- * (contratos federais — inclui empresas que nunca apareceram no PNCP).
+ * Estratégia: itera sobre TODOS os órgãos federais (SIAFI) para o período atual.
+ * A API exige codigoOrgao obrigatório → não há outra forma de obter dados por data.
  *
- * Requer: PORTAL_TRANSPARENCIA_API_KEY no ambiente
- * (cadastro grátis em portaldatransparencia.gov.br/api-de-dados/cadastrar-email)
+ * Estado salvo em configuracoes:
+ *   captacao_transparencia_backfill_data  → yyyy-MM-dd do início da janela atual
+ *   captacao_transparencia_orgao_idx      → próximo índice no array de órgãos
+ *   captacao_transparencia_orgaos_cache   → JSON array de codigoOrgao (atualizado semanalmente)
  *
- * Fluxo:
- *  1. Busca contratos do período no Portal da Transparência
- *  2. Extrai CNPJs de fornecedores (apenas empresas — 14 dígitos)
- *  3. Ignora CNPJs já presentes na base
- *  4. Enriquece via BrasilAPI → filtra ativas + com e-mail
- *  5. Insere com fonte='portal_transparencia'
- *
- * Ponteiro de backfill: 'captacao_transparencia_backfill_data'
+ * Fluxo por execução:
+ *  1. Carrega (ou recarrega) lista de órgãos SIAFI
+ *  2. Pega os próximos ORGAOS_POR_RODADA órgãos
+ *  3. Para cada órgão → GET /contratos?codigoOrgao=X&dataInicial=...&dataFinal=...
+ *  4. Extrai CNPJs de fornecedores (apenas PJ, 14 dígitos)
+ *  5. Ignora CNPJs já na base
+ *  6. Enriquece via BrasilAPI (cap MAX_ENRIQUECER)
+ *  7. Quando todos os órgãos do período forem processados → avança janela de data
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -27,57 +29,48 @@ export const maxDuration = 300
 const TRANSPARENCIA_BASE = 'https://api.portaldatransparencia.gov.br/api-de-dados'
 const BRASIL_API         = 'https://brasilapi.com.br/api/cnpj/v1'
 
-// Portal Transparência tem dados a partir de 2014 (antes disso retorna 0)
-const BACKFILL_INICIO  = '2014-01-01'
-const JANELA_BACKFILL  = 90   // dias por execução durante backfill
-const JANELA_CONTINUA  = 2    // dias no modo contínuo
-const MAX_PAGINAS      = 5    // 5 × 100 = 500 contratos/execução
-const MAX_ENRIQUECER   = 30   // cap de enriquecimentos por execução
+const BACKFILL_INICIO    = '2014-01-01'
+const JANELA_DIAS        = 180   // janela de 6 meses por varredura completa de órgãos
+const ORGAOS_POR_RODADA  = 50    // órgãos processados por execução (cada chamada ~1s)
+const MAX_ENRIQUECER     = 20    // cap de enriquecimentos BrasilAPI por execução
+
+// Cache dos órgãos válido por 7 dias (em ms)
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
 // Portal Transparência exige dd/MM/yyyy
-const fmtBr  = (d: Date) => {
+const fmtBr = (d: Date) => {
   const [y, m, day] = d.toISOString().slice(0, 10).split('-')
   return `${day}/${m}/${y}`
 }
 
-// ─── Segmentação por CNAE (mesmo mapeamento de coletar-leads) ─────────────────
+// ─── Segmentação por CNAE ─────────────────────────────────────────────────────
 function mapearSegmento(cnae: string | null | undefined): string {
   if (!cnae) return 'outros'
   const c = cnae.toLowerCase()
-  if (/constru|engenharia|obra|reform|pavimentaç/.test(c))           return 'construção'
-  if (/tecnolog|informátic|software|sistema|hardware|ti\b|dados/.test(c)) return 'tecnologia'
-  if (/saúde|hospital|médic|farmac|laborat|clínic|enfermag/.test(c))  return 'saúde'
-  if (/limpeza|conservaç|higienizaç|saneament|desinfeç/.test(c))      return 'limpeza'
-  if (/vigilânc|segurança|monitoram|portaria|armado/.test(c))         return 'segurança'
-  if (/transport|logístic|frete|mudança|veícul|frota/.test(c))        return 'transporte'
-  if (/aliment|nutriç|refeição|catering|merenda|buffet/.test(c))      return 'alimentação'
-  if (/consult|assessor|gestão|planejam|auditoria/.test(c))           return 'consultoria'
-  if (/educaç|treinament|capacitaç|ensino|curso|escola/.test(c))      return 'educação'
-  if (/manutençã|reparo|instalação|calibraç|assistência técn/.test(c)) return 'manutenção'
-  if (/paisag|jardim|arborizaç|verde/.test(c))                        return 'jardinagem'
-  if (/gráfic|impres|copiaç|editoraç/.test(c))                        return 'gráfica'
+  if (/constru|engenharia|obra|reform|pavimentaç/.test(c))                 return 'construção'
+  if (/tecnolog|informátic|software|sistema|hardware|ti\b|dados/.test(c))  return 'tecnologia'
+  if (/saúde|hospital|médic|farmac|laborat|clínic|enfermag/.test(c))       return 'saúde'
+  if (/limpeza|conservaç|higienizaç|saneament|desinfeç/.test(c))           return 'limpeza'
+  if (/vigilânc|segurança|monitoram|portaria|armado/.test(c))              return 'segurança'
+  if (/transport|logístic|frete|mudança|veícul|frota/.test(c))             return 'transporte'
+  if (/aliment|nutriç|refeição|catering|merenda|buffet/.test(c))           return 'alimentação'
+  if (/consult|assessor|gestão|planejam|auditoria/.test(c))                return 'consultoria'
+  if (/educaç|treinament|capacitaç|ensino|curso|escola/.test(c))           return 'educação'
+  if (/manutençã|reparo|instalação|calibraç|assistência técn/.test(c))     return 'manutenção'
   return 'outros'
 }
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
+interface OrgaoSiafi { codigo: string; descricao?: string }
 
 interface Contrato {
-  id?:                   string
-  objeto?:               string
-  valorInicial?:         number
-  dataAssinatura?:       string
-  fornecedor?: {
-    cnpjFormatado?:      string
-    nome?:               string
-  }
+  fornecedor?: { cnpjFormatado?: string; nome?: string }
+  objeto?:     string
+  valorInicial?: number
+  dataAssinatura?: string
   modalidadeCompra?: { descricao?: string }
-  unidadeGestora?: {
-    uf?:                 string
-    municipio?:          string
-    descricaoOrgao?:     string
-  }
 }
 
 interface BrasilApiCnpj {
@@ -94,77 +87,48 @@ interface BrasilApiCnpj {
   cnae_fiscal_descricao?:       string
 }
 
-// ─── Busca contratos ──────────────────────────────────────────────────────────
-
-interface BuscarContratosResult {
-  contratos: Contrato[]
-  debug: {
-    url: string
-    http_status: number | null
-    x_total_count: string
-    content_type: string
-    body_amostra: string
-  }
-}
-
-async function buscarContratos(
-  dataInicio: string, dataFim: string, apiKey: string
-): Promise<BuscarContratosResult> {
-  const todos: Contrato[] = []
-  let debugInfo = {
-    url: '',
-    http_status: null as number | null,
-    x_total_count: 'ausente',
-    content_type: 'ausente',
-    body_amostra: '',
-  }
-
-  for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
+// ─── Busca lista de órgãos SIAFI ──────────────────────────────────────────────
+async function buscarOrgaosSiafi(apiKey: string): Promise<string[]> {
+  const codigos: string[] = []
+  for (let pagina = 1; pagina <= 20; pagina++) {   // até 2000 órgãos (100/página)
     try {
-      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicial=${encodeURIComponent(dataInicio)}&dataFinal=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=100`
-      if (pagina === 1) debugInfo.url = url
-      console.log(`[transparencia] GET ${url}`)
-
+      const url = `${TRANSPARENCIA_BASE}/orgaos-siafi?pagina=${pagina}`
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(15000),
       })
-
-      const bodyText = await res.text()
-
-      if (pagina === 1) {
-        debugInfo.http_status   = res.status
-        debugInfo.x_total_count = res.headers.get('x-total-count') ?? res.headers.get('X-Total-Count') ?? 'ausente'
-        debugInfo.content_type  = res.headers.get('content-type') ?? 'ausente'
-        debugInfo.body_amostra  = bodyText.slice(0, 300)
-      }
-
-      if (!res.ok) {
-        console.warn(`[transparencia] p${pagina}: HTTP ${res.status} — body: ${bodyText.slice(0, 300)}`)
-        break
-      }
-
+      if (!res.ok) break
+      const body = await res.text()
       let data: unknown
-      try { data = JSON.parse(bodyText) } catch {
-        console.warn(`[transparencia] p${pagina}: JSON inválido — ${bodyText.slice(0, 200)}`)
-        break
+      try { data = JSON.parse(body) } catch { break }
+      if (!Array.isArray(data)) break
+      const lista = data as OrgaoSiafi[]
+      if (!lista.length) break
+      for (const o of lista) {
+        if (o.codigo) codigos.push(o.codigo)
       }
-
-      if (!Array.isArray(data)) {
-        console.warn(`[transparencia] p${pagina}: resposta não é array — ${JSON.stringify(data).slice(0, 300)}`)
-        break
-      }
-
-      if (!data.length) break
-
-      todos.push(...(data as Contrato[]))
-      if (data.length < 100) break
-    } catch (e) {
-      console.warn(`[transparencia] erro p${pagina}:`, String(e))
-      break
-    }
+      if (lista.length < 100) break   // última página
+    } catch { break }
   }
-  return { contratos: todos, debug: debugInfo }
+  return codigos
+}
+
+// ─── Busca contratos de um órgão ──────────────────────────────────────────────
+async function buscarContratosOrgao(
+  codigoOrgao: string, dataInicio: string, dataFim: string, apiKey: string
+): Promise<Contrato[]> {
+  try {
+    const url = `${TRANSPARENCIA_BASE}/contratos?codigoOrgao=${encodeURIComponent(codigoOrgao)}&dataInicial=${encodeURIComponent(dataInicio)}&dataFinal=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=100`
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!res.ok) return []
+    const body = await res.text()
+    if (!body.trim().startsWith('[') && !body.trim().startsWith('{')) return []
+    const data = JSON.parse(body)
+    return Array.isArray(data) ? data as Contrato[] : []
+  } catch { return [] }
 }
 
 async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
@@ -179,7 +143,6 @@ async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
-
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
@@ -189,7 +152,7 @@ export async function GET(req: NextRequest) {
   if (!apiKey) {
     return NextResponse.json({
       ok: false,
-      motivo: 'PORTAL_TRANSPARENCIA_API_KEY não configurada. Cadastre em portaldatransparencia.gov.br/api-de-dados/cadastrar-email',
+      motivo: 'PORTAL_TRANSPARENCIA_API_KEY não configurada',
     })
   }
 
@@ -199,125 +162,144 @@ export async function GET(req: NextRequest) {
   )
 
   // Verificar se captação está ativa
-  const { data: cfg } = await supabase
-    .from('configuracoes')
-    .select('valor')
-    .eq('chave', 'captacao_ativa')
-    .maybeSingle()
-  if (cfg && (cfg.valor === false || cfg.valor === 'false')) {
+  const { data: cfgAtiva } = await supabase
+    .from('configuracoes').select('valor').eq('chave', 'captacao_ativa').maybeSingle()
+  if (cfgAtiva && (cfgAtiva.valor === false || cfgAtiva.valor === 'false')) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'sistema pausado' })
   }
 
-  // ── Backfill progressivo ──────────────────────────────────────────────────
-  const hoje    = new Date()
-  const hojeIso = fmtIso(hoje)
+  // ── 1. Carregar/atualizar cache de órgãos ────────────────────────────────
+  const { data: cfgOrgaos } = await supabase
+    .from('configuracoes').select('valor')
+    .eq('chave', 'captacao_transparencia_orgaos_cache').maybeSingle()
 
-  const { data: cfgBf } = await supabase
-    .from('configuracoes')
-    .select('valor')
-    .eq('chave', 'captacao_transparencia_backfill_data')
-    .maybeSingle()
+  let orgaosCached: { codigos: string[]; ts: number } = { codigos: [], ts: 0 }
+  try {
+    if (cfgOrgaos?.valor) orgaosCached = JSON.parse(cfgOrgaos.valor as string)
+  } catch { /* inicia vazio */ }
 
-  let ponteiro: string = (cfgBf?.valor as string) || BACKFILL_INICIO
-  const emBackfill = ponteiro < hojeIso
-
-  // dataInicio/dataFim → formato dd/MM/yyyy para a API do Portal Transparência
-  // dataFimIso → ISO yyyy-MM-dd para o ponteiro de backfill (avancarPonteiro)
-  let dataInicio: string
-  let dataFim:    string
-  let dataFimIso: string
-  let modoLabel:  string
-
-  if (emBackfill) {
-    const inicioDate = new Date(ponteiro)
-    const fimDate    = new Date(inicioDate)
-    fimDate.setDate(fimDate.getDate() + JANELA_BACKFILL - 1)
-    if (fimDate > hoje) fimDate.setTime(hoje.getTime())
-    dataInicio = fmtBr(inicioDate)
-    dataFim    = fmtBr(fimDate)
-    dataFimIso = fmtIso(fimDate)           // ← ISO para o ponteiro
-    modoLabel  = `backfill (${ponteiro} → ${dataFimIso})`
-  } else {
-    const inicioDate = new Date(hoje)
-    inicioDate.setDate(inicioDate.getDate() - JANELA_CONTINUA)
-    dataInicio = fmtBr(inicioDate)
-    dataFim    = fmtBr(hoje)
-    dataFimIso = hojeIso
-    modoLabel  = 'contínuo'
+  const cacheExpirado = Date.now() - orgaosCached.ts > CACHE_TTL_MS
+  if (!orgaosCached.codigos.length || cacheExpirado) {
+    const codigos = await buscarOrgaosSiafi(apiKey)
+    if (!codigos.length) {
+      return NextResponse.json({ ok: false, motivo: 'Falha ao buscar lista de órgãos SIAFI' })
+    }
+    orgaosCached = { codigos, ts: Date.now() }
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_orgaos_cache', valor: JSON.stringify(orgaosCached) },
+      { onConflict: 'chave' }
+    )
   }
 
-  console.log(`[coletar-leads-transparencia] modo=${modoLabel}`)
+  const { codigos: todosOrgaos } = orgaosCached
+  const totalOrgaos = todosOrgaos.length
 
-  // ── 1. Buscar contratos ───────────────────────────────────────────────────
-  const { contratos, debug: apiDebug } = await buscarContratos(dataInicio, dataFim, apiKey)
-  console.log(`[coletar-leads-transparencia] ${contratos.length} contratos`)
+  // ── 2. Carregar ponteiros de estado ──────────────────────────────────────
+  const [{ data: cfgData }, { data: cfgIdx }] = await Promise.all([
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_transparencia_backfill_data').maybeSingle(),
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_transparencia_orgao_idx').maybeSingle(),
+  ])
 
-  if (!contratos.length) {
-    // Só avança ponteiro se a API respondeu OK (status 200 com array vazio)
-    // HTTP 400/401/403 indica erro de configuração — não desperdiça o backfill
-    const apiOk = apiDebug.http_status === 200
-    if (emBackfill && apiOk) await avancarPonteiro(supabase, dataFimIso)
+  const hoje     = new Date()
+  const hojeIso  = fmtIso(hoje)
+  let dataInicio: string = (cfgData?.valor as string) || BACKFILL_INICIO
+  let orgaoIdx   = parseInt((cfgIdx?.valor as string) || '0', 10) || 0
+
+  // Se a data já chegou em hoje, reinicia no começo do período contínuo (2 dias atrás)
+  if (dataInicio >= hojeIso) {
+    const d = new Date(hoje)
+    d.setDate(d.getDate() - 2)
+    dataInicio = fmtIso(d)
+    orgaoIdx   = 0
+  }
+
+  // Calcular data final da janela
+  const inicioDate = new Date(dataInicio)
+  const fimDate    = new Date(inicioDate)
+  fimDate.setDate(fimDate.getDate() + JANELA_DIAS - 1)
+  if (fimDate > hoje) fimDate.setTime(hoje.getTime())
+  const dataFimIso = fmtIso(fimDate)
+
+  const dataInicioFmt = fmtBr(inicioDate)
+  const dataFimFmt    = fmtBr(fimDate)
+
+  // Órgãos desta rodada
+  const orgaosBatch = todosOrgaos.slice(orgaoIdx, orgaoIdx + ORGAOS_POR_RODADA)
+  const novoIdx     = orgaoIdx + orgaosBatch.length
+  const janelaConcluida = novoIdx >= totalOrgaos
+
+  const modoLabel = `órgãos ${orgaoIdx}–${novoIdx - 1}/${totalOrgaos} | ${dataInicio} → ${dataFimIso}`
+  console.log(`[coletar-leads-transparencia] ${modoLabel}`)
+
+  // ── 3. Coletar contratos de cada órgão nesta rodada ──────────────────────
+  const cnpjMap = new Map<string, Contrato>()
+  const debugOrgaos: string[] = []
+
+  for (const codigoOrgao of orgaosBatch) {
+    const contratos = await buscarContratosOrgao(codigoOrgao, dataInicioFmt, dataFimFmt, apiKey)
+    if (contratos.length) {
+      debugOrgaos.push(`${codigoOrgao}:${contratos.length}`)
+      for (const c of contratos) {
+        const raw = (c.fornecedor?.cnpjFormatado ?? '').replace(/\D/g, '')
+        if (raw.length === 14 && !cnpjMap.has(raw)) cnpjMap.set(raw, c)
+      }
+    }
+  }
+
+  const cnpjsTotal = [...cnpjMap.keys()]
+
+  // ── 4. Avançar ponteiros ──────────────────────────────────────────────────
+  if (janelaConcluida) {
+    // Todos os órgãos desta janela foram processados → avança data
+    const proxData = new Date(fimDate)
+    proxData.setDate(proxData.getDate() + 1)
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_backfill_data', valor: fmtIso(proxData) },
+      { onConflict: 'chave' }
+    )
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_orgao_idx', valor: '0' },
+      { onConflict: 'chave' }
+    )
+  } else {
+    // Avança só o índice de órgãos
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_orgao_idx', valor: String(novoIdx) },
+      { onConflict: 'chave' }
+    )
+  }
+
+  if (!cnpjsTotal.length) {
     return NextResponse.json({
-      ok: true, novos: 0, modo: modoLabel, contratos: 0,
-      api_debug: apiDebug,
+      ok: true, novos: 0, modo: modoLabel,
+      orgaos_com_contratos: 0,
+      janela_concluida: janelaConcluida,
     })
   }
 
-  // ── 2. Extrair CNPJs únicos de fornecedores ───────────────────────────────
-  const cnpjMap = new Map<string, Contrato>()
-  for (const c of contratos) {
-    const raw = (c.fornecedor?.cnpjFormatado ?? '').replace(/\D/g, '')
-    if (raw.length === 14 && !cnpjMap.has(raw)) cnpjMap.set(raw, c)
-  }
-  const cnpjsTotal = [...cnpjMap.keys()]
-
-  // ── 3. Separar: novos × já na base sem e-mail ────────────────────────────
+  // ── 5. Filtrar CNPJs já na base ───────────────────────────────────────────
   const { data: existentes } = await supabase
-    .from('leads')
-    .select('cnpj, email')
-    .in('cnpj', cnpjsTotal)
-  const mapExistentes = new Map(
-    (existentes ?? []).map((r: { cnpj: string; email: string | null }) => [r.cnpj, r.email])
-  )
-  const paraInserir  = cnpjsTotal.filter(c => !mapExistentes.has(c))
-  const paraAtuEmail = cnpjsTotal.filter(c => mapExistentes.has(c) && mapExistentes.get(c) == null)
-  const paraEnriquecer = [...paraInserir, ...paraAtuEmail]
-
-  console.log(`[coletar-leads-transparencia] ${mapExistentes.size} existentes (${paraAtuEmail.length} sem e-mail), ${paraInserir.length} novos`)
+    .from('leads').select('cnpj').in('cnpj', cnpjsTotal)
+  const setExistentes = new Set((existentes ?? []).map((r: { cnpj: string }) => r.cnpj))
+  const paraEnriquecer = cnpjsTotal.filter(c => !setExistentes.has(c))
 
   if (!paraEnriquecer.length) {
-    if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
-    return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base com e-mail', modo: modoLabel })
+    return NextResponse.json({
+      ok: true, novos: 0, modo: modoLabel,
+      cnpjs_unicos: cnpjsTotal.length, ja_na_base: setExistentes.size,
+      janela_concluida: janelaConcluida,
+    })
   }
 
-  // ── 4. Avançar ponteiro ANTES do enriquecimento (crash-safe) ────────────
-  if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
-
-  // ── 5. Enriquecer, inserir novos ou atualizar e-mail dos existentes ───────
-  let inseridos = 0, atualizados = 0
-
+  // ── 6. Enriquecer e inserir ───────────────────────────────────────────────
+  let inseridos = 0
   for (const cnpj of paraEnriquecer.slice(0, MAX_ENRIQUECER)) {
-    const ehNovo = !mapExistentes.has(cnpj)
-    const dados  = await enriquecerCnpj(cnpj)
-    await sleep(500) // ~2 req/s — BrasilAPI free tier
-
+    const dados = await enriquecerCnpj(cnpj)
+    await sleep(500)
     if (!dados) continue
-    if (dados.situacao_cadastral !== '02') continue // apenas ATIVAS
+    if (dados.situacao_cadastral !== '02') continue
 
     const emailRaw = dados.email?.trim()
-
-    if (!ehNovo) {
-      // Já existe — só atualiza se encontrou e-mail
-      if (!emailRaw) continue
-      const { error } = await supabase
-        .from('leads')
-        .update({ email: emailRaw.toLowerCase(), status: 'pendente' })
-        .eq('cnpj', cnpj)
-        .is('email', null)
-      if (!error) atualizados++
-      continue
-    }
-
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
 
@@ -337,34 +319,21 @@ export async function GET(req: NextRequest) {
       objeto:        (contrato.objeto ?? '').slice(0, 200) || null,
       valor:         contrato.valorInicial ?? null,
       data_contrato: contrato.dataAssinatura?.slice(0, 10) ?? null,
-      status:        emailRaw ? 'pendente' : 'sem_email',
+      status:        emailRaw ? 'pendente' : 'invalido',
       fonte:         'portal_transparencia',
     }, { onConflict: 'cnpj', ignoreDuplicates: true })
 
-    if (error) console.error('[coletar-leads-transparencia] upsert error:', error.message)
-    else inseridos++
+    if (!error) inseridos++
   }
 
-  console.log(`[coletar-leads-transparencia] ${inseridos} inseridos, ${atualizados} e-mails atualizados`)
   return NextResponse.json({
     ok: true,
-    modo:             modoLabel,
-    novos:            inseridos,
-    emails_atualizados: atualizados,
-    contratos:        contratos.length,
-    cnpjs_unicos:     cnpjsTotal.length,
-    para_enriquecer:  paraEnriquecer.length,
+    modo:              modoLabel,
+    novos:             inseridos,
+    orgaos_com_contratos: debugOrgaos.length,
+    cnpjs_unicos:      cnpjsTotal.length,
+    para_enriquecer:   paraEnriquecer.length,
+    janela_concluida:  janelaConcluida,
+    debug_orgaos:      debugOrgaos.slice(0, 10),
   })
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function avancarPonteiro(supabase: any, dataFim: string) {
-  const d = new Date(dataFim)
-  d.setDate(d.getDate() + 1)
-  const proximo = fmtIso(d)
-  await supabase.from('configuracoes').upsert(
-    { chave: 'captacao_transparencia_backfill_data', valor: proximo },
-    { onConflict: 'chave' }
-  )
-  console.log(`[coletar-leads-transparencia] ponteiro avançado para ${proximo}`)
 }
