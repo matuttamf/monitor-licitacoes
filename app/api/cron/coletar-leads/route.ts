@@ -188,7 +188,8 @@ export async function GET(req: NextRequest) {
   }
 
   // ── 1. Buscar contratos PNCP ──────────────────────────────────────────────
-  const { contratos, debug: debugPncp } = await buscarContratosPNCP(dataInicial, dataFinal, 5)
+  // Usa o default de 26 páginas (= até 1300 contratos por janela de 30 dias)
+  const { contratos, debug: debugPncp } = await buscarContratosPNCP(dataInicial, dataFinal)
 
   if (!contratos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)

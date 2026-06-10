@@ -248,46 +248,45 @@ export async function GET(req: NextRequest) {
 
   const cnpjsTotal = [...cnpjMap.keys()]
 
-  // ── 4. Avançar ponteiros ──────────────────────────────────────────────────
-  if (janelaConcluida) {
-    // Todos os órgãos desta janela foram processados → avança data
-    const proxData = new Date(fimDate)
-    proxData.setDate(proxData.getDate() + 1)
-    await supabase.from('configuracoes').upsert(
-      { chave: 'captacao_transparencia_backfill_data', valor: fmtIso(proxData) },
-      { onConflict: 'chave' }
-    )
-    await supabase.from('configuracoes').upsert(
-      { chave: 'captacao_transparencia_orgao_idx', valor: '0' },
-      { onConflict: 'chave' }
-    )
-  } else {
-    // Avança só o índice de órgãos
-    await supabase.from('configuracoes').upsert(
-      { chave: 'captacao_transparencia_orgao_idx', valor: String(novoIdx) },
-      { onConflict: 'chave' }
-    )
-  }
-
-  if (!cnpjsTotal.length) {
-    return NextResponse.json({
-      ok: true, novos: 0, modo: modoLabel,
-      orgaos_com_contratos: 0,
-      janela_concluida: janelaConcluida,
-    })
-  }
-
-  // ── 5. Filtrar CNPJs já na base ───────────────────────────────────────────
+  // ── 4. Filtrar CNPJs já na base ───────────────────────────────────────────
   const { data: existentes } = await supabase
-    .from('leads').select('cnpj').in('cnpj', cnpjsTotal)
+    .from('leads').select('cnpj').in('cnpj', cnpjsTotal.length ? cnpjsTotal : ['__noop__'])
   const setExistentes = new Set((existentes ?? []).map((r: { cnpj: string }) => r.cnpj))
   const paraEnriquecer = cnpjsTotal.filter(c => !setExistentes.has(c))
+
+  // ── 5. Avançar ponteiros — SÓ se todos os CNPJs novos cabem no lote ───────
+  //
+  // Se paraEnriquecer > MAX_ENRIQUECER, existem CNPJs que não serão processados
+  // nesta execução. Mantemos os mesmos órgãos na próxima rodada: os CNPJs já
+  // inseridos serão filtrados por setExistentes, reduzindo paraEnriquecer até
+  // caber no lote. Assim NENHUM CNPJ é perdido.
+  const todosVaoSerProcessados = paraEnriquecer.length <= MAX_ENRIQUECER
+  if (todosVaoSerProcessados) {
+    if (janelaConcluida) {
+      const proxData = new Date(fimDate)
+      proxData.setDate(proxData.getDate() + 1)
+      await supabase.from('configuracoes').upsert(
+        { chave: 'captacao_transparencia_backfill_data', valor: fmtIso(proxData) },
+        { onConflict: 'chave' }
+      )
+      await supabase.from('configuracoes').upsert(
+        { chave: 'captacao_transparencia_orgao_idx', valor: '0' },
+        { onConflict: 'chave' }
+      )
+    } else {
+      await supabase.from('configuracoes').upsert(
+        { chave: 'captacao_transparencia_orgao_idx', valor: String(novoIdx) },
+        { onConflict: 'chave' }
+      )
+    }
+  }
 
   if (!paraEnriquecer.length) {
     return NextResponse.json({
       ok: true, novos: 0, modo: modoLabel,
       cnpjs_unicos: cnpjsTotal.length, ja_na_base: setExistentes.size,
       janela_concluida: janelaConcluida,
+      ponteiro_avancou: todosVaoSerProcessados,
     })
   }
 

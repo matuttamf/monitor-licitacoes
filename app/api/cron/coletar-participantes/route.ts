@@ -266,12 +266,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
   }
 
-  // 4. Avançar ponteiro ANTES do enriquecimento (evita reprocessar se timeout)
-  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+  // 4. Avançar ponteiro — SÓ se todos os CNPJs novos cabem no lote (cap 20).
+  // Se sobrar CNPJs, mantém o mesmo período: na próxima rodada os já inseridos
+  // somem do paraEnriquecer até caber, aí o ponteiro avança. Sem perda de dados.
+  const CAP_ENRIQUECIMENTO = 20
+  const todosVaoSerProcessados = paraEnriquecer.length <= CAP_ENRIQUECIMENTO
+  if (emBackfill && todosVaoSerProcessados) await avancarPonteiro(supabase, dataFinal)
 
   // 5. Enriquecer e inserir (cap 20 para caber nos 300s)
   let inseridos = 0
-  for (const cnpj of paraEnriquecer.slice(0, 20)) {
+  for (const cnpj of paraEnriquecer.slice(0, CAP_ENRIQUECIMENTO)) {
     const dados = await enriquecerCnpj(cnpj)
     await sleep(300) // cnpj.ws sem rate limit agressivo
     if (!dados) continue
