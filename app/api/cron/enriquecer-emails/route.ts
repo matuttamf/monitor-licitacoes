@@ -354,7 +354,18 @@ export async function GET(req: NextRequest) {
     }).eq('id', lead.id)
   }
 
+  // Salva resultado da Etapa 0 imediatamente — garante que Receita stats aparecem
+  // no painel mesmo se a função for encerrada antes de terminar a Etapa 1.
+  await salvarResultadoCron(supabase, 'enriquecer-emails', {
+    ok: true,
+    enriquecidos: 0,
+    tentativas: 0,
+    fase: 'etapa0_concluida',
+    receita: { verificados: receitaVerificados, ativos: receitaAtivos, inativas: receitaInativas },
+  })
+
   // ── Etapa 1: Busca de e-mail via web para leads ATIVAS sem e-mail ─────────
+  const inicioEtapa1 = Date.now()
   const retryApos = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
@@ -367,7 +378,7 @@ export async function GET(req: NextRequest) {
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
     .gte('data_contrato', vinteAnosAtras)
     .order('data_contrato', { ascending: false })
-    .limit(50)  // 24 rodadas/dia; Google CSE esgota nas 2 primeiras, restante usa SearXNG/Bing/DDG
+    .limit(30)  // reduzido de 50→30 para caber nos 300s; roda a cada hora, suficiente
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!leads?.length) return NextResponse.json({
@@ -461,6 +472,13 @@ export async function GET(req: NextRequest) {
     }
 
     await supabase.from('leads').update(update).eq('id', lead.id)
+
+    // Saída antecipada: para com segurança se já gastou 250s (margem de 50s)
+    if (Date.now() - inicioEtapa1 > 250_000) {
+      console.log('[enriquecer-emails] tempo limite atingido, saindo antes do fim do lote')
+      break
+    }
+
     await sleep(800)
   }
 
