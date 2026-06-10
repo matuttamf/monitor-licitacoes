@@ -318,7 +318,7 @@ export async function GET(req: NextRequest) {
     lotesEmail.push(leads.slice(i, i + CONCORRENCIA_EMAIL))
   }
 
-  async function processarLead(lead: typeof leads[0]) {
+  async function processarLead(lead: NonNullable<typeof leads>[0]) {
     const query    = `"${lead.razao_social.slice(0, 45)}" ${lead.municipio ?? ''} ${lead.uf ?? ''} email contato`
     const debugLog: string[] = []
     let emailFinal: string | null = null
