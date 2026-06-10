@@ -238,18 +238,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sistema pausado' })
   }
 
-  const retryApos = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const retryApos    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  // Filtro 1: só leads dos últimos 12 meses (empresas recentes têm mais presença digital)
+  const dozeMesesAtras = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-  // Apenas leads ATIVOS (situacao = 'ATIVA') sem e-mail
+  // Filtro 2: ignorar MEI e Micro Empresa (raramente têm e-mail publicado online)
+  // Mantém porte=null (desconhecido) e porte IN ('EMPRESA DE PEQUENO PORTE','DEMAIS')
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, cnpj, razao_social, municipio, uf')
+    .select('id, cnpj, razao_social, municipio, uf, porte')
     .is('email', null)
     .eq('status', 'invalido')
-    .eq('situacao', 'ATIVA')   // ← garante que só processa empresas ATIVAS
+    .eq('situacao', 'ATIVA')
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
-    .order('created_at', { ascending: true })
-    .limit(8)
+    .gte('data_contrato', dozeMesesAtras)                                   // ← filtro 1: recentes
+    .or('porte.is.null,porte.not.in.(MEI,MICRO EMPRESA)')                  // ← filtro 2: porte
+    .order('data_contrato', { ascending: false })   // mais recentes primeiro
+    .limit(10)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!leads?.length) return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis' })
@@ -258,16 +263,40 @@ export async function GET(req: NextRequest) {
   const detalhes: Record<string, { email?: string; metodo?: string; debug: string[] }> = {}
 
   for (const lead of leads) {
-    const query   = `"${lead.razao_social.slice(0, 45)}" ${lead.municipio ?? ''} ${lead.uf ?? ''} email contato`
+    const query    = `"${lead.razao_social.slice(0, 45)}" ${lead.municipio ?? ''} ${lead.uf ?? ''} email contato`
     const debugLog: string[] = []
     let emailFinal: string | null = null
     let metodo = ''
 
+    // 0. Domínio deduzido — gratuito, zero queries de API ────────────────────
+    // Tenta deduzir o site da empresa pelo nome e buscar e-mail lá diretamente.
+    // Se funcionar, economiza toda a chamada de busca abaixo.
+    const emailsDom0 = await buscarEmailPorDominio(lead.razao_social)
+    emailFinal = melhorEmail(emailsDom0)
+    if (emailFinal) {
+      metodo = 'dominio_deduzido'
+      debugLog.push(`dominio: encontrou ${emailFinal}`)
+    } else {
+      debugLog.push('dominio: sem resultado')
+    }
+
     // 1. SearXNG ──────────────────────────────────────────────────────────────
-    const searx = await buscarSearX(query)
-    debugLog.push(searx.debug)
-    emailFinal = melhorEmail(searx.emails)
-    if (emailFinal) { metodo = 'searx_snippet' }
+    if (!emailFinal) {
+      const searx = await buscarSearX(query)
+      debugLog.push(searx.debug)
+      emailFinal = melhorEmail(searx.emails)
+      if (emailFinal) { metodo = 'searx_snippet' }
+
+      // Site via URLs do SearX
+      if (!emailFinal && searx.urls.length) {
+        for (const url of searx.urls) {
+          const es = await buscarEmailNaSite(url)
+          emailFinal = melhorEmail(es)
+          if (emailFinal) { metodo = 'searx_site'; break }
+          await sleep(300)
+        }
+      }
+    }
 
     // 2. Bing ─────────────────────────────────────────────────────────────────
     if (!emailFinal) {
@@ -277,11 +306,11 @@ export async function GET(req: NextRequest) {
       emailFinal = melhorEmail(bing.emails)
       if (emailFinal) { metodo = 'bing_snippet' }
 
-      // Tenta TODOS os URLs do Bing (não apenas o primeiro)
+      // Site via URLs do Bing
       if (!emailFinal && bing.urls.length) {
         for (const url of bing.urls) {
-          const emailsSite = await buscarEmailNaSite(url)
-          emailFinal = melhorEmail(emailsSite)
+          const es = await buscarEmailNaSite(url)
+          emailFinal = melhorEmail(es)
           if (emailFinal) { metodo = 'bing_site'; break }
           await sleep(300)
         }
@@ -296,32 +325,15 @@ export async function GET(req: NextRequest) {
       emailFinal = melhorEmail(ddg.emails)
       if (emailFinal) { metodo = 'ddg_snippet' }
 
-      // Tenta TODOS os URLs do DDG
+      // Site via URLs do DDG
       if (!emailFinal && ddg.urls.length) {
         for (const url of ddg.urls) {
-          const emailsSite = await buscarEmailNaSite(url)
-          emailFinal = melhorEmail(emailsSite)
+          const es = await buscarEmailNaSite(url)
+          emailFinal = melhorEmail(es)
           if (emailFinal) { metodo = 'ddg_site'; break }
           await sleep(300)
         }
       }
-    }
-
-    // 4. Site via TODOS os URLs do SearX ─────────────────────────────────────
-    if (!emailFinal && searx.urls.length) {
-      for (const url of searx.urls) {
-        const emailsSite = await buscarEmailNaSite(url)
-        emailFinal = melhorEmail(emailsSite)
-        if (emailFinal) { metodo = 'searx_site'; break }
-        await sleep(300)
-      }
-    }
-
-    // 5. Domínio deduzido ─────────────────────────────────────────────────────
-    if (!emailFinal) {
-      const emailsDom = await buscarEmailPorDominio(lead.razao_social)
-      emailFinal = melhorEmail(emailsDom)
-      if (emailFinal) { metodo = 'dominio_deduzido' }
     }
 
     // Atualiza o lead ─────────────────────────────────────────────────────────
