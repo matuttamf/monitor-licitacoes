@@ -8,7 +8,7 @@
  *  3. SearXNG (instâncias públicas, fallback)
  *  4. Bing HTML scraping (fallback)
  *
- * A Etapa 0 (Receita Federal) foi separada para enriquecer-receita (*/5 min).
+ * A Etapa 0 (Receita Federal) foi separada para enriquecer-receita (a cada 5min).
  * Leads enriquecidos → status 'pendente'. Retry somente após 7 dias.
  */
 
