@@ -27,20 +27,42 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, matches: 0, debug: 'sem keywords' })
   }
 
+  // Buscar timestamp do último matching bem-sucedido
+  const { data: cfgUltimoMatching } = await supabase
+    .from('configuracoes')
+    .select('valor')
+    .eq('chave', 'ultimo_matching_em')
+    .maybeSingle()
+
+  // Se nunca rodou, busca dos últimos 90 dias. Caso contrário, só novas desde então.
+  const ultimoMatching: string | null = cfgUltimoMatching?.valor ?? null
+  const agora = new Date().toISOString()
+
   // Pré-filtro textual nas licitações abertas
   const termos   = [...new Set(keywords.map(k => k.termo.toLowerCase()))]
   const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
   const hoje     = new Date().toISOString().substring(0, 10)
 
-  // Busca licitações ainda não abertas — upsert (licitacao+keyword) garante idempotência
-  const { data: candidatos } = await supabase
+  // Busca licitações ainda não abertas, coletadas desde o último matching
+  let query = supabase
     .from('licitacoes')
     .select('id, objeto, data_abertura, estado, valor_estimado')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
     .or(filtroOr)
 
+  if (ultimoMatching) {
+    query = query.gte('coletado_em', ultimoMatching) as typeof query
+  }
+
+  const { data: candidatos } = await query
+
   if (!candidatos?.length) {
-    return NextResponse.json({ ok: true, matches: 0, candidatos: 0 })
+    // Atualiza o timestamp mesmo sem candidatos para não reprocessar
+    await supabase.from('configuracoes').upsert(
+      { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
+      { onConflict: 'chave' }
+    )
+    return NextResponse.json({ ok: true, matches: 0, candidatos: 0, ultimoMatching })
   }
 
   console.log(`Matching: ${candidatos.length} candidatos, ${keywords.length} keywords`)
@@ -68,8 +90,8 @@ export async function GET(request: Request) {
   )
 
   // Mapas auxiliares
-  const kwMap      = Object.fromEntries(keywords.map(k => [k.id, k]))
-  const licMap     = Object.fromEntries(candidatos.map(c => [c.id, c]))
+  const kwMap  = Object.fromEntries(keywords.map(k => [k.id, k]))
+  const licMap = Object.fromEntries(candidatos.map(c => [c.id, c]))
 
   // Construir alertas com score
   const alertasParaSalvar: {
@@ -90,7 +112,6 @@ export async function GET(request: Request) {
       const kw = kwMap[kid]
       if (!kw) continue
 
-      // Filtro de região (exclui totalmente se fora)
       if (!estadoCompativelComRegioes(lic.estado, kw.regiao)) continue
 
       const minValor = minValorMap[kw.user_id] ?? 0
@@ -106,10 +127,8 @@ export async function GET(request: Request) {
         maxValorInteresse: maxValor,
       })
 
-      // null = valor acima do máximo → descarta
       if (!s) continue
 
-      // Salva todo match confirmado pelo Gemini (score usado só para ordenação)
       alertasParaSalvar.push({
         licitacao_id:  m.licitacao_id,
         keyword_id:    kid,
@@ -122,7 +141,7 @@ export async function GET(request: Request) {
     }
   }
 
-  console.log(`Gemini: ${lotes} lotes, ${lotesComErro} erros, ${matches.length} matches brutos, ${alertasParaSalvar.length} alertas salvos`)
+  console.log(`Gemini: ${lotes} lotes, ${lotesComErro} erros, ${matches.length} matches brutos, ${alertasParaSalvar.length} alertas`)
 
   // Contagem de alertas por usuário para diagnóstico
   const alertasPorUsuario: Record<string, number> = {}
@@ -132,13 +151,11 @@ export async function GET(request: Request) {
   }
 
   if (alertasParaSalvar.length > 0) {
-    // upsert: se já existe (licitacao+keyword), atualiza o score
     await supabase.from('alertas').upsert(
       alertasParaSalvar,
       { onConflict: 'licitacao_id,keyword_id', ignoreDuplicates: false }
     )
 
-    // Disparar envio de alertas
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     fetch(`${appUrl}/api/cron/alertar`, {
       method:  'GET',
@@ -146,12 +163,20 @@ export async function GET(request: Request) {
     }).catch(console.error)
   }
 
+  // Avançar o ponteiro de matching para agora
+  await supabase.from('configuracoes').upsert(
+    { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
+    { onConflict: 'chave' }
+  )
+
   const resultado = {
     ok: true,
     candidatos:       candidatos.length,
     matchesBrutos:    matches.length,
     alertasSalvos:    alertasParaSalvar.length,
     alertasPorUsuario,
+    incremental:      !!ultimoMatching,
+    ultimoMatching,
     gemini: { lotes, lotesComErro, primeiroErro: erros[0] ?? null },
   }
 
