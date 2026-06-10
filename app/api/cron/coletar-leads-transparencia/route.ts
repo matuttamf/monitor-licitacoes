@@ -126,7 +126,7 @@ async function buscarContratos(
       console.log(`[transparencia] GET ${url}`)
 
       const res = await fetch(url, {
-        headers: { Accept: 'application/json', 'Authorization': apiKey },
+        headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
         signal: AbortSignal.timeout(20000),
       })
 

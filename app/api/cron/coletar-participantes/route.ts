@@ -72,15 +72,22 @@ interface CnpjWs {
   uf?:                           string
 }
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+async function fetchJson<T>(url: string): Promise<{ data: T | null; status: number; body: string }> {
   try {
     const res = await fetch(url, {
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(15000),
     })
-    if (!res.ok) return null
-    return await res.json() as T
-  } catch { return null }
+    const body = await res.text()
+    if (!res.ok) return { data: null, status: res.status, body: body.slice(0, 200) }
+    try {
+      return { data: JSON.parse(body) as T, status: res.status, body: '' }
+    } catch {
+      return { data: null, status: res.status, body: body.slice(0, 200) }
+    }
+  } catch (e) {
+    return { data: null, status: 0, body: String(e) }
+  }
 }
 
 // codigoModalidadeContratacao é obrigatório — iteramos pelas 4 principais
@@ -92,35 +99,40 @@ function toIso(d: string): string {
   return d.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
 }
 
-async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<Contratacao[]> {
+interface BuscarProcessosResult {
+  processos: Contratacao[]
+  debug: { url: string; status: number; body: string }[]
+}
+
+async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<BuscarProcessosResult> {
   const vistos = new Set<string>()
   const resultado: Contratacao[] = []
+  const debugLogs: { url: string; status: number; body: string }[] = []
   const di = toIso(dataInicial)
   const df = toIso(dataFinal)
 
   for (const mod of MODALIDADES) {
     const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${di}&dataFinal=${df}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
-    const json = await fetchJson<{ data?: Contratacao[] }>(url)
-    const itens = json?.data ?? []
+    const { data: json, status, body } = await fetchJson<{ data?: Contratacao[] }>(url)
+    debugLogs.push({ url, status, body: body || `ok, itens=${(json?.data ?? []).length}` })
 
+    const itens = json?.data ?? []
     for (const c of itens) {
-      // cnpjOrgao fica em orgaoEntidade.cnpj conforme spec da API
       const cnpj = c.orgaoEntidade?.cnpj ?? c.cnpjOrgao
       if (!cnpj || !c.anoCompra || !c.sequencialCompra) continue
       const chave = `${cnpj}-${c.anoCompra}-${c.sequencialCompra}`
       if (vistos.has(chave)) continue
       vistos.add(chave)
-      // normaliza cnpjOrgao para uso nas sub-chamadas
       resultado.push({ ...c, cnpjOrgao: cnpj })
     }
   }
 
-  return resultado
+  return { processos: resultado, debug: debugLogs }
 }
 
 async function buscarItens(cnpjOrgao: string, ano: number, seq: number): Promise<ItemCompra[]> {
   const url = `${PNCP_BASE}/orgaos/${cnpjOrgao}/compras/${ano}/${seq}/itens`
-  const json = await fetchJson<{ data?: ItemCompra[] } | ItemCompra[]>(url)
+  const { data: json } = await fetchJson<{ data?: ItemCompra[] } | ItemCompra[]>(url)
   if (!json) return []
   if (Array.isArray(json)) return json
   return json.data ?? []
@@ -128,7 +140,7 @@ async function buscarItens(cnpjOrgao: string, ano: number, seq: number): Promise
 
 async function buscarPropostas(cnpjOrgao: string, ano: number, seq: number, item: number): Promise<Proposta[]> {
   const url = `${PNCP_BASE}/orgaos/${cnpjOrgao}/compras/${ano}/${seq}/itens/${item}/propostas`
-  const json = await fetchJson<{ data?: Proposta[] } | Proposta[]>(url)
+  const { data: json } = await fetchJson<{ data?: Proposta[] } | Proposta[]>(url)
   if (!json) return []
   if (Array.isArray(json)) return json
   return json.data ?? []
@@ -202,12 +214,12 @@ export async function GET(req: NextRequest) {
   console.log(`[coletar-participantes] modo=${modoLabel}`)
 
   // 1. Buscar processos licitatórios do período
-  const processos = await buscarProcessos(dataInicial, dataFinal)
+  const { processos, debug: pncpDebug } = await buscarProcessos(dataInicial, dataFinal)
   console.log(`[coletar-participantes] ${processos.length} processos encontrados`)
 
   if (!processos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)
-    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, processos: 0 })
+    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, processos: 0, pncp_debug: pncpDebug })
   }
 
   // 2. Para cada processo → itens → propostas → CNPJs
