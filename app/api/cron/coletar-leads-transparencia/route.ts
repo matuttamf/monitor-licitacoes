@@ -233,7 +233,9 @@ export async function GET(req: NextRequest) {
 
   if (!contratos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
-    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, contratos: 0 })
+    // Retorna URL chamada para diagnóstico visível no painel admin
+    const urlDiag = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=500`
+    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, contratos: 0, url_testada: urlDiag })
   }
 
   // ── 2. Extrair CNPJs únicos de fornecedores ───────────────────────────────
