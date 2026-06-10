@@ -18,16 +18,25 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
     titulo: undefined,
   }))
 
-  // upsert: atualiza url, valor, datas se já existir (fonte + numero_edital são unique)
-  const { data, error } = await supabase
+  // 1. Verifica quais já existem (para contar novas inserções)
+  const chaves = normalizadas.map(l => `${l.fonte}__${l.numero_edital}`)
+  const { count: existentes } = await supabase
+    .from('licitacoes')
+    .select('id', { count: 'exact', head: true })
+    .in('numero_edital', normalizadas.map(l => l.numero_edital!))
+
+  // 2. upsert: atualiza url, valor, datas se já existir (fonte + numero_edital são unique)
+  const { error } = await supabase
     .from('licitacoes')
     .upsert(normalizadas, { onConflict: 'fonte,numero_edital', ignoreDuplicates: false })
-    .select('id')
 
   if (error) {
     console.error('Erro ao salvar licitações:', error.message)
     return 0
   }
 
-  return data?.length ?? 0
+  // novas = total upsertado − existentes (aproximação; ignoreDuplicates=false faz update em todos)
+  const novas = Math.max(0, normalizadas.length - (existentes ?? 0))
+  console.log(`salvarLicitacoes: ${normalizadas.length} processadas, ~${novas} novas, ~${existentes ?? 0} atualizadas`)
+  return novas
 }
