@@ -510,7 +510,7 @@ export default function CaptacaoPage() {
                   <span style={{ color: ok ? '#059669' : '#dc2626', fontWeight: 700, minWidth: 14 }}>{ok ? '✓' : '✗'}</span>
                   <div className="flex-1 min-w-0">
                     <span className="font-semibold" style={{ color: 'var(--escuro)' }}>{id}</span>
-                    {modo && <span style={{ color: 'var(--cinza)', marginLeft: 6 }}>{String(modo).slice(0, 60)}</span>}
+                    {modo != null && <span style={{ color: 'var(--cinza)', marginLeft: 6 }}>{String(modo).slice(0, 60)}</span>}
                     {resumo && <div style={{ color: ok ? '#065f46' : '#991b1b', marginTop: 1 }}>{resumo}</div>}
                   </div>
                   <span style={{ color: 'var(--cinza)', whiteSpace: 'nowrap', flexShrink: 0 }}>{ago}</span>

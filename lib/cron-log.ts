@@ -1,10 +1,29 @@
 /**
- * Salva o resultado da última execução de um cron em `configuracoes`.
- * O painel admin lê essas chaves para exibir status de cada cron.
+ * Utilitários de log para cron jobs.
  *
- * Chave: `ultimo_resultado_<cronId>`
- * Valor: JSON { ok, ts, erro?, ...demais campos do resultado }
+ * - `registrarCronLog`: insere linha na tabela `cron_logs` (histórico)
+ * - `salvarResultadoCron`: upsert na tabela `configuracoes` (última execução,
+ *   lida pelo painel admin)
  */
+
+import { createServiceClient } from '@/lib/supabase/server'
+
+export async function registrarCronLog({
+  job,
+  status,
+  mensagem,
+  detalhes,
+}: {
+  job: string
+  status: 'ok' | 'erro' | 'ignorado'
+  mensagem?: string
+  detalhes?: Record<string, unknown>
+}) {
+  try {
+    const supabase = await createServiceClient()
+    await supabase.from('cron_logs').insert({ job, status, mensagem, detalhes })
+  } catch { /* não deixa falha de log derrubar o cron */ }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function salvarResultadoCron(supabase: any, cronId: string, resultado: Record<string, unknown>) {
