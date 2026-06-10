@@ -2,24 +2,20 @@
  * Cron: enriquecer-emails
  * Horário: a cada 30 minutos
  *
- * Para leads com email=null (status='invalido') E situacao='ATIVA',
- * tenta encontrar o e-mail corporativo:
+ * Etapa 1: Para leads ATIVAS sem e-mail, tenta encontrar o e-mail corporativo via:
+ *  1. Domínio deduzido do nome (sem quota)
+ *  2. Google Custom Search JSON API (100/dia)
+ *  3. SearXNG (instâncias públicas, fallback)
+ *  4. Bing HTML scraping (fallback)
  *
- *  1. SearXNG (instâncias públicas, retorna JSON)
- *  2. Bing HTML scraping
- *  3. DuckDuckGo HTML scraping
- *  4. Fetch direto de site da empresa (/contato, /sobre...)
- *  5. Domínio deduzido do nome
- *
- * Apenas leads com situacao='ATIVA' são processados.
- * Leads enriquecidos → status 'pendente'.
- * Retry somente após 7 dias.
+ * A Etapa 0 (Receita Federal) foi separada para enriquecer-receita (*/5 min).
+ * Leads enriquecidos → status 'pendente'. Retry somente após 7 dias.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
-import { trackGoogleCSE, trackEnrichment } from '@/lib/uso-apis'
+import { trackGoogleCSE } from '@/lib/uso-apis'
 import { salvarResultadoCron } from '@/lib/cron-log'
 
 export const maxDuration = 300
@@ -273,19 +269,6 @@ async function buscarEmailPorDominio(razao: string): Promise<string[]> {
   return []
 }
 
-const MINHARECEITA = 'https://minhareceita.org'
-
-async function enriquecerReceita(cnpj: string) {
-  try {
-    const res = await fetch(`${MINHARECEITA}/${cnpj}`, {
-      headers: { Accept: 'application/json', 'User-Agent': 'MonitorLicitacoes/1.0' },
-      signal: AbortSignal.timeout(15000),
-    })
-    if (!res.ok) return null
-    return await res.json()
-  } catch { return null }
-}
-
 // ── Handler ──────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
@@ -303,72 +286,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sistema pausado' })
   }
 
-  // ── Etapa 0: Receita Federal para leads com situacao IS NULL ─────────────
-  // Processamento paralelo em lotes de 5 — ~5× mais rápido que sequencial.
-  const { data: semReceita } = await supabase
-    .from('leads')
-    .select('id, cnpj')
-    .is('situacao', null)
-    .eq('status', 'invalido')
-    .limit(120)
-
-  let receitaVerificados = 0, receitaAtivos = 0, receitaInativas = 0
-
-  const CONCORRENCIA_RECEITA = 5
-  const lotesSemReceita = []
-  for (let i = 0; i < (semReceita ?? []).length; i += CONCORRENCIA_RECEITA) {
-    lotesSemReceita.push((semReceita ?? []).slice(i, i + CONCORRENCIA_RECEITA))
-  }
-
-  for (const lote of lotesSemReceita) {
-    await Promise.all(lote.map(async lead => {
-      const dados = await enriquecerReceita(lead.cnpj)
-      if (!dados) return
-
-      receitaVerificados++
-      const emailRaw = dados.email?.trim()
-      const ativa = dados.situacao_cadastral === 2
-
-      if (!ativa) {
-        receitaInativas++
-        await supabase.from('leads').update({
-          razao_social: dados.razao_social ?? lead.cnpj,
-          situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
-          cnae:         dados.cnae_fiscal_descricao ?? null,
-          porte:        dados.porte ?? null,
-          status:       'invalido',
-        }).eq('id', lead.id)
-        return
-      }
-
-      receitaAtivos++
-      await supabase.from('leads').update({
-        razao_social:  dados.razao_social,
-        nome_fantasia: dados.nome_fantasia ?? null,
-        email:         emailRaw ? emailRaw.toLowerCase() : null,
-        telefone:      dados.ddd_telefone_1 ?? null,
-        municipio:     dados.municipio ?? null,
-        uf:            dados.uf ?? null,
-        situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
-        porte:         dados.porte ?? null,
-        cnae:          dados.cnae_fiscal_descricao ?? null,
-        status:        emailRaw ? 'pendente' : 'invalido',
-      }).eq('id', lead.id)
-    }))
-    await sleep(200)   // pausa curta entre lotes para não sobrecarregar a API
-  }
-
-  // Salva resultado da Etapa 0 imediatamente — garante que Receita stats aparecem
-  // no painel mesmo se a função for encerrada antes de terminar a Etapa 1.
-  await salvarResultadoCron(supabase, 'enriquecer-emails', {
-    ok: true,
-    enriquecidos: 0,
-    tentativas: 0,
-    fase: 'etapa0_concluida',
-    receita: { verificados: receitaVerificados, ativos: receitaAtivos, inativas: receitaInativas },
-  })
-
-  // ── Etapa 1: Busca de e-mail via web para leads ATIVAS sem e-mail ─────────
+  // Etapa 0 (Receita Federal) foi movida para enriquecer-receita (*/5 min).
+  // Este cron faz apenas a busca web de e-mail para leads ATIVAS sem e-mail.
   const inicioEtapa1 = Date.now()
   const retryApos = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -387,7 +306,6 @@ export async function GET(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!leads?.length) return NextResponse.json({
     ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis para e-mail',
-    receita: { verificados: receitaVerificados, ativos: receitaAtivos, inativas: receitaInativas },
   })
 
   let enriquecidos = 0
@@ -491,10 +409,9 @@ export async function GET(req: NextRequest) {
   }
 
   const resultado = {
-    ok:          true,
+    ok:         true,
     enriquecidos,
-    tentativas:  leads.length,
-    receita: { verificados: receitaVerificados, ativos: receitaAtivos, inativas: receitaInativas },
+    tentativas: leads.length,
   }
   await salvarResultadoCron(supabase, 'enriquecer-emails', resultado)
   return NextResponse.json({ ...resultado, detalhes })
