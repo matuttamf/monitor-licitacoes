@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { LicitacaoRaw } from '@/lib/scrapers/types'
+import { verificarCronAuth } from '@/lib/cron-auth'
 
 // ── Camada 1 — Federais obrigatórios ──────────────────────────────────────
 import { coletarPNCP }             from '@/lib/scrapers/pncp'
@@ -206,8 +207,7 @@ export const maxDuration = 300
 const TOTAL_FONTES = 346
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 

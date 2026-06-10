@@ -238,7 +238,7 @@ export async function GET(req: NextRequest) {
   if (!contratos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
     // Retorna URL chamada para diagnóstico visível no painel admin
-    const urlDiag = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=500`
+    const urlDiag = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=100`
     return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, contratos: 0, url_testada: urlDiag })
   }
 

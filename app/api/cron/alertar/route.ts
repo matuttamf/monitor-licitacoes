@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { verificarCronAuth } from '@/lib/cron-auth'
 import { enviarAlertaEmailUsuario } from '@/lib/alerts/email'
 import { registrarCronLog } from '@/lib/cron-log'
 import { getLimites, HORARIOS_POR_QTD } from '@/lib/planos'
@@ -26,8 +27,7 @@ function horarioPermitidoParaUsuario(emailsPorDia: number, horaBRT: number): boo
 }
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 

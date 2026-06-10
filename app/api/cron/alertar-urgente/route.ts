@@ -9,6 +9,7 @@
 
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { verificarCronAuth } from '@/lib/cron-auth'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
 import { enviarAlertaWhatsApp } from '@/lib/alerts/whatsapp'
 import { registrarCronLog } from '@/lib/cron-log'
@@ -25,8 +26,7 @@ function dentroDoHorario(): boolean {
 }
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
