@@ -4,6 +4,7 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { calcularScore } from '@/lib/scoring'
 import { estadoCompativelComRegioes } from '@/lib/regioes'
+import { salvarResultadoCron } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -123,6 +124,13 @@ export async function GET(request: Request) {
 
   console.log(`Gemini: ${lotes} lotes, ${lotesComErro} erros, ${matches.length} matches brutos, ${alertasParaSalvar.length} alertas salvos`)
 
+  // Contagem de alertas por usuário para diagnóstico
+  const alertasPorUsuario: Record<string, number> = {}
+  for (const a of alertasParaSalvar) {
+    const kw = kwMap[a.keyword_id]
+    if (kw?.user_id) alertasPorUsuario[kw.user_id] = (alertasPorUsuario[kw.user_id] ?? 0) + 1
+  }
+
   if (alertasParaSalvar.length > 0) {
     // upsert: se já existe (licitacao+keyword), atualiza o score
     await supabase.from('alertas').upsert(
@@ -138,11 +146,16 @@ export async function GET(request: Request) {
     }).catch(console.error)
   }
 
-  return NextResponse.json({
+  const resultado = {
     ok: true,
     candidatos:       candidatos.length,
     matchesBrutos:    matches.length,
     alertasSalvos:    alertasParaSalvar.length,
+    alertasPorUsuario,
     gemini: { lotes, lotesComErro, primeiroErro: erros[0] ?? null },
-  })
+  }
+
+  await salvarResultadoCron(supabase, 'matching', resultado)
+
+  return NextResponse.json(resultado)
 }
