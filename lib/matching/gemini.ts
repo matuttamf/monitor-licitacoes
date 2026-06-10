@@ -29,8 +29,8 @@ export async function encontrarMatchesDetalhado(
   const erros: string[] = []
   const termosTexto = keywords.map(k => `"${k.termo}"`).join(', ')
 
-  for (let i = 0; i < licitacoes.length; i += 10) {
-    const lote = licitacoes.slice(i, i + 10)
+  for (let i = 0; i < licitacoes.length; i += 50) {
+    const lote = licitacoes.slice(i, i + 50)
 
     const prompt = `Você é um especialista em licitações públicas brasileiras. Analise cada licitação e identifique quais palavras-chave correspondem ao TEMA PRINCIPAL do que está sendo contratado.
 
@@ -66,7 +66,7 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
           // @ts-expect-error - thinkingConfig é suportado no gemini-2.5-flash mas não está nos tipos ainda
           thinkingConfig: { thinkingBudget: 0 },
         },
@@ -93,13 +93,13 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       erros.push(msg)
-      console.error(`Gemini lote ${i / 10 + 1} erro:`, msg)
+      console.error(`Gemini lote ${Math.floor(i / 50) + 1} erro:`, msg)
     }
 
     await new Promise(r => setTimeout(r, 100))
   }
 
-  const lotes = Math.ceil(licitacoes.length / 10)
+  const lotes = Math.ceil(licitacoes.length / 50)
   console.log(`Gemini concluído: ${lotes} lotes, ${erros.length} erros, ${resultados.length} matches`)
   return { resultados, erros, lotes, lotesComErro: erros.length }
 }
