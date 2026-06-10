@@ -221,8 +221,8 @@ export async function GET(req: NextRequest) {
   // Garante progresso mesmo que a função estoure o timeout durante o BrasilAPI.
   if (emBackfill) await avancarPonteiro(supabase, dataFinal)
 
-  // ── 5. Enriquecer via BrasilAPI e inserir (até 20 por execução) ───────────
-  const LOTE = 20  // reduzido para caber nos 300s de maxDuration
+  // ── 5. Enriquecer via BrasilAPI e inserir (até 50 por execução) ───────────
+  const LOTE = 50  // minhareceita.org é rápida; 50 CNPJs ≈ ~50s dentro dos 300s
   let inseridos = 0
   let brasilApiOk = 0, brasilApiNull = 0, inativas = 0
 

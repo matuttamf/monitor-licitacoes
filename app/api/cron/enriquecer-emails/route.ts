@@ -109,23 +109,37 @@ async function buscarSearX(query: string): Promise<{ emails: string[]; urls: str
 async function buscarBing(query: string): Promise<{ emails: string[]; urls: string[]; debug: string }> {
   try {
     const q = encodeURIComponent(query)
-    const res = await fetch(`https://www.bing.com/search?q=${q}&setlang=pt-BR`, {
+    const res = await fetch(`https://www.bing.com/search?q=${q}&setlang=pt-BR&cc=BR`, {
       headers: {
         'User-Agent': UA,
-        'Accept': 'text/html',
-        'Accept-Language': 'pt-BR,pt;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        'Cookie': 'SRCHHPGUSR=SRCHLANG=pt',
       },
       signal: AbortSignal.timeout(12000),
     })
     if (!res.ok) return { emails: [], urls: [], debug: `bing: HTTP ${res.status}` }
     const html = await res.text()
+
+    // Detecta página de captcha/bot
+    if (html.includes('g.live.com/OR/') || html.includes('captcha') || html.length < 2000) {
+      return { emails: [], urls: [], debug: `bing: bloqueado (captcha ou HTML curto: ${html.length}b)` }
+    }
+
     const emails = extrairEmails(html)
-    // Extrai URLs dos snippets do Bing
-    const urlMatches = [...html.matchAll(/href="(https?:\/\/[^"?#]+)[^"]*"/g)]
-      .map(m => m[1])
+
+    // Bing usa <cite> para mostrar a URL real dos resultados orgânicos
+    const citeMatches = [...html.matchAll(/<cite[^>]*>(https?:\/\/[^<]+)<\/cite>/gi)]
+      .map(m => m[1].trim())
       .filter(u => !u.includes('bing.com') && !u.includes('microsoft.com'))
-      .slice(0, 3)
-    return { emails, urls: urlMatches, debug: `bing: ok (${emails.length} emails encontrados)` }
+
+    // Fallback: href direto de links externos
+    const hrefMatches = [...html.matchAll(/href="(https?:\/\/(?!www\.bing\.com|microsoft\.com)[^"?#]{10,80})"/g)]
+      .map(m => m[1])
+      .filter(u => !u.includes('bing.com') && !u.includes('microsoft.com') && !u.includes('msn.com'))
+
+    const urls = [...new Set([...citeMatches, ...hrefMatches])].slice(0, 4)
+    return { emails, urls, debug: `bing: ok (${emails.length} emails, ${urls.length} urls, html=${html.length}b)` }
   } catch (e) {
     return { emails: [], urls: [], debug: `bing: ${String(e).slice(0, 80)}` }
   }
@@ -263,11 +277,14 @@ export async function GET(req: NextRequest) {
       emailFinal = melhorEmail(bing.emails)
       if (emailFinal) { metodo = 'bing_snippet' }
 
-      // Site via Bing URL
+      // Tenta TODOS os URLs do Bing (não apenas o primeiro)
       if (!emailFinal && bing.urls.length) {
-        const emailsSite = await buscarEmailNaSite(bing.urls[0])
-        emailFinal = melhorEmail(emailsSite)
-        if (emailFinal) { metodo = 'bing_site' }
+        for (const url of bing.urls) {
+          const emailsSite = await buscarEmailNaSite(url)
+          emailFinal = melhorEmail(emailsSite)
+          if (emailFinal) { metodo = 'bing_site'; break }
+          await sleep(300)
+        }
       }
     }
 
@@ -279,18 +296,25 @@ export async function GET(req: NextRequest) {
       emailFinal = melhorEmail(ddg.emails)
       if (emailFinal) { metodo = 'ddg_snippet' }
 
+      // Tenta TODOS os URLs do DDG
       if (!emailFinal && ddg.urls.length) {
-        const emailsSite = await buscarEmailNaSite(ddg.urls[0])
-        emailFinal = melhorEmail(emailsSite)
-        if (emailFinal) { metodo = 'ddg_site' }
+        for (const url of ddg.urls) {
+          const emailsSite = await buscarEmailNaSite(url)
+          emailFinal = melhorEmail(emailsSite)
+          if (emailFinal) { metodo = 'ddg_site'; break }
+          await sleep(300)
+        }
       }
     }
 
-    // 4. Site via SearX URL ───────────────────────────────────────────────────
+    // 4. Site via TODOS os URLs do SearX ─────────────────────────────────────
     if (!emailFinal && searx.urls.length) {
-      const emailsSite = await buscarEmailNaSite(searx.urls[0])
-      emailFinal = melhorEmail(emailsSite)
-      if (emailFinal) { metodo = 'searx_site' }
+      for (const url of searx.urls) {
+        const emailsSite = await buscarEmailNaSite(url)
+        emailFinal = melhorEmail(emailsSite)
+        if (emailFinal) { metodo = 'searx_site'; break }
+        await sleep(300)
+      }
     }
 
     // 5. Domínio deduzido ─────────────────────────────────────────────────────
