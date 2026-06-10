@@ -266,7 +266,7 @@ export async function GET(req: NextRequest) {
   // contrato — enriquecer-emails buscará Receita + e-mail nas próximas rodadas.
   // Se inativa (baixada/suspensa): salva situacao, mantém status='invalido'.
   const LOTE = 50
-  let atualizados = 0, brasilApiOk = 0, brasilApiNull = 0, inativas = 0
+  let comEmail = 0, situacaoAtualizada = 0, brasilApiOk = 0, brasilApiNull = 0, inativas = 0
 
   // Para atualização de e-mail nos leads já existentes (paraAtuEmail)
   const todoEnriquecimento = [...paraInserir, ...paraAtuEmail]
@@ -298,16 +298,17 @@ export async function GET(req: NextRequest) {
         cnae, porte: dados.porte ?? null,
         status: 'invalido',
       }).eq('cnpj', cnpj).is('situacao', null)  // só se ainda não verificada
+      situacaoAtualizada++
       continue
     }
 
     if (!ehNovo) {
       // Lead existente — só atualiza e-mail se encontrou um agora
-      if (!emailRaw) continue
+      if (!emailRaw) { situacaoAtualizada++; continue }
       const { error } = await supabase.from('leads')
         .update({ email: emailRaw.toLowerCase(), status: 'pendente' })
         .eq('cnpj', cnpj).is('email', null)
-      if (!error) atualizados++
+      if (!error) { comEmail++; situacaoAtualizada++ }
       continue
     }
 
@@ -329,19 +330,22 @@ export async function GET(req: NextRequest) {
       cnae, segmento: mapearSegmento(cnae), modalidade,
       status:        emailRaw ? 'pendente' : 'invalido',
     }).eq('cnpj', cnpj)
-    if (error) console.error('[coletar-leads] update error:', error.message)
-    else if (emailRaw) atualizados++
+    if (!error) {
+      situacaoAtualizada++
+      if (emailRaw) comEmail++
+    } else {
+      console.error('[coletar-leads] update error:', error.message)
+    }
   }
 
-  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} salvos, ${atualizados} enriquecidos`)
+  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} salvos, ${situacaoAtualizada} receita-ok, ${comEmail} com-email`)
   const resultado = {
     ok: true,
     modo: modoLabel,
     salvos: inseridos,
-    enriquecidos: atualizados,
-    total_contratos_pncp: contratos.length,
     cnpjs_novos: paraInserir.length,
-    enriquecimento: { ok: brasilApiOk, null: brasilApiNull, inativas },
+    total_contratos_pncp: contratos.length,
+    receita: { ok: brasilApiOk, sem_resposta: brasilApiNull, inativas, com_email: comEmail, situacao_atualizada: situacaoAtualizada },
   }
   await salvarResultadoCron(supabase, 'coletar-leads', resultado)
   return NextResponse.json(resultado)
