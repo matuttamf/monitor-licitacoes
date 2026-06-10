@@ -41,8 +41,10 @@ const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
 const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
 
 interface Contratacao {
-  cnpjOrgao:        string
-  anoCompra:        number
+  // cnpjOrgao NÃO é campo direto — está em orgaoEntidade.cnpj
+  orgaoEntidade?: { cnpj?: string }
+  cnpjOrgao?:     string  // presente em alguns formatos de resposta
+  anoCompra:      number
   sequencialCompra: number
 }
 
@@ -80,11 +82,32 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   } catch { return null }
 }
 
+// codigoModalidadeContratacao é obrigatório — iteramos pelas 4 principais
+// 6=Pregão Eletrônico, 8=Dispensa, 9=Inexigibilidade, 4=Concorrência Eletrônica
+const MODALIDADES = [6, 8, 9, 4]
+
 async function buscarProcessos(dataInicial: string, dataFinal: string): Promise<Contratacao[]> {
-  const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
-  const json = await fetchJson<{ data?: Contratacao[] }>(url)
-  const itens = json?.data ?? []
-  return itens.filter(c => c.cnpjOrgao && c.anoCompra && c.sequencialCompra)
+  const vistos = new Set<string>()
+  const resultado: Contratacao[] = []
+
+  for (const mod of MODALIDADES) {
+    const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&codigoModalidadeContratacao=${mod}&pagina=1&tamanhoPagina=${MAX_PROCESSOS}`
+    const json = await fetchJson<{ data?: Contratacao[] }>(url)
+    const itens = json?.data ?? []
+
+    for (const c of itens) {
+      // cnpjOrgao fica em orgaoEntidade.cnpj conforme spec da API
+      const cnpj = c.orgaoEntidade?.cnpj ?? c.cnpjOrgao
+      if (!cnpj || !c.anoCompra || !c.sequencialCompra) continue
+      const chave = `${cnpj}-${c.anoCompra}-${c.sequencialCompra}`
+      if (vistos.has(chave)) continue
+      vistos.add(chave)
+      // normaliza cnpjOrgao para uso nas sub-chamadas
+      resultado.push({ ...c, cnpjOrgao: cnpj })
+    }
+  }
+
+  return resultado
 }
 
 async function buscarItens(cnpjOrgao: string, ano: number, seq: number): Promise<ItemCompra[]> {
