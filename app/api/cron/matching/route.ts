@@ -27,45 +27,84 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, matches: 0, debug: 'sem keywords' })
   }
 
-  // Buscar timestamp do último matching bem-sucedido
-  const { data: cfgUltimoMatching } = await supabase
+  // Ponteiro global do último matching incremental
+  const { data: cfgUltimo } = await supabase
     .from('configuracoes')
     .select('valor')
     .eq('chave', 'ultimo_matching_em')
     .maybeSingle()
-
-  // Se nunca rodou, busca dos últimos 90 dias. Caso contrário, só novas desde então.
-  const ultimoMatching: string | null = cfgUltimoMatching?.valor ?? null
+  const ultimoMatching: string | null = cfgUltimo?.valor ?? null
   const agora = new Date().toISOString()
 
-  // Pré-filtro textual nas licitações abertas
-  const termos   = [...new Set(keywords.map(k => k.termo.toLowerCase()))]
-  const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
-  const hoje     = new Date().toISOString().substring(0, 10)
+  // Usuários com keywords ativas
+  const userIds = [...new Set(keywords.map(k => k.user_id).filter(Boolean))]
 
-  // Busca licitações ainda não abertas, coletadas desde o último matching
-  let query = supabase
-    .from('licitacoes')
-    .select('id, objeto, data_abertura, estado, valor_estimado')
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-    .or(filtroOr)
+  // Identificar novos usuários (nunca tiveram matching inicial)
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, matching_inicial_em, min_valor_interesse, max_valor_interesse')
+    .in('id', userIds)
 
-  if (ultimoMatching) {
-    query = query.gte('coletado_em', ultimoMatching) as typeof query
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+  const novosUserIds = new Set(
+    userIds.filter(uid => !profileMap[uid]?.matching_inicial_em)
+  )
+
+  // ── Candidatos para novos usuários: todo o banco aberto ──────────────────
+  const termosNovos = [...new Set(
+    keywords.filter(k => novosUserIds.has(k.user_id)).map(k => k.termo.toLowerCase())
+  )]
+
+  // ── Candidatos incrementais: só licitações novas desde último matching ───
+  const termosExistentes = [...new Set(
+    keywords.filter(k => !novosUserIds.has(k.user_id)).map(k => k.termo.toLowerCase())
+  )]
+
+  const hoje = new Date().toISOString().substring(0, 10)
+
+  const [resNovos, resIncrementais] = await Promise.all([
+    // Novos usuários → todo o banco aberto
+    termosNovos.length > 0
+      ? supabase
+          .from('licitacoes')
+          .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
+          .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+          .or(termosNovos.map(t => `objeto.ilike.%${t}%`).join(','))
+      : Promise.resolve({ data: [] }),
+
+    // Usuários existentes → apenas licitações novas
+    termosExistentes.length > 0
+      ? (() => {
+          let q = supabase
+            .from('licitacoes')
+            .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
+            .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+            .or(termosExistentes.map(t => `objeto.ilike.%${t}%`).join(','))
+          if (ultimoMatching) q = q.gte('coletado_em', ultimoMatching) as typeof q
+          return q
+        })()
+      : Promise.resolve({ data: [] }),
+  ])
+
+  // Mescla candidatos sem duplicatas
+  const candidatosMap = new Map<string, typeof resNovos.data[0]>()
+  for (const l of [...(resNovos.data ?? []), ...(resIncrementais.data ?? [])]) {
+    if (l && !candidatosMap.has(l.id)) candidatosMap.set(l.id, l)
   }
+  const candidatos = [...candidatosMap.values()]
 
-  const { data: candidatos } = await query
-
-  if (!candidatos?.length) {
-    // Atualiza o timestamp mesmo sem candidatos para não reprocessar
+  if (!candidatos.length) {
     await supabase.from('configuracoes').upsert(
       { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
       { onConflict: 'chave' }
     )
-    return NextResponse.json({ ok: true, matches: 0, candidatos: 0, ultimoMatching })
+    return NextResponse.json({
+      ok: true, matches: 0, candidatos: 0,
+      novosUsuarios: novosUserIds.size, ultimoMatching,
+    })
   }
 
-  console.log(`Matching: ${candidatos.length} candidatos, ${keywords.length} keywords`)
+  console.log(`Matching: ${candidatos.length} candidatos (${resNovos.data?.length ?? 0} novos + ${resIncrementais.data?.length ?? 0} incrementais), ${keywords.length} keywords`)
 
   // Confirmar matches com Gemini
   const { resultados: matches, lotes, lotesComErro, erros } =
@@ -76,12 +115,6 @@ export async function GET(request: Request) {
 
   if (erros.length > 0) console.error('Primeiro erro Gemini:', erros[0])
 
-  // Buscar min_valor_interesse por usuário (donos das keywords)
-  const userIds = [...new Set(keywords.map(k => k.user_id).filter(Boolean))]
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, min_valor_interesse, max_valor_interesse')
-    .in('id', userIds)
   const minValorMap = Object.fromEntries(
     (profiles ?? []).map(p => [p.id, p.min_valor_interesse ?? 0])
   )
@@ -89,11 +122,9 @@ export async function GET(request: Request) {
     (profiles ?? []).map(p => [p.id, p.max_valor_interesse ?? 0])
   )
 
-  // Mapas auxiliares
   const kwMap  = Object.fromEntries(keywords.map(k => [k.id, k]))
   const licMap = Object.fromEntries(candidatos.map(c => [c.id, c]))
 
-  // Construir alertas com score
   const alertasParaSalvar: {
     licitacao_id: string
     keyword_id: string
@@ -114,17 +145,14 @@ export async function GET(request: Request) {
 
       if (!estadoCompativelComRegioes(lic.estado, kw.regiao)) continue
 
-      const minValor = minValorMap[kw.user_id] ?? 0
-      const maxValor = maxValorMap[kw.user_id] ?? 0
-
       const s = calcularScore({
         objeto:            lic.objeto,
         termo:             kw.termo,
         estadoLicitacao:   lic.estado,
         regiaoKeyword:     kw.regiao,
         valorLicitacao:    lic.valor_estimado,
-        minValorInteresse: minValor,
-        maxValorInteresse: maxValor,
+        minValorInteresse: minValorMap[kw.user_id] ?? 0,
+        maxValorInteresse: maxValorMap[kw.user_id] ?? 0,
       })
 
       if (!s) continue
@@ -141,9 +169,6 @@ export async function GET(request: Request) {
     }
   }
 
-  console.log(`Gemini: ${lotes} lotes, ${lotesComErro} erros, ${matches.length} matches brutos, ${alertasParaSalvar.length} alertas`)
-
-  // Contagem de alertas por usuário para diagnóstico
   const alertasPorUsuario: Record<string, number> = {}
   for (const a of alertasParaSalvar) {
     const kw = kwMap[a.keyword_id]
@@ -163,7 +188,15 @@ export async function GET(request: Request) {
     }).catch(console.error)
   }
 
-  // Avançar o ponteiro de matching para agora
+  // Marcar novos usuários como inicializados
+  if (novosUserIds.size > 0) {
+    await supabase
+      .from('profiles')
+      .update({ matching_inicial_em: agora })
+      .in('id', [...novosUserIds])
+  }
+
+  // Avançar ponteiro incremental
   await supabase.from('configuracoes').upsert(
     { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
     { onConflict: 'chave' }
@@ -172,11 +205,10 @@ export async function GET(request: Request) {
   const resultado = {
     ok: true,
     candidatos:       candidatos.length,
+    novosUsuarios:    novosUserIds.size,
     matchesBrutos:    matches.length,
     alertasSalvos:    alertasParaSalvar.length,
     alertasPorUsuario,
-    incremental:      !!ultimoMatching,
-    ultimoMatching,
     gemini: { lotes, lotesComErro, primeiroErro: erros[0] ?? null },
   }
 
