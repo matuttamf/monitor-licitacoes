@@ -33,20 +33,41 @@ const DOMINIOS_GENERICOS = new Set([
 
 const EMAIL_REGEX = /[\w.+%-]{2,}@[\w-]+\.[\w.]{2,}/g
 
+// TLDs válidos — bloqueia coisas como fancybox@3.5.7 (versão de lib JS)
+const TLD_VALIDO = /\.(com|net|org|gov|edu|mil|int|br|co|io|app|dev|info|biz|pro|mus|tel|mobi|name|aero|coop|museum|com\.br|net\.br|org\.br|gov\.br|edu\.br|adv\.br|eng\.br|med\.br|arq\.br)$/i
+
+// E-mails/domínios que nunca são reais (placeholders, exemplos, testes)
+const EMAIL_BLACKLIST = new Set([
+  'exemplo@exemplo.com.br', 'example@example.com', 'email@email.com',
+  'contato@empresa.com.br', 'email@dominio.com.br', 'seuemail@email.com',
+  'nome@dominio.com', 'email@exemplo.com.br',
+])
+const DOMINIO_BLACKLIST = new Set([
+  'exemplo.com.br', 'example.com', 'email.com', 'dominio.com.br',
+  'empresa.com.br', 'test.com', 'teste.com.br', 'fake.com',
+  'seusite.com.br', 'yoursite.com',
+])
+
 function extrairEmails(texto: string): string[] {
   const raw = texto.match(EMAIL_REGEX) ?? []
   return [...new Set(
     raw
       .map(e => e.toLowerCase().replace(/[.,;:>'")\]]+$/, ''))
-      .filter(e =>
-        e.includes('@') &&
-        e.includes('.') &&
-        !e.endsWith('.') &&
-        e.length >= 6 &&
-        e.length <= 80 &&
-        !e.includes('..') &&
-        !/\.(png|jpg|gif|svg|css|js|php|html|woff)$/i.test(e)
-      )
+      .filter(e => {
+        if (!e.includes('@') || !e.includes('.')) return false
+        if (e.endsWith('.') || e.includes('..')) return false
+        if (e.length < 6 || e.length > 80) return false
+        if (/\.(png|jpg|gif|svg|css|js|php|html|woff|ttf|eot|ico|xml|json|map)$/i.test(e)) return false
+        // Domínio deve ter TLD real (bloqueia versões de libs como @3.5.7)
+        const dominio = e.split('@')[1] ?? ''
+        if (!TLD_VALIDO.test(dominio)) return false
+        // Blacklists de placeholders conhecidos
+        if (EMAIL_BLACKLIST.has(e)) return false
+        if (DOMINIO_BLACKLIST.has(dominio)) return false
+        // Domínio não pode ser só números (ex: @123.456)
+        if (/^[\d.]+$/.test(dominio)) return false
+        return true
+      })
   )]
 }
 
