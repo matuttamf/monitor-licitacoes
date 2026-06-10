@@ -89,7 +89,7 @@ interface CnpjWs {
 // ─── Busca PNCP ───────────────────────────────────────────────────────────────
 
 async function buscarContratosPNCP(
-  dataInicial: string, dataFinal: string, paginas = 5
+  dataInicial: string, dataFinal: string, paginas = 26
 ): Promise<{ contratos: PncpContrato[]; debug: string[] }> {
   const todos: PncpContrato[] = []
   const debug: string[] = []
