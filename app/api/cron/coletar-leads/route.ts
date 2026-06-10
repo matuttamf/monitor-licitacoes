@@ -268,8 +268,10 @@ export async function GET(req: NextRequest) {
     const { error } = await supabase
       .from('leads')
       .upsert(row, { onConflict: 'cnpj', ignoreDuplicates: true })
-    if (error) console.error('[coletar-leads] upsert error:', error.message)
-    else inseridos++
+    if (error) {
+      console.error('[coletar-leads] upsert error:', error.message)
+      if (i === 0) return NextResponse.json({ ok: false, erro_upsert: error.message, row_keys: Object.keys(row) }, { status: 500 })
+    } else inseridos++
   }
 
   console.log(`[coletar-leads] ${modoLabel} → ${inseridos} leads inseridos`)
