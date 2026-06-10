@@ -387,11 +387,12 @@ export default function CaptacaoPage() {
         <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         <div className="flex gap-3 flex-wrap items-start">
           {([
-            { acao: 'coletar-leads',               label: '🏆 Coletar PNCP',          desc: '~17s · contratos assinados PNCP' },
-            { acao: 'coletar-participantes',        label: '👥 Coletar participantes',  desc: 'Diário · todos os proponentes PNCP' },
-            { acao: 'coletar-leads-transparencia',  label: '🏛️ Portal Transparência',  desc: 'Diário · contratos federais gov.br' },
-            { acao: 'disparar-leads',               label: '✉️ Disparar leads',        desc: '~5s · até 20 e-mails captação' },
-            { acao: 'reconverter-trials',           label: '🔄 Reconverter trials',     desc: '~5s · até 15 e-mails reativação' },
+            { acao: 'coletar-leads',               label: '🏆 Coletar PNCP',           desc: '~17s · contratos assinados PNCP' },
+            { acao: 'coletar-participantes',        label: '👥 Coletar participantes',   desc: 'Diário · todos os proponentes PNCP' },
+            { acao: 'coletar-leads-transparencia',  label: '🏛️ Portal Transparência',   desc: 'Diário · contratos federais gov.br' },
+            { acao: 'enriquecer-emails',            label: '🔍 Buscar e-mails',          desc: '~60s · busca online por CNPJ/nome' },
+            { acao: 'disparar-leads',               label: '✉️ Disparar leads',         desc: '~5s · até 20 e-mails captação' },
+            { acao: 'reconverter-trials',           label: '🔄 Reconverter trials',      desc: '~5s · até 15 e-mails reativação' },
           ] as const).map(({ acao, label, desc }) => (
             <div key={acao}>
               <button onClick={() => acionarCron(acao)} disabled={disparando !== null}

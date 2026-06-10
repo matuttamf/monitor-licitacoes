@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     'coletar-leads':               `${baseUrl}/api/cron/coletar-leads`,
     'coletar-participantes':       `${baseUrl}/api/cron/coletar-participantes`,
     'coletar-leads-transparencia': `${baseUrl}/api/cron/coletar-leads-transparencia`,
+    'enriquecer-emails':           `${baseUrl}/api/cron/enriquecer-emails`,
     'disparar-leads':              `${baseUrl}/api/cron/disparar-leads`,
     'reconverter-trials':          `${baseUrl}/api/cron/reconverter-trials`,
   }
