@@ -72,6 +72,7 @@ function statusGlobal(uso: Record<string, number>, limites: Record<string, UsoSe
 
 const CRON_LABELS: Record<string, string> = {
   coletar:          'Coletar licitações',
+  'coletar-abertos':'Coletar abertos (PNCP)',
   matching:         'Matching Gemini',
   alertar:          'Enviar alertas',
   'emails-trial':   'E-mails trial',

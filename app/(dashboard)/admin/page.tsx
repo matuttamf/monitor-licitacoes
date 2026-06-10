@@ -278,8 +278,9 @@ export default function AdminPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         <div className="flex gap-2 flex-wrap">
           {[
-            { acao: 'coletar',        label: '🔍 Coletar',       desc: 'Busca novos editais' },
-            { acao: 'matching',       label: '🤖 Matching',       desc: 'Gera candidatos' },
+            { acao: 'coletar',          label: '🔍 Coletar',         desc: 'Busca novos editais' },
+            { acao: 'coletar-abertos', label: '📂 Abertos (PNCP)',  desc: 'Todos com prazo futuro' },
+            { acao: 'matching',        label: '🤖 Matching',        desc: 'Gera candidatos' },
             { acao: 'alertar',        label: '📧 Alertar',        desc: 'Envia alertas' },
             { acao: 'emails',         label: '📩 E-mails trial',  desc: 'Sequência trial' },
             { acao: 'coletar-leads',  label: '🎯 Coletar leads',  desc: 'Busca CNPJs/PNCP' },

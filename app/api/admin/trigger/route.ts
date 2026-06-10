@@ -54,6 +54,7 @@ export async function POST(request: Request) {
 
   const rotas: Record<string, string> = {
     coletar:           `${baseUrl}/api/cron/coletar`,
+    'coletar-abertos': `${baseUrl}/api/cron/coletar-abertos`,
     matching:          `${baseUrl}/api/cron/matching`,
     alertar:           `${baseUrl}/api/cron/alertar`,
     emails:            `${baseUrl}/api/cron/emails-trial`,
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
   const MSGS_BACKGROUND: Record<string, string> = {
     'enriquecer-emails':      'Busca de e-mails disparada em background. Verifique os leads em ~2min.',
     'coletar':                'Coleta disparada em background (~5 min). Verifique Licitações em breve.',
+    'coletar-abertos':        'Varredura de abertos disparada em background (~5 min). Pode trazer 10k+ licitações.',
     'coletar-participantes':         'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
     'coletar-leads-transparencia':  'Coleta Portal Transparência disparada em background. Verifique os leads em breve.',
   }
