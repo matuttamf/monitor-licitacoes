@@ -32,7 +32,7 @@ const BRASIL_API         = 'https://brasilapi.com.br/api/cnpj/v1'
 
 const BACKFILL_INICIO    = '2014-01-01'
 const JANELA_DIAS        = 180   // janela de 6 meses por varredura completa de órgãos
-const ORGAOS_POR_RODADA  = 50    // órgãos processados por execução (cada chamada ~1s)
+const ORGAOS_POR_RODADA  = 150   // órgãos processados por execução (cada chamada ~1s)
 const MAX_ENRIQUECER     = 20    // cap de enriquecimentos BrasilAPI por execução
 
 // Cache dos órgãos válido por 7 dias (em ms)
