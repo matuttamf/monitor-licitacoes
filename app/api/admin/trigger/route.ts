@@ -68,15 +68,16 @@ export async function POST(request: Request) {
   if (!url) return NextResponse.json({ error: 'Ação inválida' }, { status: 400 })
 
   // Ações longas rodam em background — retornam imediatamente sem aguardar
-  // matching: ~60s  |  enriquecer-emails: ~120s (10 leads × buscas web)
-  const fireAndForget = acao === 'matching' || acao === 'enriquecer-emails'
+  const MSGS_BACKGROUND: Record<string, string> = {
+    'matching':          'Matching disparado em background. Verifique Alertas em ~60s.',
+    'enriquecer-emails': 'Busca de e-mails disparada em background. Verifique os leads em ~2min.',
+    'coletar':           'Coleta disparada em background (~5 min). Verifique Licitações em breve.',
+  }
+  const fireAndForget = acao in MSGS_BACKGROUND
 
   if (fireAndForget) {
     fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error)
-    const msg = acao === 'matching'
-      ? 'Matching disparado em background. Verifique Alertas em ~60s.'
-      : 'Busca de e-mails disparada em background. Verifique os leads em ~2min.'
-    return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg } })
+    return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg: MSGS_BACKGROUND[acao] } })
   }
 
   try {

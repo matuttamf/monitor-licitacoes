@@ -8,7 +8,7 @@
 // ─── Constantes de limiar ──────────────────────────────────────────────────
 
 /** Score mínimo para enviar por e-mail */
-export const SCORE_MIN_EMAIL = 50
+export const SCORE_MIN_EMAIL = 30
 
 /** Score mínimo para enviar por WhatsApp e Telegram (alta relevância) */
 export const SCORE_MIN_URGENTE = 80
