@@ -87,7 +87,7 @@ export async function GET(request: Request) {
   ])
 
   // Mescla candidatos sem duplicatas
-  const candidatosMap = new Map<string, typeof resNovos.data[0]>()
+  const candidatosMap = new Map<string, NonNullable<typeof resNovos.data>[0]>()
   for (const l of [...(resNovos.data ?? []), ...(resIncrementais.data ?? [])]) {
     if (l && !candidatosMap.has(l.id)) candidatosMap.set(l.id, l)
   }
