@@ -17,10 +17,10 @@ export async function GET(request: Request) {
 
   const supabase = await createServiceClient()
 
-  // Buscar keywords ativas com regiao
+  // Buscar keywords ativas com regiao e tracking de matching
   const { data: keywords } = await supabase
     .from('keywords')
-    .select('id, termo, regiao, user_id')
+    .select('id, termo, regiao, user_id, matching_inicial_em')
     .eq('ativo', true)
 
   if (!keywords?.length) {
@@ -35,35 +35,18 @@ export async function GET(request: Request) {
     .maybeSingle()
   const ultimoMatching: string | null = cfgUltimo?.valor ?? null
   const agora = new Date().toISOString()
+  const hoje  = new Date().toISOString().substring(0, 10)
 
-  // Usuários com keywords ativas
-  const userIds = [...new Set(keywords.map(k => k.user_id).filter(Boolean))]
+  // Separar keywords novas (nunca matcheadas) das existentes
+  // Uma keyword nova pode ser de usuário novo OU de usuário existente que adicionou nova palavra
+  const kwNovas      = keywords.filter(k => !k.matching_inicial_em)
+  const kwExistentes = keywords.filter(k =>  k.matching_inicial_em)
 
-  // Identificar novos usuários (nunca tiveram matching inicial)
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, matching_inicial_em, min_valor_interesse, max_valor_interesse')
-    .in('id', userIds)
-
-  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
-  const novosUserIds = new Set(
-    userIds.filter(uid => !profileMap[uid]?.matching_inicial_em)
-  )
-
-  // ── Candidatos para novos usuários: todo o banco aberto ──────────────────
-  const termosNovos = [...new Set(
-    keywords.filter(k => novosUserIds.has(k.user_id)).map(k => k.termo.toLowerCase())
-  )]
-
-  // ── Candidatos incrementais: só licitações novas desde último matching ───
-  const termosExistentes = [...new Set(
-    keywords.filter(k => !novosUserIds.has(k.user_id)).map(k => k.termo.toLowerCase())
-  )]
-
-  const hoje = new Date().toISOString().substring(0, 10)
+  const termosNovos      = [...new Set(kwNovas.map(k => k.termo.toLowerCase()))]
+  const termosExistentes = [...new Set(kwExistentes.map(k => k.termo.toLowerCase()))]
 
   const [resNovos, resIncrementais] = await Promise.all([
-    // Novos usuários → todo o banco aberto
+    // Keywords novas → todo o banco aberto (data_abertura >= hoje ou sem data)
     termosNovos.length > 0
       ? supabase
           .from('licitacoes')
@@ -72,7 +55,7 @@ export async function GET(request: Request) {
           .or(termosNovos.map(t => `objeto.ilike.%${t}%`).join(','))
       : Promise.resolve({ data: [] }),
 
-    // Usuários existentes → apenas licitações novas
+    // Keywords existentes → apenas licitações coletadas desde o último matching
     termosExistentes.length > 0
       ? (() => {
           let q = supabase
@@ -100,11 +83,11 @@ export async function GET(request: Request) {
     )
     return NextResponse.json({
       ok: true, matches: 0, candidatos: 0,
-      novosUsuarios: novosUserIds.size, ultimoMatching,
+      kwNovas: kwNovas.length, kwExistentes: kwExistentes.length, ultimoMatching,
     })
   }
 
-  console.log(`Matching: ${candidatos.length} candidatos (${resNovos.data?.length ?? 0} novos + ${resIncrementais.data?.length ?? 0} incrementais), ${keywords.length} keywords`)
+  console.log(`Matching: ${candidatos.length} candidatos (${resNovos.data?.length ?? 0} banco total + ${resIncrementais.data?.length ?? 0} incrementais), ${keywords.length} keywords (${kwNovas.length} novas, ${kwExistentes.length} existentes)`)
 
   // Confirmar matches com Gemini
   const { resultados: matches, lotes, lotesComErro, erros } =
@@ -114,6 +97,13 @@ export async function GET(request: Request) {
     )
 
   if (erros.length > 0) console.error('Primeiro erro Gemini:', erros[0])
+
+  // Buscar limites de valor por usuário
+  const userIds = [...new Set(keywords.map(k => k.user_id).filter(Boolean))]
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, min_valor_interesse, max_valor_interesse')
+    .in('id', userIds)
 
   const minValorMap = Object.fromEntries(
     (profiles ?? []).map(p => [p.id, p.min_valor_interesse ?? 0])
@@ -188,12 +178,12 @@ export async function GET(request: Request) {
     }).catch(console.error)
   }
 
-  // Marcar novos usuários como inicializados
-  if (novosUserIds.size > 0) {
+  // Marcar keywords novas como inicializadas
+  if (kwNovas.length > 0) {
     await supabase
-      .from('profiles')
+      .from('keywords')
       .update({ matching_inicial_em: agora })
-      .in('id', [...novosUserIds])
+      .in('id', kwNovas.map(k => k.id))
   }
 
   // Avançar ponteiro incremental
@@ -205,7 +195,8 @@ export async function GET(request: Request) {
   const resultado = {
     ok: true,
     candidatos:       candidatos.length,
-    novosUsuarios:    novosUserIds.size,
+    kwNovas:          kwNovas.length,
+    kwExistentes:     kwExistentes.length,
     matchesBrutos:    matches.length,
     alertasSalvos:    alertasParaSalvar.length,
     alertasPorUsuario,
