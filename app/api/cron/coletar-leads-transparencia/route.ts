@@ -96,14 +96,33 @@ interface BrasilApiCnpj {
 
 // ─── Busca contratos ──────────────────────────────────────────────────────────
 
+interface BuscarContratosResult {
+  contratos: Contrato[]
+  debug: {
+    url: string
+    http_status: number | null
+    x_total_count: string
+    content_type: string
+    body_amostra: string
+  }
+}
+
 async function buscarContratos(
   dataInicio: string, dataFim: string, apiKey: string
-): Promise<Contrato[]> {
+): Promise<BuscarContratosResult> {
   const todos: Contrato[] = []
+  let debugInfo = {
+    url: '',
+    http_status: null as number | null,
+    x_total_count: 'ausente',
+    content_type: 'ausente',
+    body_amostra: '',
+  }
+
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     try {
-      // Datas no formato dd/MM/yyyy URL-encoded (%2F)
       const url = `${TRANSPARENCIA_BASE}/contratos?dataInicial=${encodeURIComponent(dataInicio)}&dataFinal=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=100`
+      if (pagina === 1) debugInfo.url = url
       console.log(`[transparencia] GET ${url}`)
 
       const res = await fetch(url, {
@@ -111,8 +130,14 @@ async function buscarContratos(
         signal: AbortSignal.timeout(20000),
       })
 
-      // Lê o corpo sempre — para debug quando há falha
       const bodyText = await res.text()
+
+      if (pagina === 1) {
+        debugInfo.http_status   = res.status
+        debugInfo.x_total_count = res.headers.get('x-total-count') ?? res.headers.get('X-Total-Count') ?? 'ausente'
+        debugInfo.content_type  = res.headers.get('content-type') ?? 'ausente'
+        debugInfo.body_amostra  = bodyText.slice(0, 300)
+      }
 
       if (!res.ok) {
         console.warn(`[transparencia] p${pagina}: HTTP ${res.status} — body: ${bodyText.slice(0, 300)}`)
@@ -125,29 +150,21 @@ async function buscarContratos(
         break
       }
 
-      // API pode retornar objeto de erro mesmo com status 200
       if (!Array.isArray(data)) {
         console.warn(`[transparencia] p${pagina}: resposta não é array — ${JSON.stringify(data).slice(0, 300)}`)
         break
       }
 
-      if (!data.length) {
-        // Log headers para diagnosticar: se x-total-count=0 a API está funcionando mas sem dados;
-        // se ausente, a chave pode estar inválida ou os parâmetros errados
-        const totalCount = res.headers.get('x-total-count') ?? res.headers.get('X-Total-Count') ?? 'ausente'
-        const contentType = res.headers.get('content-type') ?? 'ausente'
-        console.log(`[transparencia] p${pagina}: array vazio — x-total-count=${totalCount} content-type=${contentType} url=${url}`)
-        break
-      }
+      if (!data.length) break
 
       todos.push(...(data as Contrato[]))
-      if (data.length < 500) break
+      if (data.length < 100) break
     } catch (e) {
       console.warn(`[transparencia] erro p${pagina}:`, String(e))
       break
     }
   }
-  return todos
+  return { contratos: todos, debug: debugInfo }
 }
 
 async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
@@ -232,14 +249,15 @@ export async function GET(req: NextRequest) {
   console.log(`[coletar-leads-transparencia] modo=${modoLabel}`)
 
   // ── 1. Buscar contratos ───────────────────────────────────────────────────
-  const contratos = await buscarContratos(dataInicio, dataFim, apiKey)
+  const { contratos, debug: apiDebug } = await buscarContratos(dataInicio, dataFim, apiKey)
   console.log(`[coletar-leads-transparencia] ${contratos.length} contratos`)
 
   if (!contratos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
-    // Retorna URL chamada para diagnóstico visível no painel admin
-    const urlDiag = `${TRANSPARENCIA_BASE}/contratos?dataInicial=${encodeURIComponent(dataInicio)}&dataFinal=${encodeURIComponent(dataFim)}&pagina=1&tamanhoPagina=100`
-    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, contratos: 0, url_testada: urlDiag })
+    return NextResponse.json({
+      ok: true, novos: 0, modo: modoLabel, contratos: 0,
+      api_debug: apiDebug,
+    })
   }
 
   // ── 2. Extrair CNPJs únicos de fornecedores ───────────────────────────────
