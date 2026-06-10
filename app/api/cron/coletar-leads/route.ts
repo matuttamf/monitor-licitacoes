@@ -69,20 +69,19 @@ interface PncpContrato {
   unidadeOrgao?:             { ufSigla?: string; municipioNome?: string }
 }
 
-// minhareceita.org — mesmo formato que BrasilAPI, funciona server-side sem bloqueio
+// minhareceita.org — situacao_cadastral é número (2 = ATIVA), porte é string direta
 interface CnpjWs {
-  cnpj:                         string
-  razao_social:                 string
-  nome_fantasia?:               string
-  situacao_cadastral:           string   // "ATIVA", "BAIXADA", etc. (string simples)
-  descricao_situacao_cadastral?: string
-  porte?:                       { descricao?: string }
-  descricao_porte?:             string
-  cnae_fiscal_descricao?:       string
-  email?:                       string
-  ddd_telefone_1?:              string
-  municipio?:                   string
-  uf?:                          string
+  cnpj:                          string
+  razao_social:                  string
+  nome_fantasia?:                string
+  situacao_cadastral:            number   // 2 = ATIVA, outros = inativa
+  descricao_situacao_cadastral?: string   // "ATIVA", "BAIXADA", etc.
+  porte?:                        string   // "DEMAIS", "PEQUENO PORTE", etc.
+  cnae_fiscal_descricao?:        string
+  email?:                        string
+  ddd_telefone_1?:               string
+  municipio?:                    string
+  uf?:                           string
 }
 
 // ─── Busca PNCP ───────────────────────────────────────────────────────────────
@@ -234,8 +233,8 @@ export async function GET(req: NextRequest) {
 
     if (!dados) { brasilApiNull++; continue }
     brasilApiOk++
-    // minhareceita.org: situacao_cadastral é string "ATIVA"/"BAIXADA"/etc.
-    if (dados.situacao_cadastral !== 'ATIVA') { inativas++; continue }
+    // minhareceita.org: situacao_cadastral é número — 2 = ATIVA
+    if (dados.situacao_cadastral !== 2) { inativas++; continue }
 
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
@@ -254,8 +253,8 @@ export async function GET(req: NextRequest) {
       telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
       uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-      situacao:      dados.situacao_cadastral ?? null,
-      porte:         dados.descricao_porte ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? null,
+      porte:         dados.porte ?? null,
       cnae,
       segmento:      mapearSegmento(cnae),
       modalidade,

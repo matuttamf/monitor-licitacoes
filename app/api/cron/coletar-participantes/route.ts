@@ -57,19 +57,19 @@ interface Proposta {
   nomeFornecedor?: string
 }
 
-// minhareceita.org — formato idêntico ao BrasilAPI, funciona server-side
+// minhareceita.org — situacao_cadastral é número (2 = ATIVA), porte é string direta
 interface CnpjWs {
-  cnpj:                         string
-  razao_social:                 string
-  nome_fantasia?:               string
-  situacao_cadastral:           string   // "ATIVA", "BAIXADA", etc.
-  descricao_situacao_cadastral?: string
-  descricao_porte?:             string
-  cnae_fiscal_descricao?:       string
-  email?:                       string
-  ddd_telefone_1?:              string
-  municipio?:                   string
-  uf?:                          string
+  cnpj:                          string
+  razao_social:                  string
+  nome_fantasia?:                string
+  situacao_cadastral:            number   // 2 = ATIVA
+  descricao_situacao_cadastral?: string   // "ATIVA", "BAIXADA", etc.
+  porte?:                        string   // "DEMAIS", "PEQUENO PORTE", etc.
+  cnae_fiscal_descricao?:        string
+  email?:                        string
+  ddd_telefone_1?:               string
+  municipio?:                    string
+  uf?:                           string
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
@@ -260,7 +260,7 @@ export async function GET(req: NextRequest) {
     const dados = await enriquecerCnpj(cnpj)
     await sleep(300) // cnpj.ws sem rate limit agressivo
     if (!dados) continue
-    if (dados.situacao_cadastral !== 'ATIVA') continue  // apenas ATIVAS
+    if (dados.situacao_cadastral !== 2) continue  // 2 = ATIVA
 
     const emailRaw = dados.email?.trim()
     const cnae = dados.cnae_fiscal_descricao ?? null
@@ -272,8 +272,8 @@ export async function GET(req: NextRequest) {
       telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? null,
       uf:            dados.uf ?? null,
-      situacao:      dados.situacao_cadastral ?? null,
-      porte:         dados.descricao_porte ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? null,
+      porte:         dados.porte ?? null,
       cnae,
       status:        emailRaw ? 'pendente' : 'sem_email',
       fonte:         'pncp_proposta',
