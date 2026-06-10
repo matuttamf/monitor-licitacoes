@@ -41,6 +41,22 @@ const CNAES_SUGERIDOS = [
   'vigilância', 'transporte', 'saúde', 'consultoria', 'treinamento',
 ]
 
+// Formata DDD + número → (XX) XXXX-XXXX ou (XX) 9XXXX-XXXX
+function fmtTelefone(raw: string | null): string {
+  if (!raw) return '—'
+  const d = raw.replace(/\D/g, '')
+  if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`
+  if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`
+  return raw
+}
+
+// Capitaliza texto em CAIXA ALTA → Primeira Letra Maiúscula
+function capitalizar(texto: string | null): string {
+  if (!texto) return '—'
+  return texto.toLowerCase().replace(/(^|\.\s+|;\s*)([a-záéíóúâêîôûãõàèìòùç])/g,
+    (_m, sep, letra) => sep + letra.toUpperCase())
+}
+
 function csvEscape(v: string) {
   if (v.includes(',') || v.includes('"') || v.includes('\n')) return `"${v.replace(/"/g, '""')}"`
   return v
@@ -660,9 +676,9 @@ export default function CaptacaoPage() {
                           <td colSpan={9} className="px-6 pb-3 pt-1">
                             <div className="rounded-xl p-4 text-xs" style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
                               <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                                <div>
+                                <div style={{ gridColumn: 'span 2' }}>
                                   <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Contrato de origem</div>
-                                  <div style={{ color: 'var(--preto)', lineHeight: 1.5 }}>{l.objeto || '—'}</div>
+                                  <div style={{ color: 'var(--preto)', lineHeight: 1.6 }}>{capitalizar(l.objeto)}</div>
                                 </div>
                                 <div>
                                   <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Valor do contrato</div>
@@ -684,7 +700,19 @@ export default function CaptacaoPage() {
                                 </div>
                                 <div>
                                   <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>Telefone</div>
-                                  <div style={{ color: 'var(--preto)' }}>{l.telefone || '—'}</div>
+                                  <div style={{ color: 'var(--preto)' }}>
+                                    {l.telefone
+                                      ? <a href={`tel:+55${l.telefone.replace(/\D/g,'')}`} style={{ color: 'var(--vinho)', textDecoration: 'none' }}>{fmtTelefone(l.telefone)}</a>
+                                      : '—'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)', fontSize: 10 }}>E-mail</div>
+                                  <div style={{ color: 'var(--preto)' }}>
+                                    {l.email
+                                      ? <a href={`mailto:${l.email}`} style={{ color: 'var(--vinho)', textDecoration: 'none' }}>{l.email}</a>
+                                      : <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>não encontrado</span>}
+                                  </div>
                                 </div>
                               </div>
                             </div>
