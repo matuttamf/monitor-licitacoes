@@ -212,12 +212,11 @@ export async function GET(request: Request) {
   }
 
   const hoje  = new Date()
-  // Janela de 30 dias: captura todas as licitações publicadas no último mês ainda abertas.
-  // Scrapers de cidade específica retornam poucos resultados mesmo com 30 dias.
-  // O PNCP geral tem limite de páginas interno para não estourar o timeout.
-  const trintaDiasAtras = new Date(hoje)
-  trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30)
-  const dataInicio = trintaDiasAtras.toISOString().substring(0, 10)
+  // Janela de 90 dias: captura licitações publicadas no trimestre com prazo ainda aberto.
+  // PNCP tem cap de 20 páginas/modalidade interno para não estourar o timeout.
+  const noventaDiasAtras = new Date(hoje)
+  noventaDiasAtras.setDate(noventaDiasAtras.getDate() - 90)
+  const dataInicio = noventaDiasAtras.toISOString().substring(0, 10)
   const dataFim    = hoje.toISOString().substring(0, 10)
 
   console.log(`Iniciando coleta ${dataInicio} — ${dataFim} (${TOTAL_FONTES} fontes verificadas em 10 camadas)`)
