@@ -4,7 +4,7 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { calcularScore } from '@/lib/scoring'
 import { estadoCompativelComRegioes } from '@/lib/regioes'
-import { salvarResultadoCron } from '@/lib/cron-log'
+import { registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
 
   if (!candidatos.length) {
     const resultado = { ok: true, matches: 0, candidatos: 0, ...debugBase }
-    await salvarResultadoCron(supabase, 'matching', resultado)
+    await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `0 candidatos — ${resultado.erroNovos ?? 'sem erro'}`, detalhes: resultado })
     await supabase.from('configuracoes').upsert(
       { chave: 'ultimo_matching_em', valor: JSON.stringify(agora) },
       { onConflict: 'chave' }
@@ -214,7 +214,7 @@ export async function GET(request: Request) {
     gemini: { lotes, lotesComErro, primeiroErro: erros[0] ?? null },
   }
 
-  await salvarResultadoCron(supabase, 'matching', resultado)
+  await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `${resultado.alertasSalvos} alertas salvos (${resultado.candidatos} candidatos, ${resultado.kwNovas} kw novas)`, detalhes: resultado })
 
   return NextResponse.json(resultado)
 }
