@@ -30,6 +30,7 @@ import {
  * Diferenciamos exato vs. parcial via busca textual simples.
  */
 export function scoreKeyword(objeto: string, termo: string): number {
+  if (!objeto || !termo) return 55
   const obj  = objeto.toLowerCase()
   const term = termo.toLowerCase()
 
@@ -91,7 +92,7 @@ export function scoreLocalizacao(
       }
     } else {
       // É uma UF específica
-      melhorScore = Math.max(melhorScore, uf === r.toUpperCase() ? 100 : 15)
+      if (typeof r === 'string') melhorScore = Math.max(melhorScore, uf === r.toUpperCase() ? 100 : 15)
     }
   }
 

@@ -146,6 +146,7 @@ export function estadoCompativelComRegioes(
   const uf = estadoLicitacao.toUpperCase().trim()
 
   for (const r of regioes) {
+    if (!r || typeof r !== 'string') continue
     const estados = ESTADOS_POR_REGIAO[r]
     if (estados) {
       if (estados.includes(uf)) return true
