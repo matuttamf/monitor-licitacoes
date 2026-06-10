@@ -248,7 +248,7 @@ export default function SaudePage() {
           <CardTabela label="Leads pendentes" valor={data.tabelas.leads.pendente}  sub="aguardando disparo" />
           <CardTabela label="Licitações"      valor={data.tabelas.licitacoes.total} />
           <CardTabela label="Alertas gerados" valor={data.tabelas.alertas.total}   sub={`${data.tabelas.alertas.enviados} enviados`} />
-          <CardTabela label="Usuários"        valor={data.tabelas.usuarios.total}  sub={`${data.tabelas.usuarios.ativos} ativos`} />
+          <CardTabela label="Usuários"        valor={data.tabelas.usuarios.total}  sub={`${data.tabelas.usuarios.ativos} com acesso`} />
         </div>
       </section>
 

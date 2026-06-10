@@ -63,7 +63,8 @@ export async function GET() {
     admin.from('alertas').select('*', { count: 'exact', head: true }),
     admin.from('alertas').select('*', { count: 'exact', head: true }).not('enviado_em', 'is', null),
     admin.from('profiles').select('*', { count: 'exact', head: true }),
-    admin.from('profiles').select('*', { count: 'exact', head: true }).eq('plano', 'ativo'),
+    // "com acesso" = trial ativo + assinantes pagos + admin (exclui expired)
+    admin.from('profiles').select('*', { count: 'exact', head: true }).neq('status', 'expired'),
   ])
 
   const tabelas = {

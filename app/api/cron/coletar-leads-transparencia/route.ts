@@ -102,7 +102,8 @@ async function buscarContratos(
   const todos: Contrato[] = []
   for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
     try {
-      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${dataInicio}&dataFim=${dataFim}&pagina=${pagina}&tamanhoPagina=500`
+      // Datas no formato dd/MM/yyyy — precisam ser URL-encoded (%2F) senão o servidor ignora
+      const url = `${TRANSPARENCIA_BASE}/contratos?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}&pagina=${pagina}&tamanhoPagina=500`
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
         signal: AbortSignal.timeout(20000),
