@@ -28,12 +28,10 @@ import { salvarResultadoCron } from '@/lib/cron-log'
 export const maxDuration = 300
 
 const TRANSPARENCIA_BASE = 'https://api.portaldatransparencia.gov.br/api-de-dados'
-const BRASIL_API         = 'https://brasilapi.com.br/api/cnpj/v1'
 
 const BACKFILL_INICIO    = '2014-01-01'
 const JANELA_DIAS        = 180   // janela de 6 meses por varredura completa de órgãos
 const ORGAOS_POR_RODADA  = 150   // órgãos processados por execução (cada chamada ~1s)
-const MAX_ENRIQUECER     = 20    // cap de enriquecimentos BrasilAPI por execução
 
 // Cache dos órgãos válido por 7 dias (em ms)
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
@@ -74,19 +72,6 @@ interface Contrato {
   modalidadeCompra?: { descricao?: string }
 }
 
-interface BrasilApiCnpj {
-  cnpj:                         string
-  razao_social:                 string
-  nome_fantasia?:               string
-  situacao_cadastral:           string
-  descricao_situacao_cadastral: string
-  email?:                       string
-  ddd_telefone_1?:              string
-  municipio?:                   string
-  uf?:                          string
-  descricao_porte?:             string
-  cnae_fiscal_descricao?:       string
-}
 
 // ─── Busca lista de órgãos SIAFI ──────────────────────────────────────────────
 async function buscarOrgaosSiafi(apiKey: string): Promise<string[]> {
@@ -132,16 +117,6 @@ async function buscarContratosOrgao(
   } catch { return [] }
 }
 
-async function enriquecerCnpj(cnpj: string): Promise<BrasilApiCnpj | null> {
-  try {
-    const res = await fetch(`${BRASIL_API}/${cnpj}`, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(10000),
-    })
-    if (!res.ok) return null
-    return await res.json()
-  } catch { return null }
-}
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -294,52 +269,11 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // ── 7. Enriquecer via BrasilAPI (cap MAX_ENRIQUECER) — atualiza já inseridos
-  // Se API retornar null: fica com dados parciais — enriquecer-emails fará retry.
-  // Se inativa: salva situacao, mantém status='invalido'.
-  let enriquecidos = 0
-  for (const cnpj of paraEnriquecer.slice(0, MAX_ENRIQUECER)) {
-    const dados = await enriquecerCnpj(cnpj)
-    await sleep(500)
-    if (!dados) continue   // parcial na base — retry pelo enriquecer-emails
-
-    const emailRaw = dados.email?.trim()
-    const cnae     = dados.cnae_fiscal_descricao ?? null
-    const ativa    = dados.situacao_cadastral === '02'
-
-    if (!ativa) {
-      // Inativa — registra situacao para evitar busca de e-mail depois
-      await supabase.from('leads').update({
-        razao_social:  dados.razao_social,
-        situacao:      dados.descricao_situacao_cadastral ?? 'INATIVA',
-        cnae, porte: dados.descricao_porte ?? null,
-        status: 'invalido',
-      }).eq('cnpj', cnpj).is('situacao', null)
-      continue
-    }
-
-    const contrato = cnpjMap.get(cnpj)!
-    const { error } = await supabase.from('leads').update({
-      razao_social:  dados.razao_social,
-      nome_fantasia: dados.nome_fantasia ?? null,
-      email:         emailRaw ? emailRaw.toLowerCase() : null,
-      telefone:      dados.ddd_telefone_1 ?? null,
-      municipio:     dados.municipio ?? null,
-      uf:            dados.uf ?? null,
-      situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
-      porte:         dados.descricao_porte ?? null,
-      cnae, segmento: mapearSegmento(cnae),
-      modalidade:    contrato.modalidadeCompra?.descricao ?? null,
-      status:        emailRaw ? 'pendente' : 'invalido',
-    }).eq('cnpj', cnpj)
-    if (!error) enriquecidos++
-  }
-
+  // Enriquecimento (situacao, telefone, email) delegado ao enriquecer-emails via minhareceita.
   const resultado = {
     ok: true,
     modo:                 modoLabel,
     salvos,
-    enriquecidos,
     orgaos_com_contratos: debugOrgaos.length,
     cnpjs_novos:          paraEnriquecer.length,
     janela_concluida:     janelaConcluida,

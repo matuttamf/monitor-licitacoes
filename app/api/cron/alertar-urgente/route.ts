@@ -1,10 +1,10 @@
 /**
  * /api/cron/alertar-urgente
  *
- * Roda a cada 5 minutos durante o horário comercial (BRT 7-17h seg-sex, 7-15h sáb).
- * Envia TODOS os alertas pendentes por usuário (sem threshold de score), ordenados por
- * score desc — um batch via Telegram e outro via WhatsApp (se configurado), simultaneamente.
- * A mesma licitação vai para os dois canais ao mesmo tempo.
+ * Roda a cada 20 minutos durante o horário comercial (BRT 7-17h seg-sex, 7-15h sáb).
+ * Envia 1 licitação por usuário por execução (a de maior score ainda não enviada).
+ * Quando múltiplas keywords do mesmo usuário matchearam a mesma licitação, todas as
+ * rows de alertas são marcadas como enviadas de uma vez — evita repetição no Telegram.
  */
 
 import { NextResponse } from 'next/server'
@@ -37,8 +37,8 @@ export async function GET(request: Request) {
   const supabase = await createServiceClient()
   const hoje     = new Date().toISOString().substring(0, 10)
 
-  // Busca O alerta de maior score ainda não enviado via telegram/whatsapp
-  // Estratégia: 1 licitação por execução (cron a cada 10 min) — cadência controlada
+  // Busca os top-50 alertas ainda não enviados via telegram/whatsapp
+  // Limite alto para garantir que dedupliquemos por licitacao_id por usuário
   const { data: alertas, error } = await supabase
     .from('alertas')
     .select(`
@@ -46,10 +46,10 @@ export async function GET(request: Request) {
       licitacoes!inner (orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
       keywords (termo, user_id)
     `)
-    .not('canais', 'cs', '{"telegram"}')   // ainda não enviado via telegram
+    .not('canais', 'cs', '{"telegram"}')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
-    .limit(1)
+    .limit(100)
 
   if (error) {
     console.error('alertar-urgente erro:', error.message)
@@ -60,13 +60,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, enviados: 0 })
   }
 
-  // Agrupar TODOS os alertas por usuário (não apenas o primeiro)
-  const porUsuario = new Map<string, typeof alertas>()
+  // Por usuário: escolhe a licitação de maior score (top 1) e coleta TODOS os IDs
+  // de alertas da mesma licitação (keywords diferentes) para marcar todos como enviados.
+  type EntradaUsuario = {
+    topAlerta: typeof alertas[0]
+    todasAsIds: string[]   // todos os IDs com mesmo licitacao_id deste usuário
+  }
+  const porUsuario = new Map<string, EntradaUsuario>()
+
   for (const a of alertas) {
     const uid = (a.keywords as any)?.user_id
     if (!uid) continue
-    if (!porUsuario.has(uid)) porUsuario.set(uid, [])
-    porUsuario.get(uid)!.push(a)
+
+    if (!porUsuario.has(uid)) {
+      porUsuario.set(uid, { topAlerta: a, todasAsIds: [a.id] })
+    } else {
+      const entrada = porUsuario.get(uid)!
+      if (a.licitacao_id === entrada.topAlerta.licitacao_id) {
+        // Mesma licitação, keyword diferente — só adiciona o ID
+        entrada.todasAsIds.push(a.id)
+      }
+      // Licitações diferentes são ignoradas nesta rodada (próximas rodadas cobrem)
+    }
   }
 
   const userIds = [...porUsuario.keys()]
@@ -79,75 +94,65 @@ export async function GET(request: Request) {
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
-  for (const [userId, alertasDoUsuario] of porUsuario.entries()) {
+  for (const [userId, { topAlerta, todasAsIds }] of porUsuario.entries()) {
     const perfil = profileMap[userId]
     if (!perfil || perfil.status === 'expired') continue
 
     const agora = new Date()
-    const telegramPausado  = perfil.telegram_pausado_ate  && new Date(perfil.telegram_pausado_ate)  > agora
-    const whatsappPausado  = perfil.whatsapp_pausado_ate  && new Date(perfil.whatsapp_pausado_ate)  > agora
+    const telegramPausado = perfil.telegram_pausado_ate && new Date(perfil.telegram_pausado_ate) > agora
+    const whatsappPausado = perfil.whatsapp_pausado_ate && new Date(perfil.whatsapp_pausado_ate) > agora
 
-    const temTelegram  = !!perfil.telegram_chat_id && !telegramPausado
-    const temWhatsApp  = !!perfil.whatsapp         && !whatsappPausado
+    const temTelegram = !!perfil.telegram_chat_id && !telegramPausado
+    const temWhatsApp = !!perfil.whatsapp         && !whatsappPausado
 
     if (!temTelegram && !temWhatsApp) continue
 
-    // Montar lista de licitações para envio em batch
-    const licitacoes = alertasDoUsuario.map(a => ({
-      orgao:          (a.licitacoes as any).orgao,
-      objeto:         (a.licitacoes as any).objeto,
-      valor_estimado: (a.licitacoes as any).valor_estimado,
-      data_abertura:  (a.licitacoes as any).data_abertura,
-      url:            (a.licitacoes as any).url,
-      estado:         (a.licitacoes as any).estado,
-      cidade:         (a.licitacoes as any).cidade,
-      keyword:        (a.keywords as any).termo,
-    }))
+    const licitacoes = [{
+      orgao:          (topAlerta.licitacoes as any).orgao,
+      objeto:         (topAlerta.licitacoes as any).objeto,
+      valor_estimado: (topAlerta.licitacoes as any).valor_estimado,
+      data_abertura:  (topAlerta.licitacoes as any).data_abertura,
+      url:            (topAlerta.licitacoes as any).url,
+      estado:         (topAlerta.licitacoes as any).estado,
+      cidade:         (topAlerta.licitacoes as any).cidade,
+      keyword:        (topAlerta.keywords as any).termo,
+    }]
 
-    const canaisEnviados: string[] = []
-
-    // Envia para Telegram e WhatsApp simultaneamente (mesmas licitações para os dois)
     const [telegramOk, whatsappOk] = await Promise.all([
-      temTelegram
-        ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)
-        : Promise.resolve(false),
-      temWhatsApp
-        ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)
-        : Promise.resolve(false),
+      temTelegram ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)  : Promise.resolve(false),
+      temWhatsApp ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)          : Promise.resolve(false),
     ])
 
-    if (telegramOk) canaisEnviados.push('telegram')
-    if (whatsappOk) canaisEnviados.push('whatsapp')
+    const canaisEnviados: string[] = []
+    if (telegramOk)  canaisEnviados.push('telegram')
+    if (whatsappOk)  canaisEnviados.push('whatsapp')
 
-    if (canaisEnviados.length > 0) {
-      // Atualiza todos os alertas do usuário como enviados
-      const ids = alertasDoUsuario.map(a => a.id)
+    if (canaisEnviados.length === 0) continue
 
-      // Lê canais atuais e faz merge
-      const { data: atuais } = await supabase
-        .from('alertas')
-        .select('id, canais')
-        .in('id', ids)
+    // Marca TODOS os alertas da mesma licitação (todas as keywords) como enviados —
+    // evita reenvio em rodadas futuras por rows duplicadas da mesma licitação.
+    const { data: atuais } = await supabase
+      .from('alertas')
+      .select('id, canais')
+      .in('id', todasAsIds)
 
-      // Atualiza cada alerta adicionando os novos canais
-      await Promise.all(
-        (atuais ?? []).map(atual => {
-          const canaisAtuais: string[] = atual.canais ?? []
-          const canaisNovos = [...new Set([...canaisAtuais, ...canaisEnviados])]
-          return supabase
-            .from('alertas')
-            .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
-            .eq('id', atual.id)
-        })
-      )
+    await Promise.all(
+      (atuais ?? []).map(atual => {
+        const canaisNovos = [...new Set([...(atual.canais ?? []), ...canaisEnviados])]
+        return supabase
+          .from('alertas')
+          .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
+          .eq('id', atual.id)
+      })
+    )
 
-      enviados += alertasDoUsuario.length
-      resultado[userId] = {
-        alertas:  alertasDoUsuario.length,
-        canais:   canaisEnviados,
-        telegram: telegramOk,
-        whatsapp: whatsappOk,
-      }
+    enviados++
+    resultado[userId] = {
+      licitacao_id: topAlerta.licitacao_id,
+      ids_marcados: todasAsIds.length,
+      canais:   canaisEnviados,
+      telegram: telegramOk,
+      whatsapp: whatsappOk,
     }
   }
 

@@ -312,7 +312,7 @@ export async function GET(req: NextRequest) {
     .select('id, cnpj')
     .is('situacao', null)
     .eq('status', 'invalido')
-    .limit(30)
+    .limit(60)
 
   let receitaVerificados = 0, receitaAtivos = 0, receitaInativas = 0
 

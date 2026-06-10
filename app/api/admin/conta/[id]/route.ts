@@ -27,11 +27,11 @@ export async function GET(
     .eq('user_id', id)
     .order('criado_em', { ascending: false })
 
-  // Alertas recentes do usuário (com dados da licitação)
+  // Alertas recentes do usuário via keywords (alertas não tem user_id direto)
   const { data: alertas } = await service
     .from('alertas')
-    .select('id, criado_em, canais, licitacoes(objeto, orgao, valor_estimado, data_abertura)')
-    .eq('user_id', id)
+    .select('id, criado_em, canais, licitacoes(objeto, orgao, valor_estimado, data_abertura), keywords!inner(user_id)')
+    .eq('keywords.user_id', id)
     .order('criado_em', { ascending: false })
     .limit(20)
 
