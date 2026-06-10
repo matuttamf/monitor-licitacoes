@@ -81,8 +81,9 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
         const licitacao = lote[match.index]
         if (!licitacao || match.keywords.length === 0) continue
 
+        // filter (não find) — múltiplos usuários podem ter o mesmo termo
         const keywordIds = match.keywords
-          .map(termo => keywords.find(k => k.termo === termo)?.id)
+          .flatMap(termo => keywords.filter(k => k.termo === termo).map(k => k.id))
           .filter(Boolean) as string[]
 
         if (keywordIds.length > 0) {
