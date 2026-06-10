@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { trackResend } from '@/lib/uso-apis'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://monitordelicitacoes.com.br'
 const FROM = process.env.EMAIL_REMETENTE || 'Monitor de Licitações <noreply@monitordelicitacoes.com.br>'
@@ -57,6 +58,7 @@ function baseEmail(conteudo: string): string {
 // E-mail Dia 1: Boas-vindas
 export async function enviarEmailBoasVindas(email: string, nome: string): Promise<void> {
   const resend = getResend()
+  trackResend()
   await resend.emails.send({
     from: FROM,
     to: email,
@@ -114,6 +116,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
 // E-mail Dia 3: Engajamento
 export async function enviarEmailDia3(email: string, totalLicitacoes: number): Promise<void> {
   const resend = getResend()
+  trackResend()
   await resend.emails.send({
     from: FROM,
     to: email,
@@ -175,6 +178,7 @@ export async function enviarEmailDia3(email: string, totalLicitacoes: number): P
 // E-mail Dia 6: Urgência (trial expira amanhã)
 export async function enviarEmailUrgencia(email: string): Promise<void> {
   const resend = getResend()
+  trackResend()
   await resend.emails.send({
     from: FROM,
     to: email,

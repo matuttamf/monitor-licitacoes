@@ -14,6 +14,7 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { emailReconversao } from '@/lib/emails/reconversao'
+import { trackResend } from '@/lib/uso-apis'
 
 export const maxDuration = 60
 
@@ -87,6 +88,7 @@ export async function GET(req: NextRequest) {
     })
 
     try {
+      trackResend()
       const { error: sendError } = await resend.emails.send({
         from: 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
         to:   perfil.email,

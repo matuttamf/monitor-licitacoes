@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { trackEnrichment } from '@/lib/uso-apis'
 
 export const maxDuration = 300
 
@@ -240,6 +241,7 @@ export async function GET(req: NextRequest) {
 
     if (!dados) { brasilApiNull++; continue }
     brasilApiOk++
+    trackEnrichment() // contabiliza chamadas diárias à minhareceita.org
     if (dados.situacao_cadastral !== 2) { inativas++; continue }
 
     const emailRaw = dados.email?.trim()

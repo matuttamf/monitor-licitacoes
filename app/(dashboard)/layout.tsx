@@ -52,7 +52,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const allNavItems = [
     ...navItems,
     ...(exibirEquipe ? [{ href: '/equipe', label: 'Minha Equipe', icon: '◫' }] : []),
-    ...(user.email === ADMIN_EMAIL ? [{ href: '/admin', label: 'Admin', icon: '⚙' }] : []),
+    ...(user.email === ADMIN_EMAIL ? [
+      { href: '/admin',       label: 'Admin',  icon: '⚙' },
+      { href: '/admin/saude', label: 'Saúde',  icon: '🏥' },
+    ] : []),
   ]
 
   return (

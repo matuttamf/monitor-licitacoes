@@ -17,6 +17,7 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { emailCaptacao, type LicitacaoResumida } from '@/lib/emails/captacao'
+import { trackResend } from '@/lib/uso-apis'
 
 // ─── Palavras-chave por segmento para buscar licitações compatíveis ──────────
 const KEYWORDS_SEGMENTO: Record<string, string[]> = {
@@ -179,6 +180,7 @@ export async function GET(req: NextRequest) {
       .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
 
     try {
+      trackResend()
       const { error: sendError } = await resend.emails.send({
         from: 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
         to:   lead.email,

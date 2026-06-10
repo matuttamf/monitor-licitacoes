@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { trackResend } from '@/lib/uso-apis'
 
 interface LicitacaoAlerta {
   id: string
@@ -216,6 +217,7 @@ export async function enviarAlertaEmailUsuario(
     console.error(`Erro ao enviar e-mail para ${emailDestino}:`, error)
     return false
   }
+  trackResend() // contabiliza e-mails enviados (3.000/mês no free tier)
 
   return true
 }

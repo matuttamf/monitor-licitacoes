@@ -1,4 +1,5 @@
 import { LicitacaoRaw } from './types'
+import { trackGoogleCSE } from '@/lib/uso-apis'
 
 const API_KEY = process.env.GOOGLE_SEARCH_API_KEY!
 const SEARCH_ENGINE_ID = process.env.GOOGLE_SEARCH_ENGINE_ID!
@@ -63,6 +64,7 @@ export async function coletarGoogle(keywords: string[]): Promise<LicitacaoRaw[]>
         continue
       }
 
+      trackGoogleCSE() // contabiliza uso diário (100 queries/dia compartilhado)
       const json = await res.json()
       const itens: GoogleSearchItem[] = json.items ?? []
 

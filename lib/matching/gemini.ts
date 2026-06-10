@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { trackGemini } from '@/lib/uso-apis'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -60,6 +61,7 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
 [{"index": 0, "keywords": ["termo1"]}, {"index": 1, "keywords": []}, ...]`
 
     try {
+      trackGemini() // contabiliza chamadas mensais ao Gemini
       const resultado = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {

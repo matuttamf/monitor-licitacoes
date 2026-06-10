@@ -19,6 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { trackGoogleCSE, trackEnrichment } from '@/lib/uso-apis'
 
 export const maxDuration = 300
 
@@ -111,6 +112,7 @@ async function buscarGoogle(query: string): Promise<{ emails: string[]; urls: st
     if (res.status === 429) return { emails: [], urls: [], debug: 'google: cota diária atingida (100/dia)' }
     if (!res.ok) return { emails: [], urls: [], debug: `google: HTTP ${res.status}` }
 
+    trackGoogleCSE() // contabiliza uso diário (100 queries/dia compartilhado)
     const json = await res.json() as {
       items?: { link?: string; snippet?: string; title?: string }[]
     }
