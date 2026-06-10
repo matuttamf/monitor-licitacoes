@@ -27,7 +27,8 @@ export const maxDuration = 300
 const TRANSPARENCIA_BASE = 'https://api.portaldatransparencia.gov.br/api-de-dados'
 const BRASIL_API         = 'https://brasilapi.com.br/api/cnpj/v1'
 
-const BACKFILL_INICIO  = '2000-01-01'
+// Portal Transparência tem dados a partir de 2014 (antes disso retorna 0)
+const BACKFILL_INICIO  = '2014-01-01'
 const JANELA_BACKFILL  = 30   // dias por execução durante backfill
 const JANELA_CONTINUA  = 2    // dias no modo contínuo
 const MAX_PAGINAS      = 3    // 3 × 500 = 1.500 contratos/execução
@@ -35,6 +36,11 @@ const MAX_ENRIQUECER   = 30   // cap de enriquecimentos por execução
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
+// Portal Transparência exige dd/MM/yyyy
+const fmtBr  = (d: Date) => {
+  const [y, m, day] = d.toISOString().slice(0, 10).split('-')
+  return `${day}/${m}/${y}`
+}
 
 // ─── Segmentação por CNAE (mesmo mapeamento de coletar-leads) ─────────────────
 function mapearSegmento(cnae: string | null | undefined): string {
@@ -180,14 +186,14 @@ export async function GET(req: NextRequest) {
     const fimDate    = new Date(inicioDate)
     fimDate.setDate(fimDate.getDate() + JANELA_BACKFILL - 1)
     if (fimDate > hoje) fimDate.setTime(hoje.getTime())
-    dataInicio = fmtIso(inicioDate)
-    dataFim    = fmtIso(fimDate)
-    modoLabel  = `backfill (${ponteiro} → ${dataFim})`
+    dataInicio = fmtBr(inicioDate)
+    dataFim    = fmtBr(fimDate)
+    modoLabel  = `backfill (${ponteiro} → ${fmtIso(fimDate)})`
   } else {
     const inicioDate = new Date(hoje)
     inicioDate.setDate(inicioDate.getDate() - JANELA_CONTINUA)
-    dataInicio = fmtIso(inicioDate)
-    dataFim    = hojeIso
+    dataInicio = fmtBr(inicioDate)
+    dataFim    = fmtBr(hoje)
     modoLabel  = 'contínuo'
   }
 

@@ -67,12 +67,16 @@ export async function POST(request: Request) {
   const url = rotas[acao]
   if (!url) return NextResponse.json({ error: 'Ação inválida' }, { status: 400 })
 
-  // Matching roda em background — retorna imediatamente sem aguardar
-  const fireAndForget = acao === 'matching'
+  // Ações longas rodam em background — retornam imediatamente sem aguardar
+  // matching: ~60s  |  enriquecer-emails: ~120s (10 leads × buscas web)
+  const fireAndForget = acao === 'matching' || acao === 'enriquecer-emails'
 
   if (fireAndForget) {
     fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error)
-    return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg: 'Matching disparado em background. Verifique Alertas em ~60s.' } })
+    const msg = acao === 'matching'
+      ? 'Matching disparado em background. Verifique Alertas em ~60s.'
+      : 'Busca de e-mails disparada em background. Verifique os leads em ~2min.'
+    return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg } })
   }
 
   try {
