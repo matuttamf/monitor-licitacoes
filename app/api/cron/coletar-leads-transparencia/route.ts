@@ -159,13 +159,19 @@ export async function GET(req: NextRequest) {
   if (!orgaosCached.codigos.length || cacheExpirado || cacheInsuficiente) {
     const codigos = await buscarOrgaosSiafi(apiKey)
     if (!codigos.length) {
-      return NextResponse.json({ ok: false, motivo: 'Falha ao buscar lista de órgãos SIAFI' })
+      // Se a API SIAFI falhar mas temos cache antigo, usamos ele para não bloquear a coleta
+      if (orgaosCached.codigos.length >= 50) {
+        console.warn('[transparencia] SIAFI falhou — usando cache antigo com', orgaosCached.codigos.length, 'órgãos')
+      } else {
+        return NextResponse.json({ ok: false, motivo: 'Falha ao buscar lista de órgãos SIAFI e sem cache disponível' })
+      }
+    } else {
+      orgaosCached = { codigos, ts: Date.now() }
+      await supabase.from('configuracoes').upsert(
+        { chave: 'captacao_transparencia_orgaos_cache', valor: JSON.stringify(orgaosCached) },
+        { onConflict: 'chave' }
+      )
     }
-    orgaosCached = { codigos, ts: Date.now() }
-    await supabase.from('configuracoes').upsert(
-      { chave: 'captacao_transparencia_orgaos_cache', valor: JSON.stringify(orgaosCached) },
-      { onConflict: 'chave' }
-    )
   }
 
   const { codigos: todosOrgaos } = orgaosCached
