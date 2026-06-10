@@ -31,9 +31,10 @@ const PNCP_BASE  = 'https://pncp.gov.br/api/consulta/v1'
 const CNPJ_API   = 'https://minhareceita.org'
 
 // PNCP tem dados a partir de ~2021 — começar antes desperdiça execuções
-const BACKFILL_INICIO = '2021-01-01'
-const JANELA_BACKFILL = 30  // dias por execução durante o backfill
-const JANELA_CONTINUA = 2   // ontem + hoje no modo contínuo (evita redundância com 10min)
+const BACKFILL_INICIO  = '2021-01-01'
+const JANELA_BACKFILL  = 7   // dias por execução — menor janela = menos dados = menos timeout
+const JANELA_CONTINUA  = 2   // ontem + hoje no modo contínuo
+const MAX_FALHAS_SKIP  = 5   // após N timeouts consecutivos no mesmo período, pula e avança
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
@@ -162,11 +163,10 @@ export async function GET(req: NextRequest) {
   const hoje    = new Date()
   const hojeIso = fmtIso(hoje)
 
-  const { data: cfgBf } = await supabase
-    .from('configuracoes')
-    .select('valor')
-    .eq('chave', 'captacao_backfill_data')
-    .maybeSingle()
+  const [{ data: cfgBf }, { data: cfgFalhas }] = await Promise.all([
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_backfill_data').maybeSingle(),
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_pncp_falhas_consecutivas').maybeSingle(),
+  ])
 
   let ponteiro: string = (cfgBf?.valor as string) || BACKFILL_INICIO
   const emBackfill = ponteiro < hojeIso
@@ -196,13 +196,43 @@ export async function GET(req: NextRequest) {
   const { contratos, debug: debugPncp, hadError } = await buscarContratosPNCP(dataInicial, dataFinal)
 
   if (!contratos.length) {
-    // Só avança o ponteiro se não houve erro — timeout/falha não deve pular o período
-    if (emBackfill && !hadError) await avancarPonteiro(supabase, dataFinal)
+    if (emBackfill && hadError) {
+      // Incrementa contador de falhas — após MAX_FALHAS_SKIP, pula o período
+      const falhasAtual = parseInt((cfgFalhas?.valor as string) || '0', 10) || 0
+      const falhasNovo  = falhasAtual + 1
+      if (falhasNovo >= MAX_FALHAS_SKIP) {
+        console.warn(`[coletar-leads] ${MAX_FALHAS_SKIP} falhas consecutivas em ${modoLabel} — pulando período`)
+        await avancarPonteiro(supabase, dataFinal)
+        await supabase.from('configuracoes').upsert(
+          { chave: 'captacao_pncp_falhas_consecutivas', valor: '0' },
+          { onConflict: 'chave' }
+        )
+        return NextResponse.json({
+          ok: true, novos: 0, modo: modoLabel,
+          mensagem: `Período pulado após ${MAX_FALHAS_SKIP} timeouts consecutivos`,
+          pncp_debug: debugPncp,
+        })
+      }
+      await supabase.from('configuracoes').upsert(
+        { chave: 'captacao_pncp_falhas_consecutivas', valor: String(falhasNovo) },
+        { onConflict: 'chave' }
+      )
+      return NextResponse.json({
+        ok: false, novos: 0, modo: modoLabel,
+        mensagem: `Erro ao buscar contratos PNCP — tentativa ${falhasNovo}/${MAX_FALHAS_SKIP}`,
+        pncp_debug: debugPncp,
+      })
+    }
+    if (emBackfill && !hadError) {
+      await avancarPonteiro(supabase, dataFinal)
+      await supabase.from('configuracoes').upsert(
+        { chave: 'captacao_pncp_falhas_consecutivas', valor: '0' },
+        { onConflict: 'chave' }
+      )
+    }
     return NextResponse.json({
-      ok: !hadError, novos: 0, modo: modoLabel,
-      mensagem: hadError
-        ? 'Erro ao buscar contratos PNCP — período será repetido na próxima rodada'
-        : 'Nenhum contrato encontrado no período',
+      ok: true, novos: 0, modo: modoLabel,
+      mensagem: 'Nenhum contrato encontrado no período',
       pncp_debug: debugPncp,
     })
   }
@@ -228,6 +258,12 @@ export async function GET(req: NextRequest) {
   const paraAtuEmail  = cnpjsNovos.filter(c => mapExistentes.has(c) && mapExistentes.get(c) == null)
   // Pool total para processar nesta execução
   const paraEnriquecer = [...paraInserir, ...paraAtuEmail]
+
+  // Chegou aqui = sucesso na busca PNCP — zera contador de falhas
+  await supabase.from('configuracoes').upsert(
+    { chave: 'captacao_pncp_falhas_consecutivas', valor: '0' },
+    { onConflict: 'chave' }
+  )
 
   if (!paraEnriquecer.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)
