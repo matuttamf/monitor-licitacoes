@@ -148,11 +148,13 @@ export async function GET(request: Request) {
     const novosAlertas    = alertas.filter(a => !(a as any)._reenvio)
     const reenviosAlertas = alertas.filter(a =>  (a as any)._reenvio)
 
-    // Novos: cap por preferência do usuário
-    const novosParaEnviar = novosAlertas.slice(0, itensPorEmail)
-    const totalRestante   = novosAlertas.length - novosParaEnviar.length
+    // Novos têm prioridade; reenvios preenchem o restante até o cap
+    const novosParaEnviar   = novosAlertas.slice(0, itensPorEmail)
+    const totalRestante     = novosAlertas.length - novosParaEnviar.length
+    const vagasReenvio      = Math.max(0, itensPorEmail - novosParaEnviar.length)
+    const reenviosParaEnviar = reenviosAlertas.slice(0, vagasReenvio)
 
-    const alertasParaEnviar = [...novosParaEnviar, ...reenviosAlertas]
+    const alertasParaEnviar = [...novosParaEnviar, ...reenviosParaEnviar]
     if (!alertasParaEnviar.length) continue
 
     // Montar lista de licitações
