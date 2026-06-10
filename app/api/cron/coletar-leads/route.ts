@@ -24,9 +24,9 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 export const maxDuration = 300
 
 const PNCP_BASE  = 'https://pncp.gov.br/api/consulta/v1'
-// publica.cnpj.ws: sem rate limit, dados da Receita Federal
-// BrasilAPI bloqueia requests da Vercel por IP compartilhado
-const CNPJ_WS    = 'https://publica.cnpj.ws/cnpj'
+// minhareceita.org: dados Receita Federal, sem CF/rate-limit server-side
+// BrasilAPI e cnpj.ws bloqueiam IPs compartilhados da Vercel
+const CNPJ_API   = 'https://minhareceita.org'
 
 const BACKFILL_INICIO = '2000-01-01'
 const JANELA_BACKFILL = 30  // dias por execução durante o backfill
@@ -69,18 +69,20 @@ interface PncpContrato {
   unidadeOrgao?:             { ufSigla?: string; municipioNome?: string }
 }
 
-// Formato do publica.cnpj.ws (substitui BrasilAPI que bloqueia IPs Vercel)
+// minhareceita.org — mesmo formato que BrasilAPI, funciona server-side sem bloqueio
 interface CnpjWs {
-  cnpj:              string
-  razao_social:      string
-  nome_fantasia?:    string
-  situacao_cadastral: { codigo: number; descricao: string }
-  porte?:            { descricao?: string }
-  atividade_principal?: Array<{ codigo: string; descricao: string }>
-  email?:            string
-  telefone_1?:       string
-  municipio?:        string
-  uf?:               string
+  cnpj:                         string
+  razao_social:                 string
+  nome_fantasia?:               string
+  situacao_cadastral:           string   // "ATIVA", "BAIXADA", etc. (string simples)
+  descricao_situacao_cadastral?: string
+  porte?:                       { descricao?: string }
+  descricao_porte?:             string
+  cnae_fiscal_descricao?:       string
+  email?:                       string
+  ddd_telefone_1?:              string
+  municipio?:                   string
+  uf?:                          string
 }
 
 // ─── Busca PNCP ───────────────────────────────────────────────────────────────
@@ -116,7 +118,7 @@ async function buscarContratosPNCP(
 
 async function enriquecerCnpj(cnpj: string): Promise<CnpjWs | null> {
   try {
-    const res = await fetch(`${CNPJ_WS}/${cnpj}`, {
+    const res = await fetch(`${CNPJ_API}/${cnpj}`, {
       headers: { Accept: 'application/json', 'User-Agent': 'MonitorLicitacoes/1.0' },
       signal: AbortSignal.timeout(15000),
     })
@@ -232,11 +234,11 @@ export async function GET(req: NextRequest) {
 
     if (!dados) { brasilApiNull++; continue }
     brasilApiOk++
-    // cnpj.ws: situacao_cadastral.codigo === 2 = ATIVA (guarda contra formato inesperado)
-    if ((dados.situacao_cadastral?.codigo ?? dados.situacao_cadastral) !== 2) { inativas++; continue }
+    // minhareceita.org: situacao_cadastral é string "ATIVA"/"BAIXADA"/etc.
+    if (dados.situacao_cadastral !== 'ATIVA') { inativas++; continue }
 
     const contrato = cnpjMap.get(cnpj)!
-    const cnae     = dados.atividade_principal?.[0]?.descricao ?? null
+    const cnae     = dados.cnae_fiscal_descricao ?? null
     const modalidade = contrato.modalidadeContratacao?.nome
                     ?? contrato.modalidadeContratacao?.descricao
                     ?? contrato.tipoContrato?.nome
@@ -249,11 +251,11 @@ export async function GET(req: NextRequest) {
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
       email:         emailRaw ? emailRaw.toLowerCase() : null,
-      telefone:      dados.telefone_1 ?? null,
+      telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
       uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-      situacao:      dados.situacao_cadastral.descricao ?? null,
-      porte:         dados.porte?.descricao ?? null,
+      situacao:      dados.situacao_cadastral ?? null,
+      porte:         dados.descricao_porte ?? null,
       cnae,
       segmento:      mapearSegmento(cnae),
       modalidade,

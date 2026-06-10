@@ -25,7 +25,7 @@ export const maxDuration = 300
 
 const PNCP_CONSULTA = 'https://pncp.gov.br/api/consulta/v1'  // busca por data
 const PNCP_BASE     = 'https://pncp.gov.br/api/pncp/v1'       // recursos por orgão/CNPJ
-const CNPJ_WS       = 'https://publica.cnpj.ws/cnpj'           // enriquecimento (sem rate limit)
+const CNPJ_API      = 'https://minhareceita.org'               // enriquecimento — sem CF/rate-limit server-side
 
 // Quantos processos inspecionar por execução (cada um gera ~N chamadas de API)
 const MAX_PROCESSOS = 8
@@ -57,17 +57,19 @@ interface Proposta {
   nomeFornecedor?: string
 }
 
+// minhareceita.org — formato idêntico ao BrasilAPI, funciona server-side
 interface CnpjWs {
-  cnpj:              string
-  razao_social:      string
-  nome_fantasia?:    string
-  situacao_cadastral: { codigo: number; descricao: string }
-  porte?:            { descricao?: string }
-  atividade_principal?: Array<{ codigo: string; descricao: string }>
-  email?:            string
-  telefone_1?:       string
-  municipio?:        string
-  uf?:               string
+  cnpj:                         string
+  razao_social:                 string
+  nome_fantasia?:               string
+  situacao_cadastral:           string   // "ATIVA", "BAIXADA", etc.
+  descricao_situacao_cadastral?: string
+  descricao_porte?:             string
+  cnae_fiscal_descricao?:       string
+  email?:                       string
+  ddd_telefone_1?:              string
+  municipio?:                   string
+  uf?:                          string
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
@@ -134,7 +136,7 @@ async function buscarPropostas(cnpjOrgao: string, ano: number, seq: number, item
 
 async function enriquecerCnpj(cnpj: string): Promise<CnpjWs | null> {
   try {
-    const res = await fetch(`${CNPJ_WS}/${cnpj}`, {
+    const res = await fetch(`${CNPJ_API}/${cnpj}`, {
       headers: { Accept: 'application/json', 'User-Agent': 'MonitorLicitacoes/1.0' },
       signal: AbortSignal.timeout(15000),
     })
@@ -258,20 +260,20 @@ export async function GET(req: NextRequest) {
     const dados = await enriquecerCnpj(cnpj)
     await sleep(300) // cnpj.ws sem rate limit agressivo
     if (!dados) continue
-    if ((dados.situacao_cadastral?.codigo ?? dados.situacao_cadastral) !== 2) continue  // apenas ATIVAS
+    if (dados.situacao_cadastral !== 'ATIVA') continue  // apenas ATIVAS
 
     const emailRaw = dados.email?.trim()
-    const cnae = dados.atividade_principal?.[0]?.descricao ?? null
+    const cnae = dados.cnae_fiscal_descricao ?? null
     const { error } = await supabase.from('leads').upsert({
       cnpj:          dados.cnpj,
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
       email:         emailRaw ? emailRaw.toLowerCase() : null,
-      telefone:      dados.telefone_1 ?? null,
+      telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? null,
       uf:            dados.uf ?? null,
-      situacao:      dados.situacao_cadastral.descricao ?? null,
-      porte:         dados.porte?.descricao ?? null,
+      situacao:      dados.situacao_cadastral ?? null,
+      porte:         dados.descricao_porte ?? null,
       cnae,
       status:        emailRaw ? 'pendente' : 'sem_email',
       fonte:         'pncp_proposta',
