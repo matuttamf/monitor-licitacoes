@@ -91,9 +91,10 @@ interface CnpjWs {
 
 async function buscarContratosPNCP(
   dataInicial: string, dataFinal: string, paginas = 26
-): Promise<{ contratos: PncpContrato[]; debug: string[] }> {
+): Promise<{ contratos: PncpContrato[]; debug: string[]; hadError: boolean }> {
   const todos: PncpContrato[] = []
   const debug: string[] = []
+  let hadError = false
   for (let p = 1; p <= paginas; p++) {
     try {
       const url = `${PNCP_BASE}/contratos?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
@@ -104,6 +105,7 @@ async function buscarContratosPNCP(
         break
       }
       if (!res.ok) {
+        hadError = true
         debug.push(`p${p} erro: ${(await res.text().catch(() => '')).slice(0, 200)}`)
         break
       }
@@ -115,11 +117,12 @@ async function buscarContratosPNCP(
       todos.push(...itens.filter(c => c.niFornecedor && c.tipoPessoa !== 'PF'))
       if (itens.length < 50) break
     } catch (e) {
+      hadError = true
       debug.push(`p${p}: exception ${String(e)}`)
       break
     }
   }
-  return { contratos: todos, debug }
+  return { contratos: todos, debug, hadError }
 }
 
 async function enriquecerCnpj(cnpj: string): Promise<CnpjWs | null> {
@@ -190,13 +193,17 @@ export async function GET(req: NextRequest) {
 
   // ── 1. Buscar contratos PNCP ──────────────────────────────────────────────
   // Usa o default de 26 páginas (= até 1300 contratos por janela de 30 dias)
-  const { contratos, debug: debugPncp } = await buscarContratosPNCP(dataInicial, dataFinal)
+  const { contratos, debug: debugPncp, hadError } = await buscarContratosPNCP(dataInicial, dataFinal)
 
   if (!contratos.length) {
-    if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+    // Só avança o ponteiro se não houve erro — timeout/falha não deve pular o período
+    if (emBackfill && !hadError) await avancarPonteiro(supabase, dataFinal)
     return NextResponse.json({
-      ok: true, novos: 0, modo: modoLabel,
-      mensagem: 'Nenhum contrato encontrado no período', pncp_debug: debugPncp,
+      ok: !hadError, novos: 0, modo: modoLabel,
+      mensagem: hadError
+        ? 'Erro ao buscar contratos PNCP — período será repetido na próxima rodada'
+        : 'Nenhum contrato encontrado no período',
+      pncp_debug: debugPncp,
     })
   }
 
