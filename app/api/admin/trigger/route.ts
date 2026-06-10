@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   const fireAndForget = acao in MSGS_BACKGROUND
 
   if (fireAndForget) {
-    fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error)
+    after(() => fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error))
     return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg: MSGS_BACKGROUND[acao] } })
   }
 
