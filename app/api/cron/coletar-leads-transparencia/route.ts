@@ -91,9 +91,10 @@ interface BrasilApiCnpj {
 // ─── Busca lista de órgãos SIAFI ──────────────────────────────────────────────
 async function buscarOrgaosSiafi(apiKey: string): Promise<string[]> {
   const codigos: string[] = []
-  for (let pagina = 1; pagina <= 20; pagina++) {   // até 2000 órgãos (100/página)
+  for (let pagina = 1; pagina <= 50; pagina++) {   // até 5000 órgãos (100/página)
     try {
-      const url = `${TRANSPARENCIA_BASE}/orgaos-siafi?pagina=${pagina}`
+      // tamanhoPagina=100 garante máximo por página; sem ele a API usa default próprio (~15)
+      const url = `${TRANSPARENCIA_BASE}/orgaos-siafi?pagina=${pagina}&tamanhoPagina=100`
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'chave-api-dados': apiKey },
         signal: AbortSignal.timeout(15000),
@@ -104,11 +105,10 @@ async function buscarOrgaosSiafi(apiKey: string): Promise<string[]> {
       try { data = JSON.parse(body) } catch { break }
       if (!Array.isArray(data)) break
       const lista = data as OrgaoSiafi[]
-      if (!lista.length) break
+      if (!lista.length) break   // página vazia = fim real da lista
       for (const o of lista) {
         if (o.codigo) codigos.push(o.codigo)
       }
-      if (lista.length < 100) break   // última página
     } catch { break }
   }
   return codigos
@@ -180,7 +180,8 @@ export async function GET(req: NextRequest) {
   } catch { /* inicia vazio */ }
 
   const cacheExpirado = Date.now() - orgaosCached.ts > CACHE_TTL_MS
-  if (!orgaosCached.codigos.length || cacheExpirado) {
+  const cacheInsuficiente = orgaosCached.codigos.length < 50  // sanidade: SIAFI tem >400 órgãos
+  if (!orgaosCached.codigos.length || cacheExpirado || cacheInsuficiente) {
     const codigos = await buscarOrgaosSiafi(apiKey)
     if (!codigos.length) {
       return NextResponse.json({ ok: false, motivo: 'Falha ao buscar lista de órgãos SIAFI' })
