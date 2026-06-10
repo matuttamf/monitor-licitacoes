@@ -26,17 +26,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, matches: 0, debug: 'sem keywords' })
   }
 
-  // Pré-filtro textual nas licitações das últimas 48h
-  const termos   = keywords.map(k => k.termo.toLowerCase())
+  // Pré-filtro textual nas licitações abertas
+  const termos   = [...new Set(keywords.map(k => k.termo.toLowerCase()))]
   const filtroOr = termos.map(t => `objeto.ilike.%${t}%`).join(',')
-  const hoje     = new Date().toISOString().substring(0, 10)
 
-  // Busca TODAS as licitações abertas (sem filtro de data de coleta)
-  // O upsert por (licitacao_id, keyword_id) garante idempotência
+  // Janela de 7 dias para não perder licitações com abertura recente
+  const janela = new Date()
+  janela.setDate(janela.getDate() - 7)
+  const dataCorte = janela.toISOString().substring(0, 10)
+
+  // Busca TODAS as licitações abertas — upsert (licitacao+keyword) garante idempotência
   const { data: candidatos } = await supabase
     .from('licitacoes')
     .select('id, objeto, data_abertura, estado, valor_estimado')
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+    .or(`data_abertura.is.null,data_abertura.gte.${dataCorte}`)
     .or(filtroOr)
 
   if (!candidatos?.length) {
