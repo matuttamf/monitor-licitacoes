@@ -258,7 +258,7 @@ export async function GET(req: NextRequest) {
     const dados = await enriquecerCnpj(cnpj)
     await sleep(300) // cnpj.ws sem rate limit agressivo
     if (!dados) continue
-    if (dados.situacao_cadastral.codigo !== 2) continue  // apenas ATIVAS
+    if ((dados.situacao_cadastral?.codigo ?? dados.situacao_cadastral) !== 2) continue  // apenas ATIVAS
 
     const emailRaw = dados.email?.trim()
     const cnae = dados.atividade_principal?.[0]?.descricao ?? null

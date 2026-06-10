@@ -232,8 +232,8 @@ export async function GET(req: NextRequest) {
 
     if (!dados) { brasilApiNull++; continue }
     brasilApiOk++
-    // cnpj.ws: situacao_cadastral.codigo === 2 = ATIVA
-    if (dados.situacao_cadastral.codigo !== 2) { inativas++; continue }
+    // cnpj.ws: situacao_cadastral.codigo === 2 = ATIVA (guarda contra formato inesperado)
+    if ((dados.situacao_cadastral?.codigo ?? dados.situacao_cadastral) !== 2) { inativas++; continue }
 
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.atividade_principal?.[0]?.descricao ?? null
