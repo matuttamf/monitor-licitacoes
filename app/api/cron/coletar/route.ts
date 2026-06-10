@@ -1,4 +1,4 @@
-import { NextResponse, after } from 'next/server'
+import { NextResponse } from 'next/server'
 import type { LicitacaoRaw } from '@/lib/scrapers/types'
 import { verificarCronAuth } from '@/lib/cron-auth'
 
@@ -629,10 +629,10 @@ export async function GET(request: Request) {
   console.log(`${candidatos?.length ?? 0} candidatos para matching`)
   if (!candidatos?.length) return NextResponse.json({ ok: true, salvas, matches: 0 })
 
-  // 5. Disparar matching após resposta (after garante execução pós-response em serverless)
-  after(() => fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/cron/matching`, {
+  // 5. Disparar matching (endpoint separado, não bloqueia)
+  fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/cron/matching`, {
     method: 'GET', headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
-  }).catch(err => console.error('Erro matching:', err)))
+  }).catch(err => console.error('Erro matching:', err))
 
   const nomes = [
     // Camada 1
