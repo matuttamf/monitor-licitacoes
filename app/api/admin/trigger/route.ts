@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   const fireAndForget = acao in MSGS_BACKGROUND
 
   if (fireAndForget) {
-    after(() => fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error))
+    fetch(url, { headers: { 'Authorization': `Bearer ${secret}`, 'X-Cron-Secret': secret ?? '' } }).catch(console.error)
     return NextResponse.json({ ok: true, status: 202, data: { ok: true, msg: MSGS_BACKGROUND[acao] } })
   }
 
