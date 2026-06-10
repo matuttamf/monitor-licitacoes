@@ -46,13 +46,12 @@ export async function GET(request: Request) {
   const termosExistentes = [...new Set(kwExistentes.map(k => k.termo.toLowerCase()))]
 
   const [resNovos, resIncrementais] = await Promise.all([
-    // Keywords novas → todo o banco aberto (data_abertura >= hoje ou sem data)
-    termosNovos.length > 0
+    // Keywords novas → todo o banco aberto sem filtro ilike (evita limite de URL com muitos termos)
+    kwNovas.length > 0
       ? supabase
           .from('licitacoes')
           .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
           .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-          .or(termosNovos.map(t => `objeto.ilike.%${t}%`).join(','))
       : Promise.resolve({ data: [] }),
 
     // Keywords existentes → apenas licitações coletadas desde o último matching
