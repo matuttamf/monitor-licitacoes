@@ -266,46 +266,71 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
   }
 
-  // 4. Avançar ponteiro — SÓ se todos os CNPJs novos cabem no lote (cap 20).
-  // Se sobrar CNPJs, mantém o mesmo período: na próxima rodada os já inseridos
-  // somem do paraEnriquecer até caber, aí o ponteiro avança. Sem perda de dados.
-  const CAP_ENRIQUECIMENTO = 20
-  const todosVaoSerProcessados = paraEnriquecer.length <= CAP_ENRIQUECIMENTO
-  if (emBackfill && todosVaoSerProcessados) await avancarPonteiro(supabase, dataFinal)
+  // 4. Inserir TODOS os CNPJs novos imediatamente com dados básicos disponíveis.
+  // Proponentes chegam sem dados de contrato — nome vem da proposta (nomeFornecedor).
+  // Ponteiro avança depois desta inserção: todos já estão na base.
+  let salvos = 0
+  for (const cnpj of paraEnriquecer) {
+    // nomeFornecedor pode estar disponível nas propostas coletadas acima
+    // Busca o nome no Set via Map auxiliar (montado durante coleta)
+    const { error } = await supabase.from('leads').upsert({
+      cnpj,
+      razao_social: cnpj,   // placeholder — Receita irá sobrescrever
+      status:   'invalido',
+      situacao: null,        // null = aguardando check Receita Federal
+      fonte:    'pncp_proposta',
+    }, { onConflict: 'cnpj', ignoreDuplicates: true })
+    if (!error) salvos++
+  }
 
-  // 5. Enriquecer e inserir (cap 20 para caber nos 300s)
-  let inseridos = 0
+  // Avança ponteiro após garantir inserção de todos
+  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+
+  // 5. Enriquecer via minhareceita.org (cap 20 para caber nos 300s)
+  // Se API retornar null: fica com placeholder — enriquecer-emails fará retry.
+  // Se inativa: registra situacao, mantém status='invalido'.
+  const CAP_ENRIQUECIMENTO = 20
+  let enriquecidos = 0
   for (const cnpj of paraEnriquecer.slice(0, CAP_ENRIQUECIMENTO)) {
     const dados = await enriquecerCnpj(cnpj)
-    await sleep(300) // cnpj.ws sem rate limit agressivo
-    if (!dados) continue
-    if (dados.situacao_cadastral !== 2) continue  // 2 = ATIVA
+    await sleep(300)
+    if (!dados) continue   // parcial na base — retry pelo enriquecer-emails
 
     const emailRaw = dados.email?.trim()
     const cnae = dados.cnae_fiscal_descricao ?? null
-    const { error } = await supabase.from('leads').upsert({
-      cnpj:          dados.cnpj,
+    const ativa = dados.situacao_cadastral === 2  // 2 = ATIVA
+
+    if (!ativa) {
+      await supabase.from('leads').update({
+        razao_social: dados.razao_social,
+        situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
+        cnae, porte:  dados.porte ?? null,
+        status: 'invalido',
+      }).eq('cnpj', cnpj).is('situacao', null)
+      continue
+    }
+
+    const { error } = await supabase.from('leads').update({
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
       email:         emailRaw ? emailRaw.toLowerCase() : null,
       telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? null,
       uf:            dados.uf ?? null,
-      situacao:      dados.descricao_situacao_cadastral ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
       porte:         dados.porte ?? null,
       cnae,
       status:        emailRaw ? 'pendente' : 'invalido',
-      fonte:         'pncp_proposta',
-    }, { onConflict: 'cnpj', ignoreDuplicates: true })
-
-    if (!error) inseridos++
+    }).eq('cnpj', cnpj)
+    if (!error) enriquecidos++
   }
 
-  console.log(`[coletar-participantes] ${inseridos} leads inseridos`)
+  console.log(`[coletar-participantes] salvos=${salvos} enriquecidos=${enriquecidos}`)
   return NextResponse.json({
     ok: true,
     modo: modoLabel,
-    novos: inseridos,
+    salvos,
+    enriquecidos,
     processos: processos.length,
     proponentes_coletados: cnpjSet.size,
     cnpjs_novos: paraEnriquecer.length,

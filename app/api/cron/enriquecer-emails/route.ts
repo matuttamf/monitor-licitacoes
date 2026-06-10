@@ -272,6 +272,19 @@ async function buscarEmailPorDominio(razao: string): Promise<string[]> {
   return []
 }
 
+const MINHARECEITA = 'https://minhareceita.org'
+
+async function enriquecerReceita(cnpj: string) {
+  try {
+    const res = await fetch(`${MINHARECEITA}/${cnpj}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'MonitorLicitacoes/1.0' },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch { return null }
+}
+
 // ── Handler ──────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
@@ -289,8 +302,59 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sistema pausado' })
   }
 
+  // ── Etapa 0: Receita Federal para leads com situacao IS NULL ─────────────
+  // Leads inseridos pelos crons de coleta chegam com situacao=null porque a
+  // Receita pode ter falhado ou o cap foi atingido. Aqui completamos o check.
+  // Só depois do check de situação o lead vai para busca de e-mail (etapa 1).
+  const { data: semReceita } = await supabase
+    .from('leads')
+    .select('id, cnpj')
+    .is('situacao', null)
+    .eq('status', 'invalido')
+    .limit(30)
+
+  let receitaVerificados = 0, receitaAtivos = 0, receitaInativas = 0
+
+  for (const lead of semReceita ?? []) {
+    const dados = await enriquecerReceita(lead.cnpj)
+    await sleep(400)
+    if (!dados) continue   // API indisponível — tenta na próxima rodada
+
+    receitaVerificados++
+    const emailRaw = dados.email?.trim()
+    // minhareceita: situacao_cadastral é número (2 = ATIVA)
+    const ativa = dados.situacao_cadastral === 2
+
+    if (!ativa) {
+      receitaInativas++
+      await supabase.from('leads').update({
+        razao_social: dados.razao_social ?? lead.cnpj,
+        situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
+        cnae:         dados.cnae_fiscal_descricao ?? null,
+        porte:        dados.porte ?? null,
+        status:       'invalido',
+      }).eq('id', lead.id)
+      continue
+    }
+
+    receitaAtivos++
+    // Empresa ativa — preenche todos os campos disponíveis
+    await supabase.from('leads').update({
+      razao_social:  dados.razao_social,
+      nome_fantasia: dados.nome_fantasia ?? null,
+      email:         emailRaw ? emailRaw.toLowerCase() : null,
+      telefone:      dados.ddd_telefone_1 ?? null,
+      municipio:     dados.municipio ?? null,
+      uf:            dados.uf ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
+      porte:         dados.porte ?? null,
+      cnae:          dados.cnae_fiscal_descricao ?? null,
+      status:        emailRaw ? 'pendente' : 'invalido',
+    }).eq('id', lead.id)
+  }
+
+  // ── Etapa 1: Busca de e-mail via web para leads ATIVAS sem e-mail ─────────
   const retryApos = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  // Filtro: leads dos últimos 20 anos — cobre toda a base histórica disponível
   const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
   const { data: leads, error } = await supabase
@@ -298,13 +362,17 @@ export async function GET(req: NextRequest) {
     .select('id, cnpj, razao_social, municipio, uf, porte')
     .is('email', null)
     .eq('status', 'invalido')
+    .eq('situacao', 'ATIVA')   // só busca e-mail para empresas confirmadas como ativas
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
     .gte('data_contrato', vinteAnosAtras)
-    .order('data_contrato', { ascending: false })   // mais recentes primeiro
-    .limit(50)  // 24 rodadas/dia; Google CSE esgota nas 2 primeiras, restante usa SearXNG/Bing/DDG (gratuitos)
+    .order('data_contrato', { ascending: false })
+    .limit(50)  // 24 rodadas/dia; Google CSE esgota nas 2 primeiras, restante usa SearXNG/Bing/DDG
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!leads?.length) return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis' })
+  if (!leads?.length) return NextResponse.json({
+    ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis para e-mail',
+    receita: { verificados: receitaVerificados, ativos: receitaAtivos, inativas: receitaInativas },
+  })
 
   let enriquecidos = 0
   const detalhes: Record<string, { email?: string; metodo?: string; debug: string[] }> = {}
@@ -399,6 +467,7 @@ export async function GET(req: NextRequest) {
     ok:          true,
     enriquecidos,
     tentativas:  leads.length,
+    receita: { verificados: receitaVerificados, ativos: receitaAtivos, inativas: receitaInativas },
     detalhes,
   })
 }

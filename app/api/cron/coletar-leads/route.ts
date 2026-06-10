@@ -230,89 +230,119 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // ── 4. Avançar ponteiro somente se todos os CNPJs novos cabem no lote ─────
-  const LOTE = 50
-  const todosVaoSerProcessados = paraInserir.length <= LOTE
-  if (emBackfill && todosVaoSerProcessados) await avancarPonteiro(supabase, dataFinal)
-
-  // ── 5. Enriquecer via minhareceita.org, inserir ou atualizar e-mail ───────
-  let inseridos = 0, atualizados = 0
-  let brasilApiOk = 0, brasilApiNull = 0, inativas = 0
-
-  for (let i = 0; i < Math.min(paraEnriquecer.length, LOTE); i++) {
-    const cnpj     = paraEnriquecer[i]
-    const ehNovo   = !mapExistentes.has(cnpj)
-    const dados    = await enriquecerCnpj(cnpj)
-    await sleep(500) // ~2 req/s
-
-    if (!dados) { brasilApiNull++; continue }
-    brasilApiOk++
-    trackEnrichment() // contabiliza chamadas diárias à minhareceita.org
-    if (dados.situacao_cadastral !== 2) { inativas++; continue }
-
-    const emailRaw = dados.email?.trim()
-
-    if (!ehNovo) {
-      // Lead já existe — só atualiza e-mail se encontrou um válido
-      if (!emailRaw) continue
-      const { error } = await supabase
-        .from('leads')
-        .update({ email: emailRaw.toLowerCase(), status: 'pendente' })
-        .eq('cnpj', cnpj)
-        .is('email', null)  // segurança: só atualiza se ainda null
-      if (!error) atualizados++
-      continue
-    }
-
+  // ── 4. Inserir TODOS os CNPJs novos imediatamente com dados do contrato ───
+  // Garante que nenhum CNPJ seja perdido por falha/timeout de API posterior.
+  // O ponteiro avança aqui — após garantir que tudo foi salvo.
+  let inseridos = 0
+  for (const cnpj of paraInserir) {
     const contrato = cnpjMap.get(cnpj)!
-    const cnae     = dados.cnae_fiscal_descricao ?? null
     const modalidade = contrato.modalidadeContratacao?.nome
                     ?? contrato.modalidadeContratacao?.descricao
                     ?? contrato.tipoContrato?.nome
                     ?? contrato.tipoContrato?.descricao
                     ?? null
-
-    const { error } = await supabase
-      .from('leads')
-      .upsert({
-        cnpj:          dados.cnpj,
-        razao_social:  dados.razao_social,
-        nome_fantasia: dados.nome_fantasia ?? null,
-        email:         emailRaw ? emailRaw.toLowerCase() : null,
-        telefone:      dados.ddd_telefone_1 ?? null,
-        municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
-        uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-        situacao:      dados.descricao_situacao_cadastral ?? null,
-        porte:         dados.porte ?? null,
-        cnae,
-        segmento:      mapearSegmento(cnae),
-        modalidade,
-        objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
-        valor:         contrato.valorInicial ?? null,
-        data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
-        status:        emailRaw ? 'pendente' : 'invalido',
-        fonte:         'pncp_contrato',
-      }, { onConflict: 'cnpj', ignoreDuplicates: true })
-    if (error) console.error('[coletar-leads] upsert error:', error.message)
-    else inseridos++
+    const { error } = await supabase.from('leads').upsert({
+      cnpj,
+      razao_social:  contrato.nomeRazaoSocialFornecedor ?? cnpj,
+      municipio:     contrato.unidadeOrgao?.municipioNome ?? null,
+      uf:            contrato.unidadeOrgao?.ufSigla ?? null,
+      modalidade,
+      objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
+      valor:         contrato.valorInicial ?? null,
+      data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
+      status:        'invalido',   // será atualizado após enriquecimento
+      situacao:      null,         // null = aguardando check Receita Federal
+      fonte:         'pncp_contrato',
+    }, { onConflict: 'cnpj', ignoreDuplicates: true })
+    if (!error) inseridos++
   }
 
-  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} inseridos, ${atualizados} e-mails atualizados`)
+  // Ponteiro avança depois da inserção — todos os CNPJs já estão na base
+  if (emBackfill) await avancarPonteiro(supabase, dataFinal)
+
+  // ── 5. Enriquecer via minhareceita.org (cap = LOTE) — atualiza os já inseridos
+  // Se minhareceita retornar null (erro/timeout): fica com dados parciais do
+  // contrato — enriquecer-emails buscará Receita + e-mail nas próximas rodadas.
+  // Se inativa (baixada/suspensa): salva situacao, mantém status='invalido'.
+  const LOTE = 50
+  let atualizados = 0, brasilApiOk = 0, brasilApiNull = 0, inativas = 0
+
+  // Para atualização de e-mail nos leads já existentes (paraAtuEmail)
+  const todoEnriquecimento = [...paraInserir, ...paraAtuEmail]
+
+  for (let i = 0; i < Math.min(todoEnriquecimento.length, LOTE); i++) {
+    const cnpj   = todoEnriquecimento[i]
+    const ehNovo = paraInserir.includes(cnpj)
+    const dados  = await enriquecerCnpj(cnpj)
+    await sleep(500) // ~2 req/s
+
+    if (!dados) {
+      brasilApiNull++
+      // CNPJ já está na base com dados parciais — enriquecer-emails fará retry
+      continue
+    }
+    brasilApiOk++
+    trackEnrichment()
+
+    const emailRaw = dados.email?.trim()
+    const cnae     = dados.cnae_fiscal_descricao ?? null
+    const ativa    = dados.situacao_cadastral === 2
+
+    if (!ativa) {
+      inativas++
+      // Empresa inativa: registra situacao para não tentar e-mail depois
+      await supabase.from('leads').update({
+        razao_social:  dados.razao_social,
+        situacao:      dados.descricao_situacao_cadastral ?? 'INATIVA',
+        cnae, porte: dados.porte ?? null,
+        status: 'invalido',
+      }).eq('cnpj', cnpj).is('situacao', null)  // só se ainda não verificada
+      continue
+    }
+
+    if (!ehNovo) {
+      // Lead existente — só atualiza e-mail se encontrou um agora
+      if (!emailRaw) continue
+      const { error } = await supabase.from('leads')
+        .update({ email: emailRaw.toLowerCase(), status: 'pendente' })
+        .eq('cnpj', cnpj).is('email', null)
+      if (!error) atualizados++
+      continue
+    }
+
+    const contrato   = cnpjMap.get(cnpj)!
+    const modalidade = contrato.modalidadeContratacao?.nome
+                    ?? contrato.modalidadeContratacao?.descricao
+                    ?? contrato.tipoContrato?.nome
+                    ?? contrato.tipoContrato?.descricao
+                    ?? null
+    const { error } = await supabase.from('leads').update({
+      razao_social:  dados.razao_social,
+      nome_fantasia: dados.nome_fantasia ?? null,
+      email:         emailRaw ? emailRaw.toLowerCase() : null,
+      telefone:      dados.ddd_telefone_1 ?? null,
+      municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
+      uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
+      porte:         dados.porte ?? null,
+      cnae, segmento: mapearSegmento(cnae), modalidade,
+      status:        emailRaw ? 'pendente' : 'invalido',
+    }).eq('cnpj', cnpj)
+    if (error) console.error('[coletar-leads] update error:', error.message)
+    else if (emailRaw) atualizados++
+  }
+
+  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} salvos, ${atualizados} enriquecidos`)
   return NextResponse.json({
     ok: true,
     modo: modoLabel,
-    novos: inseridos,
-    emails_atualizados: atualizados,
+    salvos: inseridos,
+    enriquecidos: atualizados,
     total_contratos_pncp: contratos.length,
     total_cnpjs_unicos: cnpjsNovos.length,
-    para_enriquecer: paraEnriquecer.length,
-    enriquecimento: { tentativas: Math.min(paraEnriquecer.length, LOTE), brasilapi_ok: brasilApiOk, brasilapi_null: brasilApiNull, inativas },
+    cnpjs_novos: paraInserir.length,
+    enriquecimento: { tentativas: Math.min(todoEnriquecimento.length, LOTE), ok: brasilApiOk, null: brasilApiNull, inativas },
     pncp_debug: debugPncp,
-    backfill_proximo: emBackfill ? (() => {
-      const d = new Date(dataFinal.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
-      d.setDate(d.getDate() + 1)
-      return d.toISOString().slice(0, 10)
-    })() : null,
   })
 }
 

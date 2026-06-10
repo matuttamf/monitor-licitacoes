@@ -254,85 +254,94 @@ export async function GET(req: NextRequest) {
   const setExistentes = new Set((existentes ?? []).map((r: { cnpj: string }) => r.cnpj))
   const paraEnriquecer = cnpjsTotal.filter(c => !setExistentes.has(c))
 
-  // ── 5. Avançar ponteiros — SÓ se todos os CNPJs novos cabem no lote ───────
-  //
-  // Se paraEnriquecer > MAX_ENRIQUECER, existem CNPJs que não serão processados
-  // nesta execução. Mantemos os mesmos órgãos na próxima rodada: os CNPJs já
-  // inseridos serão filtrados por setExistentes, reduzindo paraEnriquecer até
-  // caber no lote. Assim NENHUM CNPJ é perdido.
-  const todosVaoSerProcessados = paraEnriquecer.length <= MAX_ENRIQUECER
-  if (todosVaoSerProcessados) {
-    if (janelaConcluida) {
-      const proxData = new Date(fimDate)
-      proxData.setDate(proxData.getDate() + 1)
-      await supabase.from('configuracoes').upsert(
-        { chave: 'captacao_transparencia_backfill_data', valor: fmtIso(proxData) },
-        { onConflict: 'chave' }
-      )
-      await supabase.from('configuracoes').upsert(
-        { chave: 'captacao_transparencia_orgao_idx', valor: '0' },
-        { onConflict: 'chave' }
-      )
-    } else {
-      await supabase.from('configuracoes').upsert(
-        { chave: 'captacao_transparencia_orgao_idx', valor: String(novoIdx) },
-        { onConflict: 'chave' }
-      )
-    }
+  // ── 5. Inserir TODOS os CNPJs novos imediatamente com dados do contrato ───
+  // Garante que nenhum CNPJ seja perdido por falha/timeout de API posterior.
+  let salvos = 0
+  for (const cnpj of paraEnriquecer) {
+    const contrato = cnpjMap.get(cnpj)!
+    const { error } = await supabase.from('leads').upsert({
+      cnpj,
+      razao_social:  contrato.fornecedor?.nome ?? cnpj,
+      modalidade:    contrato.modalidadeCompra?.descricao ?? null,
+      objeto:        (contrato.objeto ?? '').slice(0, 200) || null,
+      valor:         contrato.valorInicial ?? null,
+      data_contrato: contrato.dataAssinatura?.slice(0, 10) ?? null,
+      status:        'invalido',   // será atualizado após enriquecimento
+      situacao:      null,         // null = aguardando check Receita Federal
+      fonte:         'portal_transparencia',
+    }, { onConflict: 'cnpj', ignoreDuplicates: true })
+    if (!error) salvos++
   }
 
-  if (!paraEnriquecer.length) {
-    return NextResponse.json({
-      ok: true, novos: 0, modo: modoLabel,
-      cnpjs_unicos: cnpjsTotal.length, ja_na_base: setExistentes.size,
-      janela_concluida: janelaConcluida,
-      ponteiro_avancou: todosVaoSerProcessados,
-    })
+  // ── 6. Avançar ponteiros — agora que todos estão na base ─────────────────
+  if (janelaConcluida) {
+    const proxData = new Date(fimDate)
+    proxData.setDate(proxData.getDate() + 1)
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_backfill_data', valor: fmtIso(proxData) },
+      { onConflict: 'chave' }
+    )
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_orgao_idx', valor: '0' },
+      { onConflict: 'chave' }
+    )
+  } else {
+    await supabase.from('configuracoes').upsert(
+      { chave: 'captacao_transparencia_orgao_idx', valor: String(novoIdx) },
+      { onConflict: 'chave' }
+    )
   }
 
-  // ── 6. Enriquecer e inserir ───────────────────────────────────────────────
-  let inseridos = 0
+  // ── 7. Enriquecer via BrasilAPI (cap MAX_ENRIQUECER) — atualiza já inseridos
+  // Se API retornar null: fica com dados parciais — enriquecer-emails fará retry.
+  // Se inativa: salva situacao, mantém status='invalido'.
+  let enriquecidos = 0
   for (const cnpj of paraEnriquecer.slice(0, MAX_ENRIQUECER)) {
     const dados = await enriquecerCnpj(cnpj)
     await sleep(500)
-    if (!dados) continue
-    if (dados.situacao_cadastral !== '02') continue
+    if (!dados) continue   // parcial na base — retry pelo enriquecer-emails
 
     const emailRaw = dados.email?.trim()
-    const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
+    const ativa    = dados.situacao_cadastral === '02'
 
-    const { error } = await supabase.from('leads').upsert({
-      cnpj:          dados.cnpj,
+    if (!ativa) {
+      // Inativa — registra situacao para evitar busca de e-mail depois
+      await supabase.from('leads').update({
+        razao_social:  dados.razao_social,
+        situacao:      dados.descricao_situacao_cadastral ?? 'INATIVA',
+        cnae, porte: dados.descricao_porte ?? null,
+        status: 'invalido',
+      }).eq('cnpj', cnpj).is('situacao', null)
+      continue
+    }
+
+    const contrato = cnpjMap.get(cnpj)!
+    const { error } = await supabase.from('leads').update({
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
       email:         emailRaw ? emailRaw.toLowerCase() : null,
       telefone:      dados.ddd_telefone_1 ?? null,
       municipio:     dados.municipio ?? null,
       uf:            dados.uf ?? null,
-      situacao:      dados.descricao_situacao_cadastral ?? null,
+      situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
       porte:         dados.descricao_porte ?? null,
-      cnae,
-      segmento:      mapearSegmento(cnae),
+      cnae, segmento: mapearSegmento(cnae),
       modalidade:    contrato.modalidadeCompra?.descricao ?? null,
-      objeto:        (contrato.objeto ?? '').slice(0, 200) || null,
-      valor:         contrato.valorInicial ?? null,
-      data_contrato: contrato.dataAssinatura?.slice(0, 10) ?? null,
       status:        emailRaw ? 'pendente' : 'invalido',
-      fonte:         'portal_transparencia',
-    }, { onConflict: 'cnpj', ignoreDuplicates: true })
-
-    if (!error) inseridos++
+    }).eq('cnpj', cnpj)
+    if (!error) enriquecidos++
   }
 
   return NextResponse.json({
     ok: true,
-    modo:              modoLabel,
-    novos:             inseridos,
+    modo:                 modoLabel,
+    salvos,
+    enriquecidos,
     orgaos_com_contratos: debugOrgaos.length,
-    cnpjs_unicos:      cnpjsTotal.length,
-    para_enriquecer:   paraEnriquecer.length,
-    janela_concluida:  janelaConcluida,
-    debug_orgaos:      debugOrgaos.slice(0, 10),
+    cnpjs_unicos:         cnpjsTotal.length,
+    novos_para_salvar:    paraEnriquecer.length,
+    janela_concluida:     janelaConcluida,
+    debug_orgaos:         debugOrgaos.slice(0, 10),
   })
 }
