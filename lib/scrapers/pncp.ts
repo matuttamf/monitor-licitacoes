@@ -45,7 +45,8 @@ async function coletarModalidade(
 ): Promise<LicitacaoRaw[]> {
   const licitacoes: LicitacaoRaw[] = []
   let pagina = 1
-  const tamanhoPagina = 50 // mínimo 10, usar 50
+  const tamanhoPagina = 50
+  const MAX_PAGINAS  = 20  // cap: 20 × 50 = 1.000 por modalidade → 12.000 total por execução
 
   while (true) {
     const url = `${BASE_URL}/contratacoes/publicacao?dataInicial=${formatarData(dataInicio)}&dataFinal=${formatarData(dataFim)}&pagina=${pagina}&tamanhoPagina=${tamanhoPagina}&codigoModalidadeContratacao=${codigoModalidade}`
@@ -98,7 +99,7 @@ async function coletarModalidade(
       }
 
       const totalPaginas = json.totalPaginas ?? 1
-      if (pagina >= totalPaginas || itens.length < tamanhoPagina) break
+      if (pagina >= totalPaginas || itens.length < tamanhoPagina || pagina >= MAX_PAGINAS) break
       pagina++
 
       // Respeitar rate limit
