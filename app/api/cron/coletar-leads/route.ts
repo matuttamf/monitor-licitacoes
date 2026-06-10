@@ -200,45 +200,61 @@ export async function GET(req: NextRequest) {
   }
   const cnpjsNovos = [...cnpjMap.keys()]
 
-  // ── 3. Filtrar quais já existem no banco ──────────────────────────────────
+  // ── 3. Separar: novos × já na base sem e-mail ────────────────────────────
+  // Novos → inserir. Já na base sem email → só atualizar email/status se achar.
   const { data: existentes } = await supabase
     .from('leads')
-    .select('cnpj')
+    .select('cnpj, email')
     .in('cnpj', cnpjsNovos)
-  const setExistentes = new Set((existentes ?? []).map((r: { cnpj: string }) => r.cnpj))
-  const paraEnriquecer = cnpjsNovos.filter(c => !setExistentes.has(c))
+  const mapExistentes = new Map(
+    (existentes ?? []).map((r: { cnpj: string; email: string | null }) => [r.cnpj, r.email])
+  )
+  const paraInserir   = cnpjsNovos.filter(c => !mapExistentes.has(c))
+  const paraAtuEmail  = cnpjsNovos.filter(c => mapExistentes.has(c) && mapExistentes.get(c) == null)
+  // Pool total para processar nesta execução
+  const paraEnriquecer = [...paraInserir, ...paraAtuEmail]
 
   if (!paraEnriquecer.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)
     return NextResponse.json({
       ok: true, novos: 0, modo: modoLabel,
-      mensagem: 'Todos os CNPJs já estão na base',
+      mensagem: 'Todos os CNPJs já na base com e-mail',
       total_contratos_pncp: contratos.length,
     })
   }
 
-  // ── 4. Avançar ponteiro somente se todos os CNPJs cabem no lote ──────────
-  // Se paraEnriquecer > LOTE, fica na mesma janela de datas.
-  // A próxima execução re-busca a mesma janela, mas os já inseridos caem no
-  // setExistentes e são ignorados → processa os próximos 50 naturalmente.
-  // Só avança quando todos os CNPJs da janela forem processados.
+  // ── 4. Avançar ponteiro somente se todos os CNPJs novos cabem no lote ─────
   const LOTE = 50
-  const todosVaoSerProcessados = paraEnriquecer.length <= LOTE
+  const todosVaoSerProcessados = paraInserir.length <= LOTE
   if (emBackfill && todosVaoSerProcessados) await avancarPonteiro(supabase, dataFinal)
 
-  // ── 5. Enriquecer via minhareceita.org e inserir ─────────────────────────
-  let inseridos = 0
+  // ── 5. Enriquecer via minhareceita.org, inserir ou atualizar e-mail ───────
+  let inseridos = 0, atualizados = 0
   let brasilApiOk = 0, brasilApiNull = 0, inativas = 0
 
   for (let i = 0; i < Math.min(paraEnriquecer.length, LOTE); i++) {
-    const cnpj  = paraEnriquecer[i]
-    const dados = await enriquecerCnpj(cnpj)
-    await sleep(500) // ~2 req/s — BrasilAPI free tier
+    const cnpj     = paraEnriquecer[i]
+    const ehNovo   = !mapExistentes.has(cnpj)
+    const dados    = await enriquecerCnpj(cnpj)
+    await sleep(500) // ~2 req/s
 
     if (!dados) { brasilApiNull++; continue }
     brasilApiOk++
-    // minhareceita.org: situacao_cadastral é número — 2 = ATIVA
     if (dados.situacao_cadastral !== 2) { inativas++; continue }
+
+    const emailRaw = dados.email?.trim()
+
+    if (!ehNovo) {
+      // Lead já existe — só atualiza e-mail se encontrou um válido
+      if (!emailRaw) continue
+      const { error } = await supabase
+        .from('leads')
+        .update({ email: emailRaw.toLowerCase(), status: 'pendente' })
+        .eq('cnpj', cnpj)
+        .is('email', null)  // segurança: só atualiza se ainda null
+      if (!error) atualizados++
+      continue
+    }
 
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
@@ -247,40 +263,38 @@ export async function GET(req: NextRequest) {
                     ?? contrato.tipoContrato?.nome
                     ?? contrato.tipoContrato?.descricao
                     ?? null
-    const emailRaw = dados.email?.trim()
-
-    const row = {
-      cnpj:          dados.cnpj,
-      razao_social:  dados.razao_social,
-      nome_fantasia: dados.nome_fantasia ?? null,
-      email:         emailRaw ? emailRaw.toLowerCase() : null,
-      telefone:      dados.ddd_telefone_1 ?? null,
-      municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
-      uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
-      situacao:      dados.descricao_situacao_cadastral ?? null,
-      porte:         dados.porte ?? null,
-      cnae,
-      segmento:      mapearSegmento(cnae),
-      modalidade,
-      objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
-      valor:         contrato.valorInicial ?? null,
-      data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
-      status:        emailRaw ? 'pendente' : 'invalido',
-      fonte:         'pncp_contrato',
-    }
 
     const { error } = await supabase
       .from('leads')
-      .upsert(row, { onConflict: 'cnpj', ignoreDuplicates: true })
+      .upsert({
+        cnpj:          dados.cnpj,
+        razao_social:  dados.razao_social,
+        nome_fantasia: dados.nome_fantasia ?? null,
+        email:         emailRaw ? emailRaw.toLowerCase() : null,
+        telefone:      dados.ddd_telefone_1 ?? null,
+        municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? null,
+        uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
+        situacao:      dados.descricao_situacao_cadastral ?? null,
+        porte:         dados.porte ?? null,
+        cnae,
+        segmento:      mapearSegmento(cnae),
+        modalidade,
+        objeto:        (contrato.objetoContrato ?? '').slice(0, 200) || null,
+        valor:         contrato.valorInicial ?? null,
+        data_contrato: contrato.dataPublicacaoPncp?.slice(0, 10) ?? null,
+        status:        emailRaw ? 'pendente' : 'invalido',
+        fonte:         'pncp_contrato',
+      }, { onConflict: 'cnpj', ignoreDuplicates: true })
     if (error) console.error('[coletar-leads] upsert error:', error.message)
     else inseridos++
   }
 
-  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} leads inseridos`)
+  console.log(`[coletar-leads] ${modoLabel} → ${inseridos} inseridos, ${atualizados} e-mails atualizados`)
   return NextResponse.json({
     ok: true,
     modo: modoLabel,
     novos: inseridos,
+    emails_atualizados: atualizados,
     total_contratos_pncp: contratos.length,
     total_cnpjs_unicos: cnpjsNovos.length,
     para_enriquecer: paraEnriquecer.length,

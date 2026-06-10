@@ -221,37 +221,55 @@ export async function GET(req: NextRequest) {
   }
   const cnpjsTotal = [...cnpjMap.keys()]
 
-  // ── 3. Filtrar quais já existem ───────────────────────────────────────────
+  // ── 3. Separar: novos × já na base sem e-mail ────────────────────────────
   const { data: existentes } = await supabase
     .from('leads')
-    .select('cnpj')
+    .select('cnpj, email')
     .in('cnpj', cnpjsTotal)
-  const setExistentes = new Set((existentes ?? []).map((r: { cnpj: string }) => r.cnpj))
-  const paraEnriquecer = cnpjsTotal.filter(c => !setExistentes.has(c))
+  const mapExistentes = new Map(
+    (existentes ?? []).map((r: { cnpj: string; email: string | null }) => [r.cnpj, r.email])
+  )
+  const paraInserir  = cnpjsTotal.filter(c => !mapExistentes.has(c))
+  const paraAtuEmail = cnpjsTotal.filter(c => mapExistentes.has(c) && mapExistentes.get(c) == null)
+  const paraEnriquecer = [...paraInserir, ...paraAtuEmail]
 
-  console.log(`[coletar-leads-transparencia] ${setExistentes.size} existentes, ${paraEnriquecer.length} novos`)
+  console.log(`[coletar-leads-transparencia] ${mapExistentes.size} existentes (${paraAtuEmail.length} sem e-mail), ${paraInserir.length} novos`)
 
   if (!paraEnriquecer.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
-    return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
+    return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base com e-mail', modo: modoLabel })
   }
 
   // ── 4. Avançar ponteiro ANTES do enriquecimento (crash-safe) ────────────
   if (emBackfill) await avancarPonteiro(supabase, dataFimIso)
 
-  // ── 5. Enriquecer e inserir ───────────────────────────────────────────────
-  let inseridos = 0
+  // ── 5. Enriquecer, inserir novos ou atualizar e-mail dos existentes ───────
+  let inseridos = 0, atualizados = 0
 
   for (const cnpj of paraEnriquecer.slice(0, MAX_ENRIQUECER)) {
-    const dados = await enriquecerCnpj(cnpj)
+    const ehNovo = !mapExistentes.has(cnpj)
+    const dados  = await enriquecerCnpj(cnpj)
     await sleep(500) // ~2 req/s — BrasilAPI free tier
 
     if (!dados) continue
     if (dados.situacao_cadastral !== '02') continue // apenas ATIVAS
 
+    const emailRaw = dados.email?.trim()
+
+    if (!ehNovo) {
+      // Já existe — só atualiza se encontrou e-mail
+      if (!emailRaw) continue
+      const { error } = await supabase
+        .from('leads')
+        .update({ email: emailRaw.toLowerCase(), status: 'pendente' })
+        .eq('cnpj', cnpj)
+        .is('email', null)
+      if (!error) atualizados++
+      continue
+    }
+
     const contrato = cnpjMap.get(cnpj)!
     const cnae     = dados.cnae_fiscal_descricao ?? null
-    const emailRaw = dados.email?.trim()
 
     const { error } = await supabase.from('leads').upsert({
       cnpj:          dados.cnpj,
@@ -277,14 +295,15 @@ export async function GET(req: NextRequest) {
     else inseridos++
   }
 
-  console.log(`[coletar-leads-transparencia] ${inseridos} leads inseridos`)
+  console.log(`[coletar-leads-transparencia] ${inseridos} inseridos, ${atualizados} e-mails atualizados`)
   return NextResponse.json({
     ok: true,
-    modo:            modoLabel,
-    novos:           inseridos,
-    contratos:       contratos.length,
-    cnpjs_unicos:    cnpjsTotal.length,
-    para_enriquecer: paraEnriquecer.length,
+    modo:             modoLabel,
+    novos:            inseridos,
+    emails_atualizados: atualizados,
+    contratos:        contratos.length,
+    cnpjs_unicos:     cnpjsTotal.length,
+    para_enriquecer:  paraEnriquecer.length,
   })
 }
 
