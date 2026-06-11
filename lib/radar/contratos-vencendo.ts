@@ -58,7 +58,7 @@ async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<
       const url = `${BASE}/contratos?dataInicial=${fmt(dataIni)}&dataFinal=${fmt(dataFim)}&pagina=${p}&tamanhoPagina=20`
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'User-Agent': 'Monitor-Licitacoes/2.0' },
-        signal:  AbortSignal.timeout(30000),
+        signal:  AbortSignal.timeout(60000),
       })
 
       if (!res.ok) {
@@ -112,9 +112,9 @@ export async function coletarContratosVencendo(): Promise<RadarContratos> {
   // Três janelas em paralelo para varrer ~9 meses distintos
   const hoje = new Date()
   const [w1, w2, w3] = await Promise.allSettled([
-    buscarJanela(subDias(120), subDias(1),    15),  // 0-4 meses atrás
-    buscarJanela(subDias(240), subDias(121),  15),  // 4-8 meses atrás
-    buscarJanela(subDias(364), subDias(241),  15),  // 8-12 meses atrás
+    buscarJanela(subDias(120), subDias(1),   5),  // 0-4 meses atrás
+    buscarJanela(subDias(240), subDias(121), 5),  // 4-8 meses atrás
+    buscarJanela(subDias(364), subDias(241), 5),  // 8-12 meses atrás
   ])
 
   const todos = [
