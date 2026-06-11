@@ -7,7 +7,7 @@
 
 import { NextResponse }           from 'next/server'
 import { Resend }                 from 'resend'
-import { createServiceClient }   from '@/lib/supabase/server'
+import { createAdminClient }     from '@/lib/supabase/server'
 import { verificarCronAuth }     from '@/lib/cron-auth'
 import { registrarCronLog }      from '@/lib/cron-log'
 import { enviarTextoTelegram }   from '@/lib/alerts/telegram'
@@ -137,7 +137,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  const supabase = await createServiceClient()
+  const supabase = createAdminClient()
   const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
 
   // Buscar usuários elegíveis (Pro e Empresarial ativos)
