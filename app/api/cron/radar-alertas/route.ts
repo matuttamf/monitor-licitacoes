@@ -37,10 +37,11 @@ function gerarHtml(params: {
   em30:    ContratoVencendo[]
   em60:    ContratoVencendo[]
   em90:    ContratoVencendo[]
+  em180:   ContratoVencendo[]
   appUrl:  string
 }): string {
-  const { nome, em30, em60, em90, appUrl } = params
-  const total = em30.length + em60.length + em90.length
+  const { nome, em30, em60, em90, em180, appUrl } = params
+  const total = em30.length + em60.length + em90.length + em180.length
 
   function secao(titulo: string, cor: string, lista: ContratoVencendo[]): string {
     if (!lista.length) return ''
@@ -87,13 +88,14 @@ function gerarHtml(params: {
     <h2 style="margin:0 0 8px;font-size:19px;color:#1A1A1C">Olá${nome ? ', ' + nome : ''}!</h2>
     <p style="margin:0;font-size:14px;color:#6B7280;line-height:1.6">
       Encontramos <strong>${total} contrato${total !== 1 ? 's' : ''}</strong> relevante${total !== 1 ? 's' : ''} vencendo
-      nos próximos 90 dias que podem representar oportunidades de renovação ou adesão.
+      nos próximos 180 dias que podem representar oportunidades de renovação ou adesão.
     </p>
   </td></tr>
 
-  ${secao('⚠️ Vencendo em até 30 dias', '#ef4444', em30)}
-  ${secao('📅 Vencendo em 31–60 dias',  '#f59e0b', em60)}
-  ${secao('📆 Vencendo em 61–90 dias',  '#10b981', em90)}
+  ${secao('⚠️ Vencendo em até 30 dias',  '#ef4444', em30)}
+  ${secao('📅 Vencendo em 31–60 dias',   '#f59e0b', em60)}
+  ${secao('📆 Vencendo em 61–90 dias',   '#10b981', em90)}
+  ${secao('📋 Vencendo em 91–180 dias',  '#6366f1', em180)}
 
   <tr><td style="padding:24px 32px;text-align:center">
     <a href="${appUrl}/radar" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:12px">
@@ -115,16 +117,17 @@ function gerarHtml(params: {
 </html>`
 }
 
-function gerarTelegram(em30: ContratoVencendo[], em60: ContratoVencendo[], em90: ContratoVencendo[], appUrl: string): string {
-  const total = em30.length + em60.length + em90.length
+function gerarTelegram(em30: ContratoVencendo[], em60: ContratoVencendo[], em90: ContratoVencendo[], em180: ContratoVencendo[], appUrl: string): string {
+  const total = em30.length + em60.length + em90.length + em180.length
   const linhas30 = em30.slice(0, 3).map(c => `• ${c.orgao.substring(0, 50)} — ${c.diasRestantes}d`).join('\n')
   const linhas60 = em60.slice(0, 3).map(c => `• ${c.orgao.substring(0, 50)} — ${c.diasRestantes}d`).join('\n')
 
   return (
     `🎯 *Radar de Inteligência — Monitor de Licitações*\n\n` +
-    `${total} contrato${total !== 1 ? 's' : ''} relevante${total !== 1 ? 's' : ''} vencendo nos próximos 90 dias.\n\n` +
+    `${total} contrato${total !== 1 ? 's' : ''} relevante${total !== 1 ? 's' : ''} vencendo nos próximos 180 dias.\n\n` +
     (em30.length ? `⚠️ *Até 30 dias (${em30.length}):*\n${linhas30}\n\n` : '') +
     (em60.length ? `📅 *31–60 dias (${em60.length}):*\n${linhas60}\n\n` : '') +
+    (em180.length ? `📋 *91–180 dias (${em180.length}):*\n${em180.slice(0, 3).map(c => `• ${c.orgao.substring(0, 50)} — ${c.diasRestantes}d`).join('\n')}\n\n` : '') +
     `[Ver todos no painel](${appUrl}/radar)`
   )
 }
@@ -155,19 +158,19 @@ export async function GET(request: Request) {
   // (pncp-contratos.ts já coleta e salva com data_abertura = dataVigenciaFim)
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
-  const em90 = new Date(hoje)
-  em90.setDate(em90.getDate() + 90)
+  const em180 = new Date(hoje)
+  em180.setDate(em180.getDate() + 180)
 
   const { data: rows } = await supabase
     .from('licitacoes')
     .select('orgao, objeto, valor_estimado, data_abertura, url, estado, municipio, fonte')
     .in('fonte', ['PNCP Contratos', 'PNCP Atas'])
     .gte('data_abertura', hoje.toISOString().substring(0, 10))
-    .lte('data_abertura', em90.toISOString().substring(0, 10))
+    .lte('data_abertura', em180.toISOString().substring(0, 10))
     .order('data_abertura', { ascending: true })
     .limit(2000)
 
-  console.log(`[radar] licitacoes encontradas: ${rows?.length ?? 0} (contratos+atas vencendo em 90d)`)
+  console.log(`[radar] licitacoes encontradas: ${rows?.length ?? 0} (contratos+atas vencendo em 180d)`)
 
   function diasAte(dataFim: string): number {
     const fim = new Date(dataFim + 'T00:00:00')
@@ -186,9 +189,10 @@ export async function GET(request: Request) {
   }))
 
   const radar = {
-    em30dias: todos.filter(c => c.diasRestantes <= 30),
-    em60dias: todos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60),
-    em90dias: todos.filter(c => c.diasRestantes >= 61),
+    em30dias:  todos.filter(c => c.diasRestantes <= 30),
+    em60dias:  todos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60),
+    em90dias:  todos.filter(c => c.diasRestantes >= 61 && c.diasRestantes <= 90),
+    em180dias: todos.filter(c => c.diasRestantes >= 91),
   }
 
   // ── Persistir no banco para o painel /radar ───────────────────────────────
@@ -237,11 +241,12 @@ export async function GET(request: Request) {
 
     const termos = (kws ?? []).map(k => k.termo.toLowerCase())
 
-    const em30 = filtrarPorTermos(radar.em30dias, termos)
-    const em60 = filtrarPorTermos(radar.em60dias, termos)
-    const em90 = filtrarPorTermos(radar.em90dias, termos)
+    const em30  = filtrarPorTermos(radar.em30dias,  termos)
+    const em60  = filtrarPorTermos(radar.em60dias,  termos)
+    const em90  = filtrarPorTermos(radar.em90dias,  termos)
+    const em180 = filtrarPorTermos(radar.em180dias, termos)
 
-    const total = em30.length + em60.length + em90.length
+    const total = em30.length + em60.length + em90.length + em180.length
     if (total === 0) continue
 
     const canais: string[] = []
@@ -251,8 +256,8 @@ export async function GET(request: Request) {
       await getResend().emails.send({
         from:    FROM,
         to:      email,
-        subject: `🎯 Radar: ${total} contrato${total !== 1 ? 's' : ''} vencendo nos próximos 90 dias`,
-        html:    gerarHtml({ nome: p.nome ?? '', em30, em60, em90, appUrl }),
+        subject: `🎯 Radar: ${total} contrato${total !== 1 ? 's' : ''} vencendo nos próximos 180 dias`,
+        html:    gerarHtml({ nome: p.nome ?? '', em30, em60, em90, em180, appUrl }),
       })
       canais.push('email')
     } catch (e) {
@@ -262,7 +267,7 @@ export async function GET(request: Request) {
     // Telegram
     if (p.telegram_chat_id) {
       try {
-        const ok = await enviarTextoTelegram(p.telegram_chat_id, gerarTelegram(em30, em60, em90, appUrl))
+        const ok = await enviarTextoTelegram(p.telegram_chat_id, gerarTelegram(em30, em60, em90, em180, appUrl))
         if (ok) canais.push('telegram')
       } catch (e) {
         console.error('radar-alertas telegram erro:', p.id, e)
