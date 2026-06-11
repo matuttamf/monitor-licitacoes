@@ -163,9 +163,8 @@ export async function GET(request: Request) {
 
   const dataInicio = hoje.toISOString().substring(0, 10)
   const dataFim    = em180.toISOString().substring(0, 10)
-  console.log(`[radar] filtro: data_abertura >= ${dataInicio} AND <= ${dataFim}`)
 
-  const { data: rows, error: rowsError } = await supabase
+  const { data: rows } = await supabase
     .from('licitacoes')
     .select('orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, fonte')
     .in('fonte', ['PNCP Contratos', 'PNCP Atas'])
@@ -174,7 +173,6 @@ export async function GET(request: Request) {
     .order('data_abertura', { ascending: true })
     .limit(2000)
 
-  if (rowsError) console.error('[radar] erro na query:', JSON.stringify(rowsError))
   console.log(`[radar] licitacoes encontradas: ${rows?.length ?? 0} (contratos+atas vencendo em 180d)`)
 
   function diasAte(dataFim: string): number {
