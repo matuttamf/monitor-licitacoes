@@ -51,11 +51,18 @@ async function coletarModalidadeAberta(
   dataFim: string,
   codigoModalidade: number,
   maxPaginas: number,
+  deadline: number, // timestamp em ms — para de paginar se ultrapassar
 ): Promise<LicitacaoRaw[]> {
   const licitacoes: LicitacaoRaw[] = []
   let pagina = 1
 
   while (pagina <= maxPaginas) {
+    // Para antes de estourar o maxDuration da Vercel
+    if (Date.now() > deadline) {
+      console.warn(`PNCP-abertos modal=${codigoModalidade}: deadline atingido na pág ${pagina}, salvando parcial`)
+      break
+    }
+
     const url = `${BASE_URL}/contratacoes/proposta?dataInicial=${fmt(dataInicio)}&dataFinal=${fmt(dataFim)}&pagina=${pagina}&tamanhoPagina=50&codigoModalidadeContratacao=${codigoModalidade}`
 
     try {
@@ -110,12 +117,14 @@ async function coletarModalidadeAberta(
 
 /**
  * Coleta todas as licitações com abertura de proposta entre hoje e +horizonte dias.
- * @param horizonte  Dias à frente (padrão 180 — cobre editais de longo prazo).
- * @param maxPaginas Páginas por modalidade (padrão 100 = 5.000/modalidade = 60.000 total).
+ * @param horizonte    Dias à frente (padrão 180 — cobre editais de longo prazo).
+ * @param maxPaginas   Páginas por modalidade (padrão 100 = 5.000/modalidade = 60.000 total).
+ * @param budgetSeg    Orçamento de tempo em segundos (padrão 240 — deixa 60s para salvar).
  */
 export async function coletarPNCPAbertos(
   horizonte = 180,
   maxPaginas = 100,
+  budgetSeg = 240,
 ): Promise<LicitacaoRaw[]> {
   const hoje = new Date()
   const fim  = new Date(hoje)
@@ -123,11 +132,12 @@ export async function coletarPNCPAbertos(
 
   const dataInicio = hoje.toISOString().substring(0, 10)
   const dataFim    = fim.toISOString().substring(0, 10)
+  const deadline   = Date.now() + budgetSeg * 1000
 
-  console.log(`PNCP-abertos: buscando abertura entre ${dataInicio} e ${dataFim} (horizon=${horizonte}d, maxPag=${maxPaginas})`)
+  console.log(`PNCP-abertos: buscando abertura entre ${dataInicio} e ${dataFim} (horizon=${horizonte}d, maxPag=${maxPaginas}, budget=${budgetSeg}s)`)
 
   const resultados = await Promise.allSettled(
-    MODALIDADES.map(m => coletarModalidadeAberta(dataInicio, dataFim, m.codigo, maxPaginas))
+    MODALIDADES.map(m => coletarModalidadeAberta(dataInicio, dataFim, m.codigo, maxPaginas, deadline))
   )
 
   const todas: LicitacaoRaw[] = []
