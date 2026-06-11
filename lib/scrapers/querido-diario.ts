@@ -63,19 +63,25 @@ export async function coletarQueridoDiario(termos: string[]): Promise<LicitacaoR
   ontem.setDate(ontem.getDate() - 2)
   const publishedSince = ontem.toISOString().substring(0, 10)
 
-  // Roda duas buscas em paralelo:
-  // 1. Termos de dispensa específicos (cobertura de dispensas pequenas)
-  // 2. Termos do usuário + licitação/pregão (cobertura geral)
-  const buscas = [
-    {
-      querystring: TERMOS_DISPENSA.slice(0, 4).join(' OR '),
-      size: 100,
-    },
-    {
-      querystring: ['licitação', 'pregão eletrônico', ...termos.slice(0, 3)].join(' '),
-      size: 50,
-    },
-  ]
+  // Buscas em paralelo cobrindo todas as modalidades:
+  // 1. Cada termo de dispensa individualmente (mais preciso que OR)
+  // 2. Licitação/pregão geral
+  // 3. Keywords do usuário em grupos de 5 (cobre até 50 termos)
+  const buscas: { querystring: string; size: number }[] = []
+
+  // Busca 1: cada termo de dispensa separado para máxima cobertura
+  for (const termo of TERMOS_DISPENSA) {
+    buscas.push({ querystring: termo, size: 50 })
+  }
+
+  // Busca 2: licitação/pregão geral
+  buscas.push({ querystring: 'licitação pregão eletrônico edital', size: 50 })
+
+  // Busca 3+: keywords do usuário em grupos de 5
+  // O QD API busca gazettes que mencionem QUALQUER dos termos do grupo
+  for (let i = 0; i < Math.min(termos.length, 50); i += 5) {
+    buscas.push({ querystring: termos.slice(i, i + 5).join(' '), size: 30 })
+  }
 
   await Promise.allSettled(buscas.map(async (busca) => {
     try {
