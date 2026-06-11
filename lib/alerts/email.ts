@@ -154,7 +154,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
         <p style="margin:0 0 10px;font-size:12px;color:#B45309">
           Aproveite para conhecer todos os recursos. Ao assinar, você continua recebendo estas oportunidades sem interrupção.
         </p>
-        <a href="${trial.appUrl}/planos" style="display:inline-block;background:linear-gradient(135deg,#D97706,#B45309);color:white;padding:9px 24px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:0.3px">
+        <a href="${trial.appUrl}/assinar" style="display:inline-block;background:linear-gradient(135deg,#D97706,#B45309);color:white;padding:9px 24px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:0.3px">
           Assinar agora →
         </a>
       </div>` : ''}
