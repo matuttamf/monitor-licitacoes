@@ -8,7 +8,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmai
 export const LIMITES = {
   google_cse:  { limite: 100,  periodo: 'dia',  label: 'Google CSE',       unidade: 'queries/dia' },
   resend:      { limite: 3000, periodo: 'mes',  label: 'Resend (e-mails)',  unidade: 'e-mails/mês' },
-  gemini:      { limite: 1500, periodo: 'mes',  label: 'Gemini',            unidade: 'calls/mês'   },
+  gemini:      { limite: 1500, periodo: 'dia',  label: 'Gemini',            unidade: 'calls/dia'   },
   enrichment:  { limite: 2000, periodo: 'dia',  label: 'minhareceita.org',  unidade: 'calls/dia'   },
 }
 
@@ -41,7 +41,7 @@ export async function GET() {
   const uso = {
     google_cse:  usoMap[`google_cse__${hoje}`]  ?? 0,
     resend:      usoMap[`resend__${mes}`]        ?? 0,
-    gemini:      usoMap[`gemini__${mes}`]        ?? 0,
+    gemini:      usoMap[`gemini__${hoje}`]        ?? 0,
     enrichment:  usoMap[`enrichment__${hoje}`]   ?? 0,
   }
 

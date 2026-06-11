@@ -5,8 +5,8 @@
  * Serviços rastreados:
  *  google_cse   → 100 queries/dia   (compartilhado licitações + email enrichment)
  *  resend        → 3.000 emails/mês  (free tier)
- *  gemini        → calls/mês         (sem limite definido, mas bom monitorar)
- *  enrichment    → calls/dia         (minhareceita.org — sem limite, mas monitorar)
+ *  gemini        → 1.500 calls/dia    (Gemini 2.5 Flash free tier — reseta meia-noite UTC)
+ *  enrichment    → 2.000 calls/dia   (minhareceita.org — reseta meia-noite UTC)
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -48,5 +48,5 @@ export async function lerUso(servico: string, periodo: string): Promise<number> 
 // Atalhos prontos para usar nas rotas
 export const trackGoogleCSE   = () => incrementarUso('google_cse', 'dia')
 export const trackResend      = () => incrementarUso('resend', 'mes')
-export const trackGemini      = () => incrementarUso('gemini', 'mes')
+export const trackGemini      = () => incrementarUso('gemini', 'dia')
 export const trackEnrichment  = () => incrementarUso('enrichment', 'dia')
