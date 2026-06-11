@@ -160,12 +160,14 @@ export async function GET(request: Request) {
 
   const { data: rows } = await supabase
     .from('licitacoes')
-    .select('orgao, objeto, valor_estimado, data_abertura, url, estado, municipio')
-    .eq('fonte', 'PNCP Contratos')
+    .select('orgao, objeto, valor_estimado, data_abertura, url, estado, municipio, fonte')
+    .in('fonte', ['PNCP Contratos', 'PNCP Atas'])
     .gte('data_abertura', hoje.toISOString().substring(0, 10))
     .lte('data_abertura', em90.toISOString().substring(0, 10))
     .order('data_abertura', { ascending: true })
     .limit(2000)
+
+  console.log(`[radar] licitacoes encontradas: ${rows?.length ?? 0} (contratos+atas vencendo em 90d)`)
 
   function diasAte(dataFim: string): number {
     const fim = new Date(dataFim + 'T00:00:00')
