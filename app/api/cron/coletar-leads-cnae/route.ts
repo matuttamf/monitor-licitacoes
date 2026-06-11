@@ -64,7 +64,8 @@ function getAnoMes(): { ano: number; mes: number } {
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
-async function getTargetCnaes(supabase: ReturnType<typeof createSupabase>): Promise<Set<string>> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getTargetCnaes(supabase: any): Promise<Set<string>> {
   const { data } = await supabase
     .from('leads')
     .select('cnae_codigo')
