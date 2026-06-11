@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     'enriquecer-emails':           `${baseUrl}/api/cron/enriquecer-emails`,
     'disparar-leads':              `${baseUrl}/api/cron/disparar-leads`,
     'reconverter-trials':          `${baseUrl}/api/cron/reconverter-trials`,
+    'radar-alertas':               `${baseUrl}/api/cron/radar-alertas`,
   }
 
   const url = rotas[acao]
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
 
   // Ações longas rodam em background — retornam imediatamente sem aguardar
   const MSGS_BACKGROUND: Record<string, string> = {
+    'radar-alertas':          'Radar disparado em background (~2 min). Verifique o painel /radar em breve.',
     'enriquecer-emails':      'Busca de e-mails disparada em background. Verifique os leads em ~2min.',
     'coletar':                'Coleta disparada em background (~5 min). Verifique Licitações em breve.',
     // 'coletar-abertos' removido do fire-and-forget — roda síncrono (ver timeout abaixo)
