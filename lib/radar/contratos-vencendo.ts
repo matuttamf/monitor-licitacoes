@@ -57,8 +57,8 @@ async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<
     try {
       const url = `${BASE}/contratos?dataInicial=${fmt(dataIni)}&dataFinal=${fmt(dataFim)}&pagina=${p}&tamanhoPagina=20`
       const res = await fetch(url, {
-        headers: { Accept: 'application/json' },
-        signal:  AbortSignal.timeout(12000),
+        headers: { Accept: 'application/json', 'User-Agent': 'Monitor-Licitacoes/2.0' },
+        signal:  AbortSignal.timeout(30000),
       })
 
       if (!res.ok) {
