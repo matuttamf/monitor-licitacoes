@@ -13,7 +13,7 @@
  */
 import { NextResponse } from 'next/server'
 import { verificarCronAuth } from '@/lib/cron-auth'
-import { coletarPNCPAbertos } from '@/lib/scrapers/pncp-abertos'
+import { coletarPNCPAbertos, coletarPNCPDesertas } from '@/lib/scrapers/pncp-abertos'
 import { salvarLicitacoes } from '@/lib/scrapers/salvar'
 import { registrarCronLog } from '@/lib/cron-log'
 
@@ -27,15 +27,25 @@ export async function GET(request: Request) {
   try {
     const inicio = Date.now()
 
-    // Coleta com horizonte de 180 dias, até 100 páginas por modalidade (5.000/mod = 60.000 total)
-    const licitacoes = await coletarPNCPAbertos(180, 100)
+    // Coleta em paralelo: abertos (180d horizonte) + desertas/fracassadas (últimos 30d)
+    const [abertas, desertas] = await Promise.allSettled([
+      coletarPNCPAbertos(180, 100),
+      coletarPNCPDesertas(50),
+    ])
+
+    const licitacoes = [
+      ...(abertas.status  === 'fulfilled' ? abertas.value  : []),
+      ...(desertas.status === 'fulfilled' ? desertas.value : []),
+    ]
 
     const salvas = await salvarLicitacoes(licitacoes)
     const segundos = Math.round((Date.now() - inicio) / 1000)
 
     const resultado = {
-      ok:        true,
-      coletadas: licitacoes.length,
+      ok:           true,
+      coletadas:    licitacoes.length,
+      abertas:      abertas.status  === 'fulfilled' ? abertas.value.length  : 0,
+      desertas:     desertas.status === 'fulfilled' ? desertas.value.length : 0,
       salvas,
       segundos,
     }
@@ -43,7 +53,7 @@ export async function GET(request: Request) {
     await registrarCronLog({
       job:      'coletar-abertos',
       status:   'ok',
-      mensagem: `${salvas} novas salvas (${licitacoes.length} coletadas em ${segundos}s)`,
+      mensagem: `${salvas} novas (${resultado.abertas} abertas + ${resultado.desertas} desertas/fraç em ${segundos}s)`,
       detalhes: resultado,
     })
 

@@ -56,23 +56,27 @@ async function runMatching() {
   const termosNovos      = [...new Set(kwNovas.map(k => k.termo.toLowerCase()))]
   const termosExistentes = [...new Set(kwExistentes.map(k => k.termo.toLowerCase()))]
 
+  // Ambas as buscas usam o mesmo padrão — sem filtro ilike.
+  // ilike.or() com milhares de keywords excede limites de URL do PostgREST e produz cobertura parcial.
+  // O Gemini faz a curadoria semântica; a pré-filtragem é apenas por data de abertura.
   const [resNovos, resIncrementais] = await Promise.all([
-    // Keywords novas → todo o banco aberto sem filtro ilike (evita limite de URL com muitos termos)
+    // Keywords novas → todo o banco com abertura futura (limite 1000)
     kwNovas.length > 0
       ? supabase
           .from('licitacoes')
           .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
           .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+          .limit(1000)
       : Promise.resolve({ data: [], error: null }),
 
-    // Keywords existentes → apenas licitações coletadas desde o último matching
+    // Keywords existentes → licitações coletadas desde o último matching (limite 500)
     termosExistentes.length > 0
       ? (() => {
           let q = supabase
             .from('licitacoes')
             .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
             .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-            .or(termosExistentes.map(t => `objeto.ilike.%${t}%`).join(','))
+            .limit(500)
           if (ultimoMatching) q = q.gte('coletado_em', ultimoMatching) as typeof q
           return q
         })()

@@ -116,6 +116,81 @@ async function coletarModalidadeAberta(
 }
 
 /**
+ * Coleta licitações desertas (código 6) e fracassadas (código 7) dos últimos 30 dias.
+ * Estas representam oportunidades imediatas: o órgão precisa do produto/serviço
+ * mas não recebeu proposta válida — a nova chamada costuma ter prazo mais curto.
+ */
+export async function coletarPNCPDesertas(budgetSeg = 60): Promise<LicitacaoRaw[]> {
+  const hoje = new Date()
+  const trinta = new Date(hoje)
+  trinta.setDate(trinta.getDate() - 30)
+
+  const dataInicio  = trinta.toISOString().substring(0, 10)
+  const dataFim     = hoje.toISOString().substring(0, 10)
+  const deadline    = Date.now() + budgetSeg * 1000
+  const resultados: LicitacaoRaw[] = []
+
+  for (const codigoSituacao of [6, 7]) {
+    const label = codigoSituacao === 6 ? 'deserta' : 'fracassada'
+    let pagina = 1
+
+    while (pagina <= 10) {
+      if (Date.now() > deadline) break
+
+      const url = `${BASE_URL}/contratacoes/publicacao?dataInicial=${fmt(dataInicio)}&dataFinal=${fmt(dataFim)}&codigoSituacaoEdital=${codigoSituacao}&pagina=${pagina}&tamanhoPagina=50`
+
+      try {
+        const res = await fetch(url, {
+          headers: { Accept: 'application/json' },
+          signal:  AbortSignal.timeout(12000),
+        })
+
+        if (res.status === 404 || res.status === 400) break
+        if (!res.ok) break
+
+        const json = await res.json()
+        const itens: PncpItem[] = json.data ?? []
+        if (!itens.length) break
+
+        for (const item of itens) {
+          const orgao = item.unidadeOrgao?.nomeUnidade || item.orgaoEntidade.razaoSocial
+          const cnpj  = item.orgaoEntidade.cnpj ?? ''
+          const ano   = item.anoCompra ?? new Date().getFullYear()
+          const seq   = String(item.sequencialCompra ?? 0).padStart(6, '0')
+          const urlPncp = cnpj
+            ? `https://pncp.gov.br/app/editais/${cnpj}/${ano}/${seq}`
+            : 'https://pncp.gov.br/app/editais'
+
+          resultados.push({
+            fonte:          `PNCP (${label})`,
+            numero_edital:  item.numeroControlePNCP || `${ano}-${cnpj}-${seq}`,
+            orgao,
+            objeto:         `[${label.toUpperCase()}] ${item.objetoCompra}`,
+            valor_estimado: item.valorTotalEstimado,
+            data_abertura:  item.dataEncerramentoProposta?.substring(0, 10) || item.dataAberturaProposta?.substring(0, 10),
+            url:            item.linkSistemaOrigem || item.linkProcessoEletronico || urlPncp,
+            estado:         item.unidadeOrgao?.ufSigla,
+            cidade:         item.unidadeOrgao?.municipioNome,
+          })
+        }
+
+        const total = json.totalPaginas ?? 1
+        if (pagina >= total || itens.length < 50) break
+        pagina++
+        await new Promise(r => setTimeout(r, 200))
+      } catch (err) {
+        console.error(`PNCP-desertas sit=${codigoSituacao} p=${pagina}:`, err instanceof Error ? err.message : err)
+        break
+      }
+    }
+
+    console.log(`PNCP-desertas ${label}: ${resultados.filter(r => r.fonte?.includes(label)).length} encontradas`)
+  }
+
+  return resultados
+}
+
+/**
  * Coleta todas as licitações com abertura de proposta entre hoje e +horizonte dias.
  * @param horizonte    Dias à frente (padrão 180 — cobre editais de longo prazo).
  * @param maxPaginas   Páginas por modalidade (padrão 100 = 5.000/modalidade = 60.000 total).

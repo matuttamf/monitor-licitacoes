@@ -619,15 +619,13 @@ export async function GET(request: Request) {
   const { data: keywords } = await supabase.from('keywords').select('id, termo').eq('ativo', true)
   if (!keywords?.length) return NextResponse.json({ ok: true, salvas, matches: 0 })
 
-  // 4. Pré-filtro textual
-  const filtroOr = keywords.map(k => `objeto.ilike.%${k.termo.toLowerCase()}%`).join(',')
-  const { data: candidatos } = await supabase
-    .from('licitacoes').select('id, objeto')
+  // 4. Contar candidatos recentes (sem ilike — ilike.or() com milhares de keywords quebra o PostgREST)
+  const { count: candidatos } = await supabase
+    .from('licitacoes')
+    .select('id', { count: 'exact', head: true })
     .gte('coletado_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-    .or(filtroOr).limit(300)
 
-  console.log(`${candidatos?.length ?? 0} candidatos para matching`)
-  if (!candidatos?.length) return NextResponse.json({ ok: true, salvas, matches: 0 })
+  console.log(`${candidatos ?? 0} licitações recentes disponíveis para matching`)
 
   // 5. Disparar matching (endpoint separado, não bloqueia)
   fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/cron/matching`, {
@@ -741,14 +739,14 @@ export async function GET(request: Request) {
   await registrarCronLog({
     job: 'coletar',
     status: 'ok',
-    mensagem: `${salvas} salvas de ${todasLicitacoes.length} coletadas (${totalOk}/${TOTAL_FONTES} fontes) — ${candidatos?.length ?? 0} candidatos`,
+    mensagem: `${salvas} salvas de ${todasLicitacoes.length} coletadas (${totalOk}/${TOTAL_FONTES} fontes) — ${candidatos ?? 0} recentes`,
     detalhes,
   })
 
   return NextResponse.json({
     ok: true,
     salvas,
-    candidatos: candidatos?.length ?? 0,
+    candidatos: candidatos ?? 0,
     fontes_ativas: totalOk,
     total_fontes: TOTAL_FONTES,
     detalhes,

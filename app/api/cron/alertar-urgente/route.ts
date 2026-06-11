@@ -57,8 +57,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if (!alertas?.length) {
-    return NextResponse.json({ ok: true, enviados: 0 })
+  // filaVazia: quando não há novos alertas, recicla os já enviados há >24h e ainda abertos
+  let filaVazia = false
+  let alertasEfetivos = alertas ?? []
+
+  if (!alertasEfetivos.length) {
+    const h24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const { data: reciclados } = await supabase
+      .from('alertas')
+      .select(`
+        id, licitacao_id, canais, score,
+        licitacoes!inner (orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
+        keywords (termo, user_id)
+      `)
+      .or('canais.cs.{"telegram"},canais.cs.{"whatsapp"}')
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
+      .lt('enviado_em', h24)
+      .order('score', { ascending: false })
+      .limit(100)
+
+    if (!reciclados?.length) {
+      return NextResponse.json({ ok: true, enviados: 0, filaVazia: true })
+    }
+    alertasEfetivos = reciclados
+    filaVazia = true
   }
 
   // Por usuário: escolhe a licitação de maior score (top 1) e coleta TODOS os IDs
@@ -69,7 +91,7 @@ export async function GET(request: Request) {
   }
   const porUsuario = new Map<string, EntradaUsuario>()
 
-  for (const a of alertas) {
+  for (const a of alertasEfetivos) {
     const uid = (a.keywords as any)?.user_id
     if (!uid) continue
 
@@ -161,10 +183,10 @@ export async function GET(request: Request) {
     await registrarCronLog({
       job:      'alertar-urgente',
       status:   'ok',
-      mensagem: `${enviados} alerta(s) via Telegram/WA para ${Object.keys(resultado).length} usuário(s)`,
-      detalhes: resultado,
+      mensagem: `${enviados} alerta(s) via Telegram/WA para ${Object.keys(resultado).length} usuário(s)${filaVazia ? ' (reciclados)' : ''}`,
+      detalhes: { ...resultado, filaVazia },
     })
   }
 
-  return NextResponse.json({ ok: true, enviados, usuarios: Object.keys(resultado).length, detalhes: resultado })
+  return NextResponse.json({ ok: true, enviados, filaVazia, usuarios: Object.keys(resultado).length, detalhes: resultado })
 }
