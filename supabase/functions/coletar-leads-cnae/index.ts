@@ -12,7 +12,6 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { DecompressionStream } from 'https://deno.land/x/compression@v0.1.2/mod.ts'
 
 const MAX_LEADS       = 2000
 const MAX_LINHAS      = 500_000
@@ -51,13 +50,7 @@ async function getTargetCnaes(supabase: any): Promise<Set<string>> {
   return top.length ? new Set(top) : CNAE_SEED
 }
 
-Deno.serve(async (req: Request) => {
-  // Autenticação simples via header
-  const secret = Deno.env.get('CRON_SECRET')
-  if (secret && req.headers.get('x-cron-secret') !== secret) {
-    return new Response(JSON.stringify({ error: 'Não autorizado' }), { status: 401 })
-  }
-
+Deno.serve(async (_req: Request) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,

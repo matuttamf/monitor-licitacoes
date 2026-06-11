@@ -255,8 +255,7 @@ export async function GET(req: NextRequest) {
     const edgeRes = await fetch(edgeFnUrl, {
       method:  'GET',
       headers: {
-        'x-cron-secret':   process.env.CRON_SECRET ?? '',
-        'Authorization':   `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
       },
       signal: AbortSignal.timeout(280_000),
     })
