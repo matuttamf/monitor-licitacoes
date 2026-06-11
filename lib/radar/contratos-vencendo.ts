@@ -50,6 +50,8 @@ function diasAte(dataFim: string): number {
 
 async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<ContratoVencendo[]> {
   const lista: ContratoVencendo[] = []
+  let totalBruto = 0
+  let semVigencia = 0
 
   for (let p = 1; p <= maxPag; p++) {
     try {
@@ -59,15 +61,20 @@ async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<
         signal:  AbortSignal.timeout(12000),
       })
 
-      if (!res.ok) break
+      if (!res.ok) {
+        console.error(`radar janela ${fmt(dataIni)}-${fmt(dataFim)} p=${p} status=${res.status}`)
+        break
+      }
 
       const json = await res.json()
       const itens: Record<string, unknown>[] = json.data ?? []
       if (!itens.length) break
 
+      totalBruto += itens.length
+
       for (const item of itens) {
         const fim = (item.dataVigenciaFim as string | null)?.substring(0, 10) ?? ''
-        if (!fim) continue
+        if (!fim) { semVigencia++; continue }
 
         const dias = diasAte(fim)
         if (dias < 0 || dias > 90) continue  // só vencendo nos próximos 90d
@@ -96,6 +103,7 @@ async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<
     }
   }
 
+  console.log(`radar janela ${fmt(dataIni)}-${fmt(dataFim)}: bruto=${totalBruto} semVigencia=${semVigencia} match=${lista.length}`)
   return lista
 }
 
