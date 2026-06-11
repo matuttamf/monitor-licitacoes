@@ -235,8 +235,8 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
               <div style="color:#9AA0A6;font-size:13px;margin-top:4px;">Palavras-chave ilimitadas · 1 usuário</div>
             </td>
             <td align="right">
-              <div style="color:#6B0F1A;font-size:28px;font-weight:700;">R$97,90</div>
-              <div style="color:#9AA0A6;font-size:12px;text-align:right;">por mês · R$3,26/dia</div>
+              <div style="color:#6B0F1A;font-size:28px;font-weight:700;">R$79,90</div>
+              <div style="color:#9AA0A6;font-size:12px;text-align:right;">por mês · R$2,66/dia</div>
             </td>
           </tr>
         </table>
@@ -264,7 +264,7 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
     <br>
     <a href="${APP_URL}/assinar"
        style="color:#6B0F1A;text-decoration:none;font-size:13px;font-weight:600;">
-      Ver todos os planos a partir de R$ 49,90/mês
+      Ver todos os planos a partir de R$ 39,90/mês
     </a>
   </td></tr>
     `),

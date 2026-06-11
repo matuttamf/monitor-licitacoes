@@ -5,8 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const NOMES: Record<string, string> = {
-  basic:        'Basic — R$49,90/mês',
-  profissional: 'Profissional — R$97,90/mês',
+  basic:        'Basic — R$39,90/mês',
+  profissional: 'Profissional — R$79,90/mês',
   pro:          'Pro — R$197,90/mês',
   empresarial:  'Empresarial — R$497/mês',
 }

@@ -17,6 +17,7 @@
 
     { "path": "/api/cron/coletar-leads",               "schedule": "*/10 * * * *"  },
     { "path": "/api/cron/coletar-participantes",       "schedule": "0 6 * * *"    },
+    { "path": "/api/cron/coletar-leads-cnae",          "schedule": "0 6 * * 6"    },
     { "path": "/api/cron/coletar-leads-transparencia", "schedule": "0 */4 * * *"  },
 
     { "path": "/api/cron/enriquecer-receita",      "schedule": "*/5 * * * *"        },

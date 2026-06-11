@@ -75,12 +75,16 @@ export async function GET(req: NextRequest) {
       const emailRaw = dados.email?.trim()
       const ativa = dados.situacao_cadastral === 2
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cnaeCode = String((dados as any).cnae_fiscal ?? '').replace(/\D/g, '') || null
+
       if (!ativa) {
         inativas++
         await supabase.from('leads').update({
           razao_social: dados.razao_social ?? lead.cnpj,
           situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
           cnae:         dados.cnae_fiscal_descricao ?? null,
+          cnae_codigo:  cnaeCode,
           porte:        dados.porte ?? null,
           status:       'invalido',
         }).eq('id', lead.id)
@@ -98,6 +102,7 @@ export async function GET(req: NextRequest) {
         situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
         porte:         dados.porte ?? null,
         cnae:          dados.cnae_fiscal_descricao ?? null,
+        cnae_codigo:   cnaeCode,
         status:        emailRaw ? 'pendente' : 'invalido',
       }).eq('id', lead.id)
     }))

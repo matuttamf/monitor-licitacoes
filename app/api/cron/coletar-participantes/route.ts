@@ -280,6 +280,7 @@ export async function GET(req: NextRequest) {
       status:   'invalido',
       situacao: null,        // null = aguardando check Receita Federal
       fonte:    'pncp_proposta',
+      origem:   'participante',
     }, { onConflict: 'cnpj', ignoreDuplicates: true })
     if (!error) salvos++
   }
