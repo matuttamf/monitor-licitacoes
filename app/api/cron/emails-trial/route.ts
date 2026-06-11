@@ -41,13 +41,14 @@ export async function GET(request: Request) {
     try {
       // Dia 3: e-mail de engajamento
       if (diasDeTrial === 3) {
-        // Contar licitações encontradas para este usuário
         const keywordsResult = await supabase
           .from('keywords')
-          .select('id')
+          .select('id, termo')
           .eq('user_id', usuario.id)
+          .eq('ativo', true)
 
         const keywordIds = keywordsResult.data?.map(k => k.id) ?? []
+        const termos     = keywordsResult.data?.map(k => k.termo as string) ?? []
 
         let count = 0
         if (keywordIds.length > 0) {
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
           count = licitacaoCount ?? 0
         }
 
-        await enviarEmailDia3(email, count)
+        await enviarEmailDia3(email, count, termos)
         enviados++
       }
 

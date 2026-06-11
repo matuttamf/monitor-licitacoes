@@ -114,15 +114,36 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
 }
 
 // E-mail Dia 3: Engajamento
-export async function enviarEmailDia3(email: string, totalLicitacoes: number): Promise<void> {
+export async function enviarEmailDia3(
+  email: string,
+  totalLicitacoes: number,
+  termos: string[] = [],
+): Promise<void> {
   const resend = getResend()
   trackResend()
+
+  const termosLabel = termos.length > 0
+    ? termos.slice(0, 3).join(', ') + (termos.length > 3 ? ` +${termos.length - 3}` : '')
+    : 'suas palavras-chave'
+
+  const subject = totalLicitacoes > 0
+    ? `${totalLicitacoes} licitações encontradas para "${termosLabel}" — veja agora`
+    : `Seu monitor está rastreando "${termosLabel}" — 4 dias restantes`
+
+  const termosChips = termos.length > 0
+    ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
+        ${termos.slice(0, 6).map(t => `
+        <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;">
+          ${t}
+        </span>`).join('')}
+        ${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;">+${termos.length - 6} mais</span>` : ''}
+      </div>`
+    : ''
+
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: totalLicitacoes > 0
-      ? `${totalLicitacoes} licitações identificadas para você — acesse o painel`
-      : 'Seu monitor está ativo — veja o que estamos rastreando',
+    subject,
     html: baseEmail(`
   <!-- Hero -->
   <tr><td style="padding:40px 40px 0;">
@@ -131,34 +152,35 @@ export async function enviarEmailDia3(email: string, totalLicitacoes: number): P
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       <span style="color:#6B0F1A;font-style:italic;">${totalLicitacoes} licitações</span><br>cruzadas com seu perfil.
     </h1>
-    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 28px;">
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
       Identificamos editais publicados nos últimos dias que correspondem ao que sua empresa vende. Acesse o painel para ver os detalhes e os valores envolvidos.
     </p>
     ` : `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       Seu monitor está <span style="color:#6B0F1A;font-style:italic;">ativo e rastreando.</span>
     </h1>
-    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 28px;">
-      Estamos monitorando portais governamentais de todos os estados brasileiros. Assim que identificarmos editais compatíveis com suas palavras-chave, você recebe o alerta imediatamente.
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      Ainda não encontramos editais publicados para suas palavras-chave nos últimos 3 dias — mas o monitoramento está rodando. Editais são publicados diariamente; seu alerta chega assim que um aparecer.
     </p>
     `}
+    ${termosChips}
   </td></tr>
 
-  <!-- Estatística destaque -->
+  <!-- Estatísticas -->
   <tr><td style="padding:0 40px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
       <tr>
         <td style="padding:24px;text-align:center;width:33%;">
-          <div style="color:#C9A65A;font-size:22px;font-weight:700;">5.500+</div>
-          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Municípios</div>
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">346+</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Fontes monitoradas</div>
         </td>
         <td style="padding:24px;text-align:center;width:33%;border-left:1px solid rgba(255,255,255,0.1);border-right:1px solid rgba(255,255,255,0.1);">
           <div style="color:#C9A65A;font-size:22px;font-weight:700;">Diário</div>
-          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Atualização</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Coleta automática</div>
         </td>
         <td style="padding:24px;text-align:center;width:33%;">
-          <div style="color:#C9A65A;font-size:22px;font-weight:700;">3 fontes</div>
-          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Portais oficiais</div>
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">5.500+</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Municípios cobertos</div>
         </td>
       </tr>
     </table>
@@ -170,6 +192,9 @@ export async function enviarEmailDia3(email: string, totalLicitacoes: number): P
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Ver licitações no painel →
     </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
+      Seu trial termina em 4 dias. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora →</a>
+    </p>
   </td></tr>
     `),
   })
