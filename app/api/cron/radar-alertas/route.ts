@@ -167,7 +167,7 @@ export async function GET(request: Request) {
 
   const { data: rows, error: rowsError } = await supabase
     .from('licitacoes')
-    .select('orgao, objeto, valor_estimado, data_abertura, url, estado, municipio, fonte')
+    .select('orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, fonte')
     .in('fonte', ['PNCP Contratos', 'PNCP Atas'])
     .gte('data_abertura', dataInicio)
     .lte('data_abertura', dataFim)
@@ -190,7 +190,7 @@ export async function GET(request: Request) {
     diasRestantes:   diasAte(r.data_abertura ?? ''),
     url:             r.url ?? 'https://pncp.gov.br/app/contratos',
     estado:          r.estado ?? null,
-    cidade:          r.municipio ?? null,
+    cidade:          r.cidade ?? null,
   }))
 
   const radar = {
