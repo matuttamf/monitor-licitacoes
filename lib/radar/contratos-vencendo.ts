@@ -6,7 +6,7 @@
  *
  * Estratégia: buscar contratos publicados há 9–12 meses (vigência típica 1 ano
  * no governo BR) e filtrar por dataVigenciaFim no cliente.
- * tamanhoPagina máximo aceito pelo PNCP: 20.
+ * tamanhoPagina máximo aceito pelo PNCP: 50 (não enviar User-Agent — WAF bloqueia).
  */
 
 const BASE = 'https://pncp.gov.br/api/consulta/v1'
@@ -55,10 +55,10 @@ async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<
 
   for (let p = 1; p <= maxPag; p++) {
     try {
-      const url = `${BASE}/contratos?dataInicial=${fmt(dataIni)}&dataFinal=${fmt(dataFim)}&pagina=${p}&tamanhoPagina=20`
+      const url = `${BASE}/contratos?dataInicial=${fmt(dataIni)}&dataFinal=${fmt(dataFim)}&pagina=${p}&tamanhoPagina=50`
       const res = await fetch(url, {
-        headers: { Accept: 'application/json', 'User-Agent': 'Monitor-Licitacoes/2.0' },
-        signal:  AbortSignal.timeout(60000),
+        headers: { Accept: 'application/json' },
+        signal:  AbortSignal.timeout(20000),
       })
 
       if (!res.ok) {
@@ -112,9 +112,9 @@ export async function coletarContratosVencendo(): Promise<RadarContratos> {
   // Três janelas em paralelo para varrer ~9 meses distintos
   const hoje = new Date()
   const [w1, w2, w3] = await Promise.allSettled([
-    buscarJanela(subDias(120), subDias(1),   5),  // 0-4 meses atrás
-    buscarJanela(subDias(240), subDias(121), 5),  // 4-8 meses atrás
-    buscarJanela(subDias(364), subDias(241), 5),  // 8-12 meses atrás
+    buscarJanela(subDias(60),  subDias(1),   5),  // 0-2 meses atrás
+    buscarJanela(subDias(180), subDias(61),  5),  // 2-6 meses atrás
+    buscarJanela(subDias(364), subDias(181), 5),  // 6-12 meses atrás
   ])
 
   const todos = [
