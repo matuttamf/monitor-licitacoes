@@ -2,6 +2,7 @@
  * GET /api/admin/inteligencia
  * Dados agregados para o painel de inteligência de mercado.
  * Acesso restrito ao admin.
+ * Usa RPCs para agregação no banco — evita truncamento PostgREST (max 1000 linhas).
  */
 import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
@@ -17,16 +18,15 @@ export async function GET() {
 
   const service = createAdminClient()
 
-  // Janelas de tempo
-  const hoje    = new Date()
-  const d30     = new Date(hoje); d30.setDate(d30.getDate() - 30)
-  const d7      = new Date(hoje); d7.setDate(d7.getDate() - 7)
-  const d30Iso  = d30.toISOString()
-  const d7Iso   = d7.toISOString()
+  const hoje   = new Date()
+  const d7Iso  = new Date(hoje.getTime() - 7  * 86400000).toISOString()
+  const hojeDayIso = new Date(hoje.toDateString()).toISOString()
 
   const [
     totalLic,
     totalLeads,
+    lic7dRes,
+    licHojeRes,
     porEstadoRes,
     porFonteRes,
     timelineRes,
@@ -35,51 +35,22 @@ export async function GET() {
     leadsSegmentoRes,
     leadsUFRes,
     leadsStatusCounts,
-    lic7dRes,
-    licHojeRes,
   ] = await Promise.all([
-    // Totais
     service.from('licitacoes').select('id', { count: 'exact', head: true }),
     service.from('leads').select('id', { count: 'exact', head: true }),
+    service.from('licitacoes').select('id', { count: 'exact', head: true }).gte('coletado_em', d7Iso),
+    service.from('licitacoes').select('id', { count: 'exact', head: true }).gte('coletado_em', hojeDayIso),
 
-    // Licitações por estado (top 20)
-    service.from('licitacoes')
-      .select('estado')
-      .not('estado', 'is', null)
-      .neq('estado', ''),
+    // Agregações via RPC — sem limite de 1000 linhas
+    service.rpc('admin_lic_por_estado'),
+    service.rpc('admin_lic_por_fonte'),
+    service.rpc('admin_lic_timeline_30d'),
+    service.rpc('admin_top_orgaos'),
+    service.rpc('admin_lic_por_valor'),
+    service.rpc('admin_leads_por_segmento'),
+    service.rpc('admin_leads_por_uf'),
 
-    // Licitações por fonte (top 15)
-    service.from('licitacoes')
-      .select('fonte'),
-
-    // Timeline 30 dias — coletado_em por dia
-    service.from('licitacoes')
-      .select('coletado_em')
-      .gte('coletado_em', d30Iso),
-
-    // Top 10 órgãos
-    service.from('licitacoes')
-      .select('orgao')
-      .not('orgao', 'is', null)
-      .neq('orgao', ''),
-
-    // Distribuição de valores
-    service.from('licitacoes')
-      .select('valor_estimado')
-      .not('valor_estimado', 'is', null)
-      .gt('valor_estimado', 0),
-
-    // Leads por segmento
-    service.from('leads')
-      .select('segmento')
-      .not('segmento', 'is', null),
-
-    // Leads por UF (top 15)
-    service.from('leads')
-      .select('uf')
-      .not('uf', 'is', null),
-
-    // Leads por status — contagens separadas para evitar truncamento do PostgREST (max 1000 linhas)
+    // Leads por status — contagens separadas
     Promise.all([
       service.from('leads').select('id', { count: 'exact', head: true }).or('status.is.null,status.eq.pendente'),
       service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'enviado'),
@@ -87,98 +58,61 @@ export async function GET() {
       service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'invalido'),
       service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'descadastrado'),
     ]),
-
-    // Licitações últimos 7 dias
-    service.from('licitacoes').select('id', { count: 'exact', head: true })
-      .gte('coletado_em', d7Iso),
-
-    // Licitações hoje
-    service.from('licitacoes').select('id', { count: 'exact', head: true })
-      .gte('coletado_em', new Date(hoje.toDateString()).toISOString()),
   ])
 
-  // ── Agregar por estado ────────────────────────────────────────────────────
-  const estadoMap = new Map<string, number>()
-  for (const row of porEstadoRes.data ?? []) {
-    const e = (row.estado ?? '').toUpperCase().trim()
-    if (e) estadoMap.set(e, (estadoMap.get(e) ?? 0) + 1)
-  }
-  const porEstado = [...estadoMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .map(([uf, total]) => ({ uf, total }))
+  // ── Por estado ───────────────────────────────────────────────────────────
+  const porEstado = (porEstadoRes.data ?? []).map((r: { uf: string; total: number }) => ({
+    uf: r.uf,
+    total: Number(r.total),
+  }))
 
-  // ── Agregar por fonte ─────────────────────────────────────────────────────
-  const fonteMap = new Map<string, number>()
-  for (const row of porFonteRes.data ?? []) {
-    const f = row.fonte ?? 'Desconhecida'
-    fonteMap.set(f, (fonteMap.get(f) ?? 0) + 1)
-  }
-  const porFonte = [...fonteMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15)
-    .map(([fonte, total]) => ({ fonte, total }))
+  // ── Por fonte ────────────────────────────────────────────────────────────
+  const porFonte = (porFonteRes.data ?? []).map((r: { fonte: string; total: number }) => ({
+    fonte: r.fonte,
+    total: Number(r.total),
+  }))
 
-  // ── Timeline 30 dias ──────────────────────────────────────────────────────
-  const timelineMap = new Map<string, number>()
-  for (const row of timelineRes.data ?? []) {
-    const dia = (row.coletado_em as string)?.slice(0, 10)
-    if (dia) timelineMap.set(dia, (timelineMap.get(dia) ?? 0) + 1)
+  // ── Timeline 30 dias (preenche dias sem dados com 0) ─────────────────────
+  const tmMap = new Map<string, number>()
+  for (const r of timelineRes.data ?? []) {
+    tmMap.set((r as { data: string }).data, Number((r as { total: number }).total))
   }
-  // Preencher dias sem dados com 0
   const timeline30d: { data: string; total: number }[] = []
   for (let i = 29; i >= 0; i--) {
     const d = new Date(hoje); d.setDate(d.getDate() - i)
     const key = d.toISOString().slice(0, 10)
-    timeline30d.push({ data: key, total: timelineMap.get(key) ?? 0 })
+    timeline30d.push({ data: key, total: tmMap.get(key) ?? 0 })
   }
 
-  // ── Top órgãos ────────────────────────────────────────────────────────────
-  const orgaoMap = new Map<string, number>()
-  for (const row of topOrgaosRes.data ?? []) {
-    const o = (row.orgao as string)?.trim().slice(0, 60)
-    if (o) orgaoMap.set(o, (orgaoMap.get(o) ?? 0) + 1)
-  }
-  const topOrgaos = [...orgaoMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([orgao, total]) => ({ orgao, total }))
+  // ── Top órgãos ───────────────────────────────────────────────────────────
+  const topOrgaos = (topOrgaosRes.data ?? []).map((r: { orgao: string; total: number }) => ({
+    orgao: r.orgao,
+    total: Number(r.total),
+  }))
 
-  // ── Distribuição de valores ───────────────────────────────────────────────
+  // ── Distribuição de valores ──────────────────────────────────────────────
   const faixas = { ate10k: 0, ate100k: 0, ate1m: 0, ate10m: 0, acima10m: 0 }
-  for (const row of porValorRes.data ?? []) {
-    const v = row.valor_estimado as number
-    if (v <= 10_000)       faixas.ate10k++
-    else if (v <= 100_000) faixas.ate100k++
-    else if (v <= 1_000_000) faixas.ate1m++
-    else if (v <= 10_000_000) faixas.ate10m++
-    else faixas.acima10m++
+  for (const r of porValorRes.data ?? []) {
+    const row = r as { faixa: string; total: number }
+    const k = row.faixa as keyof typeof faixas
+    if (k in faixas) faixas[k] = Number(row.total)
   }
 
-  // ── Leads por segmento ────────────────────────────────────────────────────
-  const segMap = new Map<string, number>()
-  for (const row of leadsSegmentoRes.data ?? []) {
-    const s = row.segmento ?? 'outros'
-    segMap.set(s, (segMap.get(s) ?? 0) + 1)
-  }
-  const leadsSegmento = [...segMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([segmento, total]) => ({ segmento, total }))
+  // ── Leads por segmento ───────────────────────────────────────────────────
+  const leadsSegmento = (leadsSegmentoRes.data ?? []).map((r: { segmento: string; total: number }) => ({
+    segmento: r.segmento,
+    total: Number(r.total),
+  }))
 
-  // ── Leads por UF ─────────────────────────────────────────────────────────
-  const leadsUFMap = new Map<string, number>()
-  for (const row of leadsUFRes.data ?? []) {
-    const u = (row.uf as string)?.toUpperCase().trim()
-    if (u) leadsUFMap.set(u, (leadsUFMap.get(u) ?? 0) + 1)
-  }
-  const leadsUF = [...leadsUFMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15)
-    .map(([uf, total]) => ({ uf, total }))
+  // ── Leads por UF ────────────────────────────────────────────────────────
+  const leadsUF = (leadsUFRes.data ?? []).map((r: { uf: string; total: number }) => ({
+    uf: r.uf,
+    total: Number(r.total),
+  }))
 
-  // ── Leads por status ──────────────────────────────────────────────────────
+  // ── Leads por status ─────────────────────────────────────────────────────
   const [cPendente, cEnviado, cErro, cInvalido, cDescadastrado] = leadsStatusCounts
-  const statusMap: Record<string, number> = {
+  const leadsStatus: Record<string, number> = {
     pendente:      cPendente.count      ?? 0,
     enviado:       cEnviado.count       ?? 0,
     erro:          cErro.count          ?? 0,
@@ -188,10 +122,10 @@ export async function GET() {
 
   return NextResponse.json({
     totais: {
-      licitacoes:    totalLic.count ?? 0,
-      leads:         totalLeads.count ?? 0,
-      licitacoes7d:  lic7dRes.count ?? 0,
-      licitacoesHoje: licHojeRes.count ?? 0,
+      licitacoes:     totalLic.count     ?? 0,
+      leads:          totalLeads.count   ?? 0,
+      licitacoes7d:   lic7dRes.count     ?? 0,
+      licitacoesHoje: licHojeRes.count   ?? 0,
     },
     porEstado,
     porFonte,
@@ -200,6 +134,6 @@ export async function GET() {
     porValor: faixas,
     leadsSegmento,
     leadsUF,
-    leadsStatus: statusMap,
+    leadsStatus,
   })
 }
