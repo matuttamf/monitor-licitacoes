@@ -232,8 +232,9 @@ export default function RadarPage() {
           />
 
           <p style={{ fontSize: 11, color: 'var(--cinza)', textAlign: 'center', paddingBottom: 8 }}>
-            Dados coletados em tempo real do PNCP ·{' '}
-            {new Date(data.coletadoEm).toLocaleString('pt-BR')}
+            {data.coletadoEm
+              ? `Dados do cache · atualizado em ${new Date(data.coletadoEm).toLocaleString('pt-BR')}`
+              : 'Cache ainda não populado — acione o Radar no painel Admin'}
           </p>
         </div>
       )}
