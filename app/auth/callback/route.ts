@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { enviarEmailBoasVindas } from '@/lib/emails/trial'
@@ -41,6 +42,18 @@ export async function GET(request: NextRequest) {
           enviarEmailBoasVindas(userEmail, userName).catch(err =>
             console.error('[callback] Erro ao enviar e-mail boas-vindas:', err)
           )
+          // Marcar lead como 'usuario' para sair da fila de captação
+          const adminClient = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
+          adminClient
+            .from('leads')
+            .update({ status: 'usuario' })
+            .eq('email', userEmail)
+            .not('status', 'in', '("descadastrado","invalido")')
+            .then()
+            .catch(err => console.error('[callback] Erro ao marcar lead como usuario:', err))
         }
       }
       // Após confirmação de e-mail → onboarding direto
