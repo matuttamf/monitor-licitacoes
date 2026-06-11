@@ -84,11 +84,33 @@ export async function GET() {
     timeline30d.push({ data: key, total: tmMap.get(key) ?? 0 })
   }
 
-  // ── Top órgãos ───────────────────────────────────────────────────────────
-  const topOrgaos = (topOrgaosRes.data ?? []).map((r: { orgao: string; total: number }) => ({
-    orgao: r.orgao,
-    total: Number(r.total),
-  }))
+  // ── Top órgãos — normaliza e agrupa nomes similares ─────────────────────
+  function normalizarOrgao(raw: string): string {
+    const s = raw.trim().toUpperCase()
+    if (/^PREFEITURA/.test(s) || /^UNIDADE\s+(ÚNICA|UNICA|ADMINISTRATIVA)/.test(s) || s === 'PREFEITURA') return 'Prefeitura Municipal'
+    if (/^CÂMARA|^CAMARA/.test(s)) return 'Câmara Municipal'
+    if (/SECRETARIA.*(SAUDE|SAÚDE)/.test(s)) return 'Secretaria de Saúde'
+    if (/SECRETARIA.*(EDUCACAO|EDUCAÇÃO)/.test(s)) return 'Secretaria de Educação'
+    if (/SECRETARIA.*(OBRAS|INFRAESTRUTURA)/.test(s)) return 'Secretaria de Obras'
+    if (/SECRETARIA.*(FINANCAS|FINANÇAS|FAZENDA)/.test(s)) return 'Secretaria de Finanças'
+    if (/SECRETARIA.*(ADMIN)/.test(s)) return 'Secretaria de Administração'
+    if (/^SECRETARIA/.test(s)) return raw.trim().split(/\s+/).slice(0, 3).join(' ')
+    if (/FUNDO.*(SAUDE|SAÚDE)/.test(s)) return 'Fundo Municipal de Saúde'
+    if (/FUNDO.*(EDUCACAO|EDUCAÇÃO)/.test(s)) return 'Fundo Municipal de Educação'
+    if (/FUNDO.*(ASSISTENCIA|ASSISTÊNCIA)/.test(s)) return 'Fundo Municipal de Assistência Social'
+    if (/^FUNDO/.test(s)) return raw.trim().split(/\s+/).slice(0, 4).join(' ')
+    return raw.trim()
+  }
+
+  const orgaoMap = new Map<string, number>()
+  for (const r of topOrgaosRes.data ?? []) {
+    const norm = normalizarOrgao((r as { orgao: string; total: number }).orgao ?? '')
+    orgaoMap.set(norm, (orgaoMap.get(norm) ?? 0) + Number((r as { orgao: string; total: number }).total))
+  }
+  const topOrgaos = [...orgaoMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([orgao, total]) => ({ orgao, total }))
 
   // ── Distribuição de valores ──────────────────────────────────────────────
   const faixas = { ate10k: 0, ate100k: 0, ate1m: 0, ate10m: 0, acima10m: 0 }

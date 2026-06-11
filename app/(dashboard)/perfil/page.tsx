@@ -147,12 +147,21 @@ export default function PerfilPage() {
     return `${m}m`
   }
 
+  function formatTel(v: string): string {
+    const d = v.replace(/\D/g, '').slice(0, 11)
+    if (d.length === 0)  return ''
+    if (d.length <= 2)   return `(${d}`
+    if (d.length <= 6)   return `(${d.slice(0,2)}) ${d.slice(2)}`
+    if (d.length <= 10)  return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`
+  }
+
   const campos = [
-    { key: 'nome',      label: 'Nome completo',   placeholder: 'Seu nome',              type: 'text' },
-    { key: 'email',     label: 'E-mail',           placeholder: 'seu@email.com',         type: 'email',  readOnly: true },
-    { key: 'empresa',   label: 'Empresa',          placeholder: 'Nome da sua empresa',   type: 'text' },
-    { key: 'telefone',  label: 'Telefone',         placeholder: '(31) 99999-9999',       type: 'tel' },
-    { key: 'whatsapp',  label: 'WhatsApp',         placeholder: '(31) 99999-9999',       type: 'tel' },
+    { key: 'nome',      label: 'Nome completo',   placeholder: 'Seu nome',              type: 'text', tel: false },
+    { key: 'email',     label: 'E-mail',           placeholder: 'seu@email.com',         type: 'email',  readOnly: true, tel: false },
+    { key: 'empresa',   label: 'Empresa',          placeholder: 'Nome da sua empresa',   type: 'text', tel: false },
+    { key: 'telefone',  label: 'Telefone',         placeholder: '(31) 3333-3333',        type: 'tel',  tel: true },
+    { key: 'whatsapp',  label: 'WhatsApp',         placeholder: '(31) 99999-9999',       type: 'tel',  tel: true },
   ]
 
   if (carregando) return (
@@ -239,7 +248,7 @@ export default function PerfilPage() {
 
         {/* Formulário */}
         <form onSubmit={salvar} className="px-8 py-6 space-y-5">
-          {campos.map(({ key, label, placeholder, type, readOnly }) => (
+          {campos.map(({ key, label, placeholder, type, readOnly, tel }) => (
             <div key={key}>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
                 {label}
@@ -248,7 +257,11 @@ export default function PerfilPage() {
               <input
                 type={type}
                 value={(perfil as unknown as Record<string, string>)[key] ?? ''}
-                onChange={e => !readOnly && setPerfil(prev => ({ ...prev, [key]: e.target.value }))}
+                onChange={e => {
+                  if (readOnly) return
+                  const val = tel ? formatTel(e.target.value) : e.target.value
+                  setPerfil(prev => ({ ...prev, [key]: val }))
+                }}
                 placeholder={placeholder}
                 readOnly={readOnly}
                 className="w-full px-4 py-3 rounded-xl text-sm transition-all"
