@@ -40,22 +40,18 @@ export async function GET(request: Request) {
   const supabase  = await createServiceClient()
   const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const umaSemanAAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  // Janela de 30 dias: alertar sobre licitações abertas recentemente ou ainda a abrir
-  const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10)
 
   const SELECT_ALERTAS = `
     id, licitacao_id, keyword_id, canais, criado_em, enviado_em, score,
     licitacoes!inner (id, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
     keywords (id, termo, user_id)
   `
-  const FILTRO_DATA = { referencedTable: 'licitacoes' }
 
-  // 1. Pendentes (nunca enviados)
+  // 1. Pendentes (nunca enviados) — todas as licitações com match de keyword
   const { data: novos, error } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .eq('canais', '{}')
-    .or(`data_abertura.is.null,data_abertura.gte.${trintaDiasAtras}`, FILTRO_DATA)
     .order('score', { ascending: false })
     .limit(500)
 
@@ -65,14 +61,13 @@ export async function GET(request: Request) {
   }
 
   // 2. Reenvios:
-  // - Se há novos pendentes: só reenviar os enviados há > 7 dias (evita duplicação no mesmo e-mail)
-  // - Se fila VAZIA: reciclar TODOS os já enviados nos últimos 30 dias (ciclagem)
+  // - Se há novos pendentes: só reenviar os enviados há > 7 dias (evita duplicação)
+  // - Se fila VAZIA: reciclar todos os já enviados (ciclagem contínua)
   const filaVazia = !novos?.length
   let reenviosQuery = supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .neq('canais', '{}')
-    .or(`data_abertura.is.null,data_abertura.gte.${trintaDiasAtras}`, FILTRO_DATA)
     .order('score', { ascending: false })
     .limit(50)
 
