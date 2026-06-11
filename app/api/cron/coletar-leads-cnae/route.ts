@@ -117,11 +117,13 @@ async function processarArquivoRF(
   let res: Response
   try {
     res = await fetch(url, {
-      signal:  abortCtrl.signal,
-      headers: { 'User-Agent': 'MonitorLicitacoes/1.0', Accept: '*/*' },
+      signal:  AbortSignal.any([abortCtrl.signal, AbortSignal.timeout(60000)]),
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot)', Accept: '*/*' },
     })
   } catch (e) {
-    return { leads, rowsProcessed, esgotado, erro: `fetch falhou: ${e}` }
+    const causa = (e as { cause?: unknown })?.cause
+    const detalhe = causa ? ` (causa: ${causa})` : ''
+    return { leads, rowsProcessed, esgotado, erro: `fetch falhou: ${e}${detalhe}` }
   }
 
   if (!res.ok) {
