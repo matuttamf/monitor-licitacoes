@@ -24,18 +24,22 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
 
   // Upsert em lotes de 500 para evitar limite de payload do Supabase
   let erros = 0
+  let primeiroErro: string | null = null
   for (let i = 0; i < normalizadas.length; i += LOTE) {
     const lote = normalizadas.slice(i, i + LOTE)
     const { error } = await supabase
       .from('licitacoes')
       .upsert(lote, { onConflict: 'fonte,numero_edital', ignoreDuplicates: false })
     if (error) {
-      console.error(`Erro ao salvar lote ${i}-${i + lote.length}:`, error.message)
+      console.error(`Erro ao salvar lote ${i}-${i + lote.length}:`, error.message, JSON.stringify(lote[0]))
+      primeiroErro = error.message
       erros++
     }
   }
 
-  if (erros === Math.ceil(normalizadas.length / LOTE)) return 0
+  if (erros === Math.ceil(normalizadas.length / LOTE)) {
+    throw new Error(`Todos os lotes falharam: ${primeiroErro}`)
+  }
 
   const { count: depois } = await supabase
     .from('licitacoes')
