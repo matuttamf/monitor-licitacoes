@@ -1,7 +1,12 @@
 /**
  * Radar de Inteligência — Contratos com vigência vencendo em breve.
- * Endpoint PNCP: /contratos com dataVigenciaFimInicial/Final.
- * Usado para identificar oportunidades de renovação/adesão.
+ *
+ * PNCP removeu o filtro dataVigenciaFimInicial/Final — agora é obrigatório
+ * dataInicial/dataFinal (data de publicação, janela máx 365 dias).
+ *
+ * Estratégia: buscar contratos publicados há 9–12 meses (vigência típica 1 ano
+ * no governo BR) e filtrar por dataVigenciaFim no cliente.
+ * tamanhoPagina máximo aceito pelo PNCP: 20.
  */
 
 const BASE = 'https://pncp.gov.br/api/consulta/v1'
@@ -22,14 +27,17 @@ export interface RadarContratos {
   em60dias:   ContratoVencendo[]
   em90dias:   ContratoVencendo[]
   coletadoEm: string
+  totalBruto: number
 }
 
-function fmt(d: string): string { return d.replace(/-/g, '') }
+function fmt(d: Date): string {
+  return d.toISOString().substring(0, 10).replace(/-/g, '')
+}
 
-function addDias(n: number): string {
+function subDias(n: number): Date {
   const d = new Date()
-  d.setDate(d.getDate() + n)
-  return d.toISOString().substring(0, 10)
+  d.setDate(d.getDate() - n)
+  return d
 }
 
 function diasAte(dataFim: string): number {
@@ -39,18 +47,17 @@ function diasAte(dataFim: string): number {
   return Math.round((fim.getTime() - hoje.getTime()) / 86400000)
 }
 
-async function buscarFaixa(dataIni: string, dataFim: string, maxPag = 20): Promise<ContratoVencendo[]> {
+async function buscarJanela(dataIni: Date, dataFim: Date, maxPag = 15): Promise<ContratoVencendo[]> {
   const lista: ContratoVencendo[] = []
 
   for (let p = 1; p <= maxPag; p++) {
     try {
-      const url = `${BASE}/contratos?dataVigenciaFimInicial=${fmt(dataIni)}&dataVigenciaFimFinal=${fmt(dataFim)}&pagina=${p}&tamanhoPagina=50`
+      const url = `${BASE}/contratos?dataInicial=${fmt(dataIni)}&dataFinal=${fmt(dataFim)}&pagina=${p}&tamanhoPagina=20`
       const res = await fetch(url, {
         headers: { Accept: 'application/json' },
-        signal:  AbortSignal.timeout(15000),
+        signal:  AbortSignal.timeout(12000),
       })
 
-      if (res.status === 404 || res.status === 400) break
       if (!res.ok) break
 
       const json = await res.json()
@@ -58,17 +65,21 @@ async function buscarFaixa(dataIni: string, dataFim: string, maxPag = 20): Promi
       if (!itens.length) break
 
       for (const item of itens) {
-        const orgEnt = item.orgaoEntidade as { razaoSocial?: string; cnpj?: string } | null
-        const und    = item.unidadeOrgao  as { ufSigla?: string; municipioNome?: string; nomeUnidade?: string } | null
-        const fim    = (item.dataVigenciaFim as string | null)?.substring(0, 10) ?? ''
+        const fim = (item.dataVigenciaFim as string | null)?.substring(0, 10) ?? ''
         if (!fim) continue
+
+        const dias = diasAte(fim)
+        if (dias < 0 || dias > 90) continue  // só vencendo nos próximos 90d
+
+        const orgEnt = item.orgaoEntidade as { razaoSocial?: string } | null
+        const und    = item.unidadeOrgao  as { ufSigla?: string; municipioNome?: string; nomeUnidade?: string } | null
 
         lista.push({
           orgao:           und?.nomeUnidade || orgEnt?.razaoSocial || 'Órgão não informado',
           objeto:          (item.objetoContrato as string | null) ?? '',
           valor:           (item.valorInicial as number | null) ?? null,
           dataVigenciaFim: fim,
-          diasRestantes:   diasAte(fim),
+          diasRestantes:   dias,
           url:             (item.linkSistemaOrigem as string | null) ?? 'https://pncp.gov.br/app/contratos',
           estado:          und?.ufSigla ?? null,
           cidade:          und?.municipioNome ?? null,
@@ -76,10 +87,10 @@ async function buscarFaixa(dataIni: string, dataFim: string, maxPag = 20): Promi
       }
 
       const total = json.totalPaginas ?? 1
-      if (p >= total || itens.length < 50) break
-      await new Promise(r => setTimeout(r, 200))
+      if (p >= total || itens.length < 20) break
+      await new Promise(r => setTimeout(r, 150))
     } catch (err) {
-      console.error('radar contratos erro p=' + p + ':', err instanceof Error ? err.message : err)
+      console.error('radar contratos err p=' + p + ':', err instanceof Error ? err.message : err)
       break
     }
   }
@@ -88,18 +99,30 @@ async function buscarFaixa(dataIni: string, dataFim: string, maxPag = 20): Promi
 }
 
 export async function coletarContratosVencendo(): Promise<RadarContratos> {
-  const hoje = new Date().toISOString().substring(0, 10)
-
-  const [r30, r60, r90] = await Promise.allSettled([
-    buscarFaixa(hoje,          addDias(30)),
-    buscarFaixa(addDias(31),   addDias(60)),
-    buscarFaixa(addDias(61),   addDias(90)),
+  // Contratos publicados nos últimos 12 meses: cobre vigências típicas de 1 ano
+  // Três janelas em paralelo para varrer ~9 meses distintos
+  const hoje = new Date()
+  const [w1, w2, w3] = await Promise.allSettled([
+    buscarJanela(subDias(120), subDias(1),    15),  // 0-4 meses atrás
+    buscarJanela(subDias(240), subDias(121),  15),  // 4-8 meses atrás
+    buscarJanela(subDias(364), subDias(241),  15),  // 8-12 meses atrás
   ])
 
+  const todos = [
+    ...(w1.status === 'fulfilled' ? w1.value : []),
+    ...(w2.status === 'fulfilled' ? w2.value : []),
+    ...(w3.status === 'fulfilled' ? w3.value : []),
+  ]
+
+  const em30dias = todos.filter(c => c.diasRestantes >= 0  && c.diasRestantes <= 30)
+  const em60dias = todos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60)
+  const em90dias = todos.filter(c => c.diasRestantes >= 61 && c.diasRestantes <= 90)
+
   return {
-    em30dias:   r30.status === 'fulfilled' ? r30.value : [],
-    em60dias:   r60.status === 'fulfilled' ? r60.value : [],
-    em90dias:   r90.status === 'fulfilled' ? r90.value : [],
-    coletadoEm: new Date().toISOString(),
+    em30dias,
+    em60dias,
+    em90dias,
+    coletadoEm: hoje.toISOString(),
+    totalBruto: todos.length,
   }
 }
