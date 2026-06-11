@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   const MSGS_BACKGROUND: Record<string, string> = {
     'enriquecer-emails':      'Busca de e-mails disparada em background. Verifique os leads em ~2min.',
     'coletar':                'Coleta disparada em background (~5 min). Verifique Licitações em breve.',
-    'coletar-abertos':        'Varredura de abertos disparada em background (~5 min). Pode trazer 10k+ licitações.',
+    // 'coletar-abertos' removido do fire-and-forget — roda síncrono (ver timeout abaixo)
     'coletar-participantes':         'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
     'coletar-leads-transparencia':  'Coleta Portal Transparência disparada em background. Verifique os leads em breve.',
   }
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         'Authorization':  `Bearer ${secret}`,
         'X-Cron-Secret':  secret ?? '',
       },
-      signal: AbortSignal.timeout(acao === 'matching' ? 290000 : 55000),
+      signal: AbortSignal.timeout(acao === 'matching' || acao === 'coletar-abertos' ? 290000 : 55000),
     })
     const texto = await res.text()
     let data
