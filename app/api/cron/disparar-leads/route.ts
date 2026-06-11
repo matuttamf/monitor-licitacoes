@@ -1,15 +1,16 @@
 /**
  * Cron: disparar-leads
- * Horário: Ter/Qua/Qui às 9h e 14h (horário de Brasília = UTC-3)
- *  → 9h BRT  = 12h UTC
- *  → 14h BRT = 17h UTC
+ * Horário: seg-sex às 8h, 9h, 12h, 14h, 16h (horário de Brasília = UTC-3)
  *
  * Fluxo:
- *  1. Busca até MAX_LOTE leads com status 'pendente'
- *  2. Envia e-mail de captação personalizado via Resend
- *  3. Atualiza status → 'enviado' (ou 'erro')
+ *  0. Reset leads 'erro' há >4h → 'pendente' (retry automático)
+ *  1. Enviar primeiro e-mail para leads 'pendente'
+ *  2. Enviar follow-up D+4 e D+8 para leads 'enviado' que não abriram
  *
- * Deduplicação: status 'enviado' garante não reenvio
+ * Sequência por lead:
+ *  - D+0: primeiro e-mail (copy PAS por setor + contrato real como gancho)
+ *  - D+4: follow-up 1 se abriu_em IS NULL e emails_enviados < 2
+ *  - D+8: follow-up 2 (último) se abriu_em IS NULL e emails_enviados < 3
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -19,7 +20,7 @@ import { Resend } from 'resend'
 import { emailCaptacao, type LicitacaoResumida } from '@/lib/emails/captacao'
 import { trackResend } from '@/lib/uso-apis'
 
-// ─── Palavras-chave por segmento para buscar licitações compatíveis ──────────
+// ─── Palavras-chave por segmento ──────────────────────────────────────────────
 const KEYWORDS_SEGMENTO: Record<string, string[]> = {
   construção:   ['constru', 'obra', 'reform', 'paviment', 'engenharia', 'instalação elétrica', 'hidráulica'],
   tecnologia:   ['software', 'tecnologia', 'sistema', 'informática', 'computador', 'licença', 'suporte técnico'],
@@ -33,7 +34,7 @@ const KEYWORDS_SEGMENTO: Record<string, string[]> = {
   manutenção:   ['manutenção', 'reparo', 'assistência técnica', 'calibração'],
   jardinagem:   ['paisagismo', 'jardinagem', 'poda', 'arborização'],
   gráfica:      ['impressão', 'gráfica', 'material gráfico', 'banner', 'panfleto'],
-  outros:       [], // sem filtro específico — retorna recentes genéricos
+  outros:       [],
 }
 
 async function buscarLicitacoesSegmento(
@@ -44,9 +45,6 @@ async function buscarLicitacoesSegmento(
   try {
     const keywords = KEYWORDS_SEGMENTO[segmento ?? 'outros'] ?? []
 
-    // Tenta primeiro na UF do lead (mais relevante), com filtro de segmento
-    // Depois fallback: só segmento sem filtro de UF
-    // Por fim: recentes sem filtro nenhum
     let query = supabase
       .from('licitacoes')
       .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
@@ -55,18 +53,14 @@ async function buscarLicitacoesSegmento(
       .limit(3)
 
     if (keywords.length > 0) {
-      // ilike com OR entre as keywords — pega a primeira que tiver resultado
       query = query.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
     }
-
-    if (uf) {
-      query = query.eq('estado', uf)
-    }
+    if (uf) query = query.eq('estado', uf)
 
     const { data } = await query
     if (data && data.length >= 1) return data as LicitacaoResumida[]
 
-    // Fallback sem filtro de UF
+    // Fallback sem UF
     if (uf && keywords.length > 0) {
       let q2 = supabase
         .from('licitacoes')
@@ -79,7 +73,7 @@ async function buscarLicitacoesSegmento(
       if (d2 && d2.length >= 1) return d2 as LicitacaoResumida[]
     }
 
-    // Último fallback: 3 licitações mais recentes sem filtro
+    // Último fallback: 3 recentes sem filtro
     const { data: recentes } = await supabase
       .from('licitacoes')
       .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
@@ -93,12 +87,12 @@ async function buscarLicitacoesSegmento(
   }
 }
 
-export const maxDuration = 60
+// Pro/Empresarial: até 300s. Com ~1s por lead (DB + Resend + 200ms pausa):
+//  75 novos + 25 followup = 100 leads → ~100s, bem dentro do limite.
+export const maxDuration = 300
 
-// Lote por execução — cron roda a cada hora nos dias úteis (8h-18h) = ~11 runs/dia × 5 dias = 55x/sem
-// Com MAX_LOTE=50: até 2.750 e-mails/semana (~11.000/mês) → requer plano pago do Resend
-// Monitore uso em /admin/saude antes de ativar o disparo
-const MAX_LOTE = 50
+const MAX_LOTE_NOVOS    = 75
+const MAX_LOTE_FOLLOWUP = 25
 
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
@@ -110,57 +104,68 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Verificar se captação está ativa
-  const { data: cfg } = await supabase
-    .from('configuracoes')
-    .select('valor')
-    .eq('chave', 'captacao_ativa')
-    .maybeSingle()
-  if (cfg && (cfg.valor === false || cfg.valor === 'false')) {
+  // Verificar se captação e disparo estão ativos
+  const [cfgCaptacao, cfgDisparo] = await Promise.all([
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_ativa').maybeSingle(),
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_disparo_ativo').maybeSingle(),
+  ])
+  if (cfgCaptacao.data && (cfgCaptacao.data.valor === false || cfgCaptacao.data.valor === 'false')) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'sistema pausado' })
   }
-
-  // Verificar se disparo de e-mails está habilitado (padrão: desabilitado)
-  const { data: cfgDisparo } = await supabase
-    .from('configuracoes')
-    .select('valor')
-    .eq('chave', 'captacao_disparo_ativo')
-    .maybeSingle()
-  const disparoAtivo = cfgDisparo?.valor === true || cfgDisparo?.valor === 'true'
+  const disparoAtivo = cfgDisparo.data?.valor === true || cfgDisparo.data?.valor === 'true'
   if (!disparoAtivo) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'disparo pausado pelo admin' })
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
-
-  // Buscar leads pendentes com e-mail
-  const { data: leads, error } = await supabase
+  // ── Step 0: Reset leads 'erro' há >4h para 'pendente' ────────────────────
+  const h4ago = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+  await supabase
     .from('leads')
-    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento')
+    .update({ status: 'pendente', erro_msg: null })
+    .eq('status', 'erro')
+    .lt('enviado_em', h4ago)
+
+  // ── Step 1: Leads pendentes (primeiro e-mail) ─────────────────────────────
+  const { data: leadsPendentes } = await supabase
+    .from('leads')
+    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
     .eq('status', 'pendente')
     .not('email', 'is', null)
     .neq('email', '')
     .order('created_at', { ascending: true })
-    .limit(MAX_LOTE)
+    .limit(MAX_LOTE_NOVOS)
 
-  if (error) {
-    console.error('[disparar-leads] erro ao buscar leads:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  // ── Step 2: Follow-up (D+4 e D+8 para quem não abriu) ────────────────────
+  const agora = new Date().toISOString()
+  const { data: leadsFollowup } = await supabase
+    .from('leads')
+    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
+    .eq('status', 'enviado')
+    .lte('proximo_email_em', agora)
+    .lt('emails_enviados', 3)
+    .is('abriu_em', null)
+    .not('email', 'is', null)
+    .neq('email', '')
+    .order('proximo_email_em', { ascending: true })
+    .limit(MAX_LOTE_FOLLOWUP)
+
+  const todos = [
+    ...(leadsPendentes ?? []).map(l => ({ ...l, isFollowup: false })),
+    ...(leadsFollowup  ?? []).map(l => ({ ...l, isFollowup: true  })),
+  ]
+
+  if (!todos.length) {
+    return NextResponse.json({ ok: true, enviados: 0, followups: 0, mensagem: 'Nenhum lead pendente ou follow-up agendado' })
   }
 
-  if (!leads?.length) {
-    console.log('[disparar-leads] nenhum lead pendente')
-    return NextResponse.json({ ok: true, enviados: 0, mensagem: 'Nenhum lead pendente' })
-  }
-
-  console.log(`[disparar-leads] ${leads.length} leads para enviar`)
-
+  const resend = new Resend(process.env.RESEND_API_KEY)
   let enviados = 0
+  let followups = 0
   let erros = 0
 
-  for (const lead of leads) {
-    // Buscar licitações reais do setor para personalizar o e-mail
+  for (const lead of todos) {
     const licitacoes = await buscarLicitacoesSegmento(supabase, lead.segmento, lead.uf)
+    const numeroEmail = (lead.emails_enviados ?? 0) + 1
 
     const { subject, html, text } = emailCaptacao({
       id:           lead.id,
@@ -170,12 +175,13 @@ export async function GET(req: NextRequest) {
       uf:           lead.uf,
       cnae:         lead.cnae,
       licitacoes,
+      objeto:       lead.objeto ?? undefined,
+      numeroEmail,
     })
 
-    // Substituir token de descadastro pelo ID do lead (UUID não-guessável)
     const htmlFinal = html
       .replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id)
-      .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email)) // compatibilidade legada
+      .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
     const textFinal = text
       .replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id)
       .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
@@ -192,12 +198,25 @@ export async function GET(req: NextRequest) {
 
       if (sendError) throw new Error(sendError.message)
 
+      const novosEnviados = numeroEmail
+      // Agenda próximo follow-up se ainda abaixo de 3 e-mails
+      const proximoEmail = novosEnviados < 3
+        ? new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()
+        : null
+
       await supabase
         .from('leads')
-        .update({ status: 'enviado', enviado_em: new Date().toISOString(), erro_msg: null })
+        .update({
+          status:          'enviado',
+          enviado_em:      new Date().toISOString(),
+          erro_msg:        null,
+          emails_enviados: novosEnviados,
+          proximo_email_em: proximoEmail,
+        })
         .eq('id', lead.id)
 
-      enviados++
+      if (lead.isFollowup) followups++
+      else enviados++
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Erro desconhecido'
       console.error(`[disparar-leads] erro ao enviar para ${lead.email}:`, msg)
@@ -209,11 +228,8 @@ export async function GET(req: NextRequest) {
 
       erros++
     }
-
-    // Pequena pausa para não saturar a API do Resend
-    await new Promise(r => setTimeout(r, 200))
   }
 
-  console.log(`[disparar-leads] enviados=${enviados} erros=${erros}`)
-  return NextResponse.json({ ok: true, enviados, erros })
+  console.log(`[disparar-leads] enviados=${enviados} followups=${followups} erros=${erros}`)
+  return NextResponse.json({ ok: true, enviados, followups, erros })
 }

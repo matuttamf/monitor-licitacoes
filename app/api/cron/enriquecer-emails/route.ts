@@ -289,15 +289,17 @@ export async function GET(req: NextRequest) {
   // Etapa 0 (Receita Federal) foi movida para enriquecer-receita (*/5 min).
   // Este cron faz apenas a busca web de e-mail para leads ATIVAS sem e-mail.
   const inicioEtapa1 = Date.now()
-  const retryApos = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  // Retry após 14 dias (era 7) — reduz pressão nas APIs externas
+  const retryApos = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
   const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, cnpj, razao_social, municipio, uf, porte')
+    .select('id, cnpj, razao_social, municipio, uf, porte, email_tentativas')
     .is('email', null)
     .eq('status', 'invalido')
     .eq('situacao', 'ATIVA')
+    .lt('email_tentativas', 3)           // descarta após 3 tentativas sem achar e-mail
     .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
     .gte('data_contrato', vinteAnosAtras)
     .order('data_contrato', { ascending: false })
@@ -386,10 +388,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const update: Record<string, unknown> = { email_buscado_em: new Date().toISOString() }
+    const tentativasAtual = (lead as { email_tentativas?: number }).email_tentativas ?? 0
+    const update: Record<string, unknown> = {
+      email_buscado_em:  new Date().toISOString(),
+      email_tentativas:  tentativasAtual + 1,
+    }
     if (emailFinal) {
-      update.email  = emailFinal
-      update.status = 'pendente'
+      update.email             = emailFinal
+      update.status            = 'pendente'
+      update.email_tentativas  = 0  // reset ao encontrar e-mail
       enriquecidos++
       detalhes[lead.cnpj] = { email: emailFinal, metodo, debug: debugLog }
     } else {

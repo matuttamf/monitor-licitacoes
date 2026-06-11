@@ -32,6 +32,8 @@ interface ParamsCaptacao {
   cnae?: string
   appUrl?: string
   licitacoes?: LicitacaoResumida[]  // editais reais do setor para personalizar o e-mail
+  objeto?: string                   // descrição do contrato que gerou o lead (prova social pessoal)
+  numeroEmail?: number              // 1=primeiro, 2=D+4 follow-up, 3=D+8 último
 }
 
 function detectarSetor(cnae?: string): 'construcao' | 'ti' | 'limpeza' | 'vigilancia' | 'saude' | 'transporte' | 'generico' {
@@ -172,15 +174,45 @@ function buildLicitacoesTxt(lics: LicitacaoResumida[]): string {
   return `\nLICITAÇÕES ABERTAS PARA O SEU SETOR:\n${lines}\n`
 }
 
+const COPY_FOLLOWUP: Record<number, { subject: string; abertura: string; ps: string }> = {
+  2: {
+    subject: '{{NOME}}, você ainda não experimentou — mas seus concorrentes já estão no Monitor',
+    abertura: 'Enviamos um e-mail há alguns dias sobre oportunidades de licitação para o seu setor. Como não houve resposta, imaginamos duas possibilidades: caiu no spam, ou ainda está avaliando se vale a pena.<br><br>Deixa eu ser direto:',
+    ps: '⚠️ <strong>P.S.:</strong> O trial é 100% gratuito, não pede cartão e você configura em 5 minutos. O único risco é não testar e continuar perdendo editais para quem monitora.',
+  },
+  3: {
+    subject: '{{NOME}}, última mensagem — não vou mais incomodar depois desta',
+    abertura: 'Esta é minha última mensagem para você. Não quero ser chato — respeito seu tempo e sua decisão.<br><br>Mas antes de ir, deixo um número: empresas que monitoram licitações participam de <strong>3× mais processos</strong> do que as que fazem busca manual. Em 7 dias de trial você vê com os próprios olhos se funciona para o seu negócio.',
+    ps: '⚠️ <strong>P.S.:</strong> Se não quiser mais receber mensagens nossas, basta clicar em "descadastrar" no rodapé. Sem julgamentos.',
+  },
+}
+
+function buildObjetoHtml(objeto: string, nome: string): string {
+  const obj = objeto.length > 120 ? objeto.slice(0, 120) + '…' : objeto
+  return `
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;">
+      <div style="font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">📋 Por que estamos enviando esta mensagem</div>
+      <p style="margin:0;font-size:14px;color:#0c4a6e;line-height:1.6;">
+        Identificamos que <strong>${nome}</strong> participou de um processo licitatório com o objeto:<br>
+        <em style="color:#075985;">"${obj}"</em><br><br>
+        Isso significa que sua empresa já fornece para o setor público. Nosso sistema encontra <strong>contratos similares ainda abertos</strong> que você pode estar perdendo.
+      </p>
+    </div>`
+}
+
 export function emailCaptacao(p: ParamsCaptacao) {
   const nome = p.nomeFantasia || p.razaoSocial
   const cidade = p.municipio ? `${p.municipio}${p.uf ? '/' + p.uf : ''}` : null
   const url = (p.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
+  const numeroEmail = p.numeroEmail ?? 1
+  const isFollowup = numeroEmail > 1
 
   const setor = detectarSetor(p.cnae)
   const copy = COPY_POR_SETOR[setor]
+  const followupCopy = COPY_FOLLOWUP[numeroEmail]
 
-  const ctaDest = `${url}/cadastro?utm_source=captacao&utm_medium=email&utm_campaign=trial7d&utm_content=${setor}`
+  const campanha = isFollowup ? `followup${numeroEmail}` : 'trial7d'
+  const ctaDest = `${url}/cadastro?utm_source=captacao&utm_medium=email&utm_campaign=${campanha}&utm_content=${setor}`
   const ctaHref = p.id
     ? `${url}/api/track/click/${p.id}?url=${encodeURIComponent(ctaDest)}`
     : ctaDest
@@ -188,12 +220,14 @@ export function emailCaptacao(p: ParamsCaptacao) {
     ? `<img src="${url}/api/track/open/${p.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`
     : ''
 
-  const subject = copy.subject.replace('{{NOME}}', nome)
+  const subject = (isFollowup ? followupCopy!.subject : copy.subject).replace('{{NOME}}', nome)
   const cidadeHtml = cidade ? `<strong>${cidade}</strong>` : 'sua região'
 
   const lics = p.licitacoes ?? []
   const licitacoesHtml = buildLicitacoesHtml(lics, ctaHref)
   const licitacoesTxt  = buildLicitacoesTxt(lics)
+
+  const objetoHtml = p.objeto ? buildObjetoHtml(p.objeto, nome) : ''
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -280,13 +314,18 @@ export function emailCaptacao(p: ParamsCaptacao) {
 
     <p class="greeting">Olá, <span class="name">${nome}</span> —</p>
 
-    <!-- DOR -->
+    ${isFollowup
+      ? `<!-- FOLLOW-UP ABERTURA -->
+    <p>${followupCopy!.abertura}</p>`
+      : `<!-- PRIMEIRO E-MAIL: DOR + AGITAÇÃO -->
     <p>${copy.dor}</p>
-
-    <!-- AGITAÇÃO -->
     <div class="pain-box">
       <p>🔴 ${copy.agitacao}</p>
-    </div>
+    </div>`
+    }
+
+    <!-- GANCHO PERSONALIZADO (contrato real que gerou o lead) -->
+    ${objetoHtml}
 
     <!-- SOLUÇÃO -->
     <p>
@@ -330,7 +369,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
 
     <!-- P.S. -->
     <div class="ps-box">
-      <p>${copy.ps}</p>
+      <p>${isFollowup ? followupCopy!.ps : copy.ps}</p>
     </div>
 
     <p style="font-size:13px;color:#888;margin-top:8px;">
