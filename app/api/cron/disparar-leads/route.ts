@@ -94,6 +94,11 @@ export const maxDuration = 300
 
 const MAX_LOTE_NOVOS    = 75
 const MAX_LOTE_FOLLOWUP = 25
+const MAX_EMAILS        = 8  // após 8 e-mails sem abertura → invalido (sunset)
+
+// Dias de espera após cada e-mail (index 0 = após o e-mail 1)
+// D+0 → D+4 → D+8 → D+17 → D+32 → D+62 → D+92 → D+152 (sunset)
+const PROXIMOS_DIAS = [4, 4, 9, 15, 30, 30, 60]
 
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
@@ -118,7 +123,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'disparo pausado pelo admin' })
   }
 
-  // ── Step 0: Reset leads 'erro' há >4h para 'pendente' ────────────────────
+  // ── Step 0a: Sunset — marcar como 'invalido' leads sem engajamento após a sequência completa
+  await supabase
+    .from('leads')
+    .update({ status: 'invalido', erro_msg: 'sem_engajamento' })
+    .eq('status', 'enviado')
+    .gte('emails_enviados', MAX_EMAILS)
+    .is('abriu_em', null)
+    .is('proximo_email_em', null)
+
+  // ── Step 0b: Reset leads 'erro' há >4h para 'pendente' ───────────────────
   const h4ago = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
   await supabase
     .from('leads')
@@ -143,7 +157,7 @@ export async function GET(req: NextRequest) {
     .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
     .eq('status', 'enviado')
     .lte('proximo_email_em', agora)
-    .lt('emails_enviados', 3)
+    .lt('emails_enviados', MAX_EMAILS)
     .is('abriu_em', null)
     .not('email', 'is', null)
     .neq('email', '')
@@ -188,6 +202,7 @@ export async function GET(req: NextRequest) {
       .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
 
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
       trackResend()
       const { error: sendError } = await resend.emails.send({
         from: 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
@@ -195,14 +210,19 @@ export async function GET(req: NextRequest) {
         subject,
         html: htmlFinal,
         text: textFinal,
+        headers: {
+          'List-Unsubscribe': `<${appUrl}/descadastrar?token=${lead.id}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       })
 
       if (sendError) throw new Error(sendError.message)
 
       const novosEnviados = numeroEmail
-      // Agenda próximo follow-up se ainda abaixo de 3 e-mails
-      const proximoEmail = novosEnviados < 3
-        ? new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()
+      // Intervalos crescentes: D+4, D+4, D+9, D+15, D+30, D+30, D+60, sunset
+      const diasProximo = PROXIMOS_DIAS[novosEnviados - 1] ?? null
+      const proximoEmail = diasProximo
+        ? new Date(Date.now() + diasProximo * 24 * 60 * 60 * 1000).toISOString()
         : null
 
       await supabase

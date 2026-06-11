@@ -181,9 +181,34 @@ const COPY_FOLLOWUP: Record<number, { subject: string; abertura: string; ps: str
     ps: '⚠️ <strong>P.S.:</strong> O trial é 100% gratuito, não pede cartão e você configura em 5 minutos. O único risco é não testar e continuar perdendo editais para quem monitora.',
   },
   3: {
-    subject: '{{NOME}}, última mensagem — não vou mais incomodar depois desta',
-    abertura: 'Esta é minha última mensagem para você. Não quero ser chato — respeito seu tempo e sua decisão.<br><br>Mas antes de ir, deixo um número: empresas que monitoram licitações participam de <strong>3× mais processos</strong> do que as que fazem busca manual. Em 7 dias de trial você vê com os próprios olhos se funciona para o seu negócio.',
-    ps: '⚠️ <strong>P.S.:</strong> Se não quiser mais receber mensagens nossas, basta clicar em "descadastrar" no rodapé. Sem julgamentos.',
+    subject: '{{NOME}}, selecionamos licitações abertas especificamente para sua empresa',
+    abertura: 'Identificamos novos editais compatíveis com o perfil da sua empresa nos últimos dias. São contratos que ainda estão dentro do prazo — você pode participar agora.<br><br>Empresas que configuraram alertas no Monitor de Licitações nesta semana já estão recebendo esses editais em tempo real:',
+    ps: '⚠️ <strong>P.S.:</strong> A configuração leva menos de 5 minutos e você começa a receber alertas no mesmo dia. Sem cartão, sem compromisso.',
+  },
+  4: {
+    subject: '{{NOME}}, estas licitações passaram enquanto você não monitorava',
+    abertura: 'Nos últimos 17 dias, vários editais compatíveis com o perfil da sua empresa foram publicados, disputados e encerrados. Sua concorrência participou. Você não soube.<br><br>Não é crítica — é o que acontece com qualquer empresa que depende de busca manual. O volume de publicações diárias torna impossível acompanhar sem automação.',
+    ps: '💡 <strong>P.S.:</strong> O Monitor acompanha PNCP, ComprasNet, BLL e mais 4 fontes simultaneamente. Você só precisa definir o que procura — uma única vez.',
+  },
+  5: {
+    subject: '{{NOME}}, resultado de 30 dias de monitoramento no seu setor',
+    abertura: 'Nos últimos 30 dias, empresas do mesmo setor que o seu que usam o Monitor de Licitações receberam alertas de <strong>dezenas de editais</strong> que correspondiam exatamente ao que oferecem.<br><br>Cada alerta chega com: objeto do edital, órgão licitante, valor estimado, prazo de abertura e link direto para o edital. Tudo o que você precisa para decidir em segundos se vale proposta.',
+    ps: '📊 <strong>P.S.:</strong> O trial de 7 dias é suficiente para você ver, na prática, quantos editais do seu setor são publicados por semana. Sem compromisso.',
+  },
+  6: {
+    subject: '{{NOME}}, tem licitações abertas no seu setor — rápida atualização',
+    abertura: 'Uma atualização rápida: o mercado público continua aquecido no seu segmento. Novos editais são publicados toda semana, e o Monitor continua monitorando em tempo real para empresas que já ativaram os alertas.<br><br>Se ainda não experimentou, o trial gratuito de 7 dias continua disponível:',
+    ps: '✅ <strong>P.S.:</strong> Sem cartão, sem contrato, sem burocracia. Ative agora, receba alertas hoje.',
+  },
+  7: {
+    subject: '{{NOME}}, atualização trimestral do mercado público no seu setor',
+    abertura: 'Faz alguns meses que estamos enviando informações sobre oportunidades de licitação para a sua empresa. O mercado público não para — e os contratos continuam sendo disputados, mês após mês, pelas mesmas empresas que monitoram ativamente.<br><br>Se você ainda não experimentou nossa plataforma, a oferta continua a mesma: 7 dias gratuitos, sem cartão.',
+    ps: '🎯 <strong>P.S.:</strong> Cada dia sem monitoramento é um edital a menos na sua lista de oportunidades. O trial é a forma mais rápida de saber se vale para o seu negócio.',
+  },
+  8: {
+    subject: '{{NOME}}, última mensagem — encerrando seu monitoramento',
+    abertura: 'Esta é nossa última mensagem. Percebemos que o momento pode não ser o ideal para a sua empresa agora, e respeitamos isso completamente.<br><br>Vamos encerrar o monitoramento do seu perfil. Se em algum momento você quiser receber alertas de licitações do seu setor, basta criar sua conta — o trial de 7 dias estará disponível.',
+    ps: '🤝 <strong>P.S.:</strong> Se mudou de ideia ou quer falar com nossa equipe, basta responder este e-mail. Até lá — e bons negócios.',
   },
 }
 

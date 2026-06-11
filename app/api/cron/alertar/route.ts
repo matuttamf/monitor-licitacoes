@@ -47,12 +47,12 @@ export async function GET(request: Request) {
     keywords (id, termo, user_id)
   `
 
-  // 1. Pendentes (nunca enviados) — todas as licitações com match de keyword
+  // 1. Pendentes (nunca enviados) — mais recentes primeiro para o usuário receber o que acabou de surgir
   const { data: novos, error } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .eq('canais', '{}')
-    .order('score', { ascending: false })
+    .order('criado_em', { ascending: false })
     .limit(500)
 
   if (error) {
