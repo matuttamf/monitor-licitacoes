@@ -161,15 +161,20 @@ export async function GET(request: Request) {
   const em180 = new Date(hoje)
   em180.setDate(em180.getDate() + 180)
 
-  const { data: rows } = await supabase
+  const dataInicio = hoje.toISOString().substring(0, 10)
+  const dataFim    = em180.toISOString().substring(0, 10)
+  console.log(`[radar] filtro: data_abertura >= ${dataInicio} AND <= ${dataFim}`)
+
+  const { data: rows, error: rowsError } = await supabase
     .from('licitacoes')
     .select('orgao, objeto, valor_estimado, data_abertura, url, estado, municipio, fonte')
     .in('fonte', ['PNCP Contratos', 'PNCP Atas'])
-    .gte('data_abertura', hoje.toISOString().substring(0, 10))
-    .lte('data_abertura', em180.toISOString().substring(0, 10))
+    .gte('data_abertura', dataInicio)
+    .lte('data_abertura', dataFim)
     .order('data_abertura', { ascending: true })
     .limit(2000)
 
+  if (rowsError) console.error('[radar] erro na query:', JSON.stringify(rowsError))
   console.log(`[radar] licitacoes encontradas: ${rows?.length ?? 0} (contratos+atas vencendo em 180d)`)
 
   function diasAte(dataFim: string): number {
