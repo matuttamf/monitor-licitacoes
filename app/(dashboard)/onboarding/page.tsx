@@ -22,6 +22,33 @@ const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
 
 const META_KEYWORDS = 5
 
+const SUGESTOES_POR_SETOR = [
+  {
+    label: 'Serviços gerais',
+    termos: ['material de limpeza', 'serviço de vigilância', 'manutenção predial', 'jardinagem', 'dedetização'],
+  },
+  {
+    label: 'Construção & obras',
+    termos: ['construção civil', 'reforma', 'pavimentação', 'instalação elétrica', 'pintura predial'],
+  },
+  {
+    label: 'TI & tecnologia',
+    termos: ['software', 'equipamentos de informática', 'suporte técnico', 'licença de software', 'impressoras'],
+  },
+  {
+    label: 'Alimentação',
+    termos: ['gêneros alimentícios', 'refeições coletivas', 'merenda escolar', 'coffee break', 'agua mineral'],
+  },
+  {
+    label: 'Saúde',
+    termos: ['material hospitalar', 'equipamentos médicos', 'medicamentos', 'material laboratorial', 'oxigênio medicinal'],
+  },
+  {
+    label: 'Móveis & suprimentos',
+    termos: ['material de escritório', 'mobiliário', 'cadeiras', 'armários', 'material escolar'],
+  },
+]
+
 export default function OnboardingPage() {
   const router = useRouter()
 
@@ -32,6 +59,7 @@ export default function OnboardingPage() {
   const [salvando, setSalvando]       = useState(false)
   const [erro, setErro]               = useState('')
   const [salvas, setSalvas]           = useState<string[]>([])
+  const [setorAberto, setSetorAberto] = useState<string | null>('Serviços gerais')
 
   useEffect(() => {
     fetch('/api/keywords')
@@ -222,6 +250,56 @@ export default function OnboardingPage() {
               </div>
             )}
 
+            {/* Sugestões por setor */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '8px' }}>
+                Exemplos por setor — clique para usar
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                {SUGESTOES_POR_SETOR.map(s => (
+                  <button
+                    key={s.label}
+                    onClick={() => setSetorAberto(setorAberto === s.label ? null : s.label)}
+                    style={{
+                      padding: '5px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: 600,
+                      border: '1.5px solid',
+                      borderColor: setorAberto === s.label ? '#6B0F1A' : '#D5D2C8',
+                      background: setorAberto === s.label ? 'rgba(107,15,26,0.07)' : 'white',
+                      color: setorAberto === s.label ? '#6B0F1A' : '#555',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              {setorAberto && (() => {
+                const setor = SUGESTOES_POR_SETOR.find(s => s.label === setorAberto)
+                if (!setor) return null
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '12px 14px', background: '#FAF6F0', borderRadius: '10px', border: '1px solid #E8E4DC' }}>
+                    {setor.termos.map(t => (
+                      <button
+                        key={t}
+                        disabled={salvas.includes(t)}
+                        onClick={() => setTermo(t)}
+                        style={{
+                          padding: '4px 11px', borderRadius: '99px', fontSize: '12px', fontWeight: 600,
+                          border: '1px solid',
+                          borderColor: salvas.includes(t) ? '#22c55e' : 'rgba(107,15,26,0.25)',
+                          background: salvas.includes(t) ? 'rgba(34,197,94,0.1)' : 'white',
+                          color: salvas.includes(t) ? '#16a34a' : '#6B0F1A',
+                          cursor: salvas.includes(t) ? 'default' : 'pointer',
+                        }}
+                      >
+                        {salvas.includes(t) ? `✓ ${t}` : `+ ${t}`}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })()}
+            </div>
+
             {/* Input nova keyword */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4a4a4d', marginBottom: '6px' }}>
@@ -284,8 +362,8 @@ export default function OnboardingPage() {
               <button
                 onClick={() => {
                   setPasso(3)
-                  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
-                  fetch(`${base}/api/cron/matching`, { method: 'GET' }).catch(() => null)
+                  fetch('/api/cron/matching', { method: 'GET' }).catch(() => null)
+                  fetch('/api/onboarding/concluir', { method: 'POST' }).catch(() => null)
                 }}
                 style={{
                   width: '100%', padding: '13px', borderRadius: '12px',
