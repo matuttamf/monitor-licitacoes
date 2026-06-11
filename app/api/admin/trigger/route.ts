@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     // 'coletar-abertos' removido do fire-and-forget — roda síncrono (ver timeout abaixo)
     'coletar-participantes':         'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
     'coletar-leads-transparencia':  'Coleta Portal Transparência disparada em background. Verifique os leads em breve.',
+    'coletar-leads':                'Coleta de leads PNCP disparada em background (~5 min). Verifique os leads em breve.',
   }
   const fireAndForget = acao in MSGS_BACKGROUND
 
