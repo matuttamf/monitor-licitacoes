@@ -74,17 +74,28 @@ export async function GET() {
     usuarios:    { total: totalUsuarios ?? 0, ativos: usuariosAtivos ?? 0 },
   }
 
-  // ── 3. Últimas execuções dos crons (últimas 24h) ──────────────────────────
-  const { data: cronLogs } = await admin
-    .from('cron_logs')
-    .select('job, status, mensagem, detalhes, criado_em')
-    .order('criado_em', { ascending: false })
-    .limit(50)
+  // ── 3. Última execução de cada job (independente de quando foi) ───────────
+  const JOBS = [
+    'coletar', 'coletar-abertos', 'matching', 'alertar', 'alertar-urgente',
+    'emails-trial', 'expirar-trials', 'resumo-semanal', 'radar-alertas',
+    'disparar-leads', 'coletar-leads', 'enriquecer-emails',
+  ]
 
-  // Última execução de cada job
+  const logResults = await Promise.all(
+    JOBS.map(job =>
+      admin
+        .from('cron_logs')
+        .select('job, status, mensagem, detalhes, criado_em')
+        .eq('job', job)
+        .order('criado_em', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    )
+  )
+
   const ultimosJobs: Record<string, { status: string; mensagem: string; criado_em: string; detalhes?: unknown }> = {}
-  for (const log of cronLogs ?? []) {
-    if (!ultimosJobs[log.job]) {
+  for (const { data: log } of logResults) {
+    if (log) {
       ultimosJobs[log.job] = {
         status:    log.status,
         mensagem:  log.mensagem,

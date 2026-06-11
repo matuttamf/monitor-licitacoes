@@ -79,6 +79,10 @@ const CRON_LABELS: Record<string, string> = {
   'expirar-trials': 'Expirar trials',
   'resumo-semanal': 'Resumo semanal',
   'alertar-urgente':'Alertas urgentes',
+  'radar-alertas':  'Radar de contratos',
+  'disparar-leads': 'Disparar leads',
+  'coletar-leads':  'Coletar leads',
+  'enriquecer-emails': 'Enriquecer e-mails',
 }
 
 // ─── Componentes ──────────────────────────────────────────────────────────────
