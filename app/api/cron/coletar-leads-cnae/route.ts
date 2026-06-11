@@ -55,6 +55,12 @@ interface CnaeEstado {
 }
 
 function getRFUrl(fileIdx: number, ano: number, mes: number): string {
+  // Tenta Supabase Storage primeiro (não bloqueado por geo-IP).
+  // Arquivo deve ser enviado via scripts/upload-rf-cnpj.ts antes de rodar o cron.
+  const storageBase = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/rf-cnpj/${ano}-${String(mes).padStart(2, '0')}`
+    : null
+  if (storageBase) return `${storageBase}/Estabelecimentos${fileIdx}.zip`
   return `https://dados.rfb.gov.br/CNPJ/dados_abertos_cnpj/${ano}-${String(mes).padStart(2, '0')}/Estabelecimentos${fileIdx}.zip`
 }
 
