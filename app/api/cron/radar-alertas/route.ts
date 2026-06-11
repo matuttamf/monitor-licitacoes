@@ -11,8 +11,8 @@ import { createServiceClient }   from '@/lib/supabase/server'
 import { verificarCronAuth }     from '@/lib/cron-auth'
 import { registrarCronLog }      from '@/lib/cron-log'
 import { enviarTextoTelegram }   from '@/lib/alerts/telegram'
-import { temRadar, temWhatsApp } from '@/lib/planos'
-import { coletarContratosVencendo, type ContratoVencendo } from '@/lib/radar/contratos-vencendo'
+import { temRadar }              from '@/lib/planos'
+import type { ContratoVencendo } from '@/lib/radar/contratos-vencendo'
 
 export const maxDuration = 300
 
@@ -151,22 +151,56 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, usuarios: 0 })
   }
 
-  // Coletar dados do radar (uma vez para todos)
-  const radar = await coletarContratosVencendo()
+  // Ler contratos vencendo nos próximos 90 dias direto da tabela licitacoes
+  // (pncp-contratos.ts já coleta e salva com data_abertura = dataVigenciaFim)
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const em90 = new Date(hoje)
+  em90.setDate(em90.getDate() + 90)
+
+  const { data: rows } = await supabase
+    .from('licitacoes')
+    .select('orgao, objeto, valor_estimado, data_abertura, url, estado, municipio')
+    .eq('fonte', 'PNCP Contratos')
+    .gte('data_abertura', hoje.toISOString().substring(0, 10))
+    .lte('data_abertura', em90.toISOString().substring(0, 10))
+    .order('data_abertura', { ascending: true })
+    .limit(2000)
+
+  function diasAte(dataFim: string): number {
+    const fim = new Date(dataFim + 'T00:00:00')
+    return Math.round((fim.getTime() - hoje.getTime()) / 86400000)
+  }
+
+  const todos: ContratoVencendo[] = (rows ?? []).map(r => ({
+    orgao:           r.orgao ?? '',
+    objeto:          r.objeto ?? '',
+    valor:           r.valor_estimado ?? null,
+    dataVigenciaFim: r.data_abertura ?? '',
+    diasRestantes:   diasAte(r.data_abertura ?? ''),
+    url:             r.url ?? 'https://pncp.gov.br/app/contratos',
+    estado:          r.estado ?? null,
+    cidade:          r.municipio ?? null,
+  }))
+
+  const radar = {
+    em30dias: todos.filter(c => c.diasRestantes <= 30),
+    em60dias: todos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60),
+    em90dias: todos.filter(c => c.diasRestantes >= 61),
+  }
 
   // ── Persistir no banco para o painel /radar ───────────────────────────────
-  const todos = [...radar.em30dias, ...radar.em60dias, ...radar.em90dias]
   if (todos.length > 0) {
     await supabase.from('radar_contratos').delete().not('id', 'is', null)
     await supabase.from('radar_contratos').insert(
       todos.map(c => ({
-        orgao:            c.orgao,
-        objeto:           c.objeto,
-        valor:            c.valor,
+        orgao:             c.orgao,
+        objeto:            c.objeto,
+        valor:             c.valor,
         data_vigencia_fim: c.dataVigenciaFim,
-        url:              c.url,
-        estado:           c.estado,
-        cidade:           c.cidade,
+        url:               c.url,
+        estado:            c.estado,
+        cidade:            c.cidade,
       }))
     )
   }
