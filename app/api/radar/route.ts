@@ -49,14 +49,14 @@ export async function GET() {
   // Ler contratos do cache (populado pelo cron radar-alertas — diário)
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
-  const em90 = new Date(hoje)
-  em90.setDate(em90.getDate() + 90)
+  const em180 = new Date(hoje)
+  em180.setDate(em180.getDate() + 180)
 
   const { data: rows, error } = await supabase
     .from('radar_contratos')
     .select('orgao, objeto, valor, data_vigencia_fim, url, estado, cidade, coletado_em')
     .gte('data_vigencia_fim', hoje.toISOString().substring(0, 10))
-    .lte('data_vigencia_fim', em90.toISOString().substring(0, 10))
+    .lte('data_vigencia_fim', em180.toISOString().substring(0, 10))
     .order('data_vigencia_fim', { ascending: true })
     .limit(2000)
 
@@ -91,14 +91,16 @@ export async function GET() {
   }
 
   const coletadoEm = rows?.[0]?.coletado_em ?? null
-  const em30 = filtrar(contratos.filter(c => c.diasRestantes <= 30))
-  const em60 = filtrar(contratos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60))
-  const em90dias = filtrar(contratos.filter(c => c.diasRestantes >= 61))
+  const em30    = filtrar(contratos.filter(c => c.diasRestantes <= 30))
+  const em60    = filtrar(contratos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60))
+  const em90    = filtrar(contratos.filter(c => c.diasRestantes >= 61 && c.diasRestantes <= 90))
+  const em180   = filtrar(contratos.filter(c => c.diasRestantes >= 91))
 
   return NextResponse.json({
     em30dias:   em30,
     em60dias:   em60,
-    em90dias:   em90dias,
+    em90dias:   em90,
+    em180dias:  em180,
     coletadoEm,
     totalBruto: rows?.length ?? 0,
     termos,

@@ -8,6 +8,7 @@ interface RadarData {
   em30dias:   ContratoVencendo[]
   em60dias:   ContratoVencendo[]
   em90dias:   ContratoVencendo[]
+  em180dias:  ContratoVencendo[]
   coletadoEm: string
   totalBruto: number
   termos:     string[]
@@ -155,7 +156,8 @@ export default function RadarPage() {
   const total = data
     ? filtrarPorTexto(data.em30dias).length +
       filtrarPorTexto(data.em60dias).length +
-      filtrarPorTexto(data.em90dias).length
+      filtrarPorTexto(data.em90dias).length +
+      filtrarPorTexto(data.em180dias ?? []).length
     : 0
 
   return (
@@ -229,6 +231,11 @@ export default function RadarPage() {
             titulo="📆 Vencendo em 61–90 dias"
             contratos={filtrarPorTexto(data.em90dias)}
             cor="#10b981"
+          />
+          <TabelaContratos
+            titulo="📋 Vencendo em 91–180 dias"
+            contratos={filtrarPorTexto(data.em180dias ?? [])}
+            cor="#6366f1"
           />
 
           <p style={{ fontSize: 11, color: 'var(--cinza)', textAlign: 'center', paddingBottom: 8 }}>
