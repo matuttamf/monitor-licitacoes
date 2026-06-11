@@ -45,10 +45,11 @@ type CronData = { logs: CronLog[]; ultimasPorJob: Record<string, { status: strin
 
 // ─── Config visual ────────────────────────────────────────────────────────────
 
-const statusConfig = {
-  active:  { label: 'Ativo',    cor: '#10b981', bg: 'rgba(16,185,129,0.1)'  },
-  trial:   { label: 'Trial',    cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
-  expired: { label: 'Expirado', cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
+const statusConfig: Record<string, { label: string; cor: string; bg: string }> = {
+  active:    { label: 'Ativo',      cor: '#10b981', bg: 'rgba(16,185,129,0.1)'  },
+  trial:     { label: 'Trial',      cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
+  expired:   { label: 'Expirado',   cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
+  bloqueado: { label: 'Bloqueado',  cor: '#6B0F1A', bg: 'rgba(107,15,26,0.1)'   },
 }
 
 const JOB_LABELS: Record<string, string> = {
@@ -513,10 +514,21 @@ export default function AdminPage() {
                                     Ativar
                                   </button>
                                 )}
-                                {statusEfetivo !== 'expired' && (
+                                {statusEfetivo !== 'expired' && statusEfetivo !== 'bloqueado' && (
                                   <button onClick={() => alterarStatus(u.id, 'expired')}
                                     style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
                                     Expirar
+                                  </button>
+                                )}
+                                {statusEfetivo !== 'bloqueado' ? (
+                                  <button onClick={() => alterarStatus(u.id, 'bloqueado')}
+                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.1)', color: '#6B0F1A', border: 'none', cursor: 'pointer' }}>
+                                    Bloquear
+                                  </button>
+                                ) : (
+                                  <button onClick={() => alterarStatus(u.id, 'active')}
+                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}>
+                                    Desbloquear
                                   </button>
                                 )}
                               </>

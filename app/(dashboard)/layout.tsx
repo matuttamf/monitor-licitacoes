@@ -37,6 +37,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Bloquear acesso ao painel se trial expirado (exceto admin)
   const isAdmin = user.email === ADMIN_EMAIL
   if (!isAdmin && profile) {
+    if (profile.status === 'bloqueado') redirect('/bloqueado')
+
     // Sub-usuário desativado pelo owner
     if (profile.owner_id && profile.membro_ativo === false) redirect('/expirado')
 
