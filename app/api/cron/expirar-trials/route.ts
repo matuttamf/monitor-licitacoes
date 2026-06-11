@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -34,5 +35,6 @@ export async function GET(request: Request) {
     .delete()
     .lt('criado_em', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
 
+  await registrarCronLog(supabase, 'expirar-trials', { ok: true, expirados })
   return NextResponse.json({ ok: true, expirados })
 }

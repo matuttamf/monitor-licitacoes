@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
 import { trackGoogleCSE } from '@/lib/uso-apis'
-import { salvarResultadoCron } from '@/lib/cron-log'
+import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -420,6 +420,7 @@ export async function GET(req: NextRequest) {
     enriquecidos,
     tentativas: leads.length,
   }
+  await registrarCronLog(supabase, 'enriquecer-emails', resultado)
   await salvarResultadoCron(supabase, 'enriquecer-emails', resultado)
   return NextResponse.json({ ...resultado, detalhes })
 }

@@ -20,7 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
-import { salvarResultadoCron } from '@/lib/cron-log'
+import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 import { createInflateRaw } from 'node:zlib'
 
 export const maxDuration = 300
@@ -285,8 +285,10 @@ export async function GET(req: NextRequest) {
   )
 
   if (erro) {
-    await salvarResultadoCron(supabase, 'coletar-leads-cnae', { ok: false, erro, file_idx: estado.file_idx })
-    return NextResponse.json({ ok: false, erro })
+    const res = { ok: false, erro, file_idx: estado.file_idx }
+    await registrarCronLog(supabase, 'coletar-leads-cnae', res)
+    await salvarResultadoCron(supabase, 'coletar-leads-cnae', res)
+    return NextResponse.json(res)
   }
 
   // Inserir leads (ignora duplicatas por CNPJ)
@@ -325,6 +327,7 @@ export async function GET(req: NextRequest) {
     cnae_alvo:         targetCnaes.size,
   }
 
+  await registrarCronLog(supabase, 'coletar-leads-cnae', resultado)
   await salvarResultadoCron(supabase, 'coletar-leads-cnae', resultado)
   return NextResponse.json(resultado)
 }

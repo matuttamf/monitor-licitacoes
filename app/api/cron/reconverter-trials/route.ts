@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { registrarCronLog } from '@/lib/cron-log'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { emailReconversao } from '@/lib/emails/reconversao'
@@ -113,5 +114,7 @@ export async function GET(req: NextRequest) {
   }
 
   console.log(`[reconverter-trials] enviados=${enviados} erros=${erros}`)
-  return NextResponse.json({ ok: true, enviados, erros, total: leads.length })
+  const resultado = { ok: true, enviados, erros, total: leads.length }
+  await registrarCronLog(supabase, 'reconverter-trials', resultado)
+  return NextResponse.json(resultado)
 }

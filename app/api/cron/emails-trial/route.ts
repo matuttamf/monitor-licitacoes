@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { verificarCronAuth } from '@/lib/cron-auth'
+import { registrarCronLog } from '@/lib/cron-log'
 import { enviarEmailDia3, enviarEmailUrgencia } from '@/lib/emails/trial'
 
 export const maxDuration = 300
@@ -74,5 +75,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, enviados })
+  const resultado = { ok: true, enviados }
+  await registrarCronLog(supabase, 'emails-trial', resultado)
+  return NextResponse.json(resultado)
 }

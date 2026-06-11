@@ -20,7 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
-import { salvarResultadoCron } from '@/lib/cron-log'
+import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -337,6 +337,7 @@ export async function GET(req: NextRequest) {
     proponentes_coletados: cnpjSet.size,
     cnpjs_novos: paraEnriquecer.length,
   }
+  await registrarCronLog(supabase, 'coletar-participantes', resultado)
   await salvarResultadoCron(supabase, 'coletar-participantes', resultado)
   return NextResponse.json(resultado)
 }

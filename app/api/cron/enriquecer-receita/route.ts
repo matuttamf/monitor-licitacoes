@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
-import { salvarResultadoCron } from '@/lib/cron-log'
+import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 60
 
@@ -110,6 +110,7 @@ export async function GET(req: NextRequest) {
   }
 
   const resultado = { ok: true, verificados, ativos, inativas }
+  await registrarCronLog(supabase, 'enriquecer-receita', resultado)
   await salvarResultadoCron(supabase, 'enriquecer-receita', resultado)
   return NextResponse.json(resultado)
 }

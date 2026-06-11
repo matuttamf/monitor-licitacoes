@@ -21,7 +21,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth } from '@/lib/cron-auth'
 import { trackEnrichment } from '@/lib/uso-apis'
-import { salvarResultadoCron } from '@/lib/cron-log'
+import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
@@ -390,6 +390,7 @@ export async function GET(req: NextRequest) {
     total_contratos_pncp: contratos.length,
     receita: { ok: brasilApiOk, sem_resposta: brasilApiNull, inativas, com_email: comEmail, situacao_atualizada: situacaoAtualizada },
   }
+  await registrarCronLog(supabase, 'coletar-leads', resultado)
   await salvarResultadoCron(supabase, 'coletar-leads', resultado)
   return NextResponse.json(resultado)
 }
