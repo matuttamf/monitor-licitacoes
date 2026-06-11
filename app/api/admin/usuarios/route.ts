@@ -79,7 +79,7 @@ export async function PATCH(request: Request) {
 
   const atualizacao: Record<string, string> = {}
   if (status) {
-    if (!['trial', 'active', 'expired'].includes(status))
+    if (!['trial', 'active', 'expired', 'bloqueado'].includes(status))
       return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
     atualizacao.status = status
   }
