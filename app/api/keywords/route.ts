@@ -62,12 +62,6 @@ export async function POST(request: Request) {
   }
   // --- Fim verificação ---
 
-  const { count: countAtual } = await supabase
-    .from('keywords')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-  const isFirst = (countAtual ?? 0) === 0
-
   const { data, error } = await supabase
     .from('keywords')
     .insert({ termo: termo.trim().toLowerCase(), user_id: user.id, regiao: regiao ?? ['brasil'] })
@@ -75,15 +69,6 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  if (isFirst) {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
-    fetch(`${base}/api/cron/matching`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
-    }).catch(() => null)
-  }
-
   return NextResponse.json(data, { status: 201 })
 }
 

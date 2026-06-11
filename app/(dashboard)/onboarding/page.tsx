@@ -282,7 +282,11 @@ export default function OnboardingPage() {
             {/* Botão continuar — só aparece após ao menos 1 keyword */}
             {salvas.length > 0 && (
               <button
-                onClick={() => setPasso(3)}
+                onClick={() => {
+                  setPasso(3)
+                  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+                  fetch(`${base}/api/cron/matching`, { method: 'GET' }).catch(() => null)
+                }}
                 style={{
                   width: '100%', padding: '13px', borderRadius: '12px',
                   background: salvas.length >= META_KEYWORDS ? '#22c55e' : 'transparent',
