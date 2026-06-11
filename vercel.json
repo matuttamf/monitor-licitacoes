@@ -13,7 +13,7 @@
     { "path": "/api/cron/alertar",               "schedule": "0 10-16 * * 6"     },
 
     { "path": "/api/cron/resumo-semanal",        "schedule": "0 13 * * 5"        },
-    { "path": "/api/cron/radar-alertas",         "schedule": "0 8 * * 1"         },
+    { "path": "/api/cron/radar-alertas",         "schedule": "0 8 * * 1-6"       },
 
     { "path": "/api/cron/coletar-leads",               "schedule": "*/10 * * * *"  },
     { "path": "/api/cron/coletar-participantes",       "schedule": "*/10 * * * *"  },

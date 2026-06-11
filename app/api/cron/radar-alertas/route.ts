@@ -154,6 +154,30 @@ export async function GET(request: Request) {
   // Coletar dados do radar (uma vez para todos)
   const radar = await coletarContratosVencendo()
 
+  // ── Persistir no banco para o painel /radar ───────────────────────────────
+  const todos = [...radar.em30dias, ...radar.em60dias, ...radar.em90dias]
+  if (todos.length > 0) {
+    await supabase.from('radar_contratos').delete().not('id', 'is', null)
+    await supabase.from('radar_contratos').insert(
+      todos.map(c => ({
+        orgao:            c.orgao,
+        objeto:           c.objeto,
+        valor:            c.valor,
+        data_vigencia_fim: c.dataVigenciaFim,
+        url:              c.url,
+        estado:           c.estado,
+        cidade:           c.cidade,
+      }))
+    )
+  }
+
+  // Enviar e-mails apenas às segundas — coleta é diária
+  const ehSegunda = new Date().getUTCDay() === 1
+  if (!ehSegunda) {
+    await registrarCronLog({ job: 'radar-alertas', status: 'ok', mensagem: `Cache atualizado (${todos.length} contratos) — sem e-mail (não é segunda)` })
+    return NextResponse.json({ ok: true, cache: todos.length, emails: 0 })
+  }
+
   // Buscar emails dos usuários via auth.admin
   const { data: authData } = await supabase.auth.admin.listUsers()
   const emailMap = Object.fromEntries(

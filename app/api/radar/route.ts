@@ -7,9 +7,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { temRadar } from '@/lib/planos'
-import { coletarContratosVencendo } from '@/lib/radar/contratos-vencendo'
 
-export const maxDuration = 60
+export const maxDuration = 15
 
 export async function GET() {
   const supabase = await createClient()
@@ -37,7 +36,7 @@ export async function GET() {
     return NextResponse.json({ error: 'plano_insuficiente' }, { status: 403 })
   }
 
-  // Buscar keywords do usuário para filtrar contratos
+  // Buscar keywords do usuário
   const { data: kws } = await supabase
     .from('keywords')
     .select('termo')
@@ -47,11 +46,41 @@ export async function GET() {
 
   const termos = (kws ?? []).map(k => k.termo.toLowerCase())
 
-  // Coletar contratos vencendo via PNCP
-  const radar = await coletarContratosVencendo()
+  // Ler contratos do cache (populado pelo cron radar-alertas — diário)
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const em90 = new Date(hoje)
+  em90.setDate(em90.getDate() + 90)
+
+  const { data: rows, error } = await supabase
+    .from('radar_contratos')
+    .select('orgao, objeto, valor, data_vigencia_fim, url, estado, cidade, coletado_em')
+    .gte('data_vigencia_fim', hoje.toISOString().substring(0, 10))
+    .lte('data_vigencia_fim', em90.toISOString().substring(0, 10))
+    .order('data_vigencia_fim', { ascending: true })
+    .limit(2000)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Recalcular dias_restantes com base na data de hoje (cache pode ter 1-2 dias)
+  function diasAte(dataFim: string): number {
+    const fim = new Date(dataFim + 'T00:00:00')
+    return Math.round((fim.getTime() - hoje.getTime()) / 86400000)
+  }
+
+  const contratos = (rows ?? []).map(c => ({
+    orgao:           c.orgao,
+    objeto:          c.objeto,
+    valor:           c.valor,
+    dataVigenciaFim: c.data_vigencia_fim,
+    diasRestantes:   diasAte(c.data_vigencia_fim),
+    url:             c.url,
+    estado:          c.estado,
+    cidade:          c.cidade,
+  }))
 
   // Filtrar por keywords e anotar quais termos fizeram match
-  function filtrar<T extends { objeto: string; orgao: string }>(lista: T[]): (T & { keywords: string[] })[] {
+  function filtrar(lista: typeof contratos) {
     return lista
       .map(c => {
         const haystack = (c.objeto + ' ' + c.orgao).toLowerCase()
@@ -61,12 +90,17 @@ export async function GET() {
       .filter(c => termos.length === 0 || c.keywords.length > 0)
   }
 
+  const coletadoEm = rows?.[0]?.coletado_em ?? null
+  const em30 = filtrar(contratos.filter(c => c.diasRestantes <= 30))
+  const em60 = filtrar(contratos.filter(c => c.diasRestantes >= 31 && c.diasRestantes <= 60))
+  const em90dias = filtrar(contratos.filter(c => c.diasRestantes >= 61))
+
   return NextResponse.json({
-    em30dias:   filtrar(radar.em30dias),
-    em60dias:   filtrar(radar.em60dias),
-    em90dias:   filtrar(radar.em90dias),
-    coletadoEm: radar.coletadoEm,
-    totalBruto: radar.em30dias.length + radar.em60dias.length + radar.em90dias.length,
+    em30dias:   em30,
+    em60dias:   em60,
+    em90dias:   em90dias,
+    coletadoEm,
+    totalBruto: rows?.length ?? 0,
     termos,
   })
 }
