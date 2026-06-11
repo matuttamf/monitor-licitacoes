@@ -97,19 +97,37 @@ export default function AdminPage() {
   const [contaDetalhe, setContaDetalhe] = useState<ContaDetalhe | null>(null)
   const [carregandoConta, setCarregandoConta] = useState(false)
 
+  // Configurações
+  const [cadastroBloqueado, setCadastroBloqueado] = useState(false)
+  const [togglingCadastro, setTogglingCadastro]   = useState(false)
+
   async function carregar() {
     setCarregando(true)
-    const [resU, resS, resC] = await Promise.all([
+    const [resU, resS, resC, resCfg] = await Promise.all([
       fetch('/api/admin/usuarios'),
       fetch('/api/admin/stats'),
       fetch('/api/admin/cron-logs'),
+      fetch('/api/admin/captacao-config?chave=cadastro_bloqueado'),
     ])
     if (!resU.ok) { setErro('Acesso negado ou erro ao carregar.'); setCarregando(false); return }
-    const [u, s, c] = await Promise.all([resU.json(), resS.json(), resC.json()])
+    const [u, s, c, cfg] = await Promise.all([resU.json(), resS.json(), resC.json(), resCfg.json()])
     setUsuarios(u)
     setStats(s)
     setCronData(c)
+    setCadastroBloqueado(cfg.valor === 'true' || cfg.valor === true)
     setCarregando(false)
+  }
+
+  async function toggleCadastro() {
+    setTogglingCadastro(true)
+    const novoValor = !cadastroBloqueado
+    await fetch('/api/admin/captacao-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chave: 'cadastro_bloqueado', valor: String(novoValor) }),
+    })
+    setCadastroBloqueado(novoValor)
+    setTogglingCadastro(false)
   }
 
   useEffect(() => { carregar() }, [])
@@ -270,6 +288,43 @@ export default function AdminPage() {
           >
             Ver inteligência →
           </a>
+        </div>
+      </div>
+
+      {/* ── Configurações ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Configurações</h2>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleCadastro}
+            disabled={togglingCadastro}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '10px 16px', borderRadius: '12px', cursor: togglingCadastro ? 'not-allowed' : 'pointer',
+              background: cadastroBloqueado ? 'rgba(239,68,68,0.06)' : 'rgba(16,185,129,0.06)',
+              border: `1px solid ${cadastroBloqueado ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`,
+              opacity: togglingCadastro ? 0.6 : 1,
+            }}
+          >
+            {/* pill toggle */}
+            <div style={{
+              width: 36, height: 20, borderRadius: 10, position: 'relative', transition: 'background .2s',
+              background: cadastroBloqueado ? '#ef4444' : '#10b981',
+            }}>
+              <div style={{
+                position: 'absolute', top: 2, left: cadastroBloqueado ? 18 : 2,
+                width: 16, height: 16, borderRadius: '50%', background: 'white', transition: 'left .2s',
+              }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: cadastroBloqueado ? '#ef4444' : '#10b981' }}>
+                {cadastroBloqueado ? '🔒 Cadastro bloqueado' : '🟢 Cadastro aberto'}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 1 }}>
+                {cadastroBloqueado ? 'Novos usuários não conseguem se registrar' : 'Qualquer pessoa pode criar conta'}
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 

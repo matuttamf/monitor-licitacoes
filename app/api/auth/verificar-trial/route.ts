@@ -47,6 +47,22 @@ export async function POST(request: NextRequest) {
     const { email, cnpj } = await request.json()
     if (!email) return NextResponse.json({ permitido: true })
 
+    // 0. Verificar se cadastros estão bloqueados pelo admin
+    const supabaseConfig = await createServiceClient()
+    const { data: cfgRow } = await supabaseConfig
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'cadastro_bloqueado')
+      .maybeSingle()
+
+    if (cfgRow?.valor === 'true') {
+      return NextResponse.json({
+        permitido: false,
+        motivo: 'cadastro_bloqueado',
+        mensagem: 'O cadastro de novos usuários está temporariamente suspenso. Tente novamente em breve.',
+      })
+    }
+
     // 1. Bloquear domínios de e-mail descartáveis
     if (isDominioDescartavel(email)) {
       return NextResponse.json({
