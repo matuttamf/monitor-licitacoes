@@ -162,7 +162,7 @@ export async function coletarPNCPDesertas(budgetSeg = 60): Promise<LicitacaoRaw[
             : 'https://pncp.gov.br/app/editais'
 
           resultados.push({
-            fonte:          `PNCP (${label})`,
+            fonte:          'PNCP',
             numero_edital:  item.numeroControlePNCP || `${ano}-${cnpj}-${seq}`,
             orgao,
             objeto:         `[${label.toUpperCase()}] ${item.objetoCompra}`,
@@ -184,7 +184,7 @@ export async function coletarPNCPDesertas(budgetSeg = 60): Promise<LicitacaoRaw[
       }
     }
 
-    console.log(`PNCP-desertas ${label}: ${resultados.filter(r => r.fonte?.includes(label)).length} encontradas`)
+    console.log(`PNCP-desertas ${label}: ${resultados.filter(r => r.objeto?.startsWith(`[${label.toUpperCase()}]`)).length} encontradas`)
   }
 
   return resultados

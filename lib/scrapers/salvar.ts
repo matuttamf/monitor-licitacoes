@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { createServiceClient } from '@/lib/supabase/server'
 import { LicitacaoRaw } from './types'
 
@@ -10,7 +11,10 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
 
   const normalizadas = licitacoes.map(l => ({
     fonte:          l.fonte,
-    numero_edital:  l.numero_edital ?? l.external_id ?? `${l.fonte}-${Date.now()}-${Math.random()}`,
+    numero_edital:  l.numero_edital ?? l.external_id ?? (() => {
+      const raw = `${l.fonte}|${(l.orgao ?? '').slice(0, 60)}|${(l.objeto ?? '').slice(0, 80)}`
+      return 'auto-' + createHash('sha1').update(raw).digest('hex').slice(0, 20)
+    })(),
     orgao:          l.orgao,
     objeto:         l.objeto,
     valor_estimado: l.valor_estimado ?? null,
