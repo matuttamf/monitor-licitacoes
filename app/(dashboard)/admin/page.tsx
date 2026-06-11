@@ -8,7 +8,7 @@ type Usuario = {
   id: string
   email: string
   is_admin?: boolean
-  status: 'trial' | 'active' | 'expired'
+  status: 'trial' | 'active' | 'expired' | 'bloqueado'
   plano: string
   trial_inicio: string
   trial_fim: string
