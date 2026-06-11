@@ -47,13 +47,14 @@ export async function GET(request: NextRequest) {
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
           )
-          adminClient
-            .from('leads')
-            .update({ status: 'usuario' })
-            .eq('email', userEmail)
-            .not('status', 'in', '("descadastrado","invalido")')
-            .then()
-            .catch(err => console.error('[callback] Erro ao marcar lead como usuario:', err))
+          ;(async () => {
+            const { error } = await adminClient
+              .from('leads')
+              .update({ status: 'usuario' })
+              .eq('email', userEmail)
+              .not('status', 'in', '("descadastrado","invalido")')
+            if (error) console.error('[callback] Erro ao marcar lead como usuario:', error.message)
+          })()
         }
       }
       // Após confirmação de e-mail → onboarding direto
