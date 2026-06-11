@@ -76,6 +76,6 @@ export async function GET(request: Request) {
   }
 
   const resultado = { ok: true, enviados }
-  await registrarCronLog(supabase, 'emails-trial', resultado)
+  await registrarCronLog({ job: 'emails-trial', status: 'ok', mensagem: `${enviados} e-mail(s) enviados`, detalhes: resultado })
   return NextResponse.json(resultado)
 }

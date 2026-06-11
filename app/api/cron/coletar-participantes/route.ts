@@ -337,7 +337,7 @@ export async function GET(req: NextRequest) {
     proponentes_coletados: cnpjSet.size,
     cnpjs_novos: paraEnriquecer.length,
   }
-  await registrarCronLog(supabase, 'coletar-participantes', resultado)
+  await registrarCronLog({ job: 'coletar-participantes', status: 'ok', mensagem: `${salvos} salvos`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'coletar-participantes', resultado)
   return NextResponse.json(resultado)
 }

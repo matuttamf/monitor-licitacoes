@@ -35,6 +35,6 @@ export async function GET(request: Request) {
     .delete()
     .lt('criado_em', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
 
-  await registrarCronLog(supabase, 'expirar-trials', { ok: true, expirados })
+  await registrarCronLog({ job: 'expirar-trials', status: 'ok', mensagem: `${expirados} trial(s) expirado(s)` })
   return NextResponse.json({ ok: true, expirados })
 }

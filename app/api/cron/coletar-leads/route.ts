@@ -390,7 +390,7 @@ export async function GET(req: NextRequest) {
     total_contratos_pncp: contratos.length,
     receita: { ok: brasilApiOk, sem_resposta: brasilApiNull, inativas, com_email: comEmail, situacao_atualizada: situacaoAtualizada },
   }
-  await registrarCronLog(supabase, 'coletar-leads', resultado)
+  await registrarCronLog({ job: 'coletar-leads', status: 'ok', mensagem: `${inseridos} salvos, ${comEmail} com e-mail`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'coletar-leads', resultado)
   return NextResponse.json(resultado)
 }

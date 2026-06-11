@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
   }
 
   const resultado = { ok: true, verificados, ativos, inativas }
-  await registrarCronLog(supabase, 'enriquecer-receita', resultado)
+  await registrarCronLog({ job: 'enriquecer-receita', status: 'ok', mensagem: `${verificados} verificados, ${ativos} ativos`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'enriquecer-receita', resultado)
   return NextResponse.json(resultado)
 }

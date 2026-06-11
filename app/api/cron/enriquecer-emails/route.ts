@@ -420,7 +420,7 @@ export async function GET(req: NextRequest) {
     enriquecidos,
     tentativas: leads.length,
   }
-  await registrarCronLog(supabase, 'enriquecer-emails', resultado)
+  await registrarCronLog({ job: 'enriquecer-emails', status: 'ok', mensagem: `${enriquecidos} enriquecidos`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'enriquecer-emails', resultado)
   return NextResponse.json({ ...resultado, detalhes })
 }

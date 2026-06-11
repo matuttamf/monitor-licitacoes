@@ -284,7 +284,7 @@ export async function GET(req: NextRequest) {
     cnpjs_novos:          paraEnriquecer.length,
     janela_concluida:     janelaConcluida,
   }
-  await registrarCronLog(supabase, 'coletar-leads-transparencia', resultado)
+  await registrarCronLog({ job: 'coletar-leads-transparencia', status: 'ok', mensagem: `${salvos} salvos`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'coletar-leads-transparencia', resultado)
   return NextResponse.json({ ...resultado, debug_orgaos: debugOrgaos.slice(0, 10) })
 }

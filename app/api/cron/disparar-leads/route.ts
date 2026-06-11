@@ -233,6 +233,6 @@ export async function GET(req: NextRequest) {
 
   console.log(`[disparar-leads] enviados=${enviados} followups=${followups} erros=${erros}`)
   const resultado = { ok: true, enviados, followups, erros }
-  await registrarCronLog(supabase, 'disparar-leads', resultado)
+  await registrarCronLog({ job: 'disparar-leads', status: 'ok', mensagem: `${enviados} novos + ${followups} follow-ups`, detalhes: resultado })
   return NextResponse.json(resultado)
 }

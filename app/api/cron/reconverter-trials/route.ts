@@ -115,6 +115,6 @@ export async function GET(req: NextRequest) {
 
   console.log(`[reconverter-trials] enviados=${enviados} erros=${erros}`)
   const resultado = { ok: true, enviados, erros, total: leads.length }
-  await registrarCronLog(supabase, 'reconverter-trials', resultado)
+  await registrarCronLog({ job: 'reconverter-trials', status: 'ok', mensagem: `${enviados} enviados`, detalhes: resultado })
   return NextResponse.json(resultado)
 }

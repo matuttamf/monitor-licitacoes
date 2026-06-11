@@ -286,7 +286,7 @@ export async function GET(req: NextRequest) {
 
   if (erro) {
     const res = { ok: false, erro, file_idx: estado.file_idx }
-    await registrarCronLog(supabase, 'coletar-leads-cnae', res)
+    await registrarCronLog({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
     await salvarResultadoCron(supabase, 'coletar-leads-cnae', res)
     return NextResponse.json(res)
   }
@@ -327,7 +327,7 @@ export async function GET(req: NextRequest) {
     cnae_alvo:         targetCnaes.size,
   }
 
-  await registrarCronLog(supabase, 'coletar-leads-cnae', resultado)
+  await registrarCronLog({ job: 'coletar-leads-cnae', status: 'ok', mensagem: `${inseridos} inseridos`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'coletar-leads-cnae', resultado)
   return NextResponse.json(resultado)
 }
