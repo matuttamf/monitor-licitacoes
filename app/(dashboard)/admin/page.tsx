@@ -285,6 +285,7 @@ export default function AdminPage() {
             { acao: 'emails',         label: '📩 E-mails trial',  desc: 'Sequência trial' },
             { acao: 'coletar-leads',  label: '🎯 Coletar leads',  desc: 'Busca CNPJs/PNCP' },
             { acao: 'disparar-leads', label: '✉️ Disparar leads', desc: 'Envia e-mails captação' },
+            { acao: 'radar-alertas',  label: '📡 Radar',          desc: 'Atualiza cache contratos' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
               style={{
