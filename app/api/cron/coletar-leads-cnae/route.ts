@@ -68,14 +68,15 @@ async function getTargetCnaes(supabase: ReturnType<typeof createSupabase>): Prom
   const { data } = await supabase
     .from('leads')
     .select('cnae_codigo')
-    .eq('origem', 'participante')
-    .not('cnae_codigo', 'is', null)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .not('cnae_codigo' as any, 'is', null)
     .limit(5000)
 
-  if (!data?.length) return CNAE_SEED
+  const rows = (data ?? []) as { cnae_codigo: string | null }[]
+  if (!rows.length) return CNAE_SEED
 
   const counts: Record<string, number> = {}
-  for (const r of data) {
+  for (const r of rows) {
     const code = String(r.cnae_codigo).replace(/\D/g, '').slice(0, 7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
