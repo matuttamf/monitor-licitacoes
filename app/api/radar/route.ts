@@ -50,13 +50,15 @@ export async function GET() {
   // Coletar contratos vencendo via PNCP
   const radar = await coletarContratosVencendo()
 
-  // Filtrar por keywords se houver (busca textual simples)
-  function filtrar<T extends { objeto: string; orgao: string }>(lista: T[]): T[] {
-    if (termos.length === 0) return lista
-    return lista.filter(c => {
-      const haystack = (c.objeto + ' ' + c.orgao).toLowerCase()
-      return termos.some(t => haystack.includes(t))
-    })
+  // Filtrar por keywords e anotar quais termos fizeram match
+  function filtrar<T extends { objeto: string; orgao: string }>(lista: T[]): (T & { keywords: string[] })[] {
+    return lista
+      .map(c => {
+        const haystack = (c.objeto + ' ' + c.orgao).toLowerCase()
+        const matched = termos.length === 0 ? [] : termos.filter(t => haystack.includes(t))
+        return { ...c, keywords: matched }
+      })
+      .filter(c => termos.length === 0 || c.keywords.length > 0)
   }
 
   return NextResponse.json({

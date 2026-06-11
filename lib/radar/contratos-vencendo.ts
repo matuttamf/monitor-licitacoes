@@ -20,6 +20,7 @@ export interface ContratoVencendo {
   url:             string
   estado:          string | null
   cidade:          string | null
+  keywords?:       string[]
 }
 
 export interface RadarContratos {

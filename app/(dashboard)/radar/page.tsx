@@ -65,6 +65,20 @@ function TabelaContratos({ titulo, contratos, cor }: { titulo: string; contratos
               </div>
             </div>
             <p style={{ fontSize: 12, color: 'var(--cinza)', margin: '4px 0', lineHeight: 1.5 }}>{c.objeto.substring(0, 200)}{c.objeto.length > 200 ? '…' : ''}</p>
+            {c.keywords && c.keywords.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {c.keywords.slice(0, 4).map(kw => (
+                  <span key={kw} style={{
+                    fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
+                    background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)',
+                    border: '1px solid rgba(107,15,26,0.15)',
+                  }}>{kw}</span>
+                ))}
+                {c.keywords.length > 4 && (
+                  <span style={{ fontSize: 10, color: 'var(--cinza)', padding: '2px 4px' }}>+{c.keywords.length - 4}</span>
+                )}
+              </div>
+            )}
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-3">
                 <span style={{ fontSize: 11, color: 'var(--cinza)' }}>Vence: <strong>{fmtData(c.dataVigenciaFim)}</strong></span>
