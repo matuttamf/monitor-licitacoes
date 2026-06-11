@@ -167,20 +167,29 @@ export default function OnboardingPage() {
         {passo === 2 && (
           <div style={{ background: 'white', borderRadius: '20px', padding: '36px', boxShadow: '0 8px 32px rgba(0,0,0,0.07)', border: '1px solid #E8E4DF' }}>
             <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1A1A1C', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-              O que você quer monitorar?
+              O que sua empresa vende?
             </h1>
-            <p style={{ fontSize: '14px', color: '#9AA0A6', margin: '0 0 20px', lineHeight: 1.6 }}>
-              Informe produtos ou serviços que sua empresa vende. Exemplos: <em>uniforme escolar</em>, <em>manutenção predial</em>, <em>equipamento hospitalar</em>.
+            <p style={{ fontSize: '14px', color: '#555', margin: '0 0 12px', lineHeight: 1.6 }}>
+              As <strong>palavras-chave</strong> são o coração do Monitor. O sistema cruza cada nova licitação publicada com suas palavras e só te avisa quando há correspondência — sem spam, sem ruído.
             </p>
+
+            {/* Box explicativo */}
+            <div style={{ background: '#FAF6F0', border: '1px solid #E8E4DC', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px', fontSize: '13px', color: '#4a4a4d', lineHeight: 1.7 }}>
+              <strong style={{ color: '#6B0F1A' }}>Como escolher:</strong> use o nome do produto ou serviço que você fornece ao governo. Seja específico — <em>&quot;uniforme escolar&quot;</em> funciona melhor que apenas <em>&quot;uniforme&quot;</em>. Se sua empresa tem um nicho único, adicione uma keyword por linha de produto.
+              <br />
+              <span style={{ color: '#9AA0A6', fontSize: '12px' }}>
+                Dúvidas? <a href="https://wa.me/5531998317066" target="_blank" rel="noopener noreferrer" style={{ color: '#6B0F1A', fontWeight: 600, textDecoration: 'none' }}>Fale com o suporte no WhatsApp</a>
+              </span>
+            </div>
 
             {/* Barra de progresso rumo a 5 keywords */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#1A1A1C' }}>
                   {salvas.length === 0
-                    ? 'Adicione ao menos 5 palavras-chave para melhores resultados'
+                    ? 'Recomendamos ao menos 5 para cobrir mais oportunidades'
                     : salvas.length < META_KEYWORDS
-                      ? `${salvas.length} adicionada${salvas.length > 1 ? 's' : ''} — adicione mais ${META_KEYWORDS - salvas.length} para cobrir mais oportunidades`
+                      ? `${salvas.length} adicionada${salvas.length > 1 ? 's' : ''} — mais ${META_KEYWORDS - salvas.length} para cobertura ideal`
                       : `${salvas.length} palavras-chave configuradas ✓`}
                 </span>
                 <span style={{ fontSize: '12px', color: salvas.length >= META_KEYWORDS ? '#22c55e' : '#9AA0A6', fontWeight: 600 }}>
@@ -191,7 +200,7 @@ export default function OnboardingPage() {
                 <div style={{
                   height: '100%', borderRadius: '99px',
                   background: salvas.length >= META_KEYWORDS ? '#22c55e' : '#6B0F1A',
-                  width: `${progresso * 100}%`,
+                  width: `${Math.max(progresso * 100, salvas.length > 0 ? 8 : 0)}%`,
                   transition: 'width 0.4s ease',
                 }} />
               </div>
