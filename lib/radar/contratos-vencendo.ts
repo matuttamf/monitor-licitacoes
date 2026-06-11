@@ -39,7 +39,7 @@ function diasAte(dataFim: string): number {
   return Math.round((fim.getTime() - hoje.getTime()) / 86400000)
 }
 
-async function buscarFaixa(dataIni: string, dataFim: string, maxPag = 4): Promise<ContratoVencendo[]> {
+async function buscarFaixa(dataIni: string, dataFim: string, maxPag = 20): Promise<ContratoVencendo[]> {
   const lista: ContratoVencendo[] = []
 
   for (let p = 1; p <= maxPag; p++) {

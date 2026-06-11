@@ -43,7 +43,7 @@ export async function GET() {
     .select('termo')
     .eq('user_id', user.id)
     .eq('ativo', true)
-    .limit(100)
+    .limit(500)
 
   const termos = (kws ?? []).map(k => k.termo.toLowerCase())
 
