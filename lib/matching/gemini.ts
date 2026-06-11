@@ -60,18 +60,32 @@ ${lote.map((l, idx) => `[${idx}] ${l.objeto}`).join('\n')}
 Responda APENAS com JSON válido (sem markdown, sem explicações):
 [{"index": 0, "keywords": ["termo1"]}, {"index": 1, "keywords": []}, ...]`
 
+    // Retry com backoff para 503 (high demand) e 429 (rate limit)
+    let texto = ''
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+      try {
+        if (tentativa > 0) await new Promise(r => setTimeout(r, tentativa * 3000))
+        trackGemini()
+        const resultado = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 4096,
+            // @ts-expect-error - thinkingConfig é suportado no gemini-2.5-flash mas não está nos tipos ainda
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        })
+        texto = resultado.response.text()
+        break
+      } catch (retryErr) {
+        const msg = retryErr instanceof Error ? retryErr.message : String(retryErr)
+        const retravel = msg.includes('503') || msg.includes('429') || msg.includes('overloaded')
+        if (!retravel || tentativa === 2) throw retryErr
+        console.warn(`Gemini lote tentativa ${tentativa + 1} falhou (${msg.substring(0, 60)}), retentando...`)
+      }
+    }
+
     try {
-      trackGemini() // contabiliza chamadas mensais ao Gemini
-      const resultado = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 4096,
-          // @ts-expect-error - thinkingConfig é suportado no gemini-2.5-flash mas não está nos tipos ainda
-          thinkingConfig: { thinkingBudget: 0 },
-        },
-      })
-      const texto = resultado.response.text()
       const jsonMatch = texto.match(/\[[\s\S]*\]/)
       if (!jsonMatch) continue
 
