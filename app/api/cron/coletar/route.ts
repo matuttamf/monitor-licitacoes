@@ -734,7 +734,7 @@ export async function GET(request: Request) {
   detalhes.total_coletadas = todasLicitacoes.length
   detalhes.fontes_ativas   = totalOk
   detalhes.salvas          = salvas
-  detalhes.candidatos      = candidatos?.length ?? 0
+  detalhes.candidatos      = candidatos ?? 0
 
   await registrarCronLog({
     job: 'coletar',
