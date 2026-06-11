@@ -19,16 +19,25 @@ export async function GET() {
     .order('criado_em', { ascending: false })
     .limit(50)
 
-  // Última execução de cada job
-  const jobs = ['coletar', 'matching', 'alertar', 'emails-trial', 'expirar-trials']
-  const ultimasPorJob: Record<string, { status: string; mensagem: string; criado_em: string } | null> = {}
+  // Última execução de cada job — query individual para não perder jobs raros
+  const jobs = ['coletar', 'matching', 'alertar', 'alertar-urgente', 'emails-trial', 'expirar-trials', 'resumo-semanal', 'radar-alertas']
+  const resultados = await Promise.all(
+    jobs.map(job =>
+      service
+        .from('cron_logs')
+        .select('job, status, mensagem, criado_em')
+        .eq('job', job)
+        .order('criado_em', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    )
+  )
 
-  for (const job of jobs) {
-    const ultima = (logs ?? []).find(l => l.job === job)
-    ultimasPorJob[job] = ultima
-      ? { status: ultima.status, mensagem: ultima.mensagem, criado_em: ultima.criado_em }
-      : null
-  }
+  const ultimasPorJob: Record<string, { status: string; mensagem: string; criado_em: string } | null> = {}
+  jobs.forEach((job, i) => {
+    const row = resultados[i].data
+    ultimasPorJob[job] = row ? { status: row.status, mensagem: row.mensagem, criado_em: row.criado_em } : null
+  })
 
   return NextResponse.json({ logs: logs ?? [], ultimasPorJob })
 }
