@@ -9,12 +9,15 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
   const supabase = await createServiceClient()
 
   const normalizadas = licitacoes.map(l => ({
-    ...l,
-    numero_edital: l.numero_edital ?? l.external_id ?? `${l.fonte}-${Date.now()}-${Math.random()}`,
-    cidade: l.cidade ?? l.municipio ?? null,
-    external_id: undefined,
-    municipio: undefined,
-    titulo: undefined,
+    fonte:          l.fonte,
+    numero_edital:  l.numero_edital ?? l.external_id ?? `${l.fonte}-${Date.now()}-${Math.random()}`,
+    orgao:          l.orgao,
+    objeto:         l.objeto,
+    valor_estimado: l.valor_estimado ?? null,
+    data_abertura:  l.data_abertura ?? null,
+    url:            l.url,
+    estado:         l.estado ?? null,
+    cidade:         l.cidade ?? l.municipio ?? null,
   }))
 
   // Conta total antes do upsert para calcular novas inserções
