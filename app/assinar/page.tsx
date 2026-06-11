@@ -8,7 +8,7 @@ const PLANOS = [
   {
     id: 'basic',
     nome: 'Basic',
-    preco: '39,90',
+    preco: '49,90',
     destaque: false,
     descricao: 'Ideal para começar',
     itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'],
@@ -16,7 +16,7 @@ const PLANOS = [
   {
     id: 'profissional',
     nome: 'Profissional',
-    preco: '79,90',
+    preco: '97,90',
     destaque: false,
     descricao: 'Para quem fornece ativamente ao governo',
     itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', 'Suporte via WhatsApp'],

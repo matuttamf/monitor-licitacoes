@@ -22,8 +22,8 @@ const PLANOS = [
   {
     id: 'basic',
     nome: 'Basic',
-    preco: '39,90',
-    porDia: 'R$1,33/dia',
+    preco: '49,90',
+    porDia: 'R$1,66/dia',
     desc: 'Para quem está começando no setor público',
     destaque: false,
     tag: null,
@@ -40,8 +40,8 @@ const PLANOS = [
   {
     id: 'profissional',
     nome: 'Profissional',
-    preco: '79,90',
-    porDia: 'R$2,66/dia',
+    preco: '97,90',
+    porDia: 'R$3,26/dia',
     desc: 'Para quem fornece ativamente para o governo',
     destaque: false,
     tag: '💡 MELHOR CUSTO-BENEFÍCIO',
