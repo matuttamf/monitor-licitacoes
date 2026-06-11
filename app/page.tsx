@@ -7,15 +7,17 @@ const PLANOS = [
     preco: null,
     porDia: 'Grátis',
     desc: 'Experimente sem compromisso',
-    keywords: 'Até 20 palavras-chave',
-    usuarios: '1 usuário',
     destaque: false,
     tag: '🎁 GRÁTIS',
-    telegram: true,
-    whatsapp: false,
     href: '/cadastro',
     btnText: 'Começar 7 dias grátis',
     note: 'Sem cartão de crédito',
+    features: [
+      { text: 'Até 20 palavras-chave', highlight: false },
+      { text: '1 usuário', highlight: false },
+      { text: 'Alertas por e-mail e Telegram', highlight: false },
+      { text: 'Busca manual no painel', highlight: false },
+    ],
   },
   {
     id: 'basic',
@@ -23,15 +25,17 @@ const PLANOS = [
     preco: '49,90',
     porDia: 'R$1,66/dia',
     desc: 'Para quem está começando no setor público',
-    keywords: 'Até 20 palavras-chave',
-    usuarios: '1 usuário',
     destaque: false,
     tag: null,
-    telegram: true,
-    whatsapp: false,
     href: '/checkout?plano=basic',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
+    features: [
+      { text: 'Até 20 palavras-chave', highlight: false },
+      { text: '1 usuário', highlight: false },
+      { text: 'Alertas por e-mail e Telegram', highlight: false },
+      { text: 'Busca manual no painel', highlight: false },
+    ],
   },
   {
     id: 'profissional',
@@ -39,15 +43,18 @@ const PLANOS = [
     preco: '97,90',
     porDia: 'R$3,26/dia',
     desc: 'Para quem fornece ativamente para o governo',
-    keywords: 'Ilimitadas',
-    usuarios: '1 usuário',
     destaque: false,
-    tag: null,
-    telegram: true,
-    whatsapp: true,
+    tag: '💡 MELHOR CUSTO-BENEFÍCIO',
     href: '/checkout?plano=profissional',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
+    features: [
+      { text: 'Palavras-chave ilimitadas', highlight: true },
+      { text: '1 usuário', highlight: false },
+      { text: 'E-mail, Telegram e WhatsApp', highlight: true },
+      { text: 'Busca manual no painel', highlight: false },
+      { text: '🎯 Radar de Inteligência', highlight: true },
+    ],
   },
   {
     id: 'pro',
@@ -55,15 +62,18 @@ const PLANOS = [
     preco: '197,90',
     porDia: 'R$6,60/dia',
     desc: 'Para equipes comerciais que querem crescer',
-    keywords: 'Ilimitadas',
-    usuarios: 'Até 5 usuários',
     destaque: true,
     tag: '⭐ MAIS POPULAR',
-    telegram: true,
-    whatsapp: true,
     href: '/checkout?plano=pro',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
+    features: [
+      { text: 'Palavras-chave ilimitadas', highlight: false },
+      { text: 'Até 5 usuários', highlight: true },
+      { text: 'E-mail, Telegram e WhatsApp', highlight: false },
+      { text: 'Busca manual no painel', highlight: false },
+      { text: '🎯 Radar de Inteligência', highlight: true },
+    ],
   },
   {
     id: 'empresarial',
@@ -71,15 +81,19 @@ const PLANOS = [
     preco: '497,00',
     porDia: 'R$16,57/dia',
     desc: 'Para operações que dependem do setor público',
-    keywords: 'Ilimitadas',
-    usuarios: 'Até 15 usuários',
     destaque: false,
     tag: null,
-    telegram: true,
-    whatsapp: true,
     href: '/checkout?plano=empresarial',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
+    features: [
+      { text: 'Palavras-chave ilimitadas', highlight: false },
+      { text: 'Até 15 usuários', highlight: true },
+      { text: 'E-mail, Telegram e WhatsApp', highlight: false },
+      { text: 'Busca manual no painel', highlight: false },
+      { text: '🎯 Radar de Inteligência', highlight: false },
+      { text: 'Relatório semanal detalhado', highlight: true },
+    ],
   },
 ]
 
@@ -291,18 +305,35 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
             {PLANOS.map(p => (
-              <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col text-center sm:text-left items-center sm:items-start ${p.destaque ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_16px_48px_rgba(107,15,26,0.25)]' : p.id === 'trial' ? 'bg-[#FAF6F0] border-2 border-[#C9A65A]' : 'bg-[#FAF6F0] border border-[#D5D2C8]'}`}>
+              <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col ${
+                p.destaque
+                  ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_20px_60px_rgba(107,15,26,0.3)]'
+                  : p.id === 'trial'
+                  ? 'bg-[#FAF6F0] border-2 border-[#C9A65A]'
+                  : p.id === 'profissional'
+                  ? 'bg-white border-2 border-[#6B0F1A] shadow-[0_4px_24px_rgba(107,15,26,0.08)]'
+                  : 'bg-[#FAF6F0] border border-[#D5D2C8]'
+              }`}>
+                {/* Badge topo */}
                 {p.tag && (
-                  <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#C9A65A] text-[#1A1A1C]'}`}>{p.tag}</div>
+                  <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${
+                    p.destaque
+                      ? 'bg-[#C9A65A] text-[#1A1A1C]'
+                      : p.id === 'profissional'
+                      ? 'bg-[#6B0F1A] text-white'
+                      : 'bg-[#C9A65A] text-[#1A1A1C]'
+                  }`}>{p.tag}</div>
                 )}
 
-                <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
+                {/* Nome + descrição */}
+                <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 ${p.destaque ? 'text-[#C9A65A]' : p.id === 'profissional' ? 'text-[#6B0F1A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
                 <div className={`text-xs mb-4 leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
 
+                {/* Preço */}
                 {p.preco ? (
-                  <div className="flex items-end gap-1 mb-1 justify-center sm:justify-start">
+                  <div className="flex items-end gap-1 mb-1">
                     <span className={`text-xs font-medium mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
                     <span className={`text-[32px] font-black tracking-tight leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
                       {p.preco.split(',')[0]}
@@ -311,28 +342,48 @@ export default function LandingPage() {
                     <span className={`text-[11px] mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
                   </div>
                 ) : (
-                  <div className="flex items-end gap-1 mb-1 justify-center sm:justify-start">
+                  <div className="flex items-end gap-1 mb-1">
                     <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
                   </div>
                 )}
 
-                <div className={`text-[11px] font-semibold mb-4 px-2 py-1 rounded inline-block ${p.destaque ? 'text-[rgba(201,166,90,0.7)] bg-[rgba(201,166,90,0.1)]' : p.id === 'trial' ? 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'}`}>
+                <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded inline-block w-fit ${
+                  p.destaque
+                    ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]'
+                    : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
+                }`}>
                   {p.porDia}
                 </div>
 
-                <div className="flex-1 mb-5">
-                  {[p.keywords, p.usuarios, p.whatsapp ? 'E-mail, Telegram e WhatsApp' : p.telegram ? 'Alertas por e-mail e Telegram' : 'Alertas por e-mail', 'Busca manual no painel'].map(item => (
-                    <div key={item} className="flex items-start gap-2 mb-2 justify-center sm:justify-start">
+                {/* Features */}
+                <div className="flex-1 mb-5 space-y-2.5">
+                  {p.features.map(f => (
+                    <div key={f.text} className="flex items-start gap-2">
                       <span className={`font-bold text-sm shrink-0 mt-0.5 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
-                      <span className={`text-xs leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.8)]' : 'text-[#4a4a4d]'}`}>{item}</span>
+                      <span className={`text-xs leading-snug ${
+                        p.destaque
+                          ? f.highlight ? 'text-white font-semibold' : 'text-[rgba(255,255,255,0.75)]'
+                          : f.highlight ? 'text-[#1A1A1C] font-semibold' : 'text-[#4a4a4d]'
+                      }`}>{f.text}</span>
                     </div>
                   ))}
                 </div>
 
-                <Link href={p.href} className={`block text-center py-3 rounded-[10px] text-sm font-bold no-underline ${p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : p.id === 'trial' ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'}`}>
+                {/* Divisor visual antes do botão */}
+                <div className={`h-px mb-4 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#E8E4DC]'}`} />
+
+                <Link href={p.href} className={`block text-center py-3 rounded-[10px] text-sm font-bold no-underline transition-opacity hover:opacity-90 ${
+                  p.destaque
+                    ? 'bg-[#C9A65A] text-[#1A1A1C]'
+                    : p.id === 'trial'
+                    ? 'bg-[#C9A65A] text-[#1A1A1C]'
+                    : p.id === 'profissional'
+                    ? 'bg-[#6B0F1A] text-white'
+                    : 'bg-[#6B0F1A] text-white'
+                }`}>
                   {p.btnText}
                 </Link>
-                <p className={`text-center text-[11px] mt-2 mb-0 ${p.destaque ? 'text-[rgba(255,255,255,0.3)]' : 'text-[#9AA0A6]'}`}>{p.note}</p>
+                <p className={`text-center text-[11px] mt-2.5 mb-0 ${p.destaque ? 'text-[rgba(255,255,255,0.3)]' : 'text-[#9AA0A6]'}`}>{p.note}</p>
               </div>
             ))}
           </div>

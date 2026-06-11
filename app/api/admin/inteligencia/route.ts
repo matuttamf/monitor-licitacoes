@@ -34,7 +34,7 @@ export async function GET() {
     porValorRes,
     leadsSegmentoRes,
     leadsUFRes,
-    leadsStatusRes,
+    leadsStatusCounts,
     lic7dRes,
     licHojeRes,
   ] = await Promise.all([
@@ -79,9 +79,14 @@ export async function GET() {
       .select('uf')
       .not('uf', 'is', null),
 
-    // Leads por status
-    service.from('leads')
-      .select('status'),
+    // Leads por status — contagens separadas para evitar truncamento do PostgREST (max 1000 linhas)
+    Promise.all([
+      service.from('leads').select('id', { count: 'exact', head: true }).or('status.is.null,status.eq.pendente'),
+      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'enviado'),
+      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'erro'),
+      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'invalido'),
+      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'descadastrado'),
+    ]),
 
     // Licitações últimos 7 dias
     service.from('licitacoes').select('id', { count: 'exact', head: true })
@@ -172,10 +177,13 @@ export async function GET() {
     .map(([uf, total]) => ({ uf, total }))
 
   // ── Leads por status ──────────────────────────────────────────────────────
-  const statusMap = new Map<string, number>()
-  for (const row of leadsStatusRes.data ?? []) {
-    const s = row.status ?? 'pendente'
-    statusMap.set(s, (statusMap.get(s) ?? 0) + 1)
+  const [cPendente, cEnviado, cErro, cInvalido, cDescadastrado] = leadsStatusCounts
+  const statusMap: Record<string, number> = {
+    pendente:      cPendente.count      ?? 0,
+    enviado:       cEnviado.count       ?? 0,
+    erro:          cErro.count          ?? 0,
+    invalido:      cInvalido.count      ?? 0,
+    descadastrado: cDescadastrado.count ?? 0,
   }
 
   return NextResponse.json({
@@ -192,6 +200,6 @@ export async function GET() {
     porValor: faixas,
     leadsSegmento,
     leadsUF,
-    leadsStatus: Object.fromEntries(statusMap),
+    leadsStatus: statusMap,
   })
 }

@@ -19,7 +19,7 @@ const PLANOS = [
     preco: '97,90',
     destaque: false,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', 'Suporte via WhatsApp'],
   },
   {
     id: 'pro',
