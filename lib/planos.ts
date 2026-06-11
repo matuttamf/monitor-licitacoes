@@ -28,6 +28,11 @@ export function temWhatsApp(plano: string): boolean {
   return ['profissional', 'pro', 'empresarial'].includes(plano)
 }
 
+/** Radar de Inteligência disponível apenas para Pro e Empresarial */
+export function temRadar(plano: string): boolean {
+  return ['pro', 'empresarial'].includes(plano)
+}
+
 /** Horários BRT por quantidade de e-mails/dia (sem 7 e 9) */
 export const HORARIOS_POR_QTD: Record<number, number[]> = {
   1:  [8],

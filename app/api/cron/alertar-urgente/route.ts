@@ -47,6 +47,7 @@ export async function GET(request: Request) {
       keywords (termo, user_id)
     `)
     .not('canais', 'cs', '{"telegram"}')
+    .not('canais', 'cs', '{"whatsapp"}')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
     .limit(100)

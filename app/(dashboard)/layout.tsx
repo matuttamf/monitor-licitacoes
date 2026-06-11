@@ -4,7 +4,7 @@ import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
 import { MobileNavItem } from './components/MobileNavItem'
 import { MobileLogoutButton } from './components/MobileLogoutButton'
-import { temMultiUsuario } from '@/lib/planos'
+import { temMultiUsuario, temRadar } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,9 +48,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Equipe visível apenas para owners de planos Pro/Empresarial
   const exibirEquipe = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
+  // Radar visível para Pro/Empresarial (owners e membros herdam do owner)
+  const planoEfetivo = profile?.plano ?? 'basic'
+  const exibirRadar  = temRadar(planoEfetivo)
 
   const allNavItems = [
     ...navItems,
+    ...(exibirRadar  ? [{ href: '/radar',  label: 'Radar',        icon: '🎯' }] : []),
     ...(exibirEquipe ? [{ href: '/equipe', label: 'Minha Equipe', icon: '◫' }] : []),
     ...(user.email === ADMIN_EMAIL ? [
       { href: '/admin',       label: 'Admin',  icon: '⚙' },
