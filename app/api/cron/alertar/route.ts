@@ -60,41 +60,56 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 2. Reenvios:
-  // - Se há novos pendentes: só reenviar os enviados há > 7 dias (evita duplicação)
-  // - Se fila VAZIA: reciclar todos os já enviados (ciclagem contínua)
-  const filaVazia = !novos?.length
-  let reenviosQuery = supabase
+  // 2. Reenvios sem filtro de data — o controle por usuário ocorre abaixo
+  const { data: reenvios } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .neq('canais', '{}')
     .order('score', { ascending: false })
-    .limit(50)
+    .limit(500)
 
-  if (!filaVazia) {
-    // modo normal: só reenviar os antigos (> 7 dias)
-    reenviosQuery = reenviosQuery.lte('enviado_em', umaSemanAAtras)
-  }
-  // quando filaVazia: sem filtro de data → recicla todos os já enviados para licitações abertas
+  // Agrupar por usuário (novos + reenvios separados para decidir por fila individual)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const novosPorUsuario    = new Map<string, any[]>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reenviosPorUsuario = new Map<string, any[]>()
 
-  const { data: reenvios } = await reenviosQuery
-
-  const alertasPendentes = [
-    ...(novos ?? []),
-    ...(reenvios ?? []).map(a => ({ ...a, _reenvio: true })),
-  ]
-
-  if (!alertasPendentes.length) {
-    return NextResponse.json({ ok: true, enviados: 0, pendentes: 0, filaVazia })
-  }
-
-  // Agrupar por usuário
-  const alertasPorUsuario = new Map<string, typeof alertasPendentes>()
-  for (const a of alertasPendentes) {
+  for (const a of (novos ?? [])) {
     const uid = (a.keywords as any)?.user_id
     if (!uid) continue
-    if (!alertasPorUsuario.has(uid)) alertasPorUsuario.set(uid, [])
-    alertasPorUsuario.get(uid)!.push(a)
+    if (!novosPorUsuario.has(uid)) novosPorUsuario.set(uid, [])
+    novosPorUsuario.get(uid)!.push(a)
+  }
+  for (const a of (reenvios ?? [])) {
+    const uid = (a.keywords as any)?.user_id
+    if (!uid) continue
+    if (!reenviosPorUsuario.has(uid)) reenviosPorUsuario.set(uid, [])
+    reenviosPorUsuario.get(uid)!.push(a)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const alertasPorUsuario = new Map<string, any[]>()
+  const todosUids = new Set([...novosPorUsuario.keys(), ...reenviosPorUsuario.keys()])
+
+  for (const uid of todosUids) {
+    const novosUid    = novosPorUsuario.get(uid)    ?? []
+    const reenviosUid = reenviosPorUsuario.get(uid) ?? []
+    // filaVazia por usuário: se não há novos, recicla todos os já enviados
+    // caso contrário, só reenvios com > 7 dias (evita duplicação)
+    const filaVaziaUid = novosUid.length === 0
+    const reenviosFiltrados = filaVaziaUid
+      ? reenviosUid
+      : reenviosUid.filter(a => a.enviado_em && a.enviado_em <= umaSemanAAtras)
+
+    const combinados = [
+      ...novosUid,
+      ...reenviosFiltrados.map(a => ({ ...a, _reenvio: true })),
+    ]
+    if (combinados.length) alertasPorUsuario.set(uid, combinados)
+  }
+
+  if (!alertasPorUsuario.size) {
+    return NextResponse.json({ ok: true, enviados: 0, pendentes: 0 })
   }
 
   const userIds = [...alertasPorUsuario.keys()]
