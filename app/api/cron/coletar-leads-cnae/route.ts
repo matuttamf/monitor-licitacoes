@@ -246,96 +246,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  const supabase = createSupabase(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  // Delega para a Supabase Edge Function que roda em São Paulo (IP brasileiro).
+  // A Edge Function acessa dados.rfb.gov.br sem bloqueio de geo-IP.
+  const edgeFnUrl = process.env.SUPABASE_EDGE_FN_CNAE_URL
+    ?? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/coletar-leads-cnae`
 
-  // Verificar se captação está ativa
-  const { data: cfgAtiva } = await supabase
-    .from('configuracoes').select('valor').eq('chave', 'captacao_ativa').maybeSingle()
-  if (cfgAtiva && (cfgAtiva.valor === false || cfgAtiva.valor === 'false')) {
-    return NextResponse.json({ ok: true, inseridos: 0, motivo: 'sistema pausado' })
-  }
+  try {
+    const edgeRes = await fetch(edgeFnUrl, {
+      method:  'GET',
+      headers: {
+        'x-cron-secret':   process.env.CRON_SECRET ?? '',
+        'Authorization':   `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      signal: AbortSignal.timeout(280_000),
+    })
 
-  // Carregar estado
-  const { data: cfgEstado } = await supabase
-    .from('configuracoes').select('valor').eq('chave', 'coletar_leads_cnae_estado').maybeSingle()
-
-  const { ano: anoAtual, mes: mesAtual } = getAnoMes()
-  const estado: CnaeEstado = cfgEstado?.valor
-    ? (cfgEstado.valor as CnaeEstado)
-    : { file_idx: 0, rows_processed: 0, ano: anoAtual, mes: mesAtual }
-
-  // Se mudou o período mensal, reinicia do arquivo 0
-  if (estado.ano !== anoAtual || estado.mes !== mesAtual) {
-    estado.file_idx       = 0
-    estado.rows_processed = 0
-    estado.ano            = anoAtual
-    estado.mes            = mesAtual
-  }
-
-  if (estado.file_idx > 9) {
-    return NextResponse.json({ ok: true, inseridos: 0, motivo: 'todos os 10 arquivos processados neste mês' })
-  }
-
-  // Obter CNAEs alvo
-  const targetCnaes = await getTargetCnaes(supabase)
-  const url = getRFUrl(estado.file_idx, estado.ano, estado.mes)
-
-  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} skip=${estado.rows_processed} cnae_alvo=${targetCnaes.size} url=${url}`)
-
-  const { leads, rowsProcessed, esgotado, erro } = await processarArquivoRF(
-    url,
-    targetCnaes,
-    estado.rows_processed,
-    MAX_LEADS_POR_EXECUCAO,
-  )
-
-  if (erro) {
-    const res = { ok: false, erro, file_idx: estado.file_idx }
+    const resultado = await edgeRes.json()
+    const supabase  = createSupabase(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+    await salvarResultadoCron(supabase, 'coletar-leads-cnae', resultado)
+    return NextResponse.json(resultado, { status: edgeRes.ok ? 200 : 500 })
+  } catch (e) {
+    const erro = `edge fn erro: ${e}`
+    console.error('[coletar-leads-cnae]', erro)
     await registrarCronLog({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
-    await salvarResultadoCron(supabase, 'coletar-leads-cnae', res)
-    return NextResponse.json(res)
+    return NextResponse.json({ ok: false, erro }, { status: 500 })
   }
 
-  // Inserir leads (ignora duplicatas por CNPJ)
-  let inseridos = 0
-  const LOTE = 100
-  for (let i = 0; i < leads.length; i += LOTE) {
-    const lote = leads.slice(i, i + LOTE)
-    const { error } = await supabase
-      .from('leads')
-      .upsert(lote, { onConflict: 'cnpj', ignoreDuplicates: true })
-    if (!error) inseridos += lote.length
-  }
-
-  // Atualizar estado
-  const novoEstado: CnaeEstado = {
-    ...estado,
-    rows_processed: estado.rows_processed + rowsProcessed,
-    file_idx:       esgotado ? estado.file_idx + 1 : estado.file_idx,
-  }
-
-  if (esgotado) novoEstado.rows_processed = 0  // próximo arquivo começa do zero
-
-  await supabase.from('configuracoes').upsert(
-    { chave: 'coletar_leads_cnae_estado', valor: novoEstado },
-    { onConflict: 'chave' }
-  )
-
-  const resultado = {
-    ok: true,
-    inseridos,
-    leads_encontrados: leads.length,
-    linhas_varridas:   rowsProcessed,
-    esgotado,
-    file_idx:          estado.file_idx,
-    proximo_arquivo:   esgotado ? estado.file_idx + 1 : estado.file_idx,
-    cnae_alvo:         targetCnaes.size,
-  }
-
-  await registrarCronLog({ job: 'coletar-leads-cnae', status: 'ok', mensagem: `${inseridos} inseridos`, detalhes: resultado })
-  await salvarResultadoCron(supabase, 'coletar-leads-cnae', resultado)
-  return NextResponse.json(resultado)
 }
