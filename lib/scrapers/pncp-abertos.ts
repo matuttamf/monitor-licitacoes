@@ -132,9 +132,10 @@ export async function coletarPNCPAbertos(
 
   const dataInicio = hoje.toISOString().substring(0, 10)
   const dataFim    = fim.toISOString().substring(0, 10)
+  // deadline só como proteção extrema — 260s deixa 40s para salvar os lotes
   const deadline   = Date.now() + budgetSeg * 1000
 
-  console.log(`PNCP-abertos: buscando abertura entre ${dataInicio} e ${dataFim} (horizon=${horizonte}d, maxPag=${maxPaginas}, budget=${budgetSeg}s)`)
+  console.log(`PNCP-abertos: buscando abertura entre ${dataInicio} e ${dataFim} (horizon=${horizonte}d, maxPag=${maxPaginas}, budget=${budgetSeg}s, deadline=${new Date(deadline).toISOString()})`)
 
   const resultados = await Promise.allSettled(
     MODALIDADES.map(m => coletarModalidadeAberta(dataInicio, dataFim, m.codigo, maxPaginas, deadline))
