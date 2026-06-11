@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "app/api/cron/radar-alertas/route.ts": { "maxDuration": 300 },
+    "app/api/cron/coletar/route.ts":        { "maxDuration": 300 },
+    "app/api/cron/matching/route.ts":       { "maxDuration": 300 }
+  },
   "crons": [
     { "path": "/api/cron/expirar-trials",        "schedule": "0 3 * * *"         },
     { "path": "/api/cron/coletar-abertos",       "schedule": "0 4,10,16,22 * * *" },
