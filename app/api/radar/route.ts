@@ -49,14 +49,14 @@ export async function GET() {
   // Ler contratos do cache (populado pelo cron radar-alertas — diário)
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
-  const em180 = new Date(hoje)
-  em180.setDate(em180.getDate() + 180)
+  const limite180 = new Date(hoje)
+  limite180.setDate(limite180.getDate() + 180)
 
   const { data: rows, error } = await supabase
     .from('radar_contratos')
     .select('orgao, objeto, valor, data_vigencia_fim, url, estado, cidade, coletado_em')
     .gte('data_vigencia_fim', hoje.toISOString().substring(0, 10))
-    .lte('data_vigencia_fim', em180.toISOString().substring(0, 10))
+    .lte('data_vigencia_fim', limite180.toISOString().substring(0, 10))
     .order('data_vigencia_fim', { ascending: true })
     .limit(2000)
 
