@@ -39,7 +39,7 @@ function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
   const base = Deno.env.get('SUPABASE_URL') ?? ''
   return [
     `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
-    `${RF_NEXTCLOUD_BASE}/download?path=/${ano}-${mesStr}&files=Estabelecimentos${fileIdx}.zip`,
+    `${RF_NEXTCLOUD_BASE}/download?path=%2F${ano}-${mesStr}&files=Estabelecimentos${fileIdx}.zip`,
   ]
 }
 

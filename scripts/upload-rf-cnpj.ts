@@ -42,7 +42,7 @@ const mesFinal = Number(args[3] ?? mes)
 const mesPad   = String(mesFinal).padStart(2, '0')
 
 async function uploadArquivo(fileIdx: number) {
-  const rfUrl   = `${RF_NEXTCLOUD_BASE}/download?path=/${anoFinal}-${mesPad}&files=Estabelecimentos${fileIdx}.zip`
+  const rfUrl   = `${RF_NEXTCLOUD_BASE}/download?path=%2F${anoFinal}-${mesPad}&files=Estabelecimentos${fileIdx}.zip`
   const destKey = `${anoFinal}-${mesPad}/Estabelecimentos${fileIdx}.zip`
   const tmpPath = join(tmpdir(), `rf-estab-${fileIdx}.zip`)
 
