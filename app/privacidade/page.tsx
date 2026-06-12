@@ -357,3 +357,16 @@ function Tabela({ colunas, children }: { colunas: string[]; children: React.Reac
 function Td({ children }: { children: React.ReactNode }) {
   return <td className="px-4 py-2.5 text-[#4a4a4d] border-b border-[#F5F2EE] align-top last:[&]:border-0">{children}</td>
 }
+
+function Aviso({ tipo, children }: { tipo: 'info' | 'atencao' | 'destaque'; children: React.ReactNode }) {
+  const estilos = {
+    info:     'bg-[rgba(59,130,246,0.05)] border-[rgba(59,130,246,0.2)] text-[#1d4ed8]',
+    atencao:  'bg-[rgba(239,68,68,0.05)] border-[rgba(239,68,68,0.2)] text-[#b91c1c]',
+    destaque: 'bg-[rgba(201,166,90,0.07)] border-[rgba(201,166,90,0.3)] text-[#92610a]',
+  }
+  return (
+    <div className={`border rounded-xl px-4 py-3.5 my-3.5 text-[13px] leading-relaxed ${estilos[tipo]}`}>
+      {children}
+    </div>
+  )
+}
