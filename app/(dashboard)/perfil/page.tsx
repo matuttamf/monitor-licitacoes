@@ -3,6 +3,23 @@
 import { useEffect, useState } from 'react'
 import { getLimites, OPCOES_EMAILS_DIA, OPCOES_ITENS_EMAIL, HORARIOS_POR_QTD } from '@/lib/planos'
 
+const REGIOES_OPCOES = [
+  'Nacional',
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
+  'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+]
+
+type FornecedorPerfil = {
+  ativo: boolean
+  razao_social: string
+  cnpj: string
+  descricao: string
+  regioes: string[]
+  email_contato: string
+  telefone_contato: string
+  website: string
+}
+
 type Perfil = {
   nome: string
   email: string
@@ -33,9 +50,32 @@ export default function PerfilPage() {
   const [telegramMsg, setTelegramMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [salvandoTelegram, setSalvandoTelegram] = useState(false)
 
+  const [fornecedor, setFornecedor] = useState<FornecedorPerfil>({
+    ativo: false, razao_social: '', cnpj: '', descricao: '',
+    regioes: [], email_contato: '', telefone_contato: '', website: '',
+  })
+  const [salvandoFornecedor, setSalvandoFornecedor] = useState(false)
+  const [fornecedorMsg, setFornecedorMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
+
   const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'monitorlic_bot'
 
   useEffect(() => {
+    fetch('/api/fornecedor')
+      .then(r => r.json())
+      .then(d => {
+        if (d) setFornecedor({
+          ativo:            d.ativo ?? false,
+          razao_social:     d.razao_social ?? '',
+          cnpj:             d.cnpj ?? '',
+          descricao:        d.descricao ?? '',
+          regioes:          d.regioes ?? [],
+          email_contato:    d.email_contato ?? '',
+          telefone_contato: d.telefone_contato ?? '',
+          website:          d.website ?? '',
+        })
+      })
+      .catch(() => {})
+
     fetch('/api/perfil')
       .then(r => r.json())
       .then(d => {
@@ -90,6 +130,32 @@ export default function PerfilPage() {
       const d = await res.json().catch(() => ({}))
       setAlertaMsg({ tipo: 'erro', texto: d.error ?? 'Erro ao salvar.' })
     }
+  }
+
+  async function salvarFornecedor(e: React.FormEvent) {
+    e.preventDefault()
+    setSalvandoFornecedor(true)
+    setFornecedorMsg(null)
+    const res = await fetch('/api/fornecedor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fornecedor),
+    })
+    setSalvandoFornecedor(false)
+    if (res.ok) setFornecedorMsg({ tipo: 'ok', texto: fornecedor.ativo ? 'Perfil publicado no diretório!' : 'Perfil salvo (visibilidade desativada).' })
+    else {
+      const d = await res.json().catch(() => ({}))
+      setFornecedorMsg({ tipo: 'erro', texto: d.error ?? 'Erro ao salvar.' })
+    }
+  }
+
+  function toggleRegiao(r: string) {
+    setFornecedor(prev => ({
+      ...prev,
+      regioes: prev.regioes.includes(r)
+        ? prev.regioes.filter(x => x !== r)
+        : [...prev.regioes, r],
+    }))
   }
 
   async function salvarTelegram(e: React.FormEvent) {
@@ -615,6 +681,163 @@ export default function PerfilPage() {
             )
           })}
         </div>
+      </div>
+
+      {/* ── Cadastro como Fornecedor ── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="px-8 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+              style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>🏭</div>
+            <div>
+              <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Aparecer no Diretório de Fornecedores</div>
+              <div className="text-xs" style={{ color: 'var(--cinza)' }}>Visível para compradores com plano Profissional ou superior</div>
+            </div>
+          </div>
+          {fornecedor.ativo && (
+            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
+              ● Publicado
+            </span>
+          )}
+        </div>
+
+        <form onSubmit={salvarFornecedor} className="px-8 py-6 space-y-5">
+          {/* Toggle visibilidade */}
+          <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+            <div>
+              <div className="text-sm font-semibold" style={{ color: 'var(--preto)' }}>
+                {fornecedor.ativo ? 'Visível no diretório' : 'Oculto no diretório'}
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>
+                {fornecedor.ativo ? 'Compradores podem encontrar sua empresa' : 'Salve seu perfil e ative quando quiser aparecer'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFornecedor(prev => ({ ...prev, ativo: !prev.ativo }))}
+              className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+              style={{ background: fornecedor.ativo ? 'var(--vinho)' : 'var(--cinza-light)', border: 'none', cursor: 'pointer' }}
+            >
+              <span className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all"
+                style={{ left: fornecedor.ativo ? '22px' : '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+            </button>
+          </div>
+
+          {/* Razão social */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              Razão Social / Nome Comercial
+            </label>
+            <input type="text" value={fornecedor.razao_social}
+              onChange={e => setFornecedor(prev => ({ ...prev, razao_social: e.target.value }))}
+              placeholder="Ex: Empresa Exemplo Ltda"
+              className="w-full px-4 py-3 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          {/* CNPJ */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              CNPJ <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
+            </label>
+            <input type="text" value={fornecedor.cnpj}
+              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: e.target.value }))}
+              placeholder="00.000.000/0001-00"
+              className="w-full px-4 py-3 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          {/* Descrição */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              O que sua empresa vende ou fornece
+              <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>({fornecedor.descricao.length}/500)</span>
+            </label>
+            <textarea
+              value={fornecedor.descricao}
+              onChange={e => setFornecedor(prev => ({ ...prev, descricao: e.target.value.slice(0, 500) }))}
+              placeholder="Descreva brevemente os produtos ou serviços que sua empresa oferece para o setor público..."
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm resize-none"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          {/* Regiões */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--cinza)' }}>
+              Regiões de atendimento
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {REGIOES_OPCOES.map(r => {
+                const sel = fornecedor.regioes.includes(r)
+                return (
+                  <button key={r} type="button" onClick={() => toggleRegiao(r)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: sel ? 'var(--vinho)' : 'var(--surface-2)',
+                      color: sel ? 'white' : 'var(--cinza)',
+                      border: `1.5px solid ${sel ? 'var(--vinho)' : 'var(--cinza-light)'}`,
+                      cursor: 'pointer',
+                    }}>
+                    {r}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Contato */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>E-mail de contato</label>
+              <input type="email" value={fornecedor.email_contato}
+                onChange={e => setFornecedor(prev => ({ ...prev, email_contato: e.target.value }))}
+                placeholder="contato@empresa.com.br"
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Telefone</label>
+              <input type="tel" value={fornecedor.telefone_contato}
+                onChange={e => setFornecedor(prev => ({ ...prev, telefone_contato: e.target.value }))}
+                placeholder="(31) 99999-9999"
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+            </div>
+          </div>
+
+          {/* Website */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              Website <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
+            </label>
+            <input type="text" value={fornecedor.website}
+              onChange={e => setFornecedor(prev => ({ ...prev, website: e.target.value }))}
+              placeholder="www.minhaempresa.com.br"
+              className="w-full px-4 py-3 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          <div className="rounded-xl p-4 text-xs" style={{ background: 'rgba(107,15,26,0.04)', border: '1px solid rgba(107,15,26,0.1)', color: 'var(--cinza)' }}>
+            ⚠️ As negociações entre fornecedores e compradores são de responsabilidade exclusiva das partes. O Monitor de Licitações apenas disponibiliza este banco de dados para pesquisa.
+          </div>
+
+          {fornecedorMsg && (
+            <div className="rounded-xl px-4 py-3 text-sm" style={{
+              background: fornecedorMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${fornecedorMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              color: fornecedorMsg.tipo === 'ok' ? '#10b981' : '#ef4444',
+            }}>
+              {fornecedorMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{fornecedorMsg.texto}
+            </div>
+          )}
+
+          <button type="submit" disabled={salvandoFornecedor}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
+            style={{ background: salvandoFornecedor ? '#9AA0A6' : 'var(--vinho)', cursor: salvandoFornecedor ? 'not-allowed' : 'pointer' }}>
+            {salvandoFornecedor ? 'Salvando...' : 'Salvar perfil de fornecedor'}
+          </button>
+        </form>
       </div>
 
     </div>

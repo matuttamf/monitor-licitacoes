@@ -54,6 +54,7 @@ const PLANOS = [
       { text: 'E-mail, Telegram e WhatsApp', highlight: true },
       { text: 'Busca manual no painel', highlight: false },
       { text: '🎯 Radar de Inteligência', highlight: true },
+      { text: '🏭 Diretório de Fornecedores', highlight: true },
     ],
   },
   {
@@ -73,6 +74,7 @@ const PLANOS = [
       { text: 'E-mail, Telegram e WhatsApp', highlight: false },
       { text: 'Busca manual no painel', highlight: false },
       { text: '🎯 Radar de Inteligência', highlight: true },
+      { text: '🏭 Diretório de Fornecedores', highlight: true },
     ],
   },
   {
@@ -92,6 +94,7 @@ const PLANOS = [
       { text: 'E-mail, Telegram e WhatsApp', highlight: false },
       { text: 'Busca manual no painel', highlight: false },
       { text: '🎯 Radar de Inteligência', highlight: false },
+      { text: '🏭 Diretório de Fornecedores', highlight: false },
       { text: 'Relatório semanal detalhado', highlight: true },
     ],
   },

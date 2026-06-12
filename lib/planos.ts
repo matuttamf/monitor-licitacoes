@@ -34,6 +34,11 @@ export function temRadar(plano: string): boolean {
   return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
 }
 
+/** Diretório de Fornecedores visível para Profissional, Gestão e Empresarial */
+export function temFornecedores(plano: string): boolean {
+  return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
+}
+
 /** Horários BRT por quantidade de e-mails/dia (sem 7 e 9) */
 export const HORARIOS_POR_QTD: Record<number, number[]> = {
   1:  [8],

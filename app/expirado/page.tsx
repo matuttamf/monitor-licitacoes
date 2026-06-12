@@ -18,7 +18,7 @@ const PLANOS = [
     preco: '97,90',
     destaque: false,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Suporte via WhatsApp'],
   },
   {
     id: 'gestao',
@@ -26,7 +26,7 @@ const PLANOS = [
     preco: '197,90',
     destaque: true,
     descricao: 'Para equipes comerciais',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Suporte prioritário via WhatsApp'],
   },
   {
     id: 'empresarial',
@@ -34,7 +34,7 @@ const PLANOS = [
     preco: '497',
     destaque: false,
     descricao: 'Para grandes operações',
-    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Relatório semanal detalhado', 'Suporte dedicado'],
+    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Relatório semanal detalhado', 'Suporte dedicado'],
   },
 ]
 

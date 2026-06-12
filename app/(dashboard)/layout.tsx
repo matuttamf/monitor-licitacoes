@@ -4,7 +4,7 @@ import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
 import { MobileNavItem } from './components/MobileNavItem'
 import { MobileLogoutButton } from './components/MobileLogoutButton'
-import { temMultiUsuario, temRadar } from '@/lib/planos'
+import { temMultiUsuario, temRadar, temFornecedores } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,15 +55,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   // Equipe visível apenas para owners de planos Pro/Empresarial
-  const exibirEquipe = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
-  // Radar visível para Pro/Empresarial (owners e membros herdam do owner); admin vê sempre
-  const planoEfetivo = profile?.plano ?? 'basic'
-  const exibirRadar  = isAdmin || temRadar(planoEfetivo)
+  const exibirEquipe       = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
+  // Radar e Fornecedores visíveis para Profissional+; admin vê sempre
+  const planoEfetivo       = profile?.plano ?? 'basic'
+  const exibirRadar        = isAdmin || temRadar(planoEfetivo)
+  const exibirFornecedores = isAdmin || temFornecedores(planoEfetivo)
 
   const allNavItems: { href: string; label: string; icon: string; sub?: boolean }[] = [
     ...navItems,
-    ...(exibirRadar  ? [{ href: '/radar',  label: 'Radar',        icon: '🎯' }] : []),
-    ...(exibirEquipe ? [{ href: '/equipe', label: 'Minha Equipe', icon: '◫' }] : []),
+    ...(exibirRadar        ? [{ href: '/radar',        label: 'Radar',        icon: '🎯' }] : []),
+    ...(exibirFornecedores ? [{ href: '/fornecedores', label: 'Fornecedores', icon: '🏭' }] : []),
+    ...(exibirEquipe       ? [{ href: '/equipe',       label: 'Minha Equipe', icon: '◫' }] : []),
     ...(user.email === ADMIN_EMAIL ? [
       { href: '/admin',               label: 'Admin',          icon: '⚙' },
       { href: '/admin/campanhas',     label: '↳ Campanhas',    icon: '📣', sub: true },

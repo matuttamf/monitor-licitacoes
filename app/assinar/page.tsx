@@ -20,7 +20,7 @@ const PLANOS = [
     destaque: false,
     popular: true,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte via WhatsApp'],
   },
   {
     id: 'gestao',
@@ -29,7 +29,7 @@ const PLANOS = [
     destaque: true,
     popular: false,
     descricao: 'Para equipes comerciais',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte prioritário via WhatsApp'],
   },
   {
     id: 'empresarial',
@@ -37,7 +37,7 @@ const PLANOS = [
     preco: '497',
     destaque: false,
     descricao: 'Para grandes operações',
-    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Relatório semanal detalhado', '🎯 Radar de Inteligência', 'Suporte dedicado'],
+    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Relatório semanal detalhado', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte dedicado'],
   },
 ]
 
