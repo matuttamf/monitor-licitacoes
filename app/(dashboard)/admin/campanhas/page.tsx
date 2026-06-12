@@ -80,6 +80,8 @@ export default function CampanhasPage() {
   const [linkCopiado, setLinkCopiado] = useState<string | null>(null)
   const [filtroTipo, setFiltroTipo] = useState('todos')
   const [filtroAtivo, setFiltroAtivo] = useState<'todos' | 'ativo' | 'inativo'>('ativo')
+  const [busca, setBusca] = useState('')
+  const [ordenar, setOrdenar] = useState<'recente' | 'antiga' | 'mrr' | 'conversao' | 'registros'>('recente')
 
   const [form, setForm] = useState({
     nome: '', tipo: 'influenciador', codigo: '', descricao: '',
@@ -177,12 +179,26 @@ export default function CampanhasPage() {
     setCriando(true)
   }
 
-  const lista = campanhas.filter(c => {
-    if (filtroTipo !== 'todos' && c.tipo !== filtroTipo) return false
-    if (filtroAtivo === 'ativo' && !c.ativo) return false
-    if (filtroAtivo === 'inativo' && c.ativo) return false
-    return true
-  })
+  const lista = campanhas
+    .filter(c => {
+      if (filtroTipo !== 'todos' && c.tipo !== filtroTipo) return false
+      if (filtroAtivo === 'ativo' && !c.ativo) return false
+      if (filtroAtivo === 'inativo' && c.ativo) return false
+      if (busca) {
+        const q = busca.toLowerCase()
+        return c.nome.toLowerCase().includes(q) || c.codigo.toLowerCase().includes(q) || (c.descricao ?? '').toLowerCase().includes(q)
+      }
+      return true
+    })
+    .sort((a, b) => {
+      switch (ordenar) {
+        case 'antiga':    return new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime()
+        case 'mrr':       return b.metricas.mrr - a.metricas.mrr
+        case 'conversao': return b.metricas.taxaConversao - a.metricas.taxaConversao
+        case 'registros': return b.metricas.registros - a.metricas.registros
+        default:          return new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()
+      }
+    })
 
   // KPIs globais das campanhas ativas
   const ativas = campanhas.filter(c => c.ativo)
@@ -266,12 +282,22 @@ export default function CampanhasPage() {
           )}
 
           {/* Filtros */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Busca */}
+            <input
+              type="text"
+              placeholder="Buscar por nome ou código…"
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none', minWidth: '200px' }}
+            />
+            {/* Tipo */}
             <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
               <option value="todos">Todos os tipos</option>
               {TIPOS.map(t => <option key={t} value={t}>{TIPO_ICONE[t]} {t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
             </select>
+            {/* Status */}
             {(['todos','ativo','inativo'] as const).map(f => (
               <button key={f} onClick={() => setFiltroAtivo(f)}
                 style={{ padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
@@ -281,6 +307,15 @@ export default function CampanhasPage() {
                 {f === 'todos' ? 'Todas' : f === 'ativo' ? 'Ativas' : 'Inativas'}
               </button>
             ))}
+            {/* Ordenação */}
+            <select value={ordenar} onChange={e => setOrdenar(e.target.value as typeof ordenar)}
+              style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none', marginLeft: 'auto' }}>
+              <option value="recente">↓ Mais recentes</option>
+              <option value="antiga">↑ Mais antigas</option>
+              <option value="mrr">↓ Maior MRR</option>
+              <option value="conversao">↓ Maior conversão</option>
+              <option value="registros">↓ Mais cadastros</option>
+            </select>
           </div>
 
           {/* Cards de campanhas */}
