@@ -39,6 +39,8 @@ type Stats = {
   totalKeywords: number; totalAlertas: number; totalLicitacoes: number
   alertasHoje: number; alertas7d: number
   leadsPendentes: number; leadsEnviados: number; leadsTotal: number
+  leadsInvalido: number; leadsErro: number; leadsDescadastrado: number
+  leadsAbriram: number; leadsClicaram: number
 }
 
 type CronLog = { id: string; job: string; status: string; mensagem: string; detalhes: unknown; criado_em: string }
@@ -57,12 +59,18 @@ const statusConfig: Record<string, { label: string; cor: string; bg: string }> =
 }
 
 const JOB_LABELS: Record<string, string> = {
-  coletar:          'Coleta',
-  matching:         'Matching',
-  alertar:          'Alertas e-mail',
-  'alertar-urgente': 'Alertas urgentes',
-  'emails-trial':   'E-mails trial',
-  'expirar-trials': 'Expirar trials',
+  coletar:                'Coleta editais',
+  matching:               'Matching IA',
+  alertar:                'Alertas e-mail',
+  'alertar-urgente':      'Alertas Telegram/WA',
+  'emails-trial':         'E-mails trial',
+  'expirar-trials':       'Expirar trials',
+  'resumo-semanal':       'Resumo semanal',
+  'enriquecer-receita':   'Enriquecer Receita Federal',
+  'enriquecer-emails':    'Enriquecer e-mails (web)',
+  'disparar-leads':       'Disparar leads',
+  'coletar-leads':        'Coletar leads',
+  'coletar-leads-cnae':   'Coletar leads CNAE',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -267,24 +275,41 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ── KPIs de Leads ── */}
-      {stats && stats.leadsTotal > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-          {[
-            { label: 'Leads coletados', value: stats.leadsTotal,      sub: 'total na base',         cor: '#6B0F1A' },
-            { label: 'Aguardando envio', value: stats.leadsPendentes, sub: 'e-mails pendentes',      cor: '#C9A65A' },
-            { label: 'E-mails enviados', value: stats.leadsEnviados,  sub: 'captação disparada',     cor: '#10b981' },
-          ].map(({ label, value, sub, cor }) => (
-            <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '12px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
-                {value.toLocaleString('pt-BR')}
-              </div>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
-              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{sub}</div>
+      {/* ── Funil de Leads ── */}
+      {stats && stats.leadsTotal > 0 && (() => {
+        const leadsComEmail = stats.leadsPendentes + stats.leadsEnviados
+        const taxaEmail     = stats.leadsTotal > 0 ? Math.round(leadsComEmail / stats.leadsTotal * 100) : 0
+        const taxaAbertura  = stats.leadsEnviados > 0 ? Math.round(stats.leadsAbriram / stats.leadsEnviados * 100) : 0
+        const taxaClique    = stats.leadsAbriram  > 0 ? Math.round(stats.leadsClicaram / stats.leadsAbriram  * 100) : 0
+        const kpis = [
+          { label: 'Total coletados',   value: stats.leadsTotal,          sub: 'base completa',            cor: '#6B0F1A' },
+          { label: 'Sem e-mail',        value: stats.leadsInvalido,       sub: 'em enriquecimento',        cor: '#94a3b8' },
+          { label: 'Com e-mail',        value: leadsComEmail,             sub: `${taxaEmail}% da base`,    cor: '#3b82f6' },
+          { label: 'Aguardando envio',  value: stats.leadsPendentes,      sub: 'fila de disparo',          cor: '#C9A65A' },
+          { label: 'Disparados',        value: stats.leadsEnviados,       sub: 'e-mails enviados',         cor: '#10b981' },
+          { label: 'Abriram',           value: stats.leadsAbriram,        sub: `${taxaAbertura}% abertura`, cor: '#8b5cf6' },
+          { label: 'Clicaram',          value: stats.leadsClicaram,       sub: `${taxaClique}% de clique`, cor: '#f59e0b' },
+          { label: 'Descadastrados',    value: stats.leadsDescadastrado,  sub: 'opt-out',                  cor: '#ef4444' },
+        ]
+        return (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
+              Funil de captação
             </div>
-          ))}
-        </div>
-      )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+              {kpis.map(({ label, value, sub, cor }) => (
+                <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '10px', padding: '10px 12px' }}>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>
+                    {value.toLocaleString('pt-BR')}
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px' }}>{label}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Módulos com prévias ── */}
       {(() => {
@@ -572,9 +597,11 @@ export default function AdminPage() {
             { acao: 'matching',        label: '🤖 Matching',        desc: 'Gera candidatos' },
             { acao: 'alertar',        label: '📧 Alertar',        desc: 'Envia alertas' },
             { acao: 'emails',         label: '📩 E-mails trial',  desc: 'Sequência trial' },
-            { acao: 'coletar-leads',  label: '🎯 Coletar leads',  desc: 'Busca CNPJs/PNCP' },
-            { acao: 'disparar-leads', label: '✉️ Disparar leads', desc: 'Envia e-mails captação' },
-            { acao: 'radar-alertas',  label: '📡 Radar',          desc: 'Atualiza cache contratos' },
+            { acao: 'coletar-leads',       label: '🎯 Coletar leads',       desc: 'Busca CNPJs/PNCP' },
+            { acao: 'enriquecer-receita',  label: '🏛️ Receita Federal',     desc: 'Verifica CNPJs (lote 120)' },
+            { acao: 'enriquecer-emails',   label: '🔎 Buscar e-mails',      desc: 'Google/Bing/DDG (lote 60)' },
+            { acao: 'disparar-leads',      label: '✉️ Disparar leads',      desc: 'Envia e-mails captação' },
+            { acao: 'radar-alertas',       label: '📡 Radar',               desc: 'Atualiza cache contratos' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
               style={{
