@@ -1,11 +1,9 @@
 /**
  * Script: enriquecer-receita
- * Consulta minhareceita.org para todos os leads com situacao=null.
+ * Consulta minhareceita.org para todos os leads com status=invalido.
  * Atualiza: razao_social, situacao, cnae, cnae_codigo, porte, email, telefone, municipio, uf, status.
- * Sem limite de registros — processa tudo de uma vez.
+ * Usa fetch direto à REST API do Supabase (sem postgrest-js client).
  */
-
-import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? ''
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
@@ -13,17 +11,46 @@ const MINHARECEITA = 'https://minhareceita.org'
 const CONCORRENCIA = 5
 const LOTE         = 500
 
-console.log('SUPABASE_URL:', SUPABASE_URL ? SUPABASE_URL.slice(0, 35) + '…' : '*** UNDEFINED ***')
+console.log('SUPABASE_URL:', SUPABASE_URL ? SUPABASE_URL.slice(0, 40) + '…' : '*** UNDEFINED ***')
 console.log('SERVICE_KEY:', SERVICE_KEY ? `${SERVICE_KEY.length} chars` : '*** UNDEFINED ***')
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('Variáveis de ambiente não configuradas. Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY')
+  console.error('Variáveis de ambiente não configuradas.')
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+const REST = `${SUPABASE_URL}/rest/v1`
+const HEADERS = {
+  'apikey':        SERVICE_KEY,
+  'Authorization': `Bearer ${SERVICE_KEY}`,
+  'Content-Type':  'application/json',
+  'Prefer':        'return=minimal',
+}
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
+
+async function buscarLeads(offset: number): Promise<{ id: string; cnpj: string; email: string | null }[]> {
+  const url = `${REST}/leads?select=id,cnpj,email&status=eq.invalido&offset=${offset}&limit=${LOTE}`
+  const res = await fetch(url, { headers: { ...HEADERS, Prefer: 'count=none' } })
+  if (!res.ok) {
+    const txt = await res.text()
+    console.error(`Erro ao buscar leads (${res.status}):`, txt.slice(0, 300))
+    return []
+  }
+  return res.json()
+}
+
+async function atualizarLead(id: string, dados: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${REST}/leads?id=eq.${id}`, {
+    method:  'PATCH',
+    headers: HEADERS,
+    body:    JSON.stringify(dados),
+  })
+  if (!res.ok) {
+    const txt = await res.text()
+    console.error(`Erro ao atualizar lead ${id} (${res.status}):`, txt.slice(0, 200))
+  }
+}
 
 async function consultarCNPJ(cnpj: string) {
   try {
@@ -39,18 +66,17 @@ async function consultarCNPJ(cnpj: string) {
 async function main() {
   console.log('=== Enriquecer Receita Federal ===')
 
+  // Teste rápido de conectividade
+  const teste = await fetch(`${REST}/leads?select=id&limit=1`, { headers: HEADERS })
+  console.log('Teste REST API:', teste.status, teste.ok ? 'OK' : await teste.text())
+  if (!teste.ok) { process.exit(1) }
+
   let offset = 0
   let totalVerificados = 0, totalAtivos = 0, totalInativos = 0, totalSemDados = 0
 
   while (true) {
-    const { data: leads, error } = await supabase
-      .from('leads')
-      .select('id, cnpj, email')
-      .eq('status', 'invalido')
-      .range(offset, offset + LOTE - 1)
-
-    if (error) { console.error('Erro ao buscar leads:', error.message); break }
-    if (!leads || leads.length === 0) break
+    const leads = await buscarLeads(offset)
+    if (leads.length === 0) break
 
     console.log(`\nLote ${Math.floor(offset / LOTE) + 1}: ${leads.length} leads`)
 
@@ -73,7 +99,7 @@ async function main() {
 
         if (!ativa) {
           totalInativos++
-          await supabase.from('leads').update({
+          await atualizarLead(lead.id, {
             razao_social: dados.razao_social ?? lead.cnpj,
             situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
             cnae:         dados.cnae_fiscal_descricao ?? null,
@@ -83,12 +109,12 @@ async function main() {
             municipio:    dados.municipio ?? null,
             uf:           dados.uf ?? null,
             status:       'invalido',
-          }).eq('id', lead.id)
+          })
           return
         }
 
         totalAtivos++
-        await supabase.from('leads').update({
+        await atualizarLead(lead.id, {
           razao_social:  dados.razao_social,
           nome_fantasia: dados.nome_fantasia ?? null,
           email:         emailFinal,
@@ -100,9 +126,9 @@ async function main() {
           cnae:          dados.cnae_fiscal_descricao ?? null,
           cnae_codigo:   cnaeCode,
           status:        emailFinal ? 'pendente' : 'invalido',
-        }).eq('id', lead.id)
+        })
       }))
-      await sleep(200) // evitar rate limit
+      await sleep(200)
     }
 
     console.log(`  verificados=${totalVerificados} ativos=${totalAtivos} inativas=${totalInativos} sem_dados=${totalSemDados}`)
