@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     if (fromMe) return NextResponse.json({ ok: true }) // ignora mensagens enviadas por nós
 
     const telefone = body.phone as string
-    const texto    = (body.text?.message ?? body.caption ?? '') as string
+    const texto    = ((body.text as Record<string, unknown>)?.message ?? body.caption ?? '') as string
 
     if (!telefone || !texto) return NextResponse.json({ ok: true })
 
