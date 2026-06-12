@@ -51,6 +51,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, verificados: 0, motivo: 'sistema pausado' })
   }
 
+  // Cleanup: leads marcados como pendente mas sem email — são inválidos, não enviáveis
+  await supabase.from('leads')
+    .update({ status: 'invalido' })
+    .eq('status', 'pendente')
+    .is('email', null)
+
   const { data: semReceita } = await supabase
     .from('leads')
     .select('id, cnpj')

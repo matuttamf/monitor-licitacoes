@@ -62,9 +62,22 @@ export async function POST(request: Request) {
   }
   // --- Fim verificação ---
 
+  const termoNormalizado = termo.trim().toLowerCase()
+
+  // Verificar duplicata
+  const { count: duplicatas } = await supabase
+    .from('keywords')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('termo', termoNormalizado)
+
+  if ((duplicatas ?? 0) > 0) {
+    return NextResponse.json({ error: 'Essa palavra-chave já está cadastrada.', codigo: 'DUPLICATA' }, { status: 409 })
+  }
+
   const { data, error } = await supabase
     .from('keywords')
-    .insert({ termo: termo.trim().toLowerCase(), user_id: user.id, regiao: regiao ?? ['brasil'] })
+    .insert({ termo: termoNormalizado, user_id: user.id, regiao: regiao ?? ['brasil'] })
     .select()
     .single()
 
@@ -82,9 +95,21 @@ export async function PATCH(request: Request) {
   const updates: Record<string, unknown> = {}
   if (ativo  !== undefined) updates.ativo  = ativo
   if (regiao !== undefined) updates.regiao = regiao
-  if (termo  !== undefined) {
+  if (termo !== undefined) {
     const termoLimpo = termo.trim().toLowerCase()
     if (!termoLimpo) return NextResponse.json({ error: 'Termo não pode ser vazio' }, { status: 400 })
+
+    const { count: duplicatas } = await supabase
+      .from('keywords')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('termo', termoLimpo)
+      .neq('id', id)
+
+    if ((duplicatas ?? 0) > 0) {
+      return NextResponse.json({ error: 'Essa palavra-chave já está cadastrada.', codigo: 'DUPLICATA' }, { status: 409 })
+    }
+
     updates.termo = termoLimpo
   }
 
