@@ -51,7 +51,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, verificados: 0, motivo: 'sistema pausado' })
   }
 
-  // Cleanup: leads marcados como pendente mas sem email — são inválidos, não enviáveis
+  // Cleanup: leads marcados como pendente mas sem email — mover para invalido
+  // (enriquecer-emails os pegará depois via situacao='ATIVA' + email=null)
+  const { count: limpezaCount } = await supabase.from('leads')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'pendente')
+    .is('email', null)
   await supabase.from('leads')
     .update({ status: 'invalido' })
     .eq('status', 'pendente')
@@ -65,7 +70,12 @@ export async function GET(req: NextRequest) {
     .limit(120)
 
   if (!semReceita?.length) {
-    return NextResponse.json({ ok: true, verificados: 0, motivo: 'sem leads pendentes' })
+    return NextResponse.json({
+      ok: true,
+      verificados: 0,
+      limpeza_sem_email: limpezaCount ?? 0,
+      motivo: 'todos os leads já foram verificados na Receita Federal',
+    })
   }
 
   let verificados = 0, ativos = 0, inativas = 0
