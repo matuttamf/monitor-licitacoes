@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       .eq('ativo', true)
       .maybeSingle()
 
-    if (campanha?.desconto_percentual > 0 && campanha?.desconto_meses > 0) {
+    if (campanha && campanha.desconto_percentual > 0 && campanha.desconto_meses > 0) {
       descontoPercentual = campanha.desconto_percentual
       descontoMeses      = campanha.desconto_meses
       precoFinal         = Math.round(precoFinal * (1 - descontoPercentual / 100) * 100) / 100
