@@ -115,7 +115,7 @@ async function getTargetCnaes(): Promise<Set<string>> {
     const code = String(r.cnae_codigo).replace(/\D/g,'').slice(0,7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
-  const topLeads = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,30).map(([c]) => c)
+  const topLeads = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
 
   // 2. CNAEs inferidos das keywords cadastradas pelos usuários
   const { data: kwData } = await supabase.from('keywords').select('termo').limit(1000)
