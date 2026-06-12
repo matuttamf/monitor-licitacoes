@@ -65,12 +65,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ...(exibirRadar  ? [{ href: '/radar',  label: 'Radar',        icon: '🎯' }] : []),
     ...(exibirEquipe ? [{ href: '/equipe', label: 'Minha Equipe', icon: '◫' }] : []),
     ...(user.email === ADMIN_EMAIL ? [
-      { href: '/admin',               label: 'Admin',        icon: '⚙' },
-      { href: '/admin/financeiro',    label: '↳ Financeiro', icon: '💰', sub: true },
-      { href: '/admin/campanhas',     label: '↳ Campanhas',  icon: '📣', sub: true },
-      { href: '/admin/captacao',      label: '↳ Captação',   icon: '🎯', sub: true },
+      { href: '/admin',               label: 'Admin',          icon: '⚙' },
+      { href: '/admin/campanhas',     label: '↳ Campanhas',    icon: '📣', sub: true },
+      { href: '/admin/captacao',      label: '↳ Captação',     icon: '🎯', sub: true },
+      { href: '/admin/financeiro',    label: '↳ Financeiro',   icon: '💰', sub: true },
       { href: '/admin/inteligencia',  label: '↳ Inteligência', icon: '📊', sub: true },
-      { href: '/admin/saude',         label: '↳ Saúde',      icon: '🏥', sub: true },
+      { href: '/admin/saude',         label: '↳ Saúde',        icon: '🏥', sub: true },
     ] : []),
   ]
 
