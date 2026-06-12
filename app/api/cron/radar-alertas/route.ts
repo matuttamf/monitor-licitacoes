@@ -8,7 +8,7 @@
 import { NextResponse }           from 'next/server'
 import { Resend }                 from 'resend'
 import { createAdminClient }     from '@/lib/supabase/server'
-import { verificarCronAuth }     from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog }      from '@/lib/cron-log'
 import { enviarTextoTelegram }   from '@/lib/alerts/telegram'
 import { temRadar }              from '@/lib/planos'
