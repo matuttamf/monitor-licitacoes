@@ -23,6 +23,8 @@ type Campanha = {
   url_destino: string | null
   comissao_tipo: 'nenhum' | 'percentual' | 'fixo'
   comissao_valor: number
+  desconto_percentual: number
+  desconto_meses: number
   ativo: boolean
   criado_em: string
   metricas: Metricas
@@ -86,6 +88,7 @@ export default function CampanhasPage() {
   const [form, setForm] = useState({
     nome: '', tipo: 'influenciador', codigo: '', descricao: '',
     url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '',
+    desconto_percentual: '0', desconto_meses: '0',
   })
 
   async function carregar() {
@@ -131,10 +134,15 @@ export default function CampanhasPage() {
     const body = editando
       ? { id: editando.id, nome: form.nome, tipo: form.tipo, descricao: form.descricao || null,
           url_destino: form.url_destino || null, comissao_tipo: form.comissao_tipo,
-          comissao_valor: form.comissao_valor ? Number(form.comissao_valor) : 0, ativo: editando.ativo }
+          comissao_valor: form.comissao_valor ? Number(form.comissao_valor) : 0,
+          desconto_percentual: Number(form.desconto_percentual) || 0,
+          desconto_meses: Number(form.desconto_meses) || 0,
+          ativo: editando.ativo }
       : { nome: form.nome, tipo: form.tipo, codigo: form.codigo, descricao: form.descricao || null,
           url_destino: form.url_destino || null, comissao_tipo: form.comissao_tipo,
-          comissao_valor: form.comissao_valor ? Number(form.comissao_valor) : 0 }
+          comissao_valor: form.comissao_valor ? Number(form.comissao_valor) : 0,
+          desconto_percentual: Number(form.desconto_percentual) || 0,
+          desconto_meses: Number(form.desconto_meses) || 0 }
 
     const res = await fetch('/api/admin/campanhas', {
       method: editando ? 'PATCH' : 'POST',
@@ -145,7 +153,7 @@ export default function CampanhasPage() {
     setSalvando(false)
     if (!res.ok) { alert(d.error); return }
     setCriando(false); setEditando(null)
-    setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '' })
+    setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '', desconto_percentual: '0', desconto_meses: '0' })
     carregar()
   }
 
@@ -246,7 +254,9 @@ export default function CampanhasPage() {
     setEditando(c)
     setForm({ nome: c.nome, tipo: c.tipo, codigo: c.codigo, descricao: c.descricao ?? '',
       url_destino: c.url_destino ?? '', comissao_tipo: c.comissao_tipo,
-      comissao_valor: c.comissao_valor > 0 ? String(c.comissao_valor) : '' })
+      comissao_valor: c.comissao_valor > 0 ? String(c.comissao_valor) : '',
+      desconto_percentual: String(c.desconto_percentual ?? 0),
+      desconto_meses: String(c.desconto_meses ?? 0) })
     setCriando(true)
   }
 
@@ -290,7 +300,7 @@ export default function CampanhasPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {aba === 'campanhas' && (
-            <button onClick={() => { setCriando(true); setEditando(null); setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '' }) }}
+            <button onClick={() => { setCriando(true); setEditando(null); setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '', desconto_percentual: '0', desconto_meses: '0' }) }}
               style={{ padding: '9px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
               + Nova campanha
             </button>
@@ -642,6 +652,37 @@ export default function CampanhasPage() {
                       style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none', boxSizing: 'border-box' }} />
                   </div>
                 )}
+
+                {/* Desconto por período (parcerias) */}
+                <div style={{ borderTop: '1px solid var(--cinza-light)', paddingTop: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '8px' }}>
+                    Desconto de parceria (opcional)
+                  </label>
+                  <p style={{ fontSize: '11px', color: 'var(--cinza)', marginBottom: '10px' }}>
+                    Usuários vindos desta campanha recebem X% de desconto nos primeiros N meses. Após o período, o sistema reajusta automaticamente para o valor integral via MercadoPago.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '4px' }}>Desconto (%)</label>
+                      <input type="number" min="0" max="100" step="1" value={form.desconto_percentual}
+                        onChange={e => setForm(f => ({ ...f, desconto_percentual: e.target.value }))}
+                        placeholder="Ex: 30"
+                        style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '4px' }}>Meses com desconto</label>
+                      <input type="number" min="0" step="1" value={form.desconto_meses}
+                        onChange={e => setForm(f => ({ ...f, desconto_meses: e.target.value }))}
+                        placeholder="Ex: 3"
+                        style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+                    </div>
+                  </div>
+                  {Number(form.desconto_percentual) > 0 && Number(form.desconto_meses) > 0 && (
+                    <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginTop: '6px' }}>
+                      ✓ {form.desconto_percentual}% off nos primeiros {form.desconto_meses} meses → após, preço integral
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>

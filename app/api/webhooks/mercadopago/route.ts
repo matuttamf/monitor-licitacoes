@@ -91,7 +91,12 @@ export async function POST(request: Request) {
     }
 
     const subscription = await res.json()
-    const [userId, planoId] = (subscription.external_reference || '').split('|')
+    const parts   = (subscription.external_reference || '').split('|')
+    const userId  = parts[0]
+    const planoId = parts[1]
+    // ex: 'desc30' → 30, 'meses3' → 3
+    const descontoPercentual = parts.find((p: string) => p.startsWith('desc'))  ? parseInt(parts.find((p: string) => p.startsWith('desc'))!.replace('desc',''))  : 0
+    const descontoMeses      = parts.find((p: string) => p.startsWith('meses')) ? parseInt(parts.find((p: string) => p.startsWith('meses'))!.replace('meses','')) : 0
 
     if (!userId || !planoId) {
       console.warn('[webhook/mp] external_reference inválido:', subscription.external_reference)
@@ -102,7 +107,8 @@ export async function POST(request: Request) {
 
     if (subscription.status === 'authorized') {
       const limites = getLimites(planoId)
-      const valorMensalidade = PLANOS_MP[planoId] ?? null
+      // Usa o valor real cobrado (pode ser com desconto)
+      const valorMensalidade = (subscription.auto_recurring?.transaction_amount as number | null) ?? PLANOS_MP[planoId] ?? null
 
       // Registra assinatura_inicio apenas na primeira ativação (não sobrescreve renovações)
       // Também verifica bloqueio administrativo — se bloqueado_admin=true, não reativa o acesso
@@ -114,7 +120,6 @@ export async function POST(request: Request) {
 
       if (perfilAtual?.bloqueado_admin) {
         console.warn(`[webhook/mp] Usuário ${userId} bloqueado administrativamente — pagamento registrado mas acesso NÃO reativado`)
-        // Grava apenas o vínculo da assinatura e valor, sem alterar status/acesso
         await supabase.from('profiles').update({
           mp_subscription_id: subscriptionId,
           valor_mensalidade:  valorMensalidade,
@@ -132,6 +137,14 @@ export async function POST(request: Request) {
       }
       if (!perfilAtual?.assinatura_inicio) {
         updateData.assinatura_inicio = new Date().toISOString()
+      }
+      // Salva dados do desconto (apenas na primeira ativação, para não sobrescrever renovações)
+      if (descontoPercentual > 0 && descontoMeses > 0 && !perfilAtual?.assinatura_inicio) {
+        const descAte = new Date()
+        descAte.setMonth(descAte.getMonth() + descontoMeses)
+        updateData.voucher_desconto_percentual = descontoPercentual
+        updateData.voucher_desconto_meses      = descontoMeses
+        updateData.voucher_desconto_ate        = descAte.toISOString()
       }
 
       await supabase.from('profiles').update(updateData).eq('id', userId)

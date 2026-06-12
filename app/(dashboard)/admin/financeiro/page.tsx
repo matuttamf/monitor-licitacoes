@@ -164,6 +164,108 @@ export default function FinanceiroPage() {
     carregar()
   }
 
+  function exportarPDF(tipo: 'mes' | 'ano') {
+    if (!kpis) return
+    const agora   = new Date()
+    const ano     = agora.getFullYear()
+    const mesTxt  = agora.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
+    const titulo  = tipo === 'mes'
+      ? `Relatório Financeiro — ${mesTxt.charAt(0).toUpperCase() + mesTxt.slice(1)}`
+      : `Resumo Financeiro Anual — ${ano}`
+
+    const pagantesAtivos = assinantes.filter(a => a.status === 'active' && a.valor_mensalidade)
+
+    // receita acumulada no ano: meses pagos × valor mensal
+    let receitaAnoCalc = 0
+    if (tipo === 'ano') {
+      const inicioAno = new Date(ano, 0, 1)
+      pagantesAtivos.forEach(a => {
+        const inicio = a.assinatura_inicio ? new Date(a.assinatura_inicio) : inicioAno
+        const from   = inicio > inicioAno ? inicio : inicioAno
+        const mesesAtivos = Math.max(0, Math.round((agora.getTime() - from.getTime()) / (30.44 * 24 * 3600 * 1000)))
+        receitaAnoCalc += (a.valor_mensalidade ?? 0) * mesesAtivos
+      })
+    }
+
+    const rowsAssinantes = pagantesAtivos.map(a => {
+      const pc = PLANO_CORES[a.plano] ?? PLANO_CORES.basic
+      return `<tr>
+        <td>${a.nome || a.email}</td>
+        <td><span style="background:${pc.bg};color:${pc.cor};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:capitalize">${a.plano}</span></td>
+        <td style="font-family:monospace">${moeda(a.valor_mensalidade ?? 0)}/mês</td>
+        <td>${a.assinatura_inicio ? new Date(a.assinatura_inicio).toLocaleDateString('pt-BR') : '—'}</td>
+        ${tipo === 'ano' ? `<td style="font-family:monospace">
+          ${(() => { const ini = a.assinatura_inicio ? new Date(a.assinatura_inicio) : new Date(ano, 0, 1); const from = ini > new Date(ano, 0, 1) ? ini : new Date(ano, 0, 1); const m = Math.max(0, Math.round((agora.getTime() - from.getTime()) / (30.44 * 24 * 3600 * 1000))); return `${m} mês${m !== 1 ? 'es' : ''} × ${moeda(a.valor_mensalidade ?? 0)} = ${moeda((a.valor_mensalidade ?? 0) * m)}` })()}
+        </td>` : ''}
+      </tr>`
+    }).join('')
+
+    const kpiCards = tipo === 'mes' ? `
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-val green">${moeda(kpis.mrr)}</div><div class="kpi-lbl">MRR</div><div class="kpi-sub">receita mensal recorrente</div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(kpis.arr)}</div><div class="kpi-lbl">ARR projetado</div><div class="kpi-sub">MRR × 12</div></div>
+        <div class="kpi"><div class="kpi-val">${kpis.totalPagantes}</div><div class="kpi-lbl">Assinantes ativos</div><div class="kpi-sub"></div></div>
+        <div class="kpi"><div class="kpi-val">${kpis.totalTrials}</div><div class="kpi-lbl">Em trial</div><div class="kpi-sub"></div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(kpis.ticketMedio)}</div><div class="kpi-lbl">Ticket médio</div><div class="kpi-sub"></div></div>
+        <div class="kpi"><div class="kpi-val">${kpis.taxaConversao}%</div><div class="kpi-lbl">Taxa conversão</div><div class="kpi-sub">trial → assinante</div></div>
+      </div>
+      <h3 style="margin:20px 0 10px;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Receita por plano</h3>
+      <table><thead><tr><th>Plano</th><th>Assinantes</th><th>Receita mensal</th></tr></thead><tbody>
+        ${kpis.receitaPorPlano.filter(r => r.count > 0).map(r => `<tr><td style="text-transform:capitalize">${r.plano}</td><td>${r.count}</td><td style="font-family:monospace;font-weight:700">${moeda(r.receita)}</td></tr>`).join('')}
+      </tbody></table>` : `
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-val green">${moeda(receitaAnoCalc)}</div><div class="kpi-lbl">Receita acumulada ${ano}</div><div class="kpi-sub">01/01/${ano} até hoje</div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(kpis.arr)}</div><div class="kpi-lbl">ARR projetado</div><div class="kpi-sub">MRR atual × 12</div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(kpis.mrr)}</div><div class="kpi-lbl">MRR atual</div><div class="kpi-sub">dezembro/${ano}</div></div>
+        <div class="kpi"><div class="kpi-val">${kpis.totalPagantes}</div><div class="kpi-lbl">Assinantes ativos</div><div class="kpi-sub"></div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(kpis.ticketMedio)}</div><div class="kpi-lbl">Ticket médio</div><div class="kpi-sub"></div></div>
+        <div class="kpi"><div class="kpi-val">${kpis.churnMensal}</div><div class="kpi-lbl">Churn (últimos 30d)</div><div class="kpi-sub"></div></div>
+      </div>`
+
+    const colHead = tipo === 'ano'
+      ? '<th>Assinante</th><th>Plano</th><th>Valor/mês</th><th>Desde</th><th>Contribuição estimada</th>'
+      : '<th>Assinante</th><th>Plano</th><th>Valor/mês</th><th>Assinante desde</th>'
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>${titulo}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;color:#0f172a;padding:36px;font-size:13px}
+  h1{font-size:20px;font-weight:800;margin-bottom:4px}
+  .sub{font-size:12px;color:#64748b;margin-bottom:24px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px}
+  .kpi-val{font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-.03em}
+  .kpi-val.green{color:#10b981}
+  .kpi-lbl{font-size:11px;font-weight:700;color:#0f172a;margin-top:4px}
+  .kpi-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+  h3{font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;background:#f8fafc;border-bottom:2px solid #e2e8f0}
+  td{padding:8px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .aviso{background:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:12px 16px;font-size:11px;color:#854d0e;margin-bottom:20px}
+  footer{margin-top:40px;font-size:10px;color:#94a3b8;text-align:center;border-top:1px solid #f1f5f9;padding-top:16px}
+  @media print{body{padding:20px}}
+</style></head><body>
+<h1>${titulo}</h1>
+<div class="sub">Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · Monitor de Licitações</div>
+${tipo === 'ano' ? `<div class="aviso">⚠ Receita acumulada é uma estimativa baseada nos meses ativos desde 01/01/${ano}. Para valores exatos, consulte o extrato do MercadoPago.</div>` : ''}
+${kpiCards}
+<h3 style="margin:24px 0 10px">Assinantes ativos (${pagantesAtivos.length})</h3>
+<table><thead><tr>${colHead}</tr></thead><tbody>${rowsAssinantes}</tbody></table>
+<footer>Monitor de Licitações — monitordelicitacoes.com.br · Documento gerado para fins contábeis</footer>
+</body></html>`
+
+    const w = window.open('', '_blank')
+    if (!w) return
+    w.document.write(html)
+    w.document.close()
+    w.focus()
+    w.print()
+    w.addEventListener('afterprint', () => w.close())
+  }
+
   async function sincronizarMP(userId?: string) {
     if (userId) setSyncId(userId)
     else setSincronizando(true)
@@ -221,6 +323,16 @@ export default function FinanceiroPage() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--cinza)' }}>Receita, assinaturas, pagamentos e dados fiscais</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {kpis && (<>
+            <button onClick={() => exportarPDF('mes')}
+              style={{ fontSize: '13px', fontWeight: 600, padding: '9px 16px', borderRadius: '10px', background: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}>
+              PDF Mês
+            </button>
+            <button onClick={() => exportarPDF('ano')}
+              style={{ fontSize: '13px', fontWeight: 600, padding: '9px 16px', borderRadius: '10px', background: 'rgba(139,92,246,0.08)', color: '#8b5cf6', border: 'none', cursor: 'pointer' }}>
+              PDF Ano
+            </button>
+          </>)}
           <button
             onClick={() => sincronizarMP()}
             disabled={sincronizando}

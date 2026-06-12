@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { getLimites } from '@/lib/planos'
+import { atualizarValorAssinatura } from '@/lib/mercadopago'
 
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
@@ -19,6 +20,29 @@ export async function GET(request: Request) {
   }
 
   const supabase = createAdminClient()
+
+  // Atualizar preço no MP para usuários cujo desconto expirou
+  const { data: comDesconto } = await supabase
+    .from('profiles')
+    .select('id, plano, mp_subscription_id, voucher_desconto_ate')
+    .not('mp_subscription_id', 'is', null)
+    .not('voucher_desconto_ate', 'is', null)
+    .lt('voucher_desconto_ate', new Date().toISOString())
+
+  for (const p of (comDesconto ?? [])) {
+    const precoIntegral = PRECOS[p.plano] ?? null
+    if (!precoIntegral || !p.mp_subscription_id) continue
+    const ok = await atualizarValorAssinatura(p.mp_subscription_id, precoIntegral)
+    if (ok) {
+      await supabase.from('profiles').update({
+        voucher_desconto_ate:        null,
+        voucher_desconto_percentual: null,
+        voucher_desconto_meses:      null,
+        valor_mensalidade:           precoIntegral,
+      }).eq('id', p.id)
+      console.log(`[cron/sync-assinaturas] Desconto expirado — preço atualizado para ${precoIntegral} (user=${p.id})`)
+    }
+  }
 
   // Buscar todos os perfis com assinatura ativa no MP
   const { data: profiles, error } = await supabase

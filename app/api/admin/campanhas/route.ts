@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
   const body = await request.json()
-  const { nome, tipo, codigo, descricao, url_destino, comissao_tipo, comissao_valor } = body
+  const { nome, tipo, codigo, descricao, url_destino, comissao_tipo, comissao_valor, desconto_percentual, desconto_meses } = body
 
   if (!nome || !codigo) return NextResponse.json({ error: 'nome e codigo são obrigatórios' }, { status: 400 })
 
@@ -97,7 +97,9 @@ export async function POST(request: Request) {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('campanhas')
-    .insert({ nome, tipo: tipo ?? 'outro', codigo: codigoNorm, descricao, url_destino, comissao_tipo: comissao_tipo ?? 'nenhum', comissao_valor: comissao_valor ?? 0 })
+    .insert({ nome, tipo: tipo ?? 'outro', codigo: codigoNorm, descricao, url_destino,
+      comissao_tipo: comissao_tipo ?? 'nenhum', comissao_valor: comissao_valor ?? 0,
+      desconto_percentual: desconto_percentual ?? 0, desconto_meses: desconto_meses ?? 0 })
     .select()
     .single()
 
