@@ -298,7 +298,7 @@ export default function AdminPage() {
         const jogsRecentes = jobs
           .filter(([, v]) => !!v)
           .sort(([, a], [, b]) => new Date((b!).criado_em).getTime() - new Date((a!).criado_em).getTime())
-          .slice(0, 6)
+          .slice(0, 3)
           .map(([nome, v]) => ({
             nome: JOB_LABELS[nome] ?? nome,
             status: v!.status,
@@ -367,24 +367,20 @@ export default function AdminPage() {
             cor: '#10b981', bg: 'rgba(16,185,129,0.05)', border: 'rgba(16,185,129,0.2)',
             kpiVal:   prevFinanceiro ? prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }) : '—',
             kpiLabel: 'MRR mensal',
-            chips: [],
-            miniGrid: prevFinanceiro ? {
-              rows: [
-                [
-                  { label: 'ARR',          val: prevFinanceiro.kpis.arr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#3b82f6' },
-                  { label: 'Ticket médio', val: prevFinanceiro.kpis.ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#8b5cf6' },
-                  { label: 'Conversão',    val: `${prevFinanceiro.kpis.taxaConversao}%`, cor: '#C9A65A' },
-                ],
-                [
-                  { label: 'Pagantes',  val: String(prevFinanceiro.kpis.totalPagantes),  cor: '#10b981' },
-                  { label: 'Em trial',  val: String(prevFinanceiro.kpis.totalTrials),    cor: '#C9A65A' },
-                  { label: 'Expirados', val: String(prevFinanceiro.kpis.totalExpirados), cor: '#ef4444' },
-                ],
-              ],
-              footer: `Novos 7d: ${prevFinanceiro.kpis.novas7d} assinatura${prevFinanceiro.kpis.novas7d !== 1 ? 's' : ''} · ${prevFinanceiro.kpis.receita7d.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}`,
-            } : undefined,
-            nota:    prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? `⚠ Churn 30d: ${prevFinanceiro.kpis.churnMensal}` : undefined,
-            notaCor: '#ef4444',
+            chips: prevFinanceiro ? [
+              { label: 'Pagantes',     val: String(prevFinanceiro.kpis.totalPagantes),  cor: '#10b981' },
+              { label: 'Em trial',     val: String(prevFinanceiro.kpis.totalTrials),    cor: '#C9A65A' },
+              { label: 'Expirados',    val: String(prevFinanceiro.kpis.totalExpirados), cor: '#ef4444' },
+              { label: 'ARR',          val: prevFinanceiro.kpis.arr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#3b82f6' },
+              { label: 'Ticket médio', val: prevFinanceiro.kpis.ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#8b5cf6' },
+              { label: 'Conversão',    val: `${prevFinanceiro.kpis.taxaConversao}%`, cor: '#C9A65A' },
+            ] : [],
+            nota: prevFinanceiro
+              ? (prevFinanceiro.kpis.churnMensal > 0
+                  ? `⚠ Churn 30d: ${prevFinanceiro.kpis.churnMensal}`
+                  : `📈 Novos 7d: ${prevFinanceiro.kpis.novas7d} · ${prevFinanceiro.kpis.receita7d.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}`)
+              : undefined,
+            notaCor: prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? '#ef4444' : '#3b82f6',
             vazio:   !prevFinanceiro,
             vazioMsg: carregando ? 'Carregando…' : 'Aguardando migração DB',
           },
