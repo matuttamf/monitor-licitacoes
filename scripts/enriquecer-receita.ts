@@ -5,13 +5,14 @@
  * Usa fetch direto à REST API do Supabase (sem postgrest-js client).
  */
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? ''
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '').replace(/\/$/, '')
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
 const CONCORRENCIA = 5
 const LOTE         = 500
 
-console.log('SUPABASE_URL:', SUPABASE_URL ? SUPABASE_URL.slice(0, 40) + '…' : '*** UNDEFINED ***')
+console.log('SUPABASE_URL:', SUPABASE_URL || '*** UNDEFINED ***')
+console.log('REST base:', `${SUPABASE_URL}/rest/v1`)
 console.log('SERVICE_KEY:', SERVICE_KEY ? `${SERVICE_KEY.length} chars` : '*** UNDEFINED ***')
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -21,17 +22,15 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 
 const REST = `${SUPABASE_URL}/rest/v1`
 const HEADERS_GET: Record<string, string> = {
-  'apikey':          SERVICE_KEY,
-  'Authorization':   `Bearer ${SERVICE_KEY}`,
-  'Accept':          'application/json',
-  'Accept-Profile':  'public',
+  'apikey':        SERVICE_KEY,
+  'Authorization': `Bearer ${SERVICE_KEY}`,
+  'Accept':        'application/json',
 }
 const HEADERS_PATCH: Record<string, string> = {
-  'apikey':           SERVICE_KEY,
-  'Authorization':    `Bearer ${SERVICE_KEY}`,
-  'Content-Type':     'application/json',
-  'Content-Profile':  'public',
-  'Prefer':           'return=minimal',
+  'apikey':        SERVICE_KEY,
+  'Authorization': `Bearer ${SERVICE_KEY}`,
+  'Content-Type':  'application/json',
+  'Prefer':        'return=minimal',
 }
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
