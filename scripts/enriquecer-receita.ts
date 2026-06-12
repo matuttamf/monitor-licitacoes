@@ -62,6 +62,7 @@ async function main() {
         const emailFinal     = emailDaReceita ?? lead.email ?? null
         const ativa          = dados.situacao_cadastral === 2
         const cnaeCode       = String(dados.cnae_fiscal ?? '').replace(/\D/g, '') || null
+        const telefone       = dados.ddd_telefone_1?.trim() || dados.ddd_telefone_2?.trim() || null
 
         if (!ativa) {
           totalInativos++
@@ -71,6 +72,9 @@ async function main() {
             cnae:         dados.cnae_fiscal_descricao ?? null,
             cnae_codigo:  cnaeCode,
             porte:        dados.porte ?? null,
+            telefone,
+            municipio:    dados.municipio ?? null,
+            uf:           dados.uf ?? null,
             status:       'invalido',
           }).eq('id', lead.id)
           return
@@ -81,7 +85,7 @@ async function main() {
           razao_social:  dados.razao_social,
           nome_fantasia: dados.nome_fantasia ?? null,
           email:         emailFinal,
-          telefone:      dados.ddd_telefone_1 ?? null,
+          telefone,
           municipio:     dados.municipio ?? null,
           uf:            dados.uf ?? null,
           situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
