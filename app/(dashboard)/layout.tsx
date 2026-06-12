@@ -69,7 +69,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       { href: '/admin/campanhas',     label: '↳ Campanhas',    icon: '📣', sub: true },
       { href: '/admin/captacao',      label: '↳ Captação',     icon: '🎯', sub: true },
       { href: '/admin/financeiro',    label: '↳ Financeiro',   icon: '💰', sub: true },
-      { href: '/admin/inteligencia',  label: '↳ Inteligência', icon: '📊', sub: true },
       { href: '/admin/saude',         label: '↳ Saúde',        icon: '🏥', sub: true },
     ] : []),
   ]

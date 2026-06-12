@@ -271,144 +271,155 @@ export default function AdminPage() {
       )}
 
       {/* ── Módulos com prévias ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', marginBottom: '24px' }}>
 
         {/* Financeiro */}
-        <a href="/admin/financeiro" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>💰 Financeiro</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+        <a href="/admin/financeiro" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#10b981' }}>💰 Financeiro</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
           </div>
           {prevFinanceiro ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {[
-                { label: 'MRR', val: prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#10b981' },
-                { label: 'Pagantes', val: String(prevFinanceiro.kpis.totalPagantes), cor: '#10b981' },
-                { label: 'Em trial', val: String(prevFinanceiro.kpis.totalTrials), cor: '#C9A65A' },
-                { label: 'Conversão', val: `${prevFinanceiro.kpis.taxaConversao}%`, cor: '#3b82f6' },
-              ].map(({ label, val, cor }) => (
-                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+            <>
+              <div style={{ fontSize: '22px', fontWeight: 900, color: '#10b981', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>MRR</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                {[
+                  { label: 'Pagantes',  val: String(prevFinanceiro.kpis.totalPagantes), cor: '#10b981' },
+                  { label: 'Trials',    val: String(prevFinanceiro.kpis.totalTrials),   cor: '#C9A65A' },
+                  { label: 'Conversão', val: `${prevFinanceiro.kpis.taxaConversao}%`,   cor: '#3b82f6' },
+                ].map(({ label, val, cor }) => (
+                  <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
+                    <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              {prevFinanceiro.kpis.churnMensal > 0 && (
+                <div style={{ marginTop: '8px', fontSize: '10px', color: '#ef4444' }}>
+                  ⚠ {prevFinanceiro.kpis.churnMensal} churn nos últimos 30d
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           ) : (
-            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Aguardando migração DB'}</span>
             </div>
           )}
         </a>
 
         {/* Campanhas */}
-        <a href="/admin/campanhas" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#8b5cf6' }}>📣 Campanhas</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+        <a href="/admin/campanhas" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#8b5cf6' }}>📣 Campanhas</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
           </div>
           {prevCampanhas ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {[
-                { label: 'Campanhas ativas', val: String(prevCampanhas.campanhas?.length ?? 0), cor: '#8b5cf6' },
-                { label: 'Com atribuição', val: String(prevCampanhas.totais?.comAtribuicao ?? 0), cor: '#8b5cf6' },
-                { label: 'Conversões', val: String(prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { conversoes: number } }) => s + (c.metricas?.conversoes ?? 0), 0) ?? 0), cor: '#10b981' },
-                { label: 'MRR campanhas', val: (prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { mrr: number } }) => s + (c.metricas?.mrr ?? 0), 0) ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#10b981' },
-              ].map(({ label, val, cor }) => (
-                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
-                </div>
-              ))}
-            </div>
+            <>
+              <div style={{ fontSize: '22px', fontWeight: 900, color: '#8b5cf6', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {prevCampanhas.campanhas?.length ?? 0}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>campanhas ativas</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                {[
+                  { label: 'Com UTM',     val: String(prevCampanhas.totais?.comAtribuicao ?? 0), cor: '#8b5cf6' },
+                  { label: 'Conversões',  val: String(prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { conversoes: number } }) => s + (c.metricas?.conversoes ?? 0), 0) ?? 0), cor: '#10b981' },
+                  { label: 'MRR gerado',  val: (prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { mrr: number } }) => s + (c.metricas?.mrr ?? 0), 0) ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#10b981' },
+                ].map(({ label, val, cor }) => (
+                  <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
+                    <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
-            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Aguardando migração DB'}</span>
             </div>
           )}
         </a>
 
         {/* Captação */}
-        <a href="/admin/captacao" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(201,166,90,0.05)', border: '1px solid rgba(201,166,90,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#a07a20' }}>🎯 Captação</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+        <a href="/admin/captacao" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(201,166,90,0.05)', border: '1px solid rgba(201,166,90,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#a07a20' }}>🎯 Captação</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
           </div>
           {stats ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {[
-                { label: 'Leads coletados', val: stats.leadsTotal.toLocaleString('pt-BR'), cor: '#a07a20' },
-                { label: 'Aguardando envio', val: stats.leadsPendentes.toLocaleString('pt-BR'), cor: '#C9A65A' },
-                { label: 'E-mails enviados', val: stats.leadsEnviados.toLocaleString('pt-BR'), cor: '#10b981' },
-                { label: 'Taxa envio', val: stats.leadsTotal > 0 ? `${Math.round(stats.leadsEnviados / stats.leadsTotal * 100)}%` : '—', cor: '#3b82f6' },
-              ].map(({ label, val, cor }) => (
-                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+            <>
+              <div style={{ fontSize: '22px', fontWeight: 900, color: '#a07a20', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {stats.leadsTotal.toLocaleString('pt-BR')}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>leads coletados</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                {[
+                  { label: 'Pendentes', val: stats.leadsPendentes.toLocaleString('pt-BR'),  cor: '#C9A65A' },
+                  { label: 'Enviados',  val: stats.leadsEnviados.toLocaleString('pt-BR'),   cor: '#10b981' },
+                  { label: 'Taxa',      val: stats.leadsTotal > 0 ? `${Math.round(stats.leadsEnviados / stats.leadsTotal * 100)}%` : '—', cor: '#3b82f6' },
+                ].map(({ label, val, cor }) => (
+                  <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
+                    <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              {cadastroBloqueado && (
+                <div style={{ marginTop: '8px', fontSize: '10px', color: '#ef4444' }}>
+                  ⚠ Cadastro bloqueado
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           ) : (
-            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
             </div>
           )}
         </a>
 
         {/* Saúde dos jobs */}
-        <a href="/admin/saude" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#f97316' }}>🏥 Saúde dos jobs</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+        <a href="/admin/saude" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#f97316' }}>🏥 Saúde</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
           </div>
           {cronData ? (() => {
-            const jobs = Object.entries(cronData.ultimasPorJob)
-            const ok    = jobs.filter(([, v]) => v?.status === 'ok' || v?.status === 'sucesso').length
-            const erros = jobs.filter(([, v]) => v?.status === 'erro').length
+            const jobs     = Object.entries(cronData.ultimasPorJob)
+            const ok       = jobs.filter(([, v]) => v?.status === 'ok' || v?.status === 'sucesso').length
+            const erros    = jobs.filter(([, v]) => v?.status === 'erro').length
             const semDados = jobs.filter(([, v]) => !v).length
+            const ultimoLog = cronData.logs[0]
             return (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                {[
-                  { label: 'Jobs monitorados', val: String(jobs.length),  cor: '#f97316' },
-                  { label: 'Rodando OK',        val: String(ok),           cor: '#10b981' },
-                  { label: 'Com erro',           val: String(erros),        cor: erros > 0 ? '#ef4444' : 'var(--cinza)' },
-                  { label: 'Sem execução',       val: String(semDados),     cor: semDados > 0 ? '#C9A65A' : 'var(--cinza)' },
-                ].map(({ label, val, cor }) => (
-                  <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+              <>
+                <div style={{ fontSize: '22px', fontWeight: 900, color: erros > 0 ? '#ef4444' : '#10b981', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                  {erros > 0 ? `${erros} erro${erros > 1 ? 's' : ''}` : `${ok}/${jobs.length} OK`}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>
+                  {erros > 0 ? 'jobs com falha' : 'jobs rodando bem'}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                  {[
+                    { label: 'Jobs',         val: String(jobs.length),  cor: '#f97316' },
+                    { label: 'Com erro',     val: String(erros),         cor: erros > 0 ? '#ef4444' : 'var(--cinza)' },
+                    { label: 'Sem execução', val: String(semDados),      cor: semDados > 0 ? '#C9A65A' : 'var(--cinza)' },
+                  ].map(({ label, val, cor }) => (
+                    <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
+                      <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                {ultimoLog && (
+                  <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--cinza)' }}>
+                    Último: {JOB_LABELS[ultimoLog.job] ?? ultimoLog.job} · {fmtHora(ultimoLog.criado_em)}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )
           })() : (
-            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
-            </div>
-          )}
-        </a>
-
-        {/* Inteligência */}
-        <a href="/admin/inteligencia" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6' }}>📊 Inteligência</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
-          </div>
-          {stats ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {[
-                { label: 'Licitações no banco', val: stats.totalLicitacoes.toLocaleString('pt-BR'), cor: '#3b82f6' },
-                { label: 'Alertas hoje',         val: String(stats.alertasHoje),                     cor: '#3b82f6' },
-                { label: 'Alertas 7 dias',       val: String(stats.alertas7d),                       cor: '#8b5cf6' },
-                { label: 'Keywords ativas',      val: stats.totalKeywords.toLocaleString('pt-BR'),   cor: '#6B0F1A' },
-              ].map(({ label, val, cor }) => (
-                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
             </div>
           )}
