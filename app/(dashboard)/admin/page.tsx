@@ -307,7 +307,7 @@ export default function AdminPage() {
           }))
 
         // Dados pré-calculados para Campanhas
-        const campTotal    = prevCampanhas?.campanhas?.filter((c: { ativo: boolean }) => c.ativo)?.length ?? 0
+        const campTotal    = prevCampanhas?.campanhas?.filter((c: unknown) => (c as { ativo: boolean }).ativo)?.length ?? 0
         const campUTM      = prevCampanhas?.totais?.comAtribuicao ?? 0
         const campConv     = prevCampanhas?.campanhas?.reduce((s: number, c: { metricas: { conversoes: number } }) => s + (c.metricas?.conversoes ?? 0), 0) ?? 0
         const campMRR      = prevCampanhas?.campanhas?.reduce((s: number, c: { metricas: { mrr: number } }) => s + (c.metricas?.mrr ?? 0), 0) ?? 0
