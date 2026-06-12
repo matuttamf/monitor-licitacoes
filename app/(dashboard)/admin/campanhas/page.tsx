@@ -408,7 +408,7 @@ export default function CampanhasPage() {
               {testeRes && (
                 <div style={{ fontSize: '13px', fontWeight: 600, color: testeRes.ok ? '#10b981' : '#ef4444', padding: '8px 14px', borderRadius: '10px', background: testeRes.ok ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.06)' }}>
                   {testeRes.ok ? `✓ ${testeRes.mensagem}` : `✕ ${testeRes.erro}`}
-                  {testeRes.detalhe && <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '2px', opacity: 0.8 }}>{(testeRes as Record<string, string>).detalhe}</div>}
+                  {testeRes.detalhe && <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '2px', opacity: 0.8 }}>{testeRes.detalhe}</div>}
                 </div>
               )}
             </div>
