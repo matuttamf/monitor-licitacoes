@@ -2,19 +2,22 @@
 
 import { useState, useEffect } from 'react'
 
-const MIN = 218
-const MAX = 247
-
-function randomBetween(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
+const MIN = 221
+const MAX = 241
 
 export default function ContadorAoVivo() {
   const [count, setCount] = useState(230)
 
   useEffect(() => {
-    setCount(randomBetween(MIN, MAX))
-    const id = setInterval(() => setCount(randomBetween(MIN, MAX)), 60_000)
+    const id = setInterval(() => {
+      setCount(prev => {
+        const delta = Math.random() < 0.5 ? 1 : -1
+        const next = prev + delta
+        if (next < MIN) return prev + 1
+        if (next > MAX) return prev - 1
+        return next
+      })
+    }, 60_000)
     return () => clearInterval(id)
   }, [])
 
