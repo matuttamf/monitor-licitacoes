@@ -208,15 +208,15 @@ export default function SaudePage() {
   const globalLabel = global === 'critico' ? '🔴 Estado Crítico'  : global === 'atencao' ? '🟡 Atenção Necessária' : '🟢 Sistema Saudável'
 
   return (
-    <div style={{ padding: '24px 28px', maxWidth: 1100, fontFamily: 'system-ui, sans-serif' }}>
+    <div className="max-w-7xl mx-auto">
 
       {/* Cabeçalho */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0f172a' }}>🏥 Saúde do Sistema</h1>
-          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-            {ultimaAtt ? `Atualizado ${tempoAtras(ultimaAtt.toISOString())} · atualiza automaticamente a cada 1 min` : ''}
-          </div>
+          <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>🏥 Saúde do Sistema</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--cinza)' }}>
+            {ultimaAtt ? `Atualizado ${tempoAtras(ultimaAtt.toISOString())} · atualiza automaticamente a cada 1 min` : 'Carregando…'}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ background: globalCor + '22', color: globalCor, border: `1px solid ${globalCor}55`, borderRadius: 20, padding: '4px 14px', fontSize: 13, fontWeight: 600 }}>
@@ -225,7 +225,7 @@ export default function SaudePage() {
           <button
             onClick={() => carregar(true)}
             disabled={refreshing}
-            style={{ background: refreshing ? '#e2e8f0' : '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 14px', cursor: refreshing ? 'not-allowed' : 'pointer', fontSize: 13, color: '#475569', opacity: refreshing ? 0.7 : 1 }}
+            style={{ fontSize: '12px', color: 'var(--cinza)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--cinza-light)', background: 'white', cursor: refreshing ? 'not-allowed' : 'pointer', opacity: refreshing ? 0.7 : 1 }}
           >
             {refreshing ? '⟳ Atualizando…' : '↻ Atualizar'}
           </button>
