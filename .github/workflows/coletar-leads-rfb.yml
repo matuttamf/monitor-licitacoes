@@ -1,9 +1,10 @@
-name: Coleta Leads RFB (mensal)
+name: Coleta Leads RFB
 
 on:
-  # Roda todo dia 15 às 6h UTC (RFB publica entre dias 10-15 do mês seguinte)
+  # Todo domingo às 6h UTC — RFB atualiza mensalmente mas relemos para
+  # capturar novos CNPJs, enriquecer e-mails e resetar tentativas bloqueadas
   schedule:
-    - cron: '0 6 15 * *'
+    - cron: '0 6 * * 0'
   # Permite disparo manual pelo GitHub UI (Actions → Run workflow)
   workflow_dispatch:
     inputs:
