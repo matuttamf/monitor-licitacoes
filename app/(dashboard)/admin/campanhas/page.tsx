@@ -164,6 +164,77 @@ export default function CampanhasPage() {
     carregar()
   }
 
+  function exportarPDF(c: Campanha) {
+    const comissaoLabel =
+      c.comissao_tipo === 'percentual' ? `${c.comissao_valor}% do MRR` :
+      c.comissao_tipo === 'fixo'       ? `R$ ${c.comissao_valor.toFixed(2).replace('.', ',')} por conversão` :
+      'Sem comissão'
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Relatório — ${c.nome}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;color:#0f172a;background:#fff;padding:48px 56px}
+  h1{font-size:22px;font-weight:800;margin-bottom:4px}
+  .sub{font-size:13px;color:#64748b;margin-bottom:32px}
+  .section{margin-bottom:28px}
+  .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:6px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+  .kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px}
+  .kpi-val{font-size:22px;font-weight:800;color:#6B0F1A;letter-spacing:-0.03em}
+  .kpi-label{font-size:11px;color:#64748b;margin-top:3px}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+  .row:last-child{border-bottom:none}
+  .row strong{font-weight:600}
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#fef2f2;color:#6B0F1A;border:1px solid rgba(107,15,26,.15)}
+  .comissao-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px;font-size:13px}
+  .comissao-box .val{font-size:20px;font-weight:800;color:#16a34a;margin-top:4px}
+  footer{margin-top:40px;font-size:11px;color:#94a3b8;text-align:center}
+  @media print{body{padding:32px 40px}}
+</style></head><body>
+<h1>📣 ${c.nome}</h1>
+<div class="sub">
+  Relatório gerado em ${new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'long',year:'numeric'})} &nbsp;·&nbsp;
+  Campanha desde ${new Date(c.criado_em).toLocaleDateString('pt-BR')} &nbsp;·&nbsp;
+  Código: <strong>${c.codigo}</strong> &nbsp;·&nbsp; <span class="badge">${c.tipo.charAt(0).toUpperCase()+c.tipo.slice(1)}</span>
+</div>
+
+<div class="section">
+  <div class="section-title">Métricas de Desempenho</div>
+  <div class="grid">
+    <div class="kpi"><div class="kpi-val">${c.metricas.registros}</div><div class="kpi-label">Cadastros via campanha</div></div>
+    <div class="kpi"><div class="kpi-val">${c.metricas.conversoes}</div><div class="kpi-label">Conversões (ativos)</div></div>
+    <div class="kpi"><div class="kpi-val">${c.metricas.taxaConversao}%</div><div class="kpi-label">Taxa de conversão</div></div>
+  </div>
+  <div class="grid">
+    <div class="kpi"><div class="kpi-val">${moeda(c.metricas.mrr)}</div><div class="kpi-label">MRR gerado</div></div>
+    <div class="kpi"><div class="kpi-val">${moeda(c.metricas.mrr * 12)}</div><div class="kpi-label">ARR estimado</div></div>
+    <div class="kpi"><div class="kpi-val">${c.metricas.conversoes30d}</div><div class="kpi-label">Conversões últimos 30d</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Acordo de Comissão</div>
+  <div class="comissao-box">
+    <div>Modelo: <strong>${comissaoLabel}</strong></div>
+    <div class="val">${moeda(c.metricas.comissaoTotal)} a pagar</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Detalhes</div>
+  <div class="row"><span>Status</span><strong>${c.ativo ? 'Ativa' : 'Pausada'}</strong></div>
+  ${c.descricao ? `<div class="row"><span>Descrição</span><strong>${c.descricao}</strong></div>` : ''}
+  ${c.url_destino ? `<div class="row"><span>URL de destino</span><strong>${c.url_destino}</strong></div>` : ''}
+  <div class="row"><span>Churn últimos 30d</span><strong>${c.metricas.churn30d}</strong></div>
+</div>
+
+<footer>Monitor de Licitações — monitordelicitacoes.com.br</footer>
+<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script>
+</body></html>`
+    const win = window.open('', '_blank', 'width=900,height=700')
+    if (win) { win.document.write(html); win.document.close() }
+  }
+
   async function testarMP() {
     setTestando(true); setTesteRes(null)
     const res = await fetch('/api/admin/config/mercadopago', { method: 'POST' })
@@ -354,6 +425,7 @@ export default function CampanhasPage() {
                         <button onClick={() => toggleAtivo(c)} style={{ fontSize: '11px', padding: '4px 9px', borderRadius: '7px', background: c.ativo ? 'rgba(239,68,68,0.07)' : 'rgba(16,185,129,0.1)', color: c.ativo ? '#ef4444' : '#10b981', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                           {c.ativo ? 'Pausar' : 'Ativar'}
                         </button>
+                        <button onClick={() => exportarPDF(c)} style={{ fontSize: '11px', padding: '4px 9px', borderRadius: '7px', background: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'none', cursor: 'pointer', fontWeight: 600 }}>PDF</button>
                         <button onClick={() => excluirCampanha(c)} style={{ fontSize: '11px', padding: '4px 9px', borderRadius: '7px', background: 'rgba(100,116,139,0.08)', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Excluir</button>
                       </div>
                     </div>
