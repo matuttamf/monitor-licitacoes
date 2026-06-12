@@ -155,12 +155,32 @@ export async function POST(request: Request) {
       }
 
     } else if (['cancelled', 'paused'].includes(subscription.status)) {
-      await supabase.from('profiles').update({
-        status:            'expired',
-        mp_subscription_id: null,
-      }).eq('id', userId)
+      // Mantém acesso ativo até o fim do período já pago.
+      // date_of_next_payment é a data em que SERIA a próxima cobrança — coincide
+      // com o fim do ciclo atual que já foi cobrado.
+      const proximaCobranca: string | null = subscription.next_payment_date
+        ?? subscription.date_of_next_payment
+        ?? null
 
-      console.log(`[webhook/mp] Assinatura cancelada/pausada: user=${userId} status=${subscription.status}`)
+      const updateCancelado: Record<string, unknown> = {
+        mp_subscription_id: null,
+      }
+
+      if (proximaCobranca) {
+        // Acesso liberado até o fim do ciclo pago; cron expirar-trials encerra depois
+        updateCancelado.acesso_ate = new Date(proximaCobranca).toISOString()
+        // Mantém 'active' — o cron vai expirar quando acesso_ate passar
+      } else {
+        // Sem data de fim conhecida: encerra imediatamente
+        updateCancelado.status = 'expired'
+      }
+
+      await supabase.from('profiles').update(updateCancelado).eq('id', userId)
+
+      console.log(
+        `[webhook/mp] Assinatura ${subscription.status}: user=${userId}` +
+        (proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado imediatamente')
+      )
     }
   }
 

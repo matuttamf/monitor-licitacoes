@@ -19,7 +19,10 @@ const PRECOS: Record<string, number> = {
 
 export async function GET() {
   const admin = await verificarAdmin()
-  if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+  if (!admin) {
+    console.warn('[admin/financeiro] GET: acesso negado')
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+  }
 
   const supabase = createAdminClient()
 
@@ -29,7 +32,7 @@ export async function GET() {
     .select(`
       id, status, plano, trial_inicio, trial_fim, criado_em,
       nome, empresa, telefone, whatsapp,
-      mp_subscription_id, assinatura_inicio, valor_mensalidade,
+      mp_subscription_id, assinatura_inicio, valor_mensalidade, acesso_ate,
       cnpj, cpf, tipo_pessoa, razao_social, nome_fantasia, ie,
       cep, logradouro, numero, complemento, bairro, cidade, estado_uf
     `)
@@ -62,6 +65,7 @@ export async function GET() {
       trial_fim:           p.trial_fim,
       criado_em:           p.criado_em,
       mp_subscription_id:  p.mp_subscription_id,
+      acesso_ate:          p.acesso_ate ?? null,
       // Dados NF
       cnpj:        p.cnpj,
       cpf:         p.cpf,
@@ -111,15 +115,19 @@ export async function GET() {
     })),
   }
 
+  console.log(`[admin/financeiro] GET: ${assinantes.length} perfis, MRR=${kpis.mrr}`)
   return NextResponse.json({ kpis, assinantes })
 }
 
 export async function PATCH(request: Request) {
   const admin = await verificarAdmin()
-  if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+  if (!admin) {
+    console.warn('[admin/financeiro] PATCH: acesso negado')
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+  }
 
   const body = await request.json()
-  const { id, status, plano, valor_mensalidade, assinatura_inicio } = body
+  const { id, status, plano, valor_mensalidade, assinatura_inicio, acesso_ate } = body
   if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 })
 
   const supabase = createAdminClient()
@@ -129,8 +137,13 @@ export async function PATCH(request: Request) {
   if (plano              !== undefined) update.plano              = plano
   if (valor_mensalidade  !== undefined) update.valor_mensalidade  = valor_mensalidade
   if (assinatura_inicio  !== undefined) update.assinatura_inicio  = assinatura_inicio
+  if (acesso_ate         !== undefined) update.acesso_ate         = acesso_ate
 
   const { error } = await supabase.from('profiles').update(update).eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[admin/financeiro] PATCH erro:', error.message, { id })
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  console.log('[admin/financeiro] PATCH:', { id, campos: Object.keys(update) })
   return NextResponse.json({ ok: true })
 }

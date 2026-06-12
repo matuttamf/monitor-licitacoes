@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const supabase = await createServiceClient()
   const agora = new Date().toISOString()
 
-  // Marca como expired todos os trials com trial_fim no passado
+  // Expira trials vencidos
   const { data, error } = await supabase
     .from('profiles')
     .update({ status: 'expired' })
@@ -26,8 +26,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // Expira assinaturas canceladas cujo período pago já terminou
+  const { data: assinaturasExpiradas } = await supabase
+    .from('profiles')
+    .update({ status: 'expired', acesso_ate: null })
+    .eq('status', 'active')
+    .not('acesso_ate', 'is', null)
+    .lt('acesso_ate', agora)
+    .select('id')
+
   const expirados = data?.length ?? 0
-  console.log(`${expirados} trial(s) expirado(s) automaticamente`)
+  const assinaturasExp = assinaturasExpiradas?.length ?? 0
+  console.log(`${expirados} trial(s) e ${assinaturasExp} assinatura(s) cancelada(s) expirada(s)`)
 
   // Limpeza automática: remover cron_logs com mais de 90 dias
   await supabase
@@ -35,6 +45,10 @@ export async function GET(request: Request) {
     .delete()
     .lt('criado_em', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
 
-  await registrarCronLog({ job: 'expirar-trials', status: 'ok', mensagem: `${expirados} trial(s) expirado(s)` })
+  await registrarCronLog({
+    job: 'expirar-trials',
+    status: 'ok',
+    mensagem: `${expirados} trial(s) + ${assinaturasExp} assinatura(s) cancelada(s) expirada(s)`,
+  })
   return NextResponse.json({ ok: true, expirados })
 }

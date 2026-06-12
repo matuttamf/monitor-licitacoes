@@ -15,6 +15,7 @@ type Assinante = {
   plano: string
   valor_mensalidade: number | null
   assinatura_inicio: string | null
+  acesso_ate: string | null
   trial_fim: string | null
   criado_em: string
   mp_subscription_id: string | null
@@ -32,6 +33,17 @@ type Assinante = {
   bairro: string | null
   cidade: string | null
   estado_uf: string | null
+}
+
+type SyncResultado = {
+  userId: string
+  subscriptionId: string
+  statusMP: string
+  statusAntes: string
+  statusDepois: string
+  acessoAte: string | null
+  valor: number | null
+  erro?: string
 }
 
 type ReceitaPlano = { plano: string; count: number; receita: number }
@@ -58,6 +70,14 @@ const meses = (d: string | null) => {
   const m = Math.floor(diff / (30 * 24 * 3600 * 1000))
   return m === 0 ? 'Este mês' : m === 1 ? '1 mês' : `${m} meses`
 }
+const diasRestantes = (d: string | null) => {
+  if (!d) return null
+  const diff = new Date(d).getTime() - Date.now()
+  const dias = Math.ceil(diff / (24 * 3600 * 1000))
+  if (dias < 0) return 'Expirado'
+  if (dias === 0) return 'Hoje'
+  return `${dias}d restantes`
+}
 
 const PLANO_CORES: Record<string, { bg: string; cor: string }> = {
   basic:        { bg: 'rgba(107,15,26,0.08)',   cor: '#6B0F1A'  },
@@ -73,18 +93,31 @@ const STATUS_CORES: Record<string, { bg: string; cor: string; label: string }> =
   bloqueado: { bg: 'rgba(107,15,26,0.1)',  cor: '#6B0F1A', label: 'Bloqueado' },
 }
 
+const MP_STATUS_LABEL: Record<string, { label: string; cor: string }> = {
+  authorized:  { label: '✓ Autorizado',    cor: '#10b981' },
+  paused:      { label: '⏸ Pausado',       cor: '#f97316' },
+  cancelled:   { label: '✕ Cancelado',     cor: '#ef4444' },
+  pending:     { label: '⏳ Pendente',      cor: '#C9A65A' },
+  in_process:  { label: '⏳ Em processo',  cor: '#C9A65A' },
+  expired:     { label: '✕ Expirado',      cor: '#ef4444' },
+  erro_api:    { label: '⚠ Erro API',      cor: '#6B0F1A' },
+}
+
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function FinanceiroPage() {
-  const [kpis, setKpis]             = useState<Kpis | null>(null)
-  const [assinantes, setAssinantes] = useState<Assinante[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [aba, setAba]               = useState<'assinantes' | 'nf' | 'bloqueados'>('assinantes')
-  const [busca, setBusca]           = useState('')
+  const [kpis, setKpis]               = useState<Kpis | null>(null)
+  const [assinantes, setAssinantes]   = useState<Assinante[]>([])
+  const [carregando, setCarregando]   = useState(true)
+  const [aba, setAba]                 = useState<'assinantes' | 'nf' | 'bloqueados'>('assinantes')
+  const [busca, setBusca]             = useState('')
   const [filtroPlano, setFiltroPlano] = useState('todos')
-  const [editando, setEditando]     = useState<Assinante | null>(null)
-  const [salvando, setSalvando]     = useState(false)
-  const [acaoId, setAcaoId]         = useState<string | null>(null)
+  const [editando, setEditando]       = useState<Assinante | null>(null)
+  const [salvando, setSalvando]       = useState(false)
+  const [acaoId, setAcaoId]           = useState<string | null>(null)
+  const [sincronizando, setSincronizando] = useState(false)
+  const [syncId, setSyncId]           = useState<string | null>(null)
+  const [syncResultado, setSyncResultado] = useState<SyncResultado[] | null>(null)
 
   async function carregar() {
     setCarregando(true)
@@ -117,9 +150,9 @@ export default function FinanceiroPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id:               editando.id,
-        plano:            editando.plano,
-        status:           editando.status,
+        id:                editando.id,
+        plano:             editando.plano,
+        status:            editando.status,
         valor_mensalidade: editando.valor_mensalidade,
         assinatura_inicio: editando.assinatura_inicio,
       }),
@@ -129,8 +162,25 @@ export default function FinanceiroPage() {
     carregar()
   }
 
-  const pagantes  = assinantes.filter(a => a.status === 'active')
-  const trials    = assinantes.filter(a => a.status === 'trial')
+  async function sincronizarMP(userId?: string) {
+    if (userId) setSyncId(userId)
+    else setSincronizando(true)
+    setSyncResultado(null)
+
+    const res = await fetch('/api/admin/financeiro/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userId ? { userId } : {}),
+    })
+    const d = await res.json()
+    setSyncResultado(d.detalhes ?? [])
+    setSincronizando(false)
+    setSyncId(null)
+    carregar()
+  }
+
+  const pagantes   = assinantes.filter(a => a.status === 'active')
+  const trials     = assinantes.filter(a => a.status === 'trial')
   const bloqueados = assinantes.filter(a => a.status === 'bloqueado' || a.status === 'expired')
 
   function filtrar(lista: Assinante[]) {
@@ -160,7 +210,7 @@ export default function FinanceiroPage() {
     <div className="max-w-7xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <a href="/admin" className="text-xs font-medium mb-1 block" style={{ color: 'var(--cinza)', textDecoration: 'none' }}>
             ← Painel Admin
@@ -168,10 +218,51 @@ export default function FinanceiroPage() {
           <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>💰 Financeiro</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--cinza)' }}>Receita, assinaturas, pagamentos e dados fiscais</p>
         </div>
-        <button onClick={carregar} style={{ fontSize: '12px', color: 'var(--cinza)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--cinza-light)', background: 'white', cursor: 'pointer' }}>
-          ↺ Atualizar
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={() => sincronizarMP()}
+            disabled={sincronizando}
+            style={{
+              fontSize: '13px', fontWeight: 600, padding: '9px 18px', borderRadius: '10px',
+              background: sincronizando ? '#9AA0A6' : '#009ee3',
+              color: 'white', border: 'none', cursor: sincronizando ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: '6px',
+            }}>
+            {sincronizando ? '⏳ Sincronizando…' : '↺ Sync MercadoPago'}
+          </button>
+          <button onClick={carregar} style={{ fontSize: '12px', color: 'var(--cinza)', padding: '9px 14px', borderRadius: '8px', border: '1px solid var(--cinza-light)', background: 'white', cursor: 'pointer' }}>
+            ↺ Atualizar
+          </button>
+        </div>
       </div>
+
+      {/* Resultado do sync */}
+      {syncResultado && syncResultado.length > 0 && (
+        <div className="rounded-2xl p-4 mb-5" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)' }}>
+              Resultado da sincronização — {syncResultado.length} assinatura(s)
+            </span>
+            <button onClick={() => setSyncResultado(null)} style={{ fontSize: '12px', color: 'var(--cinza)', background: 'none', border: 'none', cursor: 'pointer' }}>✕ fechar</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {syncResultado.map(r => {
+              const mp = MP_STATUS_LABEL[r.statusMP] ?? { label: r.statusMP, cor: 'var(--cinza)' }
+              const mudou = r.statusAntes !== r.statusDepois
+              return (
+                <div key={r.userId} style={{ fontSize: '12px', display: 'flex', gap: '12px', alignItems: 'center', padding: '6px 12px', borderRadius: '8px', background: mudou ? 'rgba(16,185,129,0.05)' : 'var(--surface-2)' }}>
+                  <span style={{ fontWeight: 600, color: mp.cor }}>{mp.label}</span>
+                  <span style={{ color: 'var(--cinza)', fontFamily: 'monospace', fontSize: '11px' }}>{r.userId.slice(0, 8)}…</span>
+                  {mudou && <span style={{ color: '#10b981', fontWeight: 600 }}>{r.statusAntes} → {r.statusDepois}</span>}
+                  {r.acessoAte && <span style={{ color: '#f97316' }}>acesso até {fmt(r.acessoAte)}</span>}
+                  {r.valor && <span style={{ color: 'var(--preto)' }}>{moeda(r.valor)}/mês</span>}
+                  {r.erro && <span style={{ color: '#ef4444' }}>{r.erro}</span>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       {carregando ? (
@@ -182,25 +273,24 @@ export default function FinanceiroPage() {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
             {[
-              { label: 'MRR',          value: moeda(kpis.mrr),                        sub: 'receita mensal recorrente',   cor: '#10b981',  destaque: true },
-              { label: 'ARR',          value: moeda(kpis.arr),                        sub: 'receita anual projetada',     cor: '#3b82f6'  },
-              { label: 'Ticket médio', value: moeda(kpis.ticketMedio),               sub: `${kpis.totalPagantes} pagantes`,  cor: '#8b5cf6'  },
-              { label: 'Conversão',    value: `${kpis.taxaConversao}%`,              sub: 'trials → assinantes',         cor: '#C9A65A'  },
+              { label: 'MRR',          value: moeda(kpis.mrr),           sub: 'receita mensal recorrente', cor: '#10b981', destaque: true },
+              { label: 'ARR',          value: moeda(kpis.arr),           sub: 'receita anual projetada',   cor: '#3b82f6' },
+              { label: 'Ticket médio', value: moeda(kpis.ticketMedio),   sub: `${kpis.totalPagantes} pagantes`, cor: '#8b5cf6' },
+              { label: 'Conversão',    value: `${kpis.taxaConversao}%`,  sub: 'trials → assinantes',       cor: '#C9A65A' },
             ].map(({ label, value, sub, cor, destaque }) => (
-              <div key={label} style={{ background: destaque ? `linear-gradient(135deg, #064e3b 0%, #065f46 100%)` : 'white', border: destaque ? 'none' : '1px solid var(--cinza-light)', borderRadius: '16px', padding: '18px 20px' }}>
+              <div key={label} style={{ background: destaque ? 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)' : 'white', border: destaque ? 'none' : '1px solid var(--cinza-light)', borderRadius: '16px', padding: '18px 20px' }}>
                 <div style={{ fontSize: '24px', fontWeight: 800, color: destaque ? '#34d399' : cor, letterSpacing: '-0.03em' }}>{value}</div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: destaque ? 'rgba(255,255,255,0.9)' : 'var(--preto)', marginTop: '4px' }}>{label}</div>
                 <div style={{ fontSize: '11px', color: destaque ? 'rgba(255,255,255,0.5)' : 'var(--cinza)', marginTop: '2px' }}>{sub}</div>
               </div>
             ))}
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
             {[
-              { label: 'Pagantes',    value: kpis.totalPagantes,  sub: 'assinaturas ativas', cor: '#10b981' },
-              { label: 'Em trial',    value: kpis.totalTrials,    sub: 'período gratuito',   cor: '#C9A65A' },
-              { label: 'Expirados',   value: kpis.totalExpirados, sub: 'sem renovação',      cor: '#ef4444' },
-              { label: 'Churn/30d',   value: kpis.churnMensal,    sub: 'trials expirados',   cor: '#f97316' },
+              { label: 'Pagantes',  value: kpis.totalPagantes,  sub: 'assinaturas ativas', cor: '#10b981' },
+              { label: 'Em trial',  value: kpis.totalTrials,    sub: 'período gratuito',   cor: '#C9A65A' },
+              { label: 'Expirados', value: kpis.totalExpirados, sub: 'sem renovação',      cor: '#ef4444' },
+              { label: 'Churn/30d', value: kpis.churnMensal,    sub: 'trials expirados',   cor: '#f97316' },
             ].map(({ label, value, sub, cor }) => (
               <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '14px', padding: '14px 18px' }}>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>{value}</div>
@@ -215,10 +305,10 @@ export default function FinanceiroPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Receita por plano</h2>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {kpis.receitaPorPlano.filter(r => r.count > 0).map(r => {
-                const cores = PLANO_CORES[r.plano] ?? PLANO_CORES.basic
+                const c = PLANO_CORES[r.plano] ?? PLANO_CORES.basic
                 return (
-                  <div key={r.plano} style={{ flex: 1, minWidth: '140px', padding: '12px 16px', borderRadius: '12px', background: cores.bg, border: `1px solid ${cores.cor}30` }}>
-                    <div style={{ fontSize: '16px', fontWeight: 800, color: cores.cor }}>{moeda(r.receita)}</div>
+                  <div key={r.plano} style={{ flex: 1, minWidth: '140px', padding: '12px 16px', borderRadius: '12px', background: c.bg, border: `1px solid ${c.cor}30` }}>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: c.cor }}>{moeda(r.receita)}</div>
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', marginTop: '2px', textTransform: 'capitalize' }}>{r.plano}</div>
                     <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{r.count} assinante{r.count !== 1 ? 's' : ''}</div>
                   </div>
@@ -232,7 +322,7 @@ export default function FinanceiroPage() {
         </>
       )}
 
-      {/* Abas */}
+      {/* Abas + Filtros */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           {([
@@ -241,24 +331,14 @@ export default function FinanceiroPage() {
             ['bloqueados', `Expirados/Bloqueados (${bloqueados.length})`],
           ] as const).map(([id, label]) => (
             <button key={id} onClick={() => setAba(id)}
-              style={{
-                padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                background: aba === id ? 'var(--vinho)' : 'white',
-                color: aba === id ? 'white' : 'var(--cinza)',
-                border: aba === id ? 'none' : '1px solid var(--cinza-light)',
-              } as React.CSSProperties}>
+              style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', background: aba === id ? 'var(--vinho)' : 'white', color: aba === id ? 'white' : 'var(--cinza)', border: aba === id ? 'none' : '1px solid var(--cinza-light)' } as React.CSSProperties}>
               {label}
             </button>
           ))}
         </div>
-
-        {/* Filtros */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input
-            value={busca} onChange={e => setBusca(e.target.value)}
-            placeholder="Buscar nome, e-mail, CNPJ…"
-            style={{ padding: '8px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white', width: '220px' }}
-          />
+          <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar nome, e-mail, CNPJ…"
+            style={{ padding: '8px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white', width: '220px' }} />
           <select value={filtroPlano} onChange={e => setFiltroPlano(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white' }}>
             <option value="todos">Todos os planos</option>
@@ -280,15 +360,16 @@ export default function FinanceiroPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-                  {['Assinante', 'Plano / Valor', 'Status', 'Assinante desde', 'Trial fim', 'MercadoPago', 'Ações'].map(h => (
+                  {['Assinante', 'Plano / Valor', 'Status', 'Assinante desde', 'Acesso até', 'MercadoPago', 'Ações'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {abaLista.map(a => {
-                  const sc  = STATUS_CORES[a.status] ?? STATUS_CORES.expired
-                  const pc  = PLANO_CORES[a.plano]   ?? PLANO_CORES.basic
+                  const sc = STATUS_CORES[a.status] ?? STATUS_CORES.expired
+                  const pc = PLANO_CORES[a.plano]   ?? PLANO_CORES.basic
+                  const emGracePeriod = a.acesso_ate && a.status === 'active' && !a.mp_subscription_id
                   return (
                     <tr key={a.id} className="hover:bg-gray-50 transition-colors" style={{ borderBottom: '1px solid var(--cinza-light)' }}>
                       <td className="px-4 py-3">
@@ -308,27 +389,41 @@ export default function FinanceiroPage() {
                         <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: '8px', background: sc.bg, color: sc.cor }}>
                           {sc.label}
                         </span>
+                        {emGracePeriod && (
+                          <div style={{ fontSize: '10px', color: '#f97316', marginTop: '3px', fontWeight: 600 }}>
+                            Cancelado — em carência
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div style={{ fontSize: '13px', color: 'var(--preto)' }}>{fmt(a.assinatura_inicio)}</div>
-                        {a.assinatura_inicio && (
-                          <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{meses(a.assinatura_inicio)}</div>
-                        )}
+                        {a.assinatura_inicio && <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{meses(a.assinatura_inicio)}</div>}
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: a.trial_fim && new Date(a.trial_fim) < new Date() ? '#ef4444' : 'var(--cinza)', whiteSpace: 'nowrap' }}>
-                        {fmt(a.trial_fim)}
+                      <td className="px-4 py-3">
+                        {a.acesso_ate ? (
+                          <>
+                            <div style={{ fontSize: '13px', color: '#f97316', fontWeight: 600 }}>{fmt(a.acesso_ate)}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{diasRestantes(a.acesso_ate)}</div>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'var(--cinza)' }}>—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {a.mp_subscription_id ? (
-                          <a
-                            href={`https://www.mercadopago.com.br/subscriptions/${a.mp_subscription_id}`}
-                            target="_blank" rel="noopener noreferrer"
-                            style={{ fontSize: '11px', color: '#009ee3', textDecoration: 'none', fontWeight: 600 }}
-                          >
-                            🔗 Ver no MP
-                          </a>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <a href={`https://www.mercadopago.com.br/subscriptions/${a.mp_subscription_id}`}
+                              target="_blank" rel="noopener noreferrer"
+                              style={{ fontSize: '11px', color: '#009ee3', textDecoration: 'none', fontWeight: 600 }}>
+                              🔗 Ver no MP
+                            </a>
+                            <button onClick={() => sincronizarMP(a.id)} disabled={syncId === a.id}
+                              style={{ fontSize: '10px', color: '#009ee3', background: 'none', border: '1px solid #009ee340', borderRadius: '6px', padding: '2px 7px', cursor: 'pointer', fontWeight: 600 }}>
+                              {syncId === a.id ? '…' : '↺ sync'}
+                            </button>
+                          </div>
                         ) : (
-                          <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>—</span>
+                          <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>Sem assinatura MP</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -364,9 +459,7 @@ export default function FinanceiroPage() {
       {aba === 'nf' && (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cinza-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)' }}>
-              Dados para emissão de nota fiscal
-            </span>
+            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cinza)' }}>Dados para emissão de nota fiscal</span>
             <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>Apenas assinantes ativos</span>
           </div>
           {carregando ? (
@@ -384,11 +477,10 @@ export default function FinanceiroPage() {
               </thead>
               <tbody>
                 {abaLista.map(a => {
-                  const pc = PLANO_CORES[a.plano] ?? PLANO_CORES.basic
+                  const pc  = PLANO_CORES[a.plano] ?? PLANO_CORES.basic
                   const doc = a.tipo_pessoa === 'pf' ? a.cpf : a.cnpj
                   const docLabel = a.tipo_pessoa === 'pf' ? 'CPF' : 'CNPJ'
-                  const endereco = [a.logradouro, a.numero, a.complemento, a.bairro, a.cidade, a.estado_uf, a.cep]
-                    .filter(Boolean).join(', ')
+                  const endereco = [a.logradouro, a.numero, a.complemento, a.bairro, a.cidade, a.estado_uf, a.cep].filter(Boolean).join(', ')
                   return (
                     <tr key={a.id} className="hover:bg-gray-50" style={{ borderBottom: '1px solid var(--cinza-light)' }}>
                       <td className="px-4 py-3">
@@ -398,9 +490,7 @@ export default function FinanceiroPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 9px', borderRadius: '8px', background: pc.bg, color: pc.cor, textTransform: 'capitalize' }}>{a.plano}</span>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', marginTop: '4px' }}>
-                          {a.valor_mensalidade ? moeda(a.valor_mensalidade) : '—'}
-                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', marginTop: '4px' }}>{a.valor_mensalidade ? moeda(a.valor_mensalidade) : '—'}</div>
                       </td>
                       <td className="px-4 py-3">
                         {doc ? (
@@ -415,9 +505,7 @@ export default function FinanceiroPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div style={{ fontSize: '13px', color: 'var(--preto)' }}>{a.razao_social || a.nome_fantasia || '—'}</div>
-                        {a.nome_fantasia && a.razao_social && (
-                          <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{a.nome_fantasia}</div>
-                        )}
+                        {a.nome_fantasia && a.razao_social && <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{a.nome_fantasia}</div>}
                       </td>
                       <td className="px-4 py-3">
                         <div style={{ fontSize: '12px', color: 'var(--cinza)', maxWidth: '280px', lineHeight: '1.4' }}>
@@ -491,57 +579,72 @@ export default function FinanceiroPage() {
         </div>
       )}
 
-      {/* Modal edição financeira */}
+      {/* Modal edição */}
       {editando && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 4px' }}>Editar assinatura</h2>
             <p style={{ fontSize: '13px', color: 'var(--cinza)', margin: '0 0 24px' }}>{editando.email}</p>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>Plano</label>
-                <select value={editando.plano} onChange={e => setEditando({ ...editando, plano: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                  {['basic','profissional','pro','empresarial'].map(p => (
-                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>Status</label>
-                <select value={editando.status} onChange={e => setEditando({ ...editando, status: e.target.value as Assinante['status'] })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                  <option value="trial">Trial</option>
-                  <option value="active">Ativo</option>
-                  <option value="expired">Expirado</option>
-                  <option value="bloqueado">Bloqueado</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>Valor mensalidade (R$)</label>
-                <input
-                  type="number" step="0.01" min="0"
-                  value={editando.valor_mensalidade ?? ''}
-                  onChange={e => setEditando({ ...editando, valor_mensalidade: e.target.value ? Number(e.target.value) : null })}
-                  placeholder="Ex: 97.90"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>Data início assinatura</label>
-                <input
-                  type="date"
-                  value={editando.assinatura_inicio ? editando.assinatura_inicio.substring(0, 10) : ''}
-                  onChange={e => setEditando({ ...editando, assinatura_inicio: e.target.value ? e.target.value + 'T00:00:00Z' : null })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }}
-                />
-              </div>
+              {[
+                {
+                  label: 'Plano',
+                  content: (
+                    <select value={editando.plano} onChange={e => setEditando({ ...editando, plano: e.target.value })}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                      {['basic','profissional','pro','empresarial'].map(p => (
+                        <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                      ))}
+                    </select>
+                  ),
+                },
+                {
+                  label: 'Status',
+                  content: (
+                    <select value={editando.status} onChange={e => setEditando({ ...editando, status: e.target.value as Assinante['status'] })}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                      <option value="trial">Trial</option>
+                      <option value="active">Ativo</option>
+                      <option value="expired">Expirado</option>
+                      <option value="bloqueado">Bloqueado</option>
+                    </select>
+                  ),
+                },
+                {
+                  label: 'Valor mensalidade (R$)',
+                  content: (
+                    <input type="number" step="0.01" min="0"
+                      value={editando.valor_mensalidade ?? ''}
+                      onChange={e => setEditando({ ...editando, valor_mensalidade: e.target.value ? Number(e.target.value) : null })}
+                      placeholder="Ex: 97.90"
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+                  ),
+                },
+                {
+                  label: 'Data início assinatura',
+                  content: (
+                    <input type="date"
+                      value={editando.assinatura_inicio ? editando.assinatura_inicio.substring(0, 10) : ''}
+                      onChange={e => setEditando({ ...editando, assinatura_inicio: e.target.value ? e.target.value + 'T00:00:00Z' : null })}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+                  ),
+                },
+                {
+                  label: 'Acesso até (carência pós-cancelamento)',
+                  content: (
+                    <input type="date"
+                      value={editando.acesso_ate ? editando.acesso_ate.substring(0, 10) : ''}
+                      onChange={e => setEditando({ ...editando, acesso_ate: e.target.value ? e.target.value + 'T23:59:59Z' : null })}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+                  ),
+                },
+              ].map(({ label, content }) => (
+                <div key={label}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>{label}</label>
+                  {content}
+                </div>
+              ))}
             </div>
-
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button onClick={() => setEditando(null)}
                 style={{ flex: 1, padding: '11px', borderRadius: '12px', fontSize: '14px', fontWeight: 500, border: '1.5px solid var(--cinza-light)', color: 'var(--cinza)', background: 'white', cursor: 'pointer' }}>
