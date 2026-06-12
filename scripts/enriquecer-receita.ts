@@ -20,18 +20,25 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 }
 
 const REST = `${SUPABASE_URL}/rest/v1`
-const HEADERS = {
-  'apikey':        SERVICE_KEY,
-  'Authorization': `Bearer ${SERVICE_KEY}`,
-  'Content-Type':  'application/json',
-  'Prefer':        'return=minimal',
+const HEADERS_GET: Record<string, string> = {
+  'apikey':          SERVICE_KEY,
+  'Authorization':   `Bearer ${SERVICE_KEY}`,
+  'Accept':          'application/json',
+  'Accept-Profile':  'public',
+}
+const HEADERS_PATCH: Record<string, string> = {
+  'apikey':           SERVICE_KEY,
+  'Authorization':    `Bearer ${SERVICE_KEY}`,
+  'Content-Type':     'application/json',
+  'Content-Profile':  'public',
+  'Prefer':           'return=minimal',
 }
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
 async function buscarLeads(offset: number): Promise<{ id: string; cnpj: string; email: string | null }[]> {
   const url = `${REST}/leads?select=id,cnpj,email&status=eq.invalido&offset=${offset}&limit=${LOTE}`
-  const res = await fetch(url, { headers: { ...HEADERS, Prefer: 'count=none' } })
+  const res = await fetch(url, { headers: HEADERS_GET })
   if (!res.ok) {
     const txt = await res.text()
     console.error(`Erro ao buscar leads (${res.status}):`, txt.slice(0, 300))
@@ -43,7 +50,7 @@ async function buscarLeads(offset: number): Promise<{ id: string; cnpj: string; 
 async function atualizarLead(id: string, dados: Record<string, unknown>): Promise<void> {
   const res = await fetch(`${REST}/leads?id=eq.${id}`, {
     method:  'PATCH',
-    headers: HEADERS,
+    headers: HEADERS_PATCH,
     body:    JSON.stringify(dados),
   })
   if (!res.ok) {
@@ -67,7 +74,7 @@ async function main() {
   console.log('=== Enriquecer Receita Federal ===')
 
   // Teste rápido de conectividade
-  const teste = await fetch(`${REST}/leads?select=id&limit=1`, { headers: HEADERS })
+  const teste = await fetch(`${REST}/leads?select=id&limit=1`, { headers: HEADERS_GET })
   console.log('Teste REST API:', teste.status, teste.ok ? 'OK' : await teste.text())
   if (!teste.ok) { process.exit(1) }
 
