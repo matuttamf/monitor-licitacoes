@@ -114,6 +114,8 @@ export default function FinanceiroPage() {
   const [aba, setAba]                 = useState<'assinantes' | 'nf' | 'bloqueados'>('assinantes')
   const [busca, setBusca]             = useState('')
   const [filtroPlano, setFiltroPlano] = useState('todos')
+  const [filtroStatus, setFiltroStatus] = useState('todos')
+  const [ordem, setOrdem]             = useState<'novo' | 'antigo'>('novo')
   const [editando, setEditando]       = useState<Assinante | null>(null)
   const [salvando, setSalvando]       = useState(false)
   const [acaoId, setAcaoId]           = useState<string | null>(null)
@@ -288,8 +290,18 @@ ${kpiCards}
   const bloqueados = assinantes.filter(a => a.status === 'bloqueado' || a.status === 'expired')
 
   function filtrar(lista: Assinante[]) {
-    return lista.filter(a => {
+    let resultado = lista.filter(a => {
       if (filtroPlano !== 'todos' && a.plano !== filtroPlano) return false
+      if (filtroStatus !== 'todos') {
+        const emCarencia = a.acesso_ate && a.status === 'active' && !a.mp_subscription_id
+        const semMP      = !a.mp_subscription_id && a.status === 'active'
+        if (filtroStatus === 'active'   && (a.status !== 'active' || emCarencia)) return false
+        if (filtroStatus === 'trial'    && a.status !== 'trial') return false
+        if (filtroStatus === 'expired'  && a.status !== 'expired') return false
+        if (filtroStatus === 'bloqueado' && a.status !== 'bloqueado') return false
+        if (filtroStatus === 'carencia' && !emCarencia) return false
+        if (filtroStatus === 'sem_mp'   && !semMP) return false
+      }
       if (busca) {
         const q = busca.toLowerCase()
         return (
@@ -302,6 +314,12 @@ ${kpiCards}
       }
       return true
     })
+    resultado = resultado.sort((a, b) => {
+      const da = new Date(a.criado_em).getTime()
+      const db = new Date(b.criado_em).getTime()
+      return ordem === 'novo' ? db - da : da - db
+    })
+    return resultado
   }
 
   const abaLista = aba === 'assinantes'
@@ -451,15 +469,30 @@ ${kpiCards}
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar nome, e-mail, CNPJ…"
             style={{ padding: '8px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white', width: '220px' }} />
+          <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white' }}>
+            <option value="todos">Todos os status</option>
+            <option value="active">✓ Ativos</option>
+            <option value="trial">⏳ Trial</option>
+            <option value="carencia">↩ Em carência</option>
+            <option value="sem_mp">⚠ Sem assinatura MP</option>
+            <option value="expired">✕ Expirados</option>
+            <option value="bloqueado">🔒 Bloqueados</option>
+          </select>
           <select value={filtroPlano} onChange={e => setFiltroPlano(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white' }}>
             <option value="todos">Todos os planos</option>
             {['basic','profissional','pro','empresarial'].map(p => (
               <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
             ))}
+          </select>
+          <select value={ordem} onChange={e => setOrdem(e.target.value as 'novo' | 'antigo')}
+            style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white' }}>
+            <option value="novo">Mais recentes</option>
+            <option value="antigo">Mais antigos</option>
           </select>
         </div>
       </div>
