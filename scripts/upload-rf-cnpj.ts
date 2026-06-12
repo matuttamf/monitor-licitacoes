@@ -90,7 +90,7 @@ async function downloadComRetry(rfUrl: string, tmpPath: string, tentativas = 3):
 
 async function uploadArquivo(tipo: 'Estabelecimentos' | 'Empresas', fileIdx: number) {
   const rfUrl   = `https://arquivos.receitafederal.gov.br/public.php/dav/files/YggdBLfdninEJX9/${anoFinal}-${mesPad}/${tipo}${fileIdx}.zip`
-  const destKey = `${anoFinal}-${mesPad}/${tipo}${fileIdx}.zip`
+  const destKey = `${tipo}${fileIdx}.zip`
   const tmpPath = join(tmpdir(), `rf-${tipo.toLowerCase()}-${fileIdx}.zip`)
 
   console.log(`\n[${tipo}${fileIdx}] Baixando ${rfUrl}`)

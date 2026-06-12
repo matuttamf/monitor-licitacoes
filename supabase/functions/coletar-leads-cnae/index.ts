@@ -35,17 +35,16 @@ function getAnoMes() {
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
-function getStorageUrl(tipo: string, fileIdx: number, ano: number, mes: number): string {
-  const mesStr = String(mes).padStart(2, '0')
+function getStorageUrl(tipo: string, fileIdx: number): string {
   const base = Deno.env.get('SUPABASE_URL') ?? ''
-  return `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/${tipo}${fileIdx}.zip`
+  return `${base}/storage/v1/object/public/rf-cnpj/${tipo}${fileIdx}.zip`
 }
 
 function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
   const mesStr = String(mes).padStart(2, '0')
   const base = Deno.env.get('SUPABASE_URL') ?? ''
   return [
-    `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
+    `${base}/storage/v1/object/public/rf-cnpj/Estabelecimentos${fileIdx}.zip`,
     `${RF_NEXTCLOUD_BASE}/download?path=%2F${ano}-${mesStr}&files=Estabelecimentos${fileIdx}.zip`,
   ]
 }
@@ -217,7 +216,7 @@ Deno.serve(async (_req: Request) => {
     const basMap = new Map<string, number>()
     for (let i = 0; i < leads.length; i++) basMap.set(leads[i].cnpj.slice(0, 8), i)
 
-    const empresasUrl = getStorageUrl('Empresas', estado.file_idx, estado.ano, estado.mes)
+    const empresasUrl = getStorageUrl('Empresas', estado.file_idx)
     let encontrados = 0
     await streamZipLinhas(empresasUrl, (line) => {
       if (encontrados >= leads.length) return false   // todos enriquecidos → para
