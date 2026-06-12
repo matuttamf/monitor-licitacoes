@@ -410,110 +410,165 @@ export default function PerfilPage() {
         </form>
       </div>
 
-      {/* Preferências de alertas por e-mail */}
-      {(() => {
-        const limites = getLimites(perfil.plano)
-        const opcoesDia = OPCOES_EMAILS_DIA.filter(n => n <= limites.maxEmailsPorDia)
-        const opcoesItens = OPCOES_ITENS_EMAIL.filter(n => n <= limites.maxItensPorEmail)
-        const horarios = HORARIOS_POR_QTD[perfil.emails_por_dia] ?? HORARIOS_POR_QTD[2]
-        const horarioStr = horarios.map(h => `${h}h`).join(', ')
+      {/* ── Cadastro como Fornecedor ── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="px-8 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+              style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>🏭</div>
+            <div>
+              <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Aparecer no Diretório de Fornecedores</div>
+              <div className="text-xs" style={{ color: 'var(--cinza)' }}>Visível para outros usuários que buscam parceiros e fornecedores</div>
+            </div>
+          </div>
+          {fornecedor.ativo && (
+            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
+              ● Publicado
+            </span>
+          )}
+        </div>
 
-        return (
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-            <div className="px-8 py-5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-lg flex-shrink-0"
-                style={{ background: 'var(--vinho)' }}>✉</div>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Frequência de alertas por e-mail</div>
-                <div className="text-xs" style={{ color: 'var(--cinza)' }}>Controle quantos e-mails você recebe por dia e quantas licitações por mensagem</div>
+        <form onSubmit={salvarFornecedor} className="px-8 py-6 space-y-5">
+          {/* Toggle visibilidade */}
+          <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+            <div>
+              <div className="text-sm font-semibold" style={{ color: 'var(--preto)' }}>
+                {fornecedor.ativo ? 'Visível no diretório' : 'Oculto no diretório'}
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>
+                {fornecedor.ativo ? 'Outros usuários podem encontrar sua empresa' : 'Salve seu perfil e ative quando quiser aparecer'}
               </div>
             </div>
-
-            <form onSubmit={salvarPreferenciasAlerta} className="px-8 py-6 space-y-6">
-              {/* E-mails por dia */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
-                  E-mails por dia
-                  <span className="ml-2 normal-case font-normal" style={{ color: 'var(--cinza)', opacity: 0.7 }}>
-                    (plano {limites.nome}: até {limites.maxEmailsPorDia})
-                  </span>
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {opcoesDia.map(n => {
-                    const ativo = perfil.emails_por_dia === n
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setPerfil(prev => ({ ...prev, emails_por_dia: n }))}
-                        className="w-11 h-11 rounded-xl text-sm font-semibold transition-all"
-                        style={{
-                          background: ativo ? 'var(--vinho)' : 'var(--surface-2)',
-                          color: ativo ? 'white' : 'var(--cinza)',
-                          border: `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--cinza-light)'}`,
-                        }}
-                      >{n}</button>
-                    )
-                  })}
-                </div>
-                {horarios.length > 0 && (
-                  <p className="text-xs mt-2.5" style={{ color: 'var(--cinza)' }}>
-                    📅 Horários de envio (horário de Brasília): <strong>{horarioStr}</strong>
-                  </p>
-                )}
-              </div>
-
-              {/* Itens por e-mail */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
-                  Licitações por e-mail
-                  <span className="ml-2 normal-case font-normal" style={{ color: 'var(--cinza)', opacity: 0.7 }}>
-                    (plano {limites.nome}: até {limites.maxItensPorEmail})
-                  </span>
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {opcoesItens.map(n => {
-                    const ativo = perfil.itens_por_email === n
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setPerfil(prev => ({ ...prev, itens_por_email: n }))}
-                        className="px-5 h-11 rounded-xl text-sm font-semibold transition-all"
-                        style={{
-                          background: ativo ? 'var(--vinho)' : 'var(--surface-2)',
-                          color: ativo ? 'white' : 'var(--cinza)',
-                          border: `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--cinza-light)'}`,
-                        }}
-                      >{n} itens</button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {alertaMsg && (
-                <div className="rounded-xl px-4 py-3 text-sm" style={{
-                  background: alertaMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-                  border: `1px solid ${alertaMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                  color: alertaMsg.tipo === 'ok' ? '#10b981' : '#ef4444',
-                }}>
-                  {alertaMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{alertaMsg.texto}
-                </div>
-              )}
-
-              <button type="submit" disabled={salvandoAlerta}
-                className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-                style={{ background: salvandoAlerta ? '#9AA0A6' : 'var(--vinho)', cursor: salvandoAlerta ? 'not-allowed' : 'pointer' }}>
-                {salvandoAlerta ? 'Salvando...' : 'Salvar preferências'}
-              </button>
-            </form>
+            <button
+              type="button"
+              onClick={() => setFornecedor(prev => ({ ...prev, ativo: !prev.ativo }))}
+              className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+              style={{ background: fornecedor.ativo ? 'var(--vinho)' : 'var(--cinza-light)', border: 'none', cursor: 'pointer' }}
+            >
+              <span className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all"
+                style={{ left: fornecedor.ativo ? '22px' : '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+            </button>
           </div>
-        )
-      })()}
 
-      {/* Seção Telegram */}
+          {/* Razão social */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              Razão Social / Nome Comercial
+            </label>
+            <input type="text" value={fornecedor.razao_social}
+              onChange={e => setFornecedor(prev => ({ ...prev, razao_social: e.target.value }))}
+              placeholder="Ex: Empresa Exemplo Ltda"
+              className="w-full px-4 py-3 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          {/* CNPJ */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              CNPJ <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
+            </label>
+            <input type="text" value={fornecedor.cnpj}
+              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: e.target.value }))}
+              placeholder="00.000.000/0001-00"
+              className="w-full px-4 py-3 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          {/* Descrição */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              O que sua empresa oferece
+              <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>({fornecedor.descricao.length}/500)</span>
+            </label>
+            <textarea
+              value={fornecedor.descricao}
+              onChange={e => setFornecedor(prev => ({ ...prev, descricao: e.target.value.slice(0, 500) }))}
+              placeholder="Descreva brevemente os produtos ou serviços que sua empresa oferece..."
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm resize-none"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          {/* Regiões */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--cinza)' }}>
+              Regiões de atendimento
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {REGIOES_OPCOES.map(r => {
+                const sel = fornecedor.regioes.includes(r)
+                return (
+                  <button key={r} type="button" onClick={() => toggleRegiao(r)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: sel ? 'var(--vinho)' : 'var(--surface-2)',
+                      color: sel ? 'white' : 'var(--cinza)',
+                      border: `1.5px solid ${sel ? 'var(--vinho)' : 'var(--cinza-light)'}`,
+                      cursor: 'pointer',
+                    }}>
+                    {r}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Contato */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>E-mail de contato</label>
+              <input type="email" value={fornecedor.email_contato}
+                onChange={e => setFornecedor(prev => ({ ...prev, email_contato: e.target.value }))}
+                placeholder="contato@empresa.com.br"
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Telefone</label>
+              <input type="tel" value={fornecedor.telefone_contato}
+                onChange={e => setFornecedor(prev => ({ ...prev, telefone_contato: e.target.value }))}
+                placeholder="(31) 99999-9999"
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+            </div>
+          </div>
+
+          {/* Website */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
+              Website <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
+            </label>
+            <input type="text" value={fornecedor.website}
+              onChange={e => setFornecedor(prev => ({ ...prev, website: e.target.value }))}
+              placeholder="www.minhaempresa.com.br"
+              className="w-full px-4 py-3 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+          </div>
+
+          <div className="rounded-xl p-4 text-xs" style={{ background: 'rgba(107,15,26,0.04)', border: '1px solid rgba(107,15,26,0.1)', color: 'var(--cinza)' }}>
+            ⚠️ As negociações entre as partes são de responsabilidade exclusiva delas. O Monitor de Licitações apenas disponibiliza este diretório para conexão.
+          </div>
+
+          {fornecedorMsg && (
+            <div className="rounded-xl px-4 py-3 text-sm" style={{
+              background: fornecedorMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${fornecedorMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              color: fornecedorMsg.tipo === 'ok' ? '#10b981' : '#ef4444',
+            }}>
+              {fornecedorMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{fornecedorMsg.texto}
+            </div>
+          )}
+
+          <button type="submit" disabled={salvandoFornecedor}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
+            style={{ background: salvandoFornecedor ? '#9AA0A6' : 'var(--vinho)', cursor: salvandoFornecedor ? 'not-allowed' : 'pointer' }}>
+            {salvandoFornecedor ? 'Salvando...' : 'Salvar perfil de fornecedor'}
+          </button>
+        </form>
+      </div>
+
+      {/* ── Seção Telegram ── */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-        {/* Cabeçalho */}
         <div className="px-8 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-lg flex-shrink-0"
@@ -533,7 +588,6 @@ export default function PerfilPage() {
         </div>
 
         <div className="px-8 py-6 space-y-5">
-          {/* Instruções */}
           <div className="rounded-xl p-4 space-y-3" style={{ background: '#F0F8FF', border: '1px solid rgba(34,158,217,0.2)' }}>
             <p className="text-sm font-semibold" style={{ color: '#0369a1' }}>Como conectar seu Telegram:</p>
             <ol className="space-y-2">
@@ -561,7 +615,6 @@ export default function PerfilPage() {
             </a>
           </div>
 
-          {/* Campo Chat ID */}
           <form onSubmit={salvarTelegram} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
@@ -612,6 +665,106 @@ export default function PerfilPage() {
           </form>
         </div>
       </div>
+
+      {/* ── Preferências de alertas por e-mail ── */}
+      {(() => {
+        const limites = getLimites(perfil.plano)
+        const opcoesDia = OPCOES_EMAILS_DIA.filter(n => n <= limites.maxEmailsPorDia)
+        const opcoesItens = OPCOES_ITENS_EMAIL.filter(n => n <= limites.maxItensPorEmail)
+        const horarios = HORARIOS_POR_QTD[perfil.emails_por_dia] ?? HORARIOS_POR_QTD[2]
+        const horarioStr = horarios.map(h => `${h}h`).join(', ')
+
+        return (
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <div className="px-8 py-5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-lg flex-shrink-0"
+                style={{ background: 'var(--vinho)' }}>✉</div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Frequência de alertas por e-mail</div>
+                <div className="text-xs" style={{ color: 'var(--cinza)' }}>Controle quantos e-mails você recebe por dia e quantas licitações por mensagem</div>
+              </div>
+            </div>
+
+            <form onSubmit={salvarPreferenciasAlerta} className="px-8 py-6 space-y-6">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
+                  E-mails por dia
+                  <span className="ml-2 normal-case font-normal" style={{ color: 'var(--cinza)', opacity: 0.7 }}>
+                    (plano {limites.nome}: até {limites.maxEmailsPorDia})
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {opcoesDia.map(n => {
+                    const ativo = perfil.emails_por_dia === n
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setPerfil(prev => ({ ...prev, emails_por_dia: n }))}
+                        className="w-11 h-11 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          background: ativo ? 'var(--vinho)' : 'var(--surface-2)',
+                          color: ativo ? 'white' : 'var(--cinza)',
+                          border: `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--cinza-light)'}`,
+                        }}
+                      >{n}</button>
+                    )
+                  })}
+                </div>
+                {horarios.length > 0 && (
+                  <p className="text-xs mt-2.5" style={{ color: 'var(--cinza)' }}>
+                    📅 Horários de envio (horário de Brasília): <strong>{horarioStr}</strong>
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>
+                  Licitações por e-mail
+                  <span className="ml-2 normal-case font-normal" style={{ color: 'var(--cinza)', opacity: 0.7 }}>
+                    (plano {limites.nome}: até {limites.maxItensPorEmail})
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {opcoesItens.map(n => {
+                    const ativo = perfil.itens_por_email === n
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setPerfil(prev => ({ ...prev, itens_por_email: n }))}
+                        className="px-5 h-11 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          background: ativo ? 'var(--vinho)' : 'var(--surface-2)',
+                          color: ativo ? 'white' : 'var(--cinza)',
+                          border: `1.5px solid ${ativo ? 'var(--vinho)' : 'var(--cinza-light)'}`,
+                        }}
+                      >{n} itens</button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {alertaMsg && (
+                <div className="rounded-xl px-4 py-3 text-sm" style={{
+                  background: alertaMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+                  border: `1px solid ${alertaMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                  color: alertaMsg.tipo === 'ok' ? '#10b981' : '#ef4444',
+                }}>
+                  {alertaMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{alertaMsg.texto}
+                </div>
+              )}
+
+              <button type="submit" disabled={salvandoAlerta}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ background: salvandoAlerta ? '#9AA0A6' : 'var(--vinho)', cursor: salvandoAlerta ? 'not-allowed' : 'pointer' }}>
+                {salvandoAlerta ? 'Salvando...' : 'Salvar preferências'}
+              </button>
+            </form>
+          </div>
+        )
+      })()}
+
       {/* ── Pausar notificações ── */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <div className="px-8 py-5" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
@@ -681,163 +834,6 @@ export default function PerfilPage() {
             )
           })}
         </div>
-      </div>
-
-      {/* ── Cadastro como Fornecedor ── */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-        <div className="px-8 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-              style={{ background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>🏭</div>
-            <div>
-              <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Aparecer no Diretório de Fornecedores</div>
-              <div className="text-xs" style={{ color: 'var(--cinza)' }}>Visível para compradores com plano Profissional ou superior</div>
-            </div>
-          </div>
-          {fornecedor.ativo && (
-            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
-              ● Publicado
-            </span>
-          )}
-        </div>
-
-        <form onSubmit={salvarFornecedor} className="px-8 py-6 space-y-5">
-          {/* Toggle visibilidade */}
-          <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
-            <div>
-              <div className="text-sm font-semibold" style={{ color: 'var(--preto)' }}>
-                {fornecedor.ativo ? 'Visível no diretório' : 'Oculto no diretório'}
-              </div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>
-                {fornecedor.ativo ? 'Compradores podem encontrar sua empresa' : 'Salve seu perfil e ative quando quiser aparecer'}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setFornecedor(prev => ({ ...prev, ativo: !prev.ativo }))}
-              className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
-              style={{ background: fornecedor.ativo ? 'var(--vinho)' : 'var(--cinza-light)', border: 'none', cursor: 'pointer' }}
-            >
-              <span className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all"
-                style={{ left: fornecedor.ativo ? '22px' : '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-            </button>
-          </div>
-
-          {/* Razão social */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              Razão Social / Nome Comercial
-            </label>
-            <input type="text" value={fornecedor.razao_social}
-              onChange={e => setFornecedor(prev => ({ ...prev, razao_social: e.target.value }))}
-              placeholder="Ex: Empresa Exemplo Ltda"
-              className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
-          </div>
-
-          {/* CNPJ */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              CNPJ <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
-            </label>
-            <input type="text" value={fornecedor.cnpj}
-              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: e.target.value }))}
-              placeholder="00.000.000/0001-00"
-              className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
-          </div>
-
-          {/* Descrição */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              O que sua empresa vende ou fornece
-              <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>({fornecedor.descricao.length}/500)</span>
-            </label>
-            <textarea
-              value={fornecedor.descricao}
-              onChange={e => setFornecedor(prev => ({ ...prev, descricao: e.target.value.slice(0, 500) }))}
-              placeholder="Descreva brevemente os produtos ou serviços que sua empresa oferece para o setor público..."
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl text-sm resize-none"
-              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
-          </div>
-
-          {/* Regiões */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--cinza)' }}>
-              Regiões de atendimento
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {REGIOES_OPCOES.map(r => {
-                const sel = fornecedor.regioes.includes(r)
-                return (
-                  <button key={r} type="button" onClick={() => toggleRegiao(r)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: sel ? 'var(--vinho)' : 'var(--surface-2)',
-                      color: sel ? 'white' : 'var(--cinza)',
-                      border: `1.5px solid ${sel ? 'var(--vinho)' : 'var(--cinza-light)'}`,
-                      cursor: 'pointer',
-                    }}>
-                    {r}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Contato */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>E-mail de contato</label>
-              <input type="email" value={fornecedor.email_contato}
-                onChange={e => setFornecedor(prev => ({ ...prev, email_contato: e.target.value }))}
-                placeholder="contato@empresa.com.br"
-                className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Telefone</label>
-              <input type="tel" value={fornecedor.telefone_contato}
-                onChange={e => setFornecedor(prev => ({ ...prev, telefone_contato: e.target.value }))}
-                placeholder="(31) 99999-9999"
-                className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
-            </div>
-          </div>
-
-          {/* Website */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              Website <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
-            </label>
-            <input type="text" value={fornecedor.website}
-              onChange={e => setFornecedor(prev => ({ ...prev, website: e.target.value }))}
-              placeholder="www.minhaempresa.com.br"
-              className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
-          </div>
-
-          <div className="rounded-xl p-4 text-xs" style={{ background: 'rgba(107,15,26,0.04)', border: '1px solid rgba(107,15,26,0.1)', color: 'var(--cinza)' }}>
-            ⚠️ As negociações entre fornecedores e compradores são de responsabilidade exclusiva das partes. O Monitor de Licitações apenas disponibiliza este banco de dados para pesquisa.
-          </div>
-
-          {fornecedorMsg && (
-            <div className="rounded-xl px-4 py-3 text-sm" style={{
-              background: fornecedorMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-              border: `1px solid ${fornecedorMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-              color: fornecedorMsg.tipo === 'ok' ? '#10b981' : '#ef4444',
-            }}>
-              {fornecedorMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{fornecedorMsg.texto}
-            </div>
-          )}
-
-          <button type="submit" disabled={salvandoFornecedor}
-            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
-            style={{ background: salvandoFornecedor ? '#9AA0A6' : 'var(--vinho)', cursor: salvandoFornecedor ? 'not-allowed' : 'pointer' }}>
-            {salvandoFornecedor ? 'Salvando...' : 'Salvar perfil de fornecedor'}
-          </button>
-        </form>
       </div>
 
     </div>

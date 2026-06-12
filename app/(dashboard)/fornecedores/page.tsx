@@ -125,7 +125,7 @@ export default function FornecedoresPage() {
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>Diretório de Fornecedores</h1>
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>
-            Empresas cadastradas que fornecem produtos e serviços para o setor público.
+            Empresas cadastradas abertas a negociações e parcerias com outros usuários da plataforma.
           </p>
         </div>
         {!jaCadastrado && (
@@ -144,24 +144,18 @@ export default function FornecedoresPage() {
         )}
       </div>
 
-      {/* Banner CTA — aparece quando diretório está vazio ou como destaque */}
+      {/* Banner CTA */}
       {!showForm && !jaCadastrado && (
         <div className="rounded-2xl p-5 flex items-center gap-4 flex-wrap"
           style={{ background: 'rgba(107,15,26,0.04)', border: '1.5px dashed rgba(107,15,26,0.2)' }}>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--vinho)' }}>
-              🏭 Seja encontrado por compradores públicos
+              🏭 Apareça para quem está buscando parceiros
             </p>
             <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-              Cadastre sua empresa e apareça para prefeituras, secretarias e gestores que buscam fornecedores qualificados.
+              Cadastre sua empresa no diretório e fique visível para outros usuários que procuram fornecedores, prestadores de serviço ou parceiros comerciais.
             </p>
           </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
-            style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            Cadastrar agora →
-          </button>
         </div>
       )}
 
@@ -202,7 +196,7 @@ export default function FornecedoresPage() {
               <textarea
                 value={form.descricao}
                 onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
-                placeholder="Ex: Materiais elétricos, lâmpadas, cabos, interruptores e componentes de instalação elétrica para órgãos públicos."
+                placeholder="Ex: Distribuidora de materiais elétricos — atendemos órgãos públicos, construtoras e revendas em todo o Sudeste."
                 rows={3}
                 className="w-full px-3 py-2 rounded-xl text-sm resize-none"
                 style={{ border: '1.5px solid var(--cinza-light)', background: 'var(--fundo)', color: 'var(--preto)', outline: 'none', boxSizing: 'border-box' }}

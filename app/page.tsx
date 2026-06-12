@@ -224,6 +224,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── PORTAIS MONITORADOS ── */}
+      <section className="px-6 md:px-[60px] py-5 bg-[#111113] border-t border-[rgba(255,255,255,0.05)]">
+        <div className="max-w-[960px] mx-auto flex items-center gap-4 flex-wrap justify-center md:justify-start">
+          <span className="text-[11px] font-bold tracking-wider uppercase text-[rgba(255,255,255,0.25)] shrink-0">Fontes monitoradas:</span>
+          <div className="flex flex-wrap gap-2 items-center justify-center">
+            {['PNCP','ComprasNet','Licitações-e','BLL','SABESP','Petrobras','Caixa','Correios','Eletrobras','Diário Oficial'].map(p => (
+              <span key={p} className="text-[11px] font-semibold px-3 py-1 rounded-full text-[rgba(255,255,255,0.4)]"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── DOR ── */}
       <section className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-[#FAF6F0]">
         <div className="max-w-[960px] mx-auto">
@@ -351,6 +366,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── COMPARATIVO: MONITOR vs MANUALMENTE ── */}
+      <section className="px-6 md:px-[60px] py-[60px] md:py-[80px] bg-white border-t border-[#F0EDE8]">
+        <div className="max-w-[960px] mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">A diferença na prática</div>
+            <h2 className="text-3xl md:text-[38px] font-black tracking-tight leading-[1.1] text-[#1A1A1C]">
+              Sem o Monitor, é quase impossível<br className="hidden md:block" /> não perder oportunidades.
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-2xl p-8 border-2 border-[#F0EDE8] bg-[#FAFAFA]">
+              <div className="text-[11px] font-black tracking-wider uppercase text-[#9AA0A6] mb-5">❌ Sem o Monitor</div>
+              {[
+                'Verifica manualmente 10+ portais por dia',
+                'Perde editais que usam termos técnicos diferentes',
+                'Descobre licitações depois que o prazo fechou',
+                'Sem alertas — depende de lembrança e rotina',
+                'Concorrentes sabem antes e chegam primeiro',
+              ].map(item => (
+                <div key={item} className="flex items-start gap-3 mb-3">
+                  <span className="text-[#D5D2C8] text-lg leading-none mt-0.5 shrink-0">✕</span>
+                  <span className="text-sm text-[#9AA0A6] leading-snug">{item}</span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl p-8 border-2 border-[#6B0F1A] bg-white shadow-[0_4px_24px_rgba(107,15,26,0.06)]">
+              <div className="text-[11px] font-black tracking-wider uppercase text-[#6B0F1A] mb-5">✓ Com o Monitor</div>
+              {[
+                'Todos os portais monitorados automaticamente',
+                'IA lê o contexto — não só palavras exatas',
+                'Alerta chega antes do prazo começar a correr',
+                'E-mail, Telegram ou WhatsApp — você escolhe',
+                'Você chega primeiro. A proposta é sua.',
+              ].map(item => (
+                <div key={item} className="flex items-start gap-3 mb-3">
+                  <span className="text-[#6B0F1A] text-lg leading-none mt-0.5 shrink-0">✓</span>
+                  <span className="text-sm text-[#1A1A1C] font-medium leading-snug">{item}</span>
+                </div>
+              ))}
+              <div className="mt-6 pt-5 border-t border-[#F0EDE8]">
+                <Link href="/cadastro" className="block text-center py-3 rounded-[10px] bg-[#6B0F1A] text-white text-sm font-bold no-underline">
+                  Começar agora — 7 dias grátis →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── DIRETÓRIO DE FORNECEDORES ── */}
       <section className="px-6 md:px-[60px] py-[60px] md:py-[80px] bg-white border-t border-[#F0EDE8]">
         <div className="max-w-[960px] mx-auto">
@@ -360,16 +424,16 @@ export default function LandingPage() {
                 <span className="text-[11px] font-bold tracking-wider uppercase text-[#6B0F1A]">Ferramenta exclusiva</span>
               </div>
               <h3 className="text-2xl md:text-[30px] font-black text-[#1A1A1C] mb-3 tracking-tight leading-snug">
-                Seja encontrado por quem está<br className="hidden md:block" /> comprando do governo agora.
+                Sua empresa visível para quem<br className="hidden md:block" /> está buscando parceiros agora.
               </h3>
               <p className="text-sm md:text-[15px] text-[#9AA0A6] leading-relaxed mb-5 m-0">
-                O Diretório de Fornecedores conecta sua empresa diretamente a compradores públicos. Prefeituras, secretarias e gestores de compras consultam o diretório quando precisam de fornecedores qualificados — e sua empresa aparece para quem está ativamente buscando o que você vende.
+                O Diretório de Fornecedores coloca sua empresa em frente a todos os usuários da plataforma — gestores públicos, compradores privados e outros usuários que buscam fornecedores, prestadores de serviço ou parceiros comerciais para fecharem negócio. Você é encontrado. A negociação é com você.
               </p>
               <div className="flex flex-wrap gap-3">
                 {[
-                  '🎯 Apareça para compradores ativos',
+                  '🎯 Visível para todos os usuários da plataforma',
                   '📍 Filtrado por região e segmento',
-                  '🔗 Link direto para seu contato',
+                  '🔗 Contato direto com quem encontrou',
                 ].map(item => (
                   <div key={item} className="flex items-center gap-2 bg-white border border-[#D5D2C8] rounded-[8px] px-3 py-2">
                     <span className="text-xs font-semibold text-[#1A1A1C]">{item}</span>
@@ -413,8 +477,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Gatilho social */}
-          <div className="flex justify-center mb-10">
+          {/* Gatilho social + urgência */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
             <div className="inline-flex items-center gap-3 bg-white border border-[#D5D2C8] rounded-full px-5 py-2.5 shadow-sm">
               <div className="flex -space-x-1.5">
                 {['#6B0F1A','#C9A65A','#4a7a6b','#7a4a6b'].map((c, i) => (
@@ -425,6 +489,9 @@ export default function LandingPage() {
                 <span className="text-[#6B0F1A]">+230 empresas</span> monitorando licitações agora
               </span>
               <span className="text-[10px] text-[#9AA0A6] border-l border-[#D5D2C8] pl-3">🔴 ao vivo</span>
+            </div>
+            <div className="inline-flex items-center gap-2 bg-[rgba(201,166,90,0.08)] border border-[rgba(201,166,90,0.25)] rounded-full px-4 py-2">
+              <span className="text-[11px] font-bold text-[#6B0F1A]">⚡ Ativação imediata · Primeiros alertas chegam hoje</span>
             </div>
           </div>
 
@@ -545,6 +612,7 @@ export default function LandingPage() {
             ['Com que frequência recebo alertas?', 'Monitoramos continuamente de segunda a sexta, dentro do horário comercial. Assim que identificamos uma licitação compatível com o seu perfil, ela entra na fila de envio e chega para você em breve — sem sobrecarregar sua caixa de entrada.'],
             ['Vocês monitoram empresas como Petrobras, Correios e Caixa?', 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais brasileiras: Petrobras, Caixa Econômica Federal, Correios, Eletrobras e SABESP.'],
             ['Posso cancelar se não for o que esperava?', 'Sim, a qualquer momento, sem multa e sem burocracia.'],
+            ['O Diretório de Fornecedores é só para quem vende para o governo?', 'Não. Qualquer empresa pode se cadastrar no diretório — seja para ser encontrada por órgãos públicos, por outros usuários da plataforma ou por parceiros comerciais. O diretório funciona como uma vitrine aberta a todos os usuários: quem encontrar sua empresa entra em contato diretamente com você.'],
           ].map(([q, a], i) => (
             <details key={i} className="border-b border-[#D5D2C8]">
               <summary className="py-5 cursor-pointer font-semibold text-[15px] text-[#1A1A1C] flex justify-between items-center list-none">

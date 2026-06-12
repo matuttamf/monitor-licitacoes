@@ -107,7 +107,22 @@ export default function PrivacidadePage() {
                   <Td>Não usamos cookies de publicidade nem de rastreamento entre sites</Td>
                 </tr>
               </Tabela>
-              <SubTitulo>2.3 Dados de pagamento</SubTitulo>
+              <SubTitulo>2.3 Dados do Diretório de Fornecedores (voluntários e públicos)</SubTitulo>
+              <p>Caso o usuário opte por cadastrar sua empresa no Diretório de Fornecedores, os seguintes dados são coletados e exibidos <strong>publicamente para outros usuários da plataforma</strong>:</p>
+              <Tabela colunas={['Dado', 'Natureza']}>
+                <tr><Td>Razão social / nome comercial</Td><Td>Voluntário — inserido pelo usuário</Td></tr>
+                <tr><Td>CNPJ</Td><Td>Voluntário — inserido pelo usuário</Td></tr>
+                <tr><Td>Descrição da empresa</Td><Td>Voluntário — inserido pelo usuário</Td></tr>
+                <tr><Td>Regiões de atendimento</Td><Td>Voluntário — selecionado pelo usuário</Td></tr>
+                <tr><Td>E-mail de contato</Td><Td>Voluntário — pode ser diferente do e-mail de login</Td></tr>
+                <tr><Td>Telefone de contato</Td><Td>Voluntário — inserido pelo usuário</Td></tr>
+                <tr><Td>Website</Td><Td>Voluntário — inserido pelo usuário</Td></tr>
+              </Tabela>
+              <Aviso tipo="atencao">
+                Atenção: ao ativar a visibilidade no diretório, esses dados ficam acessíveis a <strong>todos os usuários da plataforma</strong> com plano que inclua acesso ao diretório. O usuário pode desativar ou remover seu perfil a qualquer momento pelo painel.
+              </Aviso>
+
+              <SubTitulo>2.4 Dados de pagamento</SubTitulo>
               <p>Não coletamos nem armazenamos dados de cartão de crédito. O processamento financeiro é realizado pela plataforma de pagamentos parceira. Armazenamos apenas o identificador da assinatura para controle de acesso.</p>
             </Section>
 
@@ -117,6 +132,7 @@ export default function PrivacidadePage() {
                 <tr><Td>Gestão da conta</Td><Td>Autenticação, controle de acesso, gerenciamento de plano e trial</Td></tr>
                 <tr><Td>Comunicações</Td><Td>Alertas de licitações, avisos sobre trial, atualizações do serviço</Td></tr>
                 <tr><Td>Segurança</Td><Td>Prevenção de fraudes, acessos não autorizados e abuso do sistema</Td></tr>
+                <tr><Td>Diretório de Fornecedores</Td><Td>Exibição do perfil público da empresa do usuário para outros usuários da plataforma, conforme configurado e autorizado pelo próprio usuário</Td></tr>
                 <tr><Td>Melhoria contínua</Td><Td>Análise agregada e anonimizada de padrões de uso</Td></tr>
                 <tr><Td>Obrigações legais</Td><Td>Cumprimento de requisitos fiscais, contábeis e regulatórios aplicáveis</Td></tr>
               </Tabela>
@@ -128,6 +144,7 @@ export default function PrivacidadePage() {
                 <tr><Td>Envio de alertas de licitações</Td><Td>Execução de contrato (art. 7º, V)</Td></tr>
                 <tr><Td>E-mails sobre trial e planos</Td><Td>Legítimo interesse (art. 7º, IX)</Td></tr>
                 <tr><Td>Segurança e antifraude</Td><Td>Legítimo interesse (art. 7º, IX)</Td></tr>
+                <tr><Td>Perfil no Diretório de Fornecedores</Td><Td>Consentimento do titular (art. 7º, I) — ativação voluntária pelo usuário</Td></tr>
                 <tr><Td>Logs de acesso (6 meses)</Td><Td>Cumprimento de obrigação legal — Marco Civil (art. 7º, II)</Td></tr>
                 <tr><Td>Registros fiscais e financeiros</Td><Td>Cumprimento de obrigação legal (art. 7º, II)</Td></tr>
               </Tabela>
@@ -135,6 +152,7 @@ export default function PrivacidadePage() {
 
             <Section titulo="5. Compartilhamento de dados">
               <p>Não comercializamos, alugamos nem vendemos seus dados pessoais a terceiros.</p>
+              <SubTitulo>5.1 Fornecedores de infraestrutura</SubTitulo>
               <Tabela colunas={['Categoria do fornecedor', 'Finalidade', 'Dados envolvidos']}>
                 <tr><Td>Banco de dados e autenticação</Td><Td>Armazenamento seguro e controle de acesso</Td><Td>Dados de cadastro, preferências, histórico</Td></tr>
                 <tr><Td>Hospedagem e entrega da aplicação</Td><Td>Disponibilização da plataforma web</Td><Td>Dados de acesso, endereço IP</Td></tr>
@@ -142,6 +160,11 @@ export default function PrivacidadePage() {
                 <tr><Td>Processamento de pagamentos</Td><Td>Cobrança e gestão de assinaturas</Td><Td>E-mail, identificador da assinatura</Td></tr>
                 <tr><Td>Processamento de conteúdo</Td><Td>Análise de textos públicos de editais</Td><Td>Apenas texto público — nenhum dado pessoal</Td></tr>
               </Tabela>
+              <SubTitulo>5.2 Outros usuários da plataforma (Diretório de Fornecedores)</SubTitulo>
+              <p>Quando o usuário <strong>ativa voluntariamente</strong> seu perfil no Diretório de Fornecedores, os dados que ele inseriu no perfil (razão social, CNPJ, descrição, regiões, e-mail de contato, telefone e website) ficam visíveis para outros usuários da plataforma com plano que inclua acesso ao diretório.</p>
+              <Aviso tipo="destaque">
+                Esse compartilhamento é <strong>inteiramente controlado pelo usuário</strong>: ocorre apenas se o usuário ativar a visibilidade do perfil, pode ser desativado a qualquer momento, e os dados inseridos no diretório são exclusivamente aqueles que o próprio usuário escolheu informar.
+              </Aviso>
             </Section>
 
             <Section titulo="6. Seus dados estão protegidos onde quer que estejam">

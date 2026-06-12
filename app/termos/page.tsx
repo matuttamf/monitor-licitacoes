@@ -56,6 +56,7 @@ export default function TermosPage() {
                 '1. Identificação das partes','2. Aceitação e vigência','3. Descrição do serviço',
                 '4. Cadastro e conta','5. Período de teste gratuito','6. Planos e pagamento',
                 '7. Cancelamento e reembolso','8. Obrigações do usuário','9. Uso aceitável',
+                '9a. Diretório de Fornecedores',
                 '10. Propriedade intelectual','11. Disponibilidade e SLA','12. Limitação de responsabilidade',
                 '13. Privacidade e dados','14. Alterações nos termos','15. Rescisão','16. Disposições gerais',
               ].map(item => (
@@ -92,6 +93,8 @@ export default function TermosPage() {
                   { icon: '📊', titulo: 'Análise de oportunidades', desc: 'Identificação de licitações relevantes com base no perfil de monitoramento cadastrado pelo usuário' },
                   { icon: '📬', titulo: 'Alertas personalizados', desc: 'Notificações por e-mail, Telegram e WhatsApp com as licitações que correspondem ao seu perfil' },
                   { icon: '🔎', titulo: 'Painel de gestão', desc: 'Dashboard completo para visualização, busca e acompanhamento de licitações' },
+                  { icon: '🏭', titulo: 'Diretório de Fornecedores', desc: 'Espaço opcional para o usuário cadastrar o perfil de sua empresa e ser encontrado por outros usuários da plataforma para fins de negociação e parceria comercial' },
+                  { icon: '🎯', titulo: 'Radar de Inteligência', desc: 'Ferramenta de análise avançada disponível nos planos Profissional, Gestão e Empresarial' },
                 ].map(({ icon, titulo, desc }) => (
                   <div key={titulo} className="bg-[#FAF6F0] rounded-xl p-3.5 border border-[#EBE7E0]">
                     <div className="text-lg mb-1.5">{icon}</div>
@@ -175,6 +178,8 @@ export default function TermosPage() {
                   'Revender ou sublicenciar o acesso ao serviço sem autorização prévia por escrito',
                   'Utilizar os dados de licitações para fins que violem a lei de licitações (Lei nº 14.133/2021)',
                   'Criar contas fictícias ou fraudulentas para usufruir do período de teste indevidamente',
+                  'Cadastrar no Diretório de Fornecedores informações falsas, enganosas ou que violem direitos de terceiros',
+                  'Utilizar o Diretório de Fornecedores para envio de comunicações não solicitadas (spam) a outros usuários',
                 ].map(item => (
                   <div key={item} className="flex gap-2.5 items-start text-sm text-[#4a4a4d]">
                     <span className="text-[#ef4444] mt-0.5 shrink-0 font-bold">✕</span>
@@ -184,6 +189,19 @@ export default function TermosPage() {
               </div>
               <Aviso tipo="atencao">
                 O descumprimento das regras de uso aceitável pode resultar na <strong>suspensão ou encerramento imediato da conta</strong>, sem reembolso, a critério exclusivo do Monitor de Licitações.
+              </Aviso>
+            </Section>
+
+            <Section titulo="9a. Diretório de Fornecedores — regras específicas">
+              <p>O Diretório de Fornecedores é uma funcionalidade <strong>opcional</strong> que permite ao usuário cadastrar o perfil público de sua empresa para ser encontrado por outros usuários da plataforma. Ao utilizar o diretório, o usuário declara que:</p>
+              <ul>
+                <li>As informações inseridas (razão social, CNPJ, descrição, regiões, contato) são <strong>verdadeiras e de sua responsabilidade exclusiva</strong>.</li>
+                <li>Tem autorização para divulgar os dados de contato informados.</li>
+                <li>Compreende que o perfil ficará visível para todos os usuários com plano que inclua acesso ao diretório.</li>
+                <li>Pode ativar ou desativar a visibilidade do perfil a qualquer momento pelo painel.</li>
+              </ul>
+              <Aviso tipo="info">
+                O Monitor de Licitações <strong>não intermedia, garante nem participa</strong> de qualquer negociação, contrato ou transação comercial realizada entre usuários que se contatarem por meio do diretório. Qualquer relação comercial estabelecida é de responsabilidade exclusiva das partes envolvidas.
               </Aviso>
             </Section>
 
@@ -218,6 +236,8 @@ export default function TermosPage() {
                 <li>Imprecisões nos dados publicados pelos órgãos licitantes</li>
                 <li>Danos indiretos, incidentais, consequenciais, punitivos ou especiais</li>
                 <li>Falhas em serviços de terceiros (e-mail, Telegram, WhatsApp, fontes de dados)</li>
+                <li><strong>Negociações, acordos ou transações comerciais</strong> realizadas entre usuários que se encontraram por meio do Diretório de Fornecedores — o Monitor de Licitações atua exclusivamente como plataforma de conexão e não é parte em qualquer relação comercial entre usuários</li>
+                <li>Veracidade, completude ou atualidade das informações inseridas pelos usuários no Diretório de Fornecedores</li>
               </ul>
               <Aviso tipo="info">
                 A responsabilidade máxima do Monitor de Licitações em qualquer hipótese fica limitada ao <strong>valor total pago pelo usuário nos últimos 3 meses</strong> de assinatura.
