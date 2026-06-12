@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: enriquecer-receita
  * Horário: a cada 5 minutos
  *
@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 60
@@ -34,6 +34,10 @@ async function enriquecerReceita(cnpj: string) {
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const supabase = createSupabase(

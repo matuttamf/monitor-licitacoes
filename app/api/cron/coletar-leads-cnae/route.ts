@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: coletar-leads-cnae
  * Horário: sábados às 6h (semanal)
  *
@@ -19,7 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 import { createInflateRaw } from 'node:zlib'
 
@@ -244,6 +244,10 @@ async function processarArquivoRF(
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   // Delega para a Supabase Edge Function que roda em São Paulo (IP brasileiro).

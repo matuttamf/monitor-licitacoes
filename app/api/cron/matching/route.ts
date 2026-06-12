@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { encontrarMatchesDetalhado } from '@/lib/matching/gemini'
 import { calcularScore } from '@/lib/scoring'
 import { estadoCompativelComRegioes } from '@/lib/regioes'
@@ -13,6 +13,10 @@ export const maxDuration = 300
 export async function GET(request: Request) {
   if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   try {

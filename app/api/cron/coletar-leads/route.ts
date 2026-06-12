@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: coletar-leads
  * Horário: a cada 10 minutos, 24/7
  *
@@ -19,7 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { trackEnrichment } from '@/lib/uso-apis'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
@@ -142,6 +142,10 @@ async function enriquecerCnpj(cnpj: string): Promise<CnpjWs | null> {
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const supabase = createSupabase(

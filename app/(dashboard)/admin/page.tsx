@@ -105,17 +105,20 @@ export default function AdminPage() {
   // Configurações
   const [cadastroBloqueado, setCadastroBloqueado] = useState(false)
   const [togglingCadastro, setTogglingCadastro]   = useState(false)
+  const [cronsBloqueados, setCronsBloqueados]     = useState(false)
+  const [togglingCrons, setTogglingCrons]         = useState(false)
   const [prevFinanceiro, setPrevFinanceiro] = useState<PreviewFinanceiro>(null)
   const [prevCampanhas,  setPrevCampanhas]  = useState<PreviewCampanhas>(null)
 
   async function carregar() {
     setCarregando(true)
     setErro('')
-    const [resU, resS, resC, resCfg, resF, resCamp] = await Promise.all([
+    const [resU, resS, resC, resCfg, resCrons, resF, resCamp] = await Promise.all([
       fetch('/api/admin/usuarios'),
       fetch('/api/admin/stats'),
       fetch('/api/admin/cron-logs'),
       fetch('/api/admin/captacao-config?chave=cadastro_bloqueado'),
+      fetch('/api/admin/captacao-config?chave=crons_bloqueados'),
       fetch('/api/admin/financeiro'),
       fetch('/api/admin/campanhas'),
     ])
@@ -125,11 +128,12 @@ export default function AdminPage() {
       setCarregando(false)
       return
     }
-    const [u, s, c, cfg] = await Promise.all([resU.json(), resS.json(), resC.json(), resCfg.json()])
+    const [u, s, c, cfg, cfgCrons] = await Promise.all([resU.json(), resS.json(), resC.json(), resCfg.json(), resCrons.json()])
     setUsuarios(u)
     setStats(s)
     setCronData(c)
     setCadastroBloqueado(cfg.valor === 'true' || cfg.valor === true)
+    setCronsBloqueados(cfgCrons.valor === 'true' || cfgCrons.valor === true)
     if (resF.ok) setPrevFinanceiro(await resF.json())
     if (resCamp.ok) setPrevCampanhas(await resCamp.json())
     setCarregando(false)
@@ -145,6 +149,18 @@ export default function AdminPage() {
     })
     setCadastroBloqueado(novoValor)
     setTogglingCadastro(false)
+  }
+
+  async function toggleCrons() {
+    setTogglingCrons(true)
+    const novoValor = !cronsBloqueados
+    await fetch('/api/admin/captacao-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chave: 'crons_bloqueados', valor: String(novoValor) }),
+    })
+    setCronsBloqueados(novoValor)
+    setTogglingCrons(false)
   }
 
   useEffect(() => { carregar() }, [])
@@ -300,23 +316,8 @@ export default function AdminPage() {
           vazioMsg: string
         }
 
+        // Ordem alfabética: Campanhas → Captação → Financeiro → Saúde
         const cards: CardDef[] = [
-          {
-            href: '/admin/financeiro',
-            titulo: '💰 Financeiro',
-            cor: '#10b981', bg: 'rgba(16,185,129,0.05)', border: 'rgba(16,185,129,0.2)',
-            kpiVal:   prevFinanceiro ? prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }) : '—',
-            kpiLabel: 'MRR mensal',
-            chips: [
-              { label: 'Pagantes',  val: prevFinanceiro ? String(prevFinanceiro.kpis.totalPagantes) : '—', cor: '#10b981' },
-              { label: 'Trials',    val: prevFinanceiro ? String(prevFinanceiro.kpis.totalTrials)   : '—', cor: '#C9A65A' },
-              { label: 'Conversão', val: prevFinanceiro ? `${prevFinanceiro.kpis.taxaConversao}%`   : '—', cor: '#3b82f6' },
-            ],
-            nota:    prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? `⚠ ${prevFinanceiro.kpis.churnMensal} churn nos últimos 30d` : undefined,
-            notaCor: '#ef4444',
-            vazio:   !prevFinanceiro,
-            vazioMsg: carregando ? 'Carregando…' : 'Aguardando migração DB',
-          },
           {
             href: '/admin/campanhas',
             titulo: '📣 Campanhas',
@@ -346,6 +347,22 @@ export default function AdminPage() {
             notaCor: '#ef4444',
             vazio:   !stats,
             vazioMsg: carregando ? 'Carregando…' : 'Sem dados',
+          },
+          {
+            href: '/admin/financeiro',
+            titulo: '💰 Financeiro',
+            cor: '#10b981', bg: 'rgba(16,185,129,0.05)', border: 'rgba(16,185,129,0.2)',
+            kpiVal:   prevFinanceiro ? prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }) : '—',
+            kpiLabel: 'MRR mensal',
+            chips: [
+              { label: 'Pagantes',  val: prevFinanceiro ? String(prevFinanceiro.kpis.totalPagantes) : '—', cor: '#10b981' },
+              { label: 'Trials',    val: prevFinanceiro ? String(prevFinanceiro.kpis.totalTrials)   : '—', cor: '#C9A65A' },
+              { label: 'Conversão', val: prevFinanceiro ? `${prevFinanceiro.kpis.taxaConversao}%`   : '—', cor: '#3b82f6' },
+            ],
+            nota:    prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? `⚠ ${prevFinanceiro.kpis.churnMensal} churn nos últimos 30d` : undefined,
+            notaCor: '#ef4444',
+            vazio:   !prevFinanceiro,
+            vazioMsg: carregando ? 'Carregando…' : 'Aguardando migração DB',
           },
           {
             href: '/admin/saude',
@@ -442,6 +459,37 @@ export default function AdminPage() {
               </div>
               <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 1 }}>
                 {cadastroBloqueado ? 'Novos usuários não conseguem se registrar' : 'Qualquer pessoa pode criar conta'}
+              </div>
+            </div>
+          </button>
+
+          {/* Botão pausa do sistema */}
+          <button
+            onClick={toggleCrons}
+            disabled={togglingCrons}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '10px 16px', borderRadius: '12px', cursor: togglingCrons ? 'not-allowed' : 'pointer',
+              background: cronsBloqueados ? 'rgba(239,68,68,0.06)' : 'rgba(107,15,26,0.04)',
+              border: `1px solid ${cronsBloqueados ? 'rgba(239,68,68,0.35)' : 'rgba(107,15,26,0.15)'}`,
+              opacity: togglingCrons ? 0.6 : 1,
+            }}
+          >
+            <div style={{
+              width: 36, height: 20, borderRadius: 10, position: 'relative', transition: 'background .2s',
+              background: cronsBloqueados ? '#ef4444' : '#9ca3af',
+            }}>
+              <div style={{
+                position: 'absolute', top: 2, left: cronsBloqueados ? 18 : 2,
+                width: 16, height: 16, borderRadius: '50%', background: 'white', transition: 'left .2s',
+              }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: cronsBloqueados ? '#ef4444' : 'var(--preto)' }}>
+                {cronsBloqueados ? '🚨 Sistema pausado' : '⚙️ Sistema ativo'}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 1 }}>
+                {cronsBloqueados ? 'Todos os crons retornam 503 (manutenção)' : 'Crons executando normalmente'}
               </div>
             </div>
           </button>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: reconverter-trials
  * Horário: Ter/Qua/Qui às 10h BRT (13h UTC)
  *
@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
@@ -24,6 +24,10 @@ const MAX_LOTE = 15
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const supabase = createClient(

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: coletar-leads-transparencia
  * Horário: a cada 6h
  *
@@ -22,7 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 
 export const maxDuration = 300
@@ -122,6 +122,10 @@ async function buscarContratosOrgao(
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const apiKey = process.env.PORTAL_TRANSPARENCIA_API_KEY

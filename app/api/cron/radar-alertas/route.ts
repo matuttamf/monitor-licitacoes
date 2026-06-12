@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: Radar de Inteligência — roda toda segunda-feira às 8h.
  * Envia digest de contratos vencendo nos próximos 90 dias
  * para usuários dos planos Pro e Empresarial.
@@ -135,6 +135,10 @@ function gerarTelegram(em30: ContratoVencendo[], em60: ContratoVencendo[], em90:
 export async function GET(request: Request) {
   if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const supabase = createAdminClient()

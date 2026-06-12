@@ -1,3 +1,5 @@
+import { createAdminClient } from '@/lib/supabase/server'
+
 /**
  * Helper de autenticação para rotas de cron.
  *
@@ -9,11 +11,28 @@
  */
 export function verificarCronAuth(request: Request): boolean {
   const cronSecret = process.env.CRON_SECRET
-  // Se CRON_SECRET não configurado, bloqueia sempre (configuração inválida)
   if (!cronSecret) return false
 
-  const auth      = request.headers.get('authorization')
-  const xSecret   = request.headers.get('x-cron-secret')
+  const auth    = request.headers.get('authorization')
+  const xSecret = request.headers.get('x-cron-secret')
 
   return auth === `Bearer ${cronSecret}` || xSecret === cronSecret
+}
+
+/**
+ * Retorna true se o sistema estiver pausado para manutenção.
+ * Cada cron deve chamar isso após verificarCronAuth e retornar 503 se pausado.
+ */
+export async function sistemaPausado(): Promise<boolean> {
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'crons_bloqueados')
+      .maybeSingle()
+    return data?.valor === true || data?.valor === 'true'
+  } catch {
+    return false
+  }
 }

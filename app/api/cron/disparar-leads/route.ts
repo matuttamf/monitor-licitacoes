@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cron: disparar-leads
  * Horário: seg-sex às 8h, 9h, 12h, 14h, 16h (horário de Brasília = UTC-3)
  *
@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
@@ -103,6 +103,10 @@ const PROXIMOS_DIAS = [4, 4, 9, 15, 30, 30, 60]
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const supabase = createClient(

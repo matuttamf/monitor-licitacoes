@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import type { LicitacaoRaw } from '@/lib/scrapers/types'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 
 // ── Camada 1 — Federais obrigatórios ──────────────────────────────────────
 import { coletarPNCP }             from '@/lib/scrapers/pncp'
@@ -209,6 +209,10 @@ const TOTAL_FONTES = 346
 export async function GET(request: Request) {
   if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   const hoje  = new Date()

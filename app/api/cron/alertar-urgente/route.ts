@@ -1,4 +1,4 @@
-/**
+﻿/**
  * /api/cron/alertar-urgente
  *
  * Roda a cada 20 minutos durante o horário comercial (BRT 7-17h seg-sex, 7-15h sáb).
@@ -9,7 +9,7 @@
 
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { enviarAlertaTelegram } from '@/lib/alerts/telegram'
 import { enviarAlertaWhatsApp } from '@/lib/alerts/whatsapp'
 import { registrarCronLog } from '@/lib/cron-log'
@@ -28,6 +28,10 @@ function dentroDoHorario(): boolean {
 export async function GET(request: Request) {
   if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
 
   if (!dentroDoHorario()) {
