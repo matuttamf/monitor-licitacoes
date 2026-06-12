@@ -50,6 +50,27 @@ type SyncResultado = {
 
 type ReceitaPlano = { plano: string; count: number; receita: number }
 
+type Despesa = {
+  id: string
+  descricao: string
+  valor: number
+  categoria: string
+  recorrente: boolean
+  mes: number | null
+  ano: number | null
+  criado_em: string
+}
+
+const CATEGORIAS: Record<string, { label: string; cor: string; bg: string }> = {
+  infraestrutura: { label: 'Infraestrutura', cor: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  marketing:      { label: 'Marketing',      cor: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+  pessoal:        { label: 'Pessoal',        cor: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  servicos:       { label: 'Serviços',       cor: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+  comissao:       { label: 'Comissão',       cor: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  imposto:        { label: 'Imposto',        cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
+  outro:          { label: 'Outro',          cor: '#64748b', bg: 'rgba(100,116,139,0.1)'},
+}
+
 type Kpis = {
   mrr: number
   mrrLiquido: number
@@ -111,11 +132,13 @@ const MP_STATUS_LABEL: Record<string, { label: string; cor: string }> = {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
+const MESES_NOMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+
 export default function FinanceiroPage() {
   const [kpis, setKpis]               = useState<Kpis | null>(null)
   const [assinantes, setAssinantes]   = useState<Assinante[]>([])
   const [carregando, setCarregando]   = useState(true)
-  const [aba, setAba]                 = useState<'assinantes' | 'nf' | 'bloqueados'>('assinantes')
+  const [aba, setAba]                 = useState<'assinantes' | 'nf' | 'bloqueados' | 'despesas'>('assinantes')
   const [busca, setBusca]             = useState('')
   const [filtroPlano, setFiltroPlano] = useState('todos')
   const [filtroStatus, setFiltroStatus] = useState('todos')
@@ -126,6 +149,23 @@ export default function FinanceiroPage() {
   const [sincronizando, setSincronizando] = useState(false)
   const [syncId, setSyncId]           = useState<string | null>(null)
   const [syncResultado, setSyncResultado] = useState<SyncResultado[] | null>(null)
+
+  // Despesas
+  const agora = new Date()
+  const [despesas, setDespesas]           = useState<Despesa[]>([])
+  const [mesFiltro, setMesFiltro]         = useState(agora.getMonth() + 1)
+  const [anoFiltro, setAnoFiltro]         = useState(agora.getFullYear())
+  const [salvandoDesp, setSalvandoDesp]   = useState(false)
+  const [editandoDesp, setEditandoDesp]   = useState<Despesa | null>(null)
+  const [formDesp, setFormDesp] = useState({
+    descricao: '', valor: '', categoria: 'outro', recorrente: false,
+    mes: String(agora.getMonth() + 1), ano: String(agora.getFullYear()),
+  })
+
+  async function carregarDespesas(mes = mesFiltro, ano = anoFiltro) {
+    const res = await fetch(`/api/admin/financeiro/despesas?mes=${mes}&ano=${ano}`)
+    if (res.ok) { const d = await res.json(); setDespesas(d.despesas ?? []) }
+  }
 
   async function carregar() {
     setCarregando(true)
@@ -138,7 +178,47 @@ export default function FinanceiroPage() {
     setCarregando(false)
   }
 
-  useEffect(() => { carregar() }, [])
+  useEffect(() => { carregar(); carregarDespesas() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function salvarDespesa() {
+    if (!formDesp.descricao.trim() || !formDesp.valor) return
+    setSalvandoDesp(true)
+    const body = editandoDesp
+      ? { id: editandoDesp.id, descricao: formDesp.descricao, valor: Number(formDesp.valor),
+          categoria: formDesp.categoria, recorrente: formDesp.recorrente,
+          mes: formDesp.recorrente ? null : Number(formDesp.mes),
+          ano: formDesp.recorrente ? null : Number(formDesp.ano) }
+      : { descricao: formDesp.descricao, valor: Number(formDesp.valor),
+          categoria: formDesp.categoria, recorrente: formDesp.recorrente,
+          mes: formDesp.recorrente ? null : Number(formDesp.mes),
+          ano: formDesp.recorrente ? null : Number(formDesp.ano) }
+    await fetch('/api/admin/financeiro/despesas', {
+      method: editandoDesp ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    setSalvandoDesp(false)
+    setEditandoDesp(null)
+    setFormDesp({ descricao: '', valor: '', categoria: 'outro', recorrente: false,
+      mes: String(mesFiltro), ano: String(anoFiltro) })
+    carregarDespesas()
+  }
+
+  async function excluirDespesa(id: string) {
+    if (!confirm('Excluir esta despesa?')) return
+    await fetch(`/api/admin/financeiro/despesas?id=${id}`, { method: 'DELETE' })
+    carregarDespesas()
+  }
+
+  function abrirEdicaoDespesa(d: Despesa) {
+    setEditandoDesp(d)
+    setFormDesp({
+      descricao: d.descricao, valor: String(d.valor), categoria: d.categoria,
+      recorrente: d.recorrente,
+      mes: d.mes ? String(d.mes) : String(mesFiltro),
+      ano: d.ano ? String(d.ano) : String(anoFiltro),
+    })
+  }
 
   async function alterarStatus(id: string, status: string) {
     setAcaoId(id)
@@ -220,6 +300,21 @@ export default function FinanceiroPage() {
         <div class="kpi"><div class="kpi-val" style="color:#f59e0b">${moeda(totalComissoesMes * 12)}</div><div class="kpi-lbl">Comissões/ano (est.)</div><div class="kpi-sub">projeção anual</div></div>
       </div>` : ''
 
+    const totalDespMes = despesas.reduce((s, d) => s + d.valor, 0)
+    const resultadoLiq = mrrLiquidoCalc - totalDespMes
+
+    const blocoDespesas = despesas.length > 0 ? `
+      <h3 style="margin:20px 0 10px;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Despesas operacionais (${MESES_NOMES[mesFiltro - 1]}/${anoFiltro})</h3>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><div class="kpi-val" style="color:#ef4444">${moeda(totalDespMes)}</div><div class="kpi-lbl">Total despesas</div><div class="kpi-sub">${despesas.length} lançamento${despesas.length !== 1 ? 's' : ''}</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:${resultadoLiq >= 0 ? '#10b981' : '#ef4444'}">${moeda(resultadoLiq)}</div><div class="kpi-lbl">Resultado líquido</div><div class="kpi-sub">MRR líq. − despesas</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#f59e0b">${moeda(despesas.filter(d => d.recorrente).reduce((s, d) => s + d.valor, 0))}</div><div class="kpi-lbl">Custos fixos/mês</div><div class="kpi-sub">recorrentes</div></div>
+      </div>
+      <table><thead><tr><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>
+        ${despesas.map(d => `<tr><td>${d.descricao}</td><td>${CATEGORIAS[d.categoria]?.label ?? d.categoria}</td><td>${d.recorrente ? '↺ Fixo' : '· Pontual'}</td><td style="font-family:monospace;font-weight:700;color:#ef4444">${moeda(d.valor)}</td></tr>`).join('')}
+        <tr style="background:#f8fafc"><td colspan="3" style="font-weight:700;text-transform:uppercase;font-size:11px">Total</td><td style="font-family:monospace;font-weight:800;color:#ef4444">${moeda(totalDespMes)}</td></tr>
+      </tbody></table>` : ''
+
     const kpiCards = tipo === 'mes' ? `
       <div class="kpi-grid">
         <div class="kpi"><div class="kpi-val green">${moeda(mrrBruto)}</div><div class="kpi-lbl">MRR Bruto</div><div class="kpi-sub">receita mensal recorrente</div></div>
@@ -274,6 +369,7 @@ export default function FinanceiroPage() {
 <div class="sub">Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · Monitor de Licitações</div>
 ${tipo === 'ano' ? `<div class="aviso">⚠ Receita acumulada é uma estimativa baseada nos meses ativos desde 01/01/${ano}. Para valores exatos, consulte o extrato do MercadoPago.</div>` : ''}
 ${kpiCards}
+${blocoDespesas}
 <h3 style="margin:24px 0 10px">Assinantes ativos (${pagantesAtivos.length})</h3>
 <table><thead><tr>${colHead}</tr></thead><tbody>${rowsAssinantes}</tbody></table>
 <footer>Monitor de Licitações — monitordelicitacoes.com.br · Documento gerado para fins contábeis</footer>
@@ -308,6 +404,9 @@ ${kpiCards}
   const pagantes   = assinantes.filter(a => a.status === 'active')
   const trials     = assinantes.filter(a => a.status === 'trial')
   const bloqueados = assinantes.filter(a => a.status === 'bloqueado' || a.status === 'expired')
+
+  const totalDespesasMes = despesas.reduce((s, d) => s + d.valor, 0)
+  const resultadoLiquido = (kpis?.mrrLiquido ?? 0) - totalDespesasMes
 
   function filtrar(lista: Assinante[]) {
     let resultado = lista.filter(a => {
@@ -482,6 +581,7 @@ ${kpiCards}
             ['assinantes', `Assinantes (${pagantes.length + trials.length})`],
             ['nf',         `Dados NF (${pagantes.length})`],
             ['bloqueados', `Expirados/Bloqueados (${bloqueados.length})`],
+            ['despesas',   `Despesas`],
           ] as const).map(([id, label]) => (
             <button key={id} onClick={() => setAba(id)}
               style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', background: aba === id ? 'var(--vinho)' : 'white', color: aba === id ? 'white' : 'var(--cinza)', border: aba === id ? 'none' : '1px solid var(--cinza-light)' } as React.CSSProperties}>
@@ -754,6 +854,169 @@ ${kpiCards}
               </tbody>
             </table>
           )}
+        </div>
+      )}
+
+      {/* ══ ABA DESPESAS ══ */}
+      {aba === 'despesas' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* Filtro de mês/ano + totais */}
+          <div className="rounded-2xl p-5" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)' }}>Período</span>
+              <select value={mesFiltro} onChange={e => { const m = Number(e.target.value); setMesFiltro(m); carregarDespesas(m, anoFiltro) }}
+                style={{ padding: '7px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                {MESES_NOMES.map((n, i) => <option key={i+1} value={i+1}>{n}</option>)}
+              </select>
+              <select value={anoFiltro} onChange={e => { const a = Number(e.target.value); setAnoFiltro(a); carregarDespesas(mesFiltro, a) }}
+                style={{ padding: '7px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                {[2024, 2025, 2026, 2027].map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+              {[
+                { label: 'Total despesas',    value: moeda(totalDespesasMes),               cor: '#ef4444', sub: `${despesas.length} lançamento${despesas.length !== 1 ? 's' : ''}` },
+                { label: 'MRR Líquido',       value: moeda(kpis?.mrrLiquido ?? 0),          cor: '#3b82f6', sub: 'após comissões' },
+                { label: 'Resultado líquido', value: moeda(resultadoLiquido),               cor: resultadoLiquido >= 0 ? '#10b981' : '#ef4444', sub: 'MRR líq. − despesas' },
+                { label: 'Fixas/mês',         value: moeda(despesas.filter(d => d.recorrente).reduce((s, d) => s + d.valor, 0)), cor: '#f59e0b', sub: 'custos recorrentes' },
+              ].map(({ label, value, cor, sub }) => (
+                <div key={label} style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: cor, letterSpacing: '-0.02em' }}>{value}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--preto)', marginTop: '3px' }}>{label}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cinza)' }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Formulário de nova despesa / edição */}
+          <div className="rounded-2xl p-5" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '14px' }}>
+              {editandoDesp ? 'Editar despesa' : 'Novo lançamento'}
+            </h3>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: '2 1 200px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Descrição</label>
+                <input value={formDesp.descricao} onChange={e => setFormDesp(p => ({ ...p, descricao: e.target.value }))}
+                  placeholder="Ex: Vercel Pro, Resend, …"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+              </div>
+              <div style={{ flex: '1 1 110px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Valor (R$)</label>
+                <input type="number" min="0" step="0.01" value={formDesp.valor} onChange={e => setFormDesp(p => ({ ...p, valor: e.target.value }))}
+                  placeholder="0,00"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+              </div>
+              <div style={{ flex: '1 1 130px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Categoria</label>
+                <select value={formDesp.categoria} onChange={e => setFormDesp(p => ({ ...p, categoria: e.target.value }))}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                  {Object.entries(CATEGORIAS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </div>
+              {!formDesp.recorrente && (<>
+                <div style={{ flex: '0 0 90px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Mês</label>
+                  <select value={formDesp.mes} onChange={e => setFormDesp(p => ({ ...p, mes: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                    {MESES_NOMES.map((n, i) => <option key={i+1} value={String(i+1)}>{n}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: '0 0 80px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Ano</label>
+                  <select value={formDesp.ano} onChange={e => setFormDesp(p => ({ ...p, ano: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                    {[2024, 2025, 2026, 2027].map(a => <option key={a} value={String(a)}>{a}</option>)}
+                  </select>
+                </div>
+              </>)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', paddingBottom: '2px' }}>
+                <input type="checkbox" id="recorrente" checked={formDesp.recorrente} onChange={e => setFormDesp(p => ({ ...p, recorrente: e.target.checked }))}
+                  style={{ width: '16px', height: '16px', accentColor: 'var(--vinho)', cursor: 'pointer' }} />
+                <label htmlFor="recorrente" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', cursor: 'pointer', whiteSpace: 'nowrap' }}>Custo fixo (mensal)</label>
+              </div>
+              <div style={{ display: 'flex', gap: '7px', paddingBottom: '2px' }}>
+                {editandoDesp && (
+                  <button onClick={() => { setEditandoDesp(null); setFormDesp({ descricao: '', valor: '', categoria: 'outro', recorrente: false, mes: String(mesFiltro), ano: String(anoFiltro) }) }}
+                    style={{ padding: '8px 14px', borderRadius: '9px', fontSize: '13px', fontWeight: 600, border: '1.5px solid var(--cinza-light)', color: 'var(--cinza)', background: 'white', cursor: 'pointer' }}>
+                    Cancelar
+                  </button>
+                )}
+                <button onClick={salvarDespesa} disabled={salvandoDesp || !formDesp.descricao.trim() || !formDesp.valor}
+                  style={{ padding: '8px 20px', borderRadius: '9px', fontSize: '13px', fontWeight: 700, color: 'white', background: salvandoDesp ? '#9AA0A6' : 'var(--vinho)', border: 'none', cursor: (salvandoDesp || !formDesp.descricao.trim() || !formDesp.valor) ? 'not-allowed' : 'pointer' }}>
+                  {salvandoDesp ? 'Salvando…' : editandoDesp ? 'Atualizar' : '+ Adicionar'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de despesas */}
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cinza-light)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)' }}>
+                Lançamentos — {MESES_NOMES[mesFiltro - 1]}/{anoFiltro}
+              </span>
+            </div>
+            {despesas.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--cinza)', fontSize: '14px' }}>Nenhuma despesa lançada para este período.</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+                    {['Descrição', 'Categoria', 'Tipo', 'Mês/Ano', 'Valor', 'Ações'].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {despesas.map(d => {
+                    const cat = CATEGORIAS[d.categoria] ?? CATEGORIAS.outro
+                    return (
+                      <tr key={d.id} className="hover:bg-gray-50" style={{ borderBottom: '1px solid var(--cinza-light)' }}>
+                        <td className="px-4 py-3">
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)' }}>{d.descricao}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 9px', borderRadius: '8px', background: cat.bg, color: cat.cor }}>{cat.label}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span style={{ fontSize: '12px', color: d.recorrente ? '#f59e0b' : 'var(--cinza)', fontWeight: 600 }}>
+                            {d.recorrente ? '↺ Fixo' : '· Pontual'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3" style={{ fontSize: '12px', color: 'var(--cinza)' }}>
+                          {d.recorrente ? 'Todo mês' : `${d.mes ? MESES_NOMES[d.mes - 1] : '?'}/${d.ano ?? '?'}`}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span style={{ fontSize: '14px', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace' }}>{moeda(d.valor)}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={() => abrirEdicaoDespesa(d)}
+                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
+                              Editar
+                            </button>
+                            <button onClick={() => excluirDespesa(d.id)}
+                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
+                              Excluir
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ borderTop: '2px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
+                    <td colSpan={4} className="px-4 py-3" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</td>
+                    <td className="px-4 py-3" style={{ fontSize: '15px', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace' }}>{moeda(totalDespesasMes)}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            )}
+          </div>
         </div>
       )}
 

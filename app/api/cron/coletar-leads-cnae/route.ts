@@ -104,8 +104,8 @@ interface LeadRow {
   uf:           string | null
   municipio:    string | null
   cnae_codigo:  string | null
-  status:       'invalido'
-  situacao:     null
+  status:       'invalido' | 'pendente'
+  situacao:     string
   origem:       'cnae'
 }
 
