@@ -7,11 +7,19 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? ''
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
 const CONCORRENCIA = 5
 const LOTE         = 500
+
+console.log('SUPABASE_URL:', SUPABASE_URL ? SUPABASE_URL.slice(0, 35) + '…' : '*** UNDEFINED ***')
+console.log('SERVICE_KEY:', SERVICE_KEY ? `${SERVICE_KEY.length} chars` : '*** UNDEFINED ***')
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error('Variáveis de ambiente não configuradas. Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY')
+  process.exit(1)
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
