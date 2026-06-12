@@ -106,27 +106,22 @@ const CNAE_POR_SEGMENTO: Record<string, string[]> = {
   equipamentos:  ['4669999','3314700','4662100'],
 }
 
-// Todos os CNAEs definidos nos segmentos — usado como complemento quando a base é escassa
-const CNAE_SEGMENTOS_TODOS = new Set(Object.values(CNAE_POR_SEGMENTO).flat())
-
 async function getTargetCnaes(): Promise<Set<string>> {
-  // Top 200 CNAEs das empresas coletadas via licitações/contratos (excluindo origem='cnae')
+  // Top 200 CNAEs dos leads já coletados via licitações/contratos (coluna 'cnae', excluindo origem='cnae')
   const { data: leadsData } = await supabase
     .from('leads')
-    .select('cnae_codigo')
-    .not('cnae_codigo', 'is', null)
+    .select('cnae')
+    .not('cnae', 'is', null)
     .neq('origem', 'cnae')
-    .limit(10000)
+    .limit(50000)
   const counts: Record<string, number> = {}
-  for (const r of (leadsData ?? []) as { cnae_codigo: string | null }[]) {
-    const code = String(r.cnae_codigo).replace(/\D/g,'').slice(0,7)
+  for (const r of (leadsData ?? []) as { cnae: string | null }[]) {
+    const code = String(r.cnae).replace(/\D/g,'').slice(0,7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
   const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
-
-  // Sempre complementa com os CNAEs dos segmentos e o seed para garantir cobertura ampla
-  const todos = new Set([...top, ...CNAE_SEGMENTOS_TODOS, ...CNAE_SEED])
-  console.log(`  CNAEs-alvo: ${todos.size} (${top.length} da base + ${CNAE_SEGMENTOS_TODOS.size} segmentos + seed)`)
+  const todos = top.length >= 10 ? new Set(top) : CNAE_SEED
+  console.log(`  CNAEs-alvo: ${todos.size} (de licitações/contratos)`)
   return todos
 }
 
