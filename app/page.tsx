@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import ContadorAoVivo from '@/app/components/ContadorAoVivo'
 
 // ─── SEO ─────────────────────────────────────────────────────────────────────
 
@@ -485,10 +486,7 @@ export default function LandingPage() {
                   <div key={i} className="w-6 h-6 rounded-full border-2 border-white" style={{ background: c }} />
                 ))}
               </div>
-              <span className="text-xs font-semibold text-[#1A1A1C]">
-                <span className="text-[#6B0F1A]">+230 empresas</span> monitorando licitações agora
-              </span>
-              <span className="text-[10px] text-[#9AA0A6] border-l border-[#D5D2C8] pl-3">🔴 ao vivo</span>
+              <ContadorAoVivo />
             </div>
             <div className="inline-flex items-center gap-2 bg-[rgba(201,166,90,0.08)] border border-[rgba(201,166,90,0.25)] rounded-full px-4 py-2">
               <span className="text-[11px] font-bold text-[#6B0F1A]">⚡ Ativação imediata · Primeiros alertas chegam hoje</span>
