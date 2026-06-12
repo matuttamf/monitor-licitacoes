@@ -255,29 +255,39 @@ export async function GET(req: NextRequest) {
   const edgeFnUrl = process.env.SUPABASE_EDGE_FN_CNAE_URL
     ?? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/coletar-leads-cnae`
 
+  const supabase = createSupabase(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+
+  let edgeRes: Response
   try {
-    const edgeRes = await fetch(edgeFnUrl, {
+    edgeRes = await fetch(edgeFnUrl, {
       method:  'GET',
-      headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      },
+      headers: { 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
       signal: AbortSignal.timeout(280_000),
     })
-
-    const texto = await edgeRes.text()
-    let resultado: Record<string, unknown>
-    try { resultado = JSON.parse(texto) as Record<string, unknown> } catch { resultado = { ok: false, erro: texto.slice(0, 300) } }
-    const supabase  = createSupabase(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
-    await salvarResultadoCron(supabase, 'coletar-leads-cnae', resultado)
-    return NextResponse.json(resultado, { status: edgeRes.ok ? 200 : 500 })
   } catch (e) {
-    const erro = `edge fn erro: ${e}`
+    const isTimeout = e instanceof Error && e.name === 'TimeoutError'
+    const erro = isTimeout
+      ? `edge fn timeout após 280s — Supabase pode estar lenta ou fora do ar`
+      : `edge fn não alcançável: ${e}`
     console.error('[coletar-leads-cnae]', erro)
     await registrarCronLog({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
     return NextResponse.json({ ok: false, erro }, { status: 500 })
   }
+
+  const texto = await edgeRes.text()
+  let resultado: Record<string, unknown>
+  try {
+    resultado = JSON.parse(texto) as Record<string, unknown>
+  } catch {
+    const erro = `edge fn retornou HTTP ${edgeRes.status} com corpo não-JSON: ${texto.slice(0, 200)}`
+    console.error('[coletar-leads-cnae]', erro)
+    resultado = { ok: false, erro }
+  }
+
+  await salvarResultadoCron(supabase, 'coletar-leads-cnae', resultado)
+  return NextResponse.json(resultado, { status: edgeRes.ok ? 200 : 500 })
 
 }
