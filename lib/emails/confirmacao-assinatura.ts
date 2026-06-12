@@ -100,7 +100,10 @@ export function emailConfirmacaoAssinatura(p: ParamsConfirmacao) {
   </div>
   <div class="footer">
     <p>Monitor de Licitações · Matutta Soluções Digitais<br>
-    E-mail enviado para ${p.email}</p>
+    E-mail enviado para ${p.email}<br>
+    <a href="${url}/perfil" style="color:#aaa;">Gerenciar preferências de e-mail</a>
+    &nbsp;·&nbsp;
+    <a href="${url}/descadastrar?email=${encodeURIComponent(p.email)}" style="color:#aaa;">Descadastrar</a></p>
   </div>
 </div>
 </body>

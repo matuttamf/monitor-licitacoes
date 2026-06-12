@@ -8,7 +8,8 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)
 }
 
-function baseEmail(conteudo: string): string {
+function baseEmail(conteudo: string, email: string): string {
+  const url = APP_URL.replace(/\/$/, '')
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -40,7 +41,10 @@ function baseEmail(conteudo: string): string {
   <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
     <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
       Monitor de Licitações · Matutta<br>
-      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
+      <a href="${url}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
+      &nbsp;·&nbsp;
+      <a href="${url}/descadastrar?email=${encodeURIComponent(email)}" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Descadastrar</a>
     </p>
   </td></tr>
   <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
@@ -111,6 +115,6 @@ export async function enviarEmailSugestoesKeywords(
       Quanto mais palavras, mais editais você encontra. Você pode adicionar a qualquer momento.
     </p>
   </td></tr>
-`),
+`, email),
   })
 }

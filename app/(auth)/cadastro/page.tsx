@@ -334,8 +334,9 @@ function CadastroConteudo() {
                 Ao criar sua conta, você concorda com nossos{' '}
                 <Link href="/termos" className="text-[#6B0F1A] font-semibold no-underline">Termos de Uso</Link>
                 {' '}e{' '}
-                <Link href="/privacidade" className="text-[#6B0F1A] font-semibold no-underline">Política de Privacidade</Link>.
-                {' '}Após os sete dias de teste, assine a partir de R$49,90/mês ou cancele sem nenhum custo.
+                <Link href="/privacidade" className="text-[#6B0F1A] font-semibold no-underline">Política de Privacidade</Link>
+                {' '}e <strong className="text-[#4a4a4d]">autoriza o recebimento de e-mails</strong> sobre alertas de licitações, atualizações da plataforma e dicas de uso.
+                {' '}Você pode cancelar a qualquer momento nas configurações do perfil.
               </p>
             </div>
           )}
