@@ -493,35 +493,40 @@ export default function CaptacaoPage() {
             </div>
           ))}
 
-          {/* Reset leads */}
-          <div style={{ borderLeft: '2px solid var(--cinza-light)', paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div>
-              <button onClick={() => resetLeads('enviados')} disabled={resetando}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: resetando ? 'var(--cinza-light)' : '#f59e0b', color: resetando ? 'var(--cinza)' : '#1a1a1c', border: 'none', cursor: resetando ? 'not-allowed' : 'pointer' }}>
-                {resetando ? '⏳ Resetando…' : '↺ Reset enviados'}
-              </button>
-              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>Volta "enviado" → pendente (recebem do zero)</p>
-            </div>
-            <div>
-              <button onClick={() => resetLeads('todos')} disabled={resetando}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: resetando ? 'var(--cinza-light)' : '#ef4444', color: 'white', border: 'none', cursor: resetando ? 'not-allowed' : 'pointer' }}>
-                {resetando ? '⏳ Resetando…' : '↺ Reset tudo'}
-              </button>
-              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>Inclui erro + inválidos também</p>
-            </div>
-            <div>
-              <button onClick={() => resetLeads('completo')} disabled={resetando}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: resetando ? 'var(--cinza-light)' : '#7c3aed', color: 'white', border: 'none', cursor: resetando ? 'not-allowed' : 'pointer' }}>
-                {resetando ? '⏳ Resetando…' : '↺ Zerar tudo'}
-              </button>
-              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>Zera todos os contadores (desc. → inválido)</p>
-            </div>
-            {resetMsg && <p style={{ fontSize: 11, color: resetMsg.startsWith('✓') ? '#10b981' : '#ef4444', marginTop: 2, fontWeight: 600 }}>{resetMsg}</p>}
-          </div>
         </div>
+
+        {/* Reset — linha separada abaixo dos crons, estilo discreto */}
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--cinza-light)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>Reset leads</span>
+          {([
+            { scope: 'enviados' as const, label: '↺ Enviados → pendente', title: 'Volta leads "enviado" para pendente',       bg: 'transparent', color: '#92400e', border: '#f59e0b' },
+            { scope: 'todos'    as const, label: '↺ Incl. erros',         title: 'Inclui erro + inválido → pendente',        bg: 'transparent', color: '#991b1b', border: '#ef4444' },
+            { scope: 'completo' as const, label: '↺ Zerar contadores',    title: 'Zera tudo — descadastrados vão p/ inválido', bg: 'transparent', color: '#5b21b6', border: '#8b5cf6' },
+          ]).map(({ scope, label, title, bg, color, border }) => (
+            <div key={scope}>
+              <button
+                onClick={() => resetLeads(scope)}
+                disabled={resetando}
+                title={title}
+                style={{
+                  padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                  background: resetando ? 'var(--cinza-light)' : bg,
+                  color: resetando ? 'var(--cinza)' : color,
+                  border: `1px solid ${resetando ? 'var(--cinza-light)' : border}`,
+                  cursor: resetando ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                }}>
+                {resetando ? '…' : label}
+              </button>
+            </div>
+          ))}
+          {resetMsg && (
+            <span style={{ fontSize: 11, fontWeight: 600, color: resetMsg.startsWith('✓') ? '#10b981' : '#ef4444' }}>
+              {resetMsg}
+            </span>
+          )}
+        </div>
+      </div>
       {/* ── Inserção manual de lead ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <div className="flex items-center justify-between mb-1">
