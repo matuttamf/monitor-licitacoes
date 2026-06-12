@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-export function NavItem({ href, label, icon, sub }: { href: string; label: string; icon: string; sub?: boolean }) {
+export function NavItem({ href, label, icon, sub, badge }: { href: string; label: string; icon: string; sub?: boolean; badge?: string }) {
   const pathname = usePathname()
 
   // Sub-itens: ativo apenas se pathname === href ou começa com href/
@@ -27,7 +27,13 @@ export function NavItem({ href, label, icon, sub }: { href: string; label: strin
       }}
     >
       <span style={{ fontSize: sub ? '12px' : '14px', color: 'var(--dourado)', opacity: ativo ? 1 : sub ? 0.45 : 0.6 }}>{icon}</span>
-      <span className={sub ? 'font-medium' : 'font-medium'}>{label}</span>
+      <span className="font-medium flex-1">{label}</span>
+      {badge && (
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none"
+          style={{ background: 'rgba(201,166,90,0.2)', color: 'var(--dourado)', border: '1px solid rgba(201,166,90,0.35)' }}>
+          {badge}
+        </span>
+      )}
     </Link>
   )
 }

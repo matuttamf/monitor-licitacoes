@@ -61,10 +61,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const exibirRadar        = isAdmin || temRadar(planoEfetivo)
   const exibirFornecedores = isAdmin || temFornecedores(planoEfetivo)
 
-  const allNavItems: { href: string; label: string; icon: string; sub?: boolean }[] = [
+  const allNavItems: { href: string; label: string; icon: string; sub?: boolean; badge?: string }[] = [
     ...navItems,
     ...(exibirRadar        ? [{ href: '/radar',        label: 'Radar',        icon: '🎯' }] : []),
-    ...(exibirFornecedores ? [{ href: '/fornecedores', label: 'Fornecedores', icon: '🏭' }] : []),
+    ...(exibirFornecedores ? [{ href: '/fornecedores', label: 'Fornecedores', icon: '🏭', badge: 'Novo' }] : []),
     ...(exibirEquipe       ? [{ href: '/equipe',       label: 'Minha Equipe', icon: '◫' }] : []),
     ...(user.email === ADMIN_EMAIL ? [
       { href: '/admin',               label: 'Admin',          icon: '⚙' },
@@ -118,7 +118,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-0.5">
           {allNavItems.map(item => (
-            <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} sub={item.sub} />
+            <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} sub={item.sub} badge={item.badge} />
           ))}
         </nav>
 
