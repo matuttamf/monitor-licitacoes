@@ -202,6 +202,15 @@ export default function AdminPage() {
   async function dispararAcao(acao: string) {
     setDisparando(acao)
     setResultadoTrigger(null)
+
+    // coletar-leads-cnae roda via GitHub Actions (sem limite de tempo, IP brasileiro)
+    if (acao === 'coletar-leads-cnae') {
+      const res = await fetch('/api/admin/trigger-github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflow: 'coletar-leads-rfb.yml' }) })
+      setResultadoTrigger({ ok: res.ok, status: res.status, data: await res.json() })
+      setDisparando(null)
+      return
+    }
+
     const res = await fetch('/api/admin/trigger', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao }) })
     setResultadoTrigger({ ok: res.ok, status: res.status, data: await res.json() })
     setDisparando(null)
