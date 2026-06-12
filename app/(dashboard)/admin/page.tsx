@@ -543,7 +543,7 @@ export default function AdminPage() {
           >
             <div style={{
               width: 36, height: 20, borderRadius: 10, position: 'relative', transition: 'background .2s',
-              background: cronsBloqueados ? '#ef4444' : '#9ca3af',
+              background: cronsBloqueados ? '#ef4444' : '#10b981',
             }}>
               <div style={{
                 position: 'absolute', top: 2, left: cronsBloqueados ? 18 : 2,
@@ -551,7 +551,7 @@ export default function AdminPage() {
               }} />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: cronsBloqueados ? '#ef4444' : 'var(--preto)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: cronsBloqueados ? '#ef4444' : '#10b981' }}>
                 {cronsBloqueados ? '🚨 Sistema pausado' : '⚙️ Sistema ativo'}
               </div>
               <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 1 }}>

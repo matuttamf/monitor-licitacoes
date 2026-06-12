@@ -264,7 +264,9 @@ export async function GET(req: NextRequest) {
       signal: AbortSignal.timeout(280_000),
     })
 
-    const resultado = await edgeRes.json()
+    const texto = await edgeRes.text()
+    let resultado: unknown
+    try { resultado = JSON.parse(texto) } catch { resultado = { ok: false, erro: texto.slice(0, 300) } }
     const supabase  = createSupabase(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

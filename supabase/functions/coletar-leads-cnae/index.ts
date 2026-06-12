@@ -11,7 +11,7 @@
  *   CRON_SECRET               (mesma que na Vercel)
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const MAX_LEADS       = 2000
 const MAX_LINHAS      = 500_000
@@ -32,8 +32,13 @@ function getAnoMes() {
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
-function getRFUrl(fileIdx: number, ano: number, mes: number) {
-  return `https://dados.rfb.gov.br/CNPJ/dados_abertos_cnpj/${ano}-${String(mes).padStart(2,'0')}/Estabelecimentos${fileIdx}.zip`
+function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
+  const mesStr = String(mes).padStart(2, '0')
+  const base = Deno.env.get('SUPABASE_URL') ?? ''
+  return [
+    `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
+    `https://dados.rfb.gov.br/CNPJ/dados_abertos_cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
+  ]
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,16 +81,25 @@ Deno.serve(async (_req: Request) => {
   }
 
   const targetCnaes = await getTargetCnaes(supabase)
-  const url = getRFUrl(estado.file_idx, estado.ano, estado.mes)
-  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} skip=${estado.rows_processed} cnae_alvo=${targetCnaes.size} url=${url}`)
+  const urls = getRFUrls(estado.file_idx, estado.ano, estado.mes)
+  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} skip=${estado.rows_processed} cnae_alvo=${targetCnaes.size}`)
 
-  // Download com IP brasileiro (sem bloqueio)
-  const res = await fetch(url, { headers: { 'User-Agent': 'MonitorLicitacoes/1.0' } })
-  if (!res.ok || !res.body) {
-    const erro = `HTTP ${res.status} ao baixar ${url}`
-    await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
-    return new Response(JSON.stringify({ ok: false, erro }), { status: 500 })
+  // Tenta Supabase Storage primeiro, depois RF direto
+  let res: Response | null = null
+  let urlUsada = ''
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { headers: { 'User-Agent': 'MonitorLicitacoes/1.0' }, signal: AbortSignal.timeout(30000) })
+      if (r.ok && r.body) { res = r; urlUsada = u; break }
+      console.log(`[coletar-leads-cnae] ${u} → HTTP ${r.status}, tentando próximo`)
+    } catch (e) { console.log(`[coletar-leads-cnae] ${u} falhou: ${e}, tentando próximo`) }
   }
+  if (!res || !res.body) {
+    const erro = `Todos os URLs falharam para arquivo ${estado.file_idx}`
+    await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
+    return new Response(JSON.stringify({ ok: false, erro }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+  }
+  console.log(`[coletar-leads-cnae] usando ${urlUsada}`)
 
   // Descomprime o ZIP via DecompressionStream (Deno nativo)
   // O ZIP contém um único arquivo deflate — pula o header local (30 + fnameLen + extraLen bytes)
