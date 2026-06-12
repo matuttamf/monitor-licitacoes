@@ -76,6 +76,8 @@ export default function CaptacaoPage() {
   const [disparoAtivo, setDisparoAtivo]     = useState<boolean>(false)
   const [toggling, setToggling]             = useState(false)
   const [togglingDisparo, setTogglingDisparo] = useState(false)
+  const [resetando, setResetando]           = useState(false)
+  const [resetMsg, setResetMsg]             = useState<string | null>(null)
   const [stats, setStats]                   = useState<Stats | null>(null)
 
   // Tabela leads DB
@@ -112,6 +114,37 @@ export default function CaptacaoPage() {
   const [filtroEmailBusca, setFiltroEmailBusca] = useState('')
   const [importando, setImportando]           = useState(false)
   const [resultadoImport, setResultadoImport] = useState<{ importados: number } | null>(null)
+
+  // Inserção manual de lead
+  const [showInsercaoManual, setShowInsercaoManual] = useState(false)
+  const [inserindo, setInserindo]                   = useState(false)
+  const [insercaoMsg, setInsercaoMsg]               = useState<{ tipo: 'ok' | 'erro' | 'dup'; texto: string } | null>(null)
+  const [formManual, setFormManual]                 = useState({
+    razao_social: '', cnpj: '', email: '', telefone: '', municipio: '', uf: '', segmento: '',
+  })
+
+  async function inserirLeadManual(e: React.FormEvent) {
+    e.preventDefault()
+    setInserindo(true)
+    setInsercaoMsg(null)
+    const res = await fetch('/api/admin/leads-manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formManual),
+    })
+    const data = await res.json()
+    if (res.status === 409) {
+      setInsercaoMsg({ tipo: 'dup', texto: data.error })
+    } else if (!res.ok) {
+      setInsercaoMsg({ tipo: 'erro', texto: data.error ?? 'Erro ao inserir' })
+    } else {
+      setInsercaoMsg({ tipo: 'ok', texto: '✓ Lead inserido com sucesso — entrará na fila de disparo.' })
+      setFormManual({ razao_social: '', cnpj: '', email: '', telefone: '', municipio: '', uf: '', segmento: '' })
+      carregarStats()
+      carregarLeadsDB(1)
+    }
+    setInserindo(false)
+  }
 
   // Backfill progress
   const [backfillData, setBackfillData]                     = useState<string | null>(null)
@@ -202,6 +235,23 @@ export default function CaptacaoPage() {
   }, [carregarLeadsDB])
 
   // ─── Ações ────────────────────────────────────────────────────────────────
+
+  async function resetLeads(scope: 'enviados' | 'todos' | 'completo') {
+    if (!confirm(scope === 'todos' || scope === 'completo'
+      ? 'Resetar TODOS os leads (enviados + erro + inválidos) para pendente? Eles receberão os e-mails do início.'
+      : 'Resetar todos os leads com status "enviado" para pendente? Eles receberão os e-mails novamente.'))
+      return
+    setResetando(true)
+    setResetMsg(null)
+    const res = await fetch('/api/admin/reset-leads', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope }),
+    })
+    const data = await res.json()
+    setResetMsg(res.ok ? `✓ ${data.resetados} leads resetados para pendente` : `Erro: ${data.error}`)
+    setResetando(false)
+    carregarStats()
+  }
 
   async function toggleDisparo() {
     setTogglingDisparo(true)
@@ -442,7 +492,103 @@ export default function CaptacaoPage() {
               <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>{desc}</p>
             </div>
           ))}
+
+          {/* Reset leads */}
+          <div style={{ borderLeft: '2px solid var(--cinza-light)', paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div>
+              <button onClick={() => resetLeads('enviados')} disabled={resetando}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: resetando ? 'var(--cinza-light)' : '#f59e0b', color: resetando ? 'var(--cinza)' : '#1a1a1c', border: 'none', cursor: resetando ? 'not-allowed' : 'pointer' }}>
+                {resetando ? '⏳ Resetando…' : '↺ Reset enviados'}
+              </button>
+              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>Volta "enviado" → pendente (recebem do zero)</p>
+            </div>
+            <div>
+              <button onClick={() => resetLeads('todos')} disabled={resetando}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: resetando ? 'var(--cinza-light)' : '#ef4444', color: 'white', border: 'none', cursor: resetando ? 'not-allowed' : 'pointer' }}>
+                {resetando ? '⏳ Resetando…' : '↺ Reset tudo'}
+              </button>
+              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>Inclui erro + inválidos também</p>
+            </div>
+            <div>
+              <button onClick={() => resetLeads('completo')} disabled={resetando}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: resetando ? 'var(--cinza-light)' : '#7c3aed', color: 'white', border: 'none', cursor: resetando ? 'not-allowed' : 'pointer' }}>
+                {resetando ? '⏳ Resetando…' : '↺ Zerar tudo'}
+              </button>
+              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>Zera todos os contadores (desc. → inválido)</p>
+            </div>
+            {resetMsg && <p style={{ fontSize: 11, color: resetMsg.startsWith('✓') ? '#10b981' : '#ef4444', marginTop: 2, fontWeight: 600 }}>{resetMsg}</p>}
+          </div>
         </div>
+      {/* ── Inserção manual de lead ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>Inserir lead manualmente</h2>
+          <button
+            onClick={() => { setShowInsercaoManual(v => !v); setInsercaoMsg(null) }}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+            style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
+            {showInsercaoManual ? '▲ Recolher' : '▼ Expandir'}
+          </button>
+        </div>
+        <p style={{ fontSize: 11, color: 'var(--cinza)', marginBottom: showInsercaoManual ? 16 : 0 }}>
+          Adicione empresas que não constam na base — serão incluídas na fila de disparo.
+        </p>
+        {showInsercaoManual && (
+          <form onSubmit={inserirLeadManual}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
+              {([
+                { field: 'razao_social', label: 'Razão social *',  placeholder: 'Nome da empresa',        required: true  },
+                { field: 'cnpj',         label: 'CNPJ',            placeholder: '00.000.000/0000-00',      required: false },
+                { field: 'email',        label: 'E-mail *',        placeholder: 'contato@empresa.com.br', required: true  },
+                { field: 'telefone',     label: 'Telefone',        placeholder: '(11) 99999-9999',        required: false },
+                { field: 'municipio',    label: 'Município',       placeholder: 'São Paulo',              required: false },
+                { field: 'uf',           label: 'UF',              placeholder: 'SP',                     required: false },
+                { field: 'segmento',     label: 'Segmento',        placeholder: 'construção, TI…',        required: false },
+              ] as const).map(({ field, label, placeholder, required }) => (
+                <div key={field}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--cinza)', display: 'block', marginBottom: 4 }}>{label}</label>
+                  <input
+                    type={field === 'email' ? 'email' : 'text'}
+                    value={formManual[field]}
+                    onChange={e => setFormManual(f => ({ ...f, [field]: e.target.value }))}
+                    placeholder={placeholder}
+                    required={required}
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      padding: '7px 10px', borderRadius: 8, fontSize: 12,
+                      border: '1px solid var(--cinza-light)', outline: 'none',
+                      background: 'var(--fundo)', color: 'var(--preto)',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {insercaoMsg && (
+              <div style={{
+                padding: '10px 14px', borderRadius: 8, marginBottom: 12, fontSize: 12, fontWeight: 600,
+                background: insercaoMsg.tipo === 'ok' ? 'rgba(16,185,129,0.08)' : insercaoMsg.tipo === 'dup' ? 'rgba(234,179,8,0.1)' : 'rgba(239,68,68,0.08)',
+                color: insercaoMsg.tipo === 'ok' ? '#065f46' : insercaoMsg.tipo === 'dup' ? '#92400e' : '#991b1b',
+                border: `1px solid ${insercaoMsg.tipo === 'ok' ? 'rgba(16,185,129,0.2)' : insercaoMsg.tipo === 'dup' ? 'rgba(234,179,8,0.3)' : 'rgba(239,68,68,0.2)'}`,
+              }}>
+                {insercaoMsg.tipo === 'dup' ? '⚠️ ' : ''}{insercaoMsg.texto}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={inserindo}
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: inserindo ? 'var(--cinza-light)' : 'var(--vinho)', color: inserindo ? 'var(--cinza)' : 'white', border: 'none', cursor: inserindo ? 'not-allowed' : 'pointer' }}>
+              {inserindo ? '⏳ Inserindo…' : '+ Inserir lead'}
+            </button>
+          </form>
+        )}
+      </div>
+
         {/* Progresso dos backfills */}
         {(() => {
           const inicio = new Date('2000-01-01').getTime()

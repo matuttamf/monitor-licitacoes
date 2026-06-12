@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     'coletar-participantes':       `${baseUrl}/api/cron/coletar-participantes`,
     'coletar-leads-transparencia': `${baseUrl}/api/cron/coletar-leads-transparencia`,
     'enriquecer-emails':           `${baseUrl}/api/cron/enriquecer-emails`,
+    'enriquecer-receita':          `${baseUrl}/api/cron/enriquecer-receita`,
     'disparar-leads':              `${baseUrl}/api/cron/disparar-leads`,
     'reconverter-trials':          `${baseUrl}/api/cron/reconverter-trials`,
     'radar-alertas':               `${baseUrl}/api/cron/radar-alertas`,

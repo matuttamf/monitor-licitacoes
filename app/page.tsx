@@ -1,8 +1,62 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+// ─── SEO ─────────────────────────────────────────────────────────────────────
+
+export const metadata: Metadata = {
+  title: 'Monitor de Licitações — Alertas Automáticos de Licitações Públicas',
+  description:
+    'Receba alertas em tempo real de licitações públicas que combinam com o que sua empresa vende — por e-mail, Telegram e WhatsApp. Governo Federal, estados, municípios e estatais. Comece grátis por 7 dias.',
+  keywords: [
+    'monitor de licitações', 'alerta de licitações', 'licitações públicas', 'PNCP',
+    'pregão eletrônico', 'compras governamentais', 'licitação empresa', 'fornecedor governo',
+    'alertas PNCP', 'monitoramento licitações', 'licitações Brasil',
+  ],
+  openGraph: {
+    title: 'Monitor de Licitações — Nunca mais perca um contrato público',
+    description:
+      'O Monitor rastreia editais, dispensas e contratos do Governo Federal, estados, municípios e estatais — e avisa você por e-mail, Telegram ou WhatsApp antes que o prazo acabe.',
+    url: 'https://monitordelicitacoes.com.br',
+    siteName: 'Monitor de Licitações',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Monitor de Licitações — Alertas automáticos de editais públicos',
+    description: 'Receba alertas de licitações que combinam com o que você vende. 7 dias grátis, sem cartão.',
+  },
+  alternates: {
+    canonical: 'https://monitordelicitacoes.com.br',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' },
+  },
+}
+
+// ─── Feature matrix ───────────────────────────────────────────────────────────
+// Cada linha aparece em TODOS os cards — planos sem o recurso exibem "—"
+
+// val = false → não incluso | string → label customizado | true → usa label padrão
+type PlanId = 'trial' | 'basic' | 'profissional' | 'gestao' | 'empresarial'
+type FeatureRow = { label: string } & Record<PlanId, string | boolean>
+
+const FEATURE_ROWS: FeatureRow[] = [
+  { label: 'Palavras-chave',             trial: 'Até 20',         basic: 'Até 20',         profissional: 'Ilimitadas',     gestao: 'Ilimitadas',     empresarial: 'Ilimitadas'     },
+  { label: 'Usuários',                   trial: '1 usuário',      basic: '1 usuário',      profissional: '1 usuário',      gestao: 'Até 5 usuários', empresarial: 'Até 15 usuários'},
+  { label: 'Alertas por e-mail + Telegram', trial: true,          basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Alertas por WhatsApp',       trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Busca manual no painel',     trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: '🎯 Radar de Inteligência',   trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: '🏭 Diretório de Fornecedores', trial: false,          basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: '📊 Relatório semanal',       trial: false,            basic: false,            profissional: false,            gestao: false,            empresarial: true             },
+]
 
 const PLANOS = [
   {
-    id: 'trial',
+    id: 'trial' as const,
     nome: 'Período de Teste',
     preco: null,
     porDia: 'Grátis',
@@ -12,15 +66,9 @@ const PLANOS = [
     href: '/cadastro',
     btnText: 'Começar 7 dias grátis',
     note: 'Sem cartão de crédito',
-    features: [
-      { text: 'Até 20 palavras-chave', highlight: false },
-      { text: '1 usuário', highlight: false },
-      { text: 'Alertas por e-mail e Telegram', highlight: false },
-      { text: 'Busca manual no painel', highlight: false },
-    ],
   },
   {
-    id: 'basic',
+    id: 'basic' as const,
     nome: 'Basic',
     preco: '49,90',
     porDia: 'R$1,66/dia',
@@ -30,15 +78,9 @@ const PLANOS = [
     href: '/checkout?plano=basic',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
-    features: [
-      { text: 'Até 20 palavras-chave', highlight: false },
-      { text: '1 usuário', highlight: false },
-      { text: 'Alertas por e-mail e Telegram', highlight: false },
-      { text: 'Busca manual no painel', highlight: false },
-    ],
   },
   {
-    id: 'profissional',
+    id: 'profissional' as const,
     nome: 'Profissional',
     preco: '97,90',
     porDia: 'R$3,26/dia',
@@ -48,17 +90,9 @@ const PLANOS = [
     href: '/checkout?plano=profissional',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
-    features: [
-      { text: 'Palavras-chave ilimitadas', highlight: true },
-      { text: '1 usuário', highlight: false },
-      { text: 'E-mail, Telegram e WhatsApp', highlight: true },
-      { text: 'Busca manual no painel', highlight: false },
-      { text: '🎯 Radar de Inteligência', highlight: true },
-      { text: '🏭 Diretório de Fornecedores', highlight: true },
-    ],
   },
   {
-    id: 'gestao',
+    id: 'gestao' as const,
     nome: 'Gestão',
     preco: '197,90',
     porDia: 'R$6,60/dia',
@@ -68,17 +102,9 @@ const PLANOS = [
     href: '/checkout?plano=gestao',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
-    features: [
-      { text: 'Palavras-chave ilimitadas', highlight: false },
-      { text: 'Até 5 usuários', highlight: true },
-      { text: 'E-mail, Telegram e WhatsApp', highlight: false },
-      { text: 'Busca manual no painel', highlight: false },
-      { text: '🎯 Radar de Inteligência', highlight: true },
-      { text: '🏭 Diretório de Fornecedores', highlight: true },
-    ],
   },
   {
-    id: 'empresarial',
+    id: 'empresarial' as const,
     nome: 'Empresarial',
     preco: '497,00',
     porDia: 'R$16,57/dia',
@@ -88,15 +114,6 @@ const PLANOS = [
     href: '/checkout?plano=empresarial',
     btnText: 'Assinar agora →',
     note: 'Ou teste 7 dias grátis antes',
-    features: [
-      { text: 'Palavras-chave ilimitadas', highlight: false },
-      { text: 'Até 15 usuários', highlight: true },
-      { text: 'E-mail, Telegram e WhatsApp', highlight: false },
-      { text: 'Busca manual no painel', highlight: false },
-      { text: '🎯 Radar de Inteligência', highlight: false },
-      { text: '🏭 Diretório de Fornecedores', highlight: false },
-      { text: 'Relatório semanal detalhado', highlight: true },
-    ],
   },
 ]
 
@@ -112,9 +129,11 @@ const jsonLd = {
   description:
     'Plataforma de monitoramento de licitações públicas brasileiras com alertas automáticos por e-mail, Telegram e WhatsApp.',
   offers: [
-    { '@type': 'Offer', price: '0', priceCurrency: 'BRL', name: 'Trial 7 dias' },
-    { '@type': 'Offer', price: '97', priceCurrency: 'BRL', name: 'Plano Basic', billingDuration: 'P1M' },
-    { '@type': 'Offer', price: '197', priceCurrency: 'BRL', name: 'Plano Empresarial', billingDuration: 'P1M' },
+    { '@type': 'Offer', price: '0',   priceCurrency: 'BRL', name: 'Trial 7 dias' },
+    { '@type': 'Offer', price: '49',  priceCurrency: 'BRL', name: 'Plano Basic',         billingDuration: 'P1M' },
+    { '@type': 'Offer', price: '97',  priceCurrency: 'BRL', name: 'Plano Profissional',  billingDuration: 'P1M' },
+    { '@type': 'Offer', price: '197', priceCurrency: 'BRL', name: 'Plano Gestão',        billingDuration: 'P1M' },
+    { '@type': 'Offer', price: '497', priceCurrency: 'BRL', name: 'Plano Empresarial',   billingDuration: 'P1M' },
   ],
   publisher: {
     '@type': 'Organization',
@@ -123,13 +142,22 @@ const jsonLd = {
   },
 }
 
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    { '@type': 'Question', name: 'Preciso de cartão de crédito para começar?', acceptedAnswer: { '@type': 'Answer', text: 'Não. Os sete dias de teste são completamente gratuitos e sem burocracia.' } },
+    { '@type': 'Question', name: 'Como o sistema sabe quais editais combinam com meu negócio?', acceptedAnswer: { '@type': 'Answer', text: 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação use termos diferentes dos seus.' } },
+    { '@type': 'Question', name: 'Vocês monitoram empresas como Petrobras, Correios e Caixa?', acceptedAnswer: { '@type': 'Answer', text: 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais: Petrobras, Caixa Econômica Federal, Correios, Eletrobras e SABESP.' } },
+    { '@type': 'Question', name: 'Posso cancelar se não for o que esperava?', acceptedAnswer: { '@type': 'Answer', text: 'Sim, a qualquer momento, sem multa e sem burocracia.' } },
+  ],
+}
+
 export default function LandingPage() {
   return (
     <div className="font-sans bg-[#FAF6F0] text-[#1A1A1C]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[60px] h-[68px] bg-[rgba(250,246,240,0.97)] backdrop-blur-xl border-b border-[rgba(201,166,90,0.12)]">
@@ -323,10 +351,59 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── DIRETÓRIO DE FORNECEDORES ── */}
+      <section className="px-6 md:px-[60px] py-[60px] md:py-[80px] bg-white border-t border-[#F0EDE8]">
+        <div className="max-w-[960px] mx-auto">
+          <div className="bg-[#FAF6F0] rounded-[20px] p-8 md:p-12 flex flex-col md:flex-row gap-10 md:gap-14 items-start md:items-center border border-[#D5D2C8]">
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(107,15,26,0.07)] mb-4">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-[#6B0F1A]">Exclusivo Profissional+</span>
+              </div>
+              <h3 className="text-2xl md:text-[30px] font-black text-[#1A1A1C] mb-3 tracking-tight leading-snug">
+                Seja encontrado por quem está<br className="hidden md:block" /> comprando do governo agora.
+              </h3>
+              <p className="text-sm md:text-[15px] text-[#9AA0A6] leading-relaxed mb-5 m-0">
+                O Diretório de Fornecedores conecta sua empresa diretamente a compradores públicos. Prefeituras, secretarias e gestores de compras consultam o diretório quando precisam de fornecedores qualificados — e sua empresa aparece para quem está ativamente buscando o que você vende.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  '🎯 Apareça para compradores ativos',
+                  '📍 Filtrado por região e segmento',
+                  '🔗 Link direto para seu contato',
+                ].map(item => (
+                  <div key={item} className="flex items-center gap-2 bg-white border border-[#D5D2C8] rounded-[8px] px-3 py-2">
+                    <span className="text-xs font-semibold text-[#1A1A1C]">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="shrink-0 w-full md:w-[200px] space-y-3">
+              {[
+                { emoji: '🏗️', nome: 'Construtora Silva & Cia', regiao: 'Sudeste', seg: 'Construção' },
+                { emoji: '💻', nome: 'Tech Solutions LTDA', regiao: 'Sul', seg: 'Tecnologia' },
+                { emoji: '🧴', nome: 'Limpeza Total ME', regiao: 'Nordeste', seg: 'Limpeza' },
+              ].map(f => (
+                <div key={f.nome} className="bg-white border border-[#D5D2C8] rounded-[12px] px-4 py-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{f.emoji}</span>
+                    <span className="text-xs font-bold text-[#1A1A1C] leading-tight">{f.nome}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-[10px] text-[#9AA0A6] bg-[#F0EDE8] px-2 py-0.5 rounded">{f.regiao}</span>
+                    <span className="text-[10px] text-[#9AA0A6] bg-[#F0EDE8] px-2 py-0.5 rounded">{f.seg}</span>
+                  </div>
+                </div>
+              ))}
+              <p className="text-[10px] text-[#9AA0A6] text-center pt-1">Exemplo ilustrativo do diretório</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── PLANOS ── */}
-      <section id="planos" className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-white">
+      <section id="planos" className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-[#FAF6F0]">
         <div className="max-w-[1200px] mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-6">
             <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Investimento mínimo. Retorno ilimitado.</div>
             <h2 className="text-3xl md:text-[44px] font-black tracking-tight mb-3 text-[#1A1A1C]">
               A partir de R$1,66 por dia para nunca mais perder um contrato.
@@ -336,87 +413,127 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
-            {PLANOS.map(p => (
-              <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col ${
-                p.destaque
-                  ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_20px_60px_rgba(107,15,26,0.3)]'
-                  : p.id === 'trial'
-                  ? 'bg-[#FAF6F0] border-2 border-[#C9A65A]'
-                  : p.id === 'profissional'
-                  ? 'bg-white border-2 border-[#6B0F1A] shadow-[0_4px_24px_rgba(107,15,26,0.08)]'
-                  : 'bg-[#FAF6F0] border border-[#D5D2C8]'
-              }`}>
-                {/* Badge topo */}
-                {p.tag && (
-                  <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${
-                    p.destaque
-                      ? 'bg-[#C9A65A] text-[#1A1A1C]'
-                      : p.id === 'profissional'
-                      ? 'bg-[#6B0F1A] text-white'
-                      : 'bg-[#C9A65A] text-[#1A1A1C]'
-                  }`}>{p.tag}</div>
-                )}
-
-                {/* Nome + descrição */}
-                <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 text-center ${p.destaque ? 'text-[#C9A65A]' : p.id === 'profissional' ? 'text-[#6B0F1A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
-                <div className={`text-xs mb-4 leading-snug text-center ${p.destaque ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
-
-                {/* Preço */}
-                {p.preco ? (
-                  <div className="flex items-end gap-1 mb-1 justify-center">
-                    <span className={`text-xs font-medium mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
-                    <span className={`text-[32px] font-black tracking-tight leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
-                      {p.preco.split(',')[0]}
-                      <span className="text-[18px]">,{p.preco.split(',')[1]}</span>
-                    </span>
-                    <span className={`text-[11px] mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
-                  </div>
-                ) : (
-                  <div className="flex items-end gap-1 mb-1 justify-center">
-                    <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
-                  </div>
-                )}
-
-                <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded text-center ${
-                  p.destaque
-                    ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]'
-                    : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
-                }`}>
-                  {p.porDia}
-                </div>
-
-                {/* Features */}
-                <div className="flex-1 mb-5 space-y-2.5">
-                  {p.features.map(f => (
-                    <div key={f.text} className="flex items-start gap-2 justify-center">
-                      <span className={`font-bold text-sm shrink-0 mt-0.5 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
-                      <span className={`text-xs leading-snug ${
-                        p.destaque
-                          ? f.highlight ? 'text-white font-semibold' : 'text-[rgba(255,255,255,0.75)]'
-                          : f.highlight ? 'text-[#1A1A1C] font-semibold' : 'text-[#4a4a4d]'
-                      }`}>{f.text}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Divisor visual antes do botão */}
-                <div className={`h-px mb-4 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#E8E4DC]'}`} />
-
-                <Link href={p.href} className={`block text-center py-3 rounded-[10px] text-sm font-bold no-underline transition-opacity hover:opacity-90 ${
-                  p.destaque
-                    ? 'bg-[#C9A65A] text-[#1A1A1C]'
-                    : p.id === 'trial'
-                    ? 'bg-[#C9A65A] text-[#1A1A1C]'
-                    : p.id === 'profissional'
-                    ? 'bg-[#6B0F1A] text-white'
-                    : 'bg-[#6B0F1A] text-white'
-                }`}>
-                  {p.btnText}
-                </Link>
-                <p className={`text-center text-[11px] mt-2.5 mb-0 ${p.destaque ? 'text-[rgba(255,255,255,0.3)]' : 'text-[#9AA0A6]'}`}>{p.note}</p>
+          {/* Gatilho social */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex items-center gap-3 bg-white border border-[#D5D2C8] rounded-full px-5 py-2.5 shadow-sm">
+              <div className="flex -space-x-1.5">
+                {['#6B0F1A','#C9A65A','#4a7a6b','#7a4a6b'].map((c, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full border-2 border-white" style={{ background: c }} />
+                ))}
               </div>
-            ))}
+              <span className="text-xs font-semibold text-[#1A1A1C]">
+                <span className="text-[#6B0F1A]">+230 empresas</span> monitorando licitações agora
+              </span>
+              <span className="text-[10px] text-[#9AA0A6] border-l border-[#D5D2C8] pl-3">🔴 ao vivo</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
+            {PLANOS.map(p => {
+              const isDark = p.destaque
+              return (
+                <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col ${
+                  isDark
+                    ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_20px_60px_rgba(107,15,26,0.3)]'
+                    : p.id === 'trial'
+                    ? 'bg-white border-2 border-[#C9A65A]'
+                    : p.id === 'profissional'
+                    ? 'bg-white border-2 border-[#6B0F1A] shadow-[0_4px_24px_rgba(107,15,26,0.08)]'
+                    : 'bg-white border border-[#D5D2C8]'
+                }`}>
+                  {/* Badge topo */}
+                  {p.tag && (
+                    <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${
+                      isDark ? 'bg-[#C9A65A] text-[#1A1A1C]' : p.id === 'profissional' ? 'bg-[#6B0F1A] text-white' : 'bg-[#C9A65A] text-[#1A1A1C]'
+                    }`}>{p.tag}</div>
+                  )}
+
+                  {/* Nome + descrição */}
+                  <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 text-center ${isDark ? 'text-[#C9A65A]' : p.id === 'profissional' ? 'text-[#6B0F1A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
+                  <div className={`text-xs mb-4 leading-snug text-center ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
+
+                  {/* Preço */}
+                  {p.preco ? (
+                    <div className="flex items-end gap-1 mb-1 justify-center">
+                      <span className={`text-xs font-medium mb-1 ${isDark ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
+                      <span className={`text-[32px] font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-[#1A1A1C]'}`}>
+                        {p.preco.split(',')[0]}<span className="text-[18px]">,{p.preco.split(',')[1]}</span>
+                      </span>
+                      <span className={`text-[11px] mb-1 ${isDark ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-end gap-1 mb-1 justify-center">
+                      <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
+                    </div>
+                  )}
+
+                  <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded text-center ${
+                    isDark ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
+                  }`}>{p.porDia}</div>
+
+                  {/* Feature matrix — mesmas linhas em todos os planos */}
+                  <div className="flex-1 mb-5 space-y-2">
+                    {FEATURE_ROWS.map(row => {
+                      const val = row[p.id]
+                      const hasIt = val !== false
+                      const label = typeof val === 'string' && val !== 'true' ? val : row.label
+                      return (
+                        <div key={row.label} className="flex items-start gap-2">
+                          {hasIt ? (
+                            <span className={`font-bold text-sm shrink-0 mt-0.5 ${isDark ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
+                          ) : (
+                            <span className="text-sm shrink-0 mt-0.5 text-[#D5D2C8] select-none">—</span>
+                          )}
+                          <span className={`text-xs leading-snug ${
+                            !hasIt
+                              ? isDark ? 'text-[rgba(255,255,255,0.2)]' : 'text-[#C4C1BB]'
+                              : isDark ? 'text-[rgba(255,255,255,0.85)]' : 'text-[#4a4a4d]'
+                          }`}>
+                            {label}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className={`h-px mb-4 ${isDark ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#E8E4DC]'}`} />
+
+                  <Link href={p.href} className={`block text-center py-3 rounded-[10px] text-sm font-bold no-underline transition-opacity hover:opacity-90 ${
+                    isDark ? 'bg-[#C9A65A] text-[#1A1A1C]'
+                    : p.id === 'trial' ? 'bg-[#C9A65A] text-[#1A1A1C]'
+                    : 'bg-[#6B0F1A] text-white'
+                  }`}>
+                    {p.btnText}
+                  </Link>
+                  <p className={`text-center text-[11px] mt-2.5 mb-0 ${isDark ? 'text-[rgba(255,255,255,0.3)]' : 'text-[#9AA0A6]'}`}>{p.note}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Garantia + urgência */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-[14px] p-5 border border-[#D5D2C8] flex items-center gap-3">
+              <span className="text-2xl shrink-0">🔒</span>
+              <div>
+                <div className="text-sm font-bold text-[#1A1A1C]">Sem cartão agora</div>
+                <div className="text-xs text-[#9AA0A6]">7 dias grátis para testar tudo sem risco</div>
+              </div>
+            </div>
+            <div className="bg-white rounded-[14px] p-5 border border-[#D5D2C8] flex items-center gap-3">
+              <span className="text-2xl shrink-0">↩</span>
+              <div>
+                <div className="text-sm font-bold text-[#1A1A1C]">Cancele quando quiser</div>
+                <div className="text-xs text-[#9AA0A6]">Sem multa, sem burocracia, sem fidelidade</div>
+              </div>
+            </div>
+            <div className="bg-[#6B0F1A] rounded-[14px] p-5 flex items-center gap-3">
+              <span className="text-2xl shrink-0">⚡</span>
+              <div>
+                <div className="text-sm font-bold text-white">Ativação imediata</div>
+                <div className="text-xs text-[rgba(255,255,255,0.55)]">Primeiro alerta chega em até 24h após o cadastro</div>
+              </div>
+            </div>
           </div>
 
           <div className="text-center mt-7">
