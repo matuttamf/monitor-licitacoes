@@ -357,7 +357,7 @@ export default function LandingPage() {
           <div className="bg-[#FAF6F0] rounded-[20px] p-8 md:p-12 flex flex-col md:flex-row gap-10 md:gap-14 items-start md:items-center border border-[#D5D2C8]">
             <div className="flex-1">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(107,15,26,0.07)] mb-4">
-                <span className="text-[11px] font-bold tracking-wider uppercase text-[#6B0F1A]">Exclusivo Profissional+</span>
+                <span className="text-[11px] font-bold tracking-wider uppercase text-[#6B0F1A]">Ferramenta exclusiva</span>
               </div>
               <h3 className="text-2xl md:text-[30px] font-black text-[#1A1A1C] mb-3 tracking-tight leading-snug">
                 Seja encontrado por quem está<br className="hidden md:block" /> comprando do governo agora.
@@ -471,24 +471,15 @@ export default function LandingPage() {
                     isDark ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
                   }`}>{p.porDia}</div>
 
-                  {/* Feature matrix — mesmas linhas em todos os planos */}
+                  {/* Feature matrix — apenas o que o plano inclui */}
                   <div className="flex-1 mb-5 space-y-2">
-                    {FEATURE_ROWS.map(row => {
+                    {FEATURE_ROWS.filter(row => row[p.id] !== false).map(row => {
                       const val = row[p.id]
-                      const hasIt = val !== false
                       const label = typeof val === 'string' && val !== 'true' ? val : row.label
                       return (
                         <div key={row.label} className="flex items-start gap-2">
-                          {hasIt ? (
-                            <span className={`font-bold text-sm shrink-0 mt-0.5 ${isDark ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
-                          ) : (
-                            <span className="text-sm shrink-0 mt-0.5 text-[#D5D2C8] select-none">—</span>
-                          )}
-                          <span className={`text-xs leading-snug ${
-                            !hasIt
-                              ? isDark ? 'text-[rgba(255,255,255,0.2)]' : 'text-[#C4C1BB]'
-                              : isDark ? 'text-[rgba(255,255,255,0.85)]' : 'text-[#4a4a4d]'
-                          }`}>
+                          <span className={`font-bold text-sm shrink-0 mt-0.5 ${isDark ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
+                          <span className={`text-xs leading-snug ${isDark ? 'text-[rgba(255,255,255,0.85)]' : 'text-[#4a4a4d]'}`}>
                             {label}
                           </span>
                         </div>
@@ -593,7 +584,7 @@ export default function LandingPage() {
       <footer className="bg-[#111113] px-10 py-7 text-center">
         <div className="flex items-center justify-center gap-2.5 mb-4">
           <div className="w-7 h-7 rounded-[7px] bg-[#6B0F1A] flex items-center justify-center text-[10px] font-black text-[#C9A65A]">ML</div>
-          <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2021 Monitor de Licitações · Matutta Soluções Digitais</span>
+          <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2021–2026 Monitor de Licitações · Matutta Soluções Digitais</span>
         </div>
         <div className="flex gap-7 justify-center flex-wrap">
           {[['Início', '/'], ['Planos', '/assinar'], ['Contato', '/contato'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (

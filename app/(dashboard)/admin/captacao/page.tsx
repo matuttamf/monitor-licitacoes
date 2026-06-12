@@ -681,12 +681,22 @@ export default function CaptacaoPage() {
         )}
 
         {resultadoCron && (
-          <div className="mt-3 px-4 py-3 rounded-xl text-xs font-mono break-all"
+          <div className="mt-3 px-4 py-3 rounded-xl text-xs"
             style={{ background: resultadoCron.ok ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${resultadoCron.ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`, color: resultadoCron.ok ? '#065f46' : '#991b1b' }}>
-            <strong>{resultadoCron.acao}</strong> → {JSON.stringify(resultadoCron.data)}
+            <div className="font-bold mb-1.5">{resultadoCron.ok ? '✓' : '✗'} {resultadoCron.acao}</div>
+            {resultadoCron.data && typeof resultadoCron.data === 'object' ? (
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {Object.entries(resultadoCron.data as Record<string, unknown>)
+                  .filter(([k]) => k !== 'ok')
+                  .map(([k, v]) => (
+                    <span key={k}><span className="opacity-60">{k}:</span> <strong>{String(v)}</strong></span>
+                  ))}
+              </div>
+            ) : (
+              <span className="font-mono">{String(resultadoCron.data)}</span>
+            )}
           </div>
         )}
-      </div>
 
       {/* ── Abas ── */}
       <div className="flex gap-1 mb-4">
