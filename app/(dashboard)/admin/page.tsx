@@ -611,14 +611,6 @@ export default function AdminPage() {
             { acao: 'alertar',         label: '📧 Alertar',         desc: 'Envia alertas' },
             { acao: 'emails',          label: '📩 E-mails trial',   desc: 'Sequência trial' },
           ]},
-          { grupo: 'Captação', itens: [
-            { acao: 'coletar-leads',      label: '🎯 Coletar leads',     desc: 'Busca CNPJs/PNCP' },
-            { acao: 'coletar-leads-cnae', label: '🏛️ Receita Federal',   desc: 'Coleta por CNAE (Storage)' },
-            { acao: 'enriquecer-receita', label: '🔬 Enriquecer CNPJs',  desc: 'Razão social + situação' },
-            { acao: 'enriquecer-emails',  label: '🔎 Buscar e-mails',    desc: 'Google/Bing/DDG (lote 60)' },
-            { acao: 'disparar-leads',     label: '✉️ Disparar leads',    desc: 'Envia e-mails captação' },
-            { acao: 'radar-alertas',      label: '📡 Radar',             desc: 'Atualiza cache contratos' },
-          ]},
         ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).map(({ grupo, itens }) => (
           <div key={grupo} style={{ marginBottom: '10px' }}>
             <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>{grupo}</div>

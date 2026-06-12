@@ -285,6 +285,17 @@ export default function CaptacaoPage() {
     setDisparando(null)
   }
 
+  const GITHUB_WORKFLOWS: Record<string, string> = {
+    'coletar-leads-cnae': 'coletar-leads-rfb.yml',
+    'enriquecer-receita': 'enriquecer-receita.yml',
+  }
+
+  async function acionar(acao: string) {
+    const wf = GITHUB_WORKFLOWS[acao]
+    if (wf) return dispararGitHub(wf)
+    return acionarCron(acao)
+  }
+
   async function acionarCron(acao: string) {
     setDisparando(acao); setResultadoCron(null)
     const res = await fetch('/api/admin/trigger', {
@@ -484,35 +495,34 @@ export default function CaptacaoPage() {
       {/* ── Ações manuais ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
-        <div className="flex gap-3 flex-wrap items-start">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
           {([
-            { acao: 'coletar-leads',               label: '🏆 Coletar PNCP',           desc: '~17s · contratos assinados PNCP' },
-            { acao: 'coletar-participantes',        label: '👥 Coletar participantes',   desc: 'Diário · todos os proponentes PNCP' },
-            { acao: 'coletar-leads-transparencia',  label: '🏛️ Portal Transparência',   desc: 'Diário · contratos federais gov.br' },
-            { acao: 'enriquecer-emails',            label: '🔍 Buscar e-mails',          desc: '~60s · busca online por CNPJ/nome' },
-            { acao: 'disparar-leads',               label: '✉️ Disparar leads',         desc: '~5s · até 20 e-mails captação' },
-            { acao: 'reconverter-trials',           label: '🔄 Reconverter trials',      desc: '~5s · até 15 e-mails reativação' },
-          ] as const).map(({ acao, label, desc }) => (
-            <div key={acao}>
-              <button onClick={() => acionarCron(acao)} disabled={disparando !== null}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: disparando === acao ? 'var(--cinza-light)' : 'var(--vinho)', color: disparando === acao ? 'var(--cinza)' : 'white', border: 'none', cursor: disparando !== null ? 'not-allowed' : 'pointer', opacity: disparando !== null && disparando !== acao ? 0.5 : 1 }}>
-                {disparando === acao ? '⏳ Executando…' : label}
+            { acao: 'coletar-leads',      label: '🎯 Coletar leads',    desc: 'Busca CNPJs/PNCP' },
+            { acao: 'coletar-leads-cnae', label: '🏛️ Receita Federal',  desc: 'Coleta por CNAE (Storage)' },
+            { acao: 'enriquecer-receita', label: '🔬 Enriquecer CNPJs', desc: 'Razão social + situação' },
+            { acao: 'enriquecer-emails',  label: '🔎 Buscar e-mails',   desc: 'Google/Bing/DDG (lote 60)' },
+            { acao: 'disparar-leads',     label: '✉️ Disparar leads',   desc: 'Envia e-mails captação' },
+            { acao: 'radar-alertas',      label: '📡 Radar',            desc: 'Atualiza cache contratos' },
+          ] as { acao: string; label: string; desc: string }[]).map(({ acao, label, desc }) => {
+            const wf = GITHUB_WORKFLOWS[acao]
+            const ativo = disparando === acao || disparando === wf
+            return (
+              <button key={acao} onClick={() => acionar(acao)} disabled={disparando !== null}
+                style={{
+                  padding: '10px 14px', borderRadius: '12px', textAlign: 'left', width: '100%',
+                  background: ativo ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)',
+                  border: `1px solid ${ativo ? 'rgba(107,15,26,0.25)' : 'var(--cinza-light)'}`,
+                  cursor: disparando ? 'not-allowed' : 'pointer',
+                  opacity: disparando && !ativo ? 0.45 : 1,
+                  transition: 'opacity 0.15s',
+                }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {ativo ? '⏳ Executando…' : label}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</div>
               </button>
-              <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>{desc}</p>
-            </div>
-          ))}
-
-          {/* Botão GitHub Actions — roda fora da Vercel, sem limite de tempo */}
-          <div>
-            <button onClick={() => dispararGitHub('coletar-leads-rfb.yml')} disabled={disparando !== null}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: disparando === 'coletar-leads-rfb.yml' ? 'var(--cinza-light)' : '#1a7f37', color: disparando === 'coletar-leads-rfb.yml' ? 'var(--cinza)' : 'white', border: 'none', cursor: disparando !== null ? 'not-allowed' : 'pointer', opacity: disparando !== null && disparando !== 'coletar-leads-rfb.yml' ? 0.5 : 1 }}>
-              {disparando === 'coletar-leads-rfb.yml' ? '⏳ Disparando…' : '🏭 Coletar CNAE (RFB)'}
-            </button>
-            <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>GitHub Actions · ~13min · base completa RF</p>
-          </div>
-
+            )
+          })}
         </div>
 
         {/* Reset — linha separada abaixo dos crons, estilo discreto */}
