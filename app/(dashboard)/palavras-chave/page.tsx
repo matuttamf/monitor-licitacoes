@@ -19,8 +19,10 @@ export default function PalavrasChavePage() {
   const [carregando, setCarregando]     = useState(true)
   const [erro, setErro]                 = useState('')
   const [salvando, setSalvando]         = useState<string | null>(null)
-  const [editandoRegiao, setEditandoRegiao] = useState<string | null>(null)
+  const [editando, setEditando]         = useState<string | null>(null)  // id da kw em edição
+  const [termoEdit, setTermoEdit]       = useState('')
   const [regiaoEdit, setRegiaoEdit]     = useState<string[]>([])
+  const [erroEdit, setErroEdit]         = useState('')
 
   async function carregar() {
     setCarregando(true)
@@ -72,16 +74,30 @@ export default function PalavrasChavePage() {
     carregar()
   }
 
-  async function salvarRegiao(id: string, regiao: string[]) {
+  function abrirEdicao(kw: Keyword) {
+    setEditando(kw.id)
+    setTermoEdit(kw.termo)
+    setRegiaoEdit(kw.regiao)
+    setErroEdit('')
+  }
+
+  async function salvarEdicao(id: string) {
+    setErroEdit('')
+    if (!termoEdit.trim()) { setErroEdit('Termo não pode ser vazio'); return }
     setSalvando(id)
-    const payload = regiao.length === 0 ? ['brasil'] : regiao
-    await fetch('/api/keywords', {
+    const payload = regiaoEdit.length === 0 ? ['brasil'] : regiaoEdit
+    const res = await fetch('/api/keywords', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, regiao: payload }),
+      body: JSON.stringify({ id, termo: termoEdit.trim(), regiao: payload }),
     })
     setSalvando(null)
-    setEditandoRegiao(null)
+    if (!res.ok) {
+      const d = await res.json()
+      setErroEdit(d.error ?? 'Erro ao salvar')
+      return
+    }
+    setEditando(null)
     carregar()
   }
 
@@ -189,45 +205,38 @@ export default function PalavrasChavePage() {
                 opacity: kw.ativo ? 1 : 0.55,
               }}>
 
-              <div className="flex items-start gap-3 flex-wrap">
-                <span className="text-sm font-semibold flex-1 min-w-0 pt-0.5"
-                  style={{ color: 'var(--preto)', textDecoration: kw.ativo ? 'none' : 'line-through' }}>
-                  {kw.termo}
-                </span>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button onClick={() => toggleAtivo(kw.id, kw.ativo)}
-                    className="text-xs font-medium"
-                    style={{ color: 'var(--vinho)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    {kw.ativo ? 'Desativar' : 'Ativar'}
-                  </button>
-                  <button onClick={() => remover(kw.id)}
-                    className="text-xs font-medium"
-                    style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    Remover
-                  </button>
-                </div>
-              </div>
-
-              {/* Regiões */}
-              {editandoRegiao === kw.id ? (
-                <div className="mt-2 space-y-2">
-                  <RegiaoSelector value={regiaoEdit} onChange={setRegiaoEdit} />
-                  {regiaoEdit.length > 0 && !regiaoEdit.includes('brasil') && (
-                    <RegiaoChips
-                      regioes={regiaoEdit}
-                      onRemove={r => setRegiaoEdit(removerRegiao(r, regiaoEdit))}
+              {editando === kw.id ? (
+                /* ── Modo edição ── */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)' }}>Palavra-chave</label>
+                    <input
+                      value={termoEdit}
+                      onChange={e => setTermoEdit(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && salvarEdicao(kw.id)}
+                      autoFocus
+                      className="w-full px-3 py-2 rounded-xl text-sm"
+                      style={{ border: '1.5px solid var(--vinho)', outline: 'none', color: 'var(--preto)', background: 'white' }}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)' }}>Regiões</label>
+                    <RegiaoSelector value={regiaoEdit} onChange={setRegiaoEdit} />
+                    {regiaoEdit.length > 0 && !regiaoEdit.includes('brasil') && (
+                      <RegiaoChips regioes={regiaoEdit} onRemove={r => setRegiaoEdit(removerRegiao(r, regiaoEdit))} />
+                    )}
+                  </div>
+                  {erroEdit && (
+                    <p className="text-xs" style={{ color: '#dc2626' }}>⚠ {erroEdit}</p>
                   )}
-                  <div className="flex gap-2 mt-1">
-                    <button type="button"
-                      disabled={salvando === kw.id}
-                      onClick={() => salvarRegiao(kw.id, regiaoEdit)}
+                  <div className="flex gap-2">
+                    <button type="button" disabled={salvando === kw.id}
+                      onClick={() => salvarEdicao(kw.id)}
                       className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white"
-                      style={{ background: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
+                      style={{ background: 'var(--vinho)', border: 'none', cursor: salvando === kw.id ? 'not-allowed' : 'pointer', opacity: salvando === kw.id ? 0.6 : 1 }}>
                       {salvando === kw.id ? 'Salvando…' : 'Salvar'}
                     </button>
-                    <button type="button"
-                      onClick={() => setEditandoRegiao(null)}
+                    <button type="button" onClick={() => setEditando(null)}
                       className="text-xs px-3 py-1.5 rounded-lg"
                       style={{ background: 'var(--surface-2)', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', cursor: 'pointer' }}>
                       Cancelar
@@ -235,16 +244,36 @@ export default function PalavrasChavePage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <span className="text-xs" style={{ color: 'var(--cinza)' }}>📍</span>
-                  <RegiaoChips regioes={kw.regiao} onRemove={() => {}} />
-                  <button type="button"
-                    onClick={() => { setEditandoRegiao(kw.id); setRegiaoEdit(kw.regiao) }}
-                    className="text-xs"
-                    style={{ color: 'var(--cinza)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-                    editar regiões
-                  </button>
-                </div>
+                /* ── Modo visualização ── */
+                <>
+                  <div className="flex items-start gap-3 flex-wrap">
+                    <span className="text-sm font-semibold flex-1 min-w-0 pt-0.5"
+                      style={{ color: 'var(--preto)', textDecoration: kw.ativo ? 'none' : 'line-through' }}>
+                      {kw.termo}
+                    </span>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <button onClick={() => abrirEdicao(kw)}
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--cinza)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => toggleAtivo(kw.id, kw.ativo)}
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--vinho)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        {kw.ativo ? 'Desativar' : 'Ativar'}
+                      </button>
+                      <button onClick={() => remover(kw.id)}
+                        className="text-xs font-medium"
+                        style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-xs" style={{ color: 'var(--cinza)' }}>📍</span>
+                    <RegiaoChips regioes={kw.regiao} onRemove={() => {}} />
+                  </div>
+                </>
               )}
             </div>
           ))}

@@ -77,11 +77,16 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { id, ativo, regiao } = await request.json()
+  const { id, ativo, regiao, termo } = await request.json()
 
   const updates: Record<string, unknown> = {}
-  if (ativo !== undefined) updates.ativo = ativo
+  if (ativo  !== undefined) updates.ativo  = ativo
   if (regiao !== undefined) updates.regiao = regiao
+  if (termo  !== undefined) {
+    const termoLimpo = termo.trim().toLowerCase()
+    if (!termoLimpo) return NextResponse.json({ error: 'Termo não pode ser vazio' }, { status: 400 })
+    updates.termo = termoLimpo
+  }
 
   const { error } = await supabase
     .from('keywords')
