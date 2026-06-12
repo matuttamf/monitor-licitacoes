@@ -37,74 +37,74 @@ export async function GET(request: Request) {
   const supabase = await createServiceClient()
   const hoje     = new Date().toISOString().substring(0, 10)
 
-  // Busca os top-50 alertas ainda não enviados via telegram/whatsapp
-  // Limite alto para garantir que dedupliquemos por licitacao_id por usuário
-  const { data: alertas, error } = await supabase
-    .from('alertas')
-    .select(`
-      id, licitacao_id, canais, score,
-      licitacoes!inner (orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
-      keywords (termo, user_id)
-    `)
-    .not('canais', 'cs', '{"telegram"}')
-    .not('canais', 'cs', '{"whatsapp"}')
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
-    .order('score', { ascending: false })
-    .limit(100)
+  const SELECT_URGENTE = `
+    id, licitacao_id, canais, score, enviado_em,
+    licitacoes!inner (orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
+    keywords (termo, user_id)
+  `
+
+  // Pendentes (nunca enviados via telegram/whatsapp) e já enviados (para reciclagem)
+  const [{ data: pendentes, error }, { data: reciclados }] = await Promise.all([
+    supabase
+      .from('alertas')
+      .select(SELECT_URGENTE)
+      .not('canais', 'cs', '{"telegram"}')
+      .not('canais', 'cs', '{"whatsapp"}')
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
+      .order('score', { ascending: false })
+      .limit(500),
+    supabase
+      .from('alertas')
+      .select(SELECT_URGENTE)
+      .or('canais.cs.{"telegram"},canais.cs.{"whatsapp"}')
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
+      .order('score', { ascending: false })
+      .limit(500),
+  ])
 
   if (error) {
     console.error('alertar-urgente erro:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // filaVazia: quando não há novos alertas, recicla os já enviados há >24h e ainda abertos
-  let filaVazia = false
-  let alertasEfetivos = alertas ?? []
+  const h24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-  if (!alertasEfetivos.length) {
-    const h24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    const { data: reciclados } = await supabase
-      .from('alertas')
-      .select(`
-        id, licitacao_id, canais, score,
-        licitacoes!inner (orgao, objeto, valor_estimado, data_abertura, url, estado, cidade),
-        keywords (termo, user_id)
-      `)
-      .or('canais.cs.{"telegram"},canais.cs.{"whatsapp"}')
-      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
-      .lt('enviado_em', h24)
-      .order('score', { ascending: false })
-      .limit(100)
+  // Agrupar pendentes e reciclados por usuário
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pendentesPorUsuario  = new Map<string, any[]>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recicladosPorUsuario = new Map<string, any[]>()
 
-    if (!reciclados?.length) {
-      return NextResponse.json({ ok: true, enviados: 0, filaVazia: true })
-    }
-    alertasEfetivos = reciclados
-    filaVazia = true
-  }
-
-  // Por usuário: escolhe a licitação de maior score (top 1) e coleta TODOS os IDs
-  // de alertas da mesma licitação (keywords diferentes) para marcar todos como enviados.
-  type EntradaUsuario = {
-    topAlerta: typeof alertas[0]
-    todasAsIds: string[]   // todos os IDs com mesmo licitacao_id deste usuário
-  }
-  const porUsuario = new Map<string, EntradaUsuario>()
-
-  for (const a of alertasEfetivos) {
+  for (const a of (pendentes ?? [])) {
     const uid = (a.keywords as any)?.user_id
     if (!uid) continue
+    if (!pendentesPorUsuario.has(uid)) pendentesPorUsuario.set(uid, [])
+    pendentesPorUsuario.get(uid)!.push(a)
+  }
+  for (const a of (reciclados ?? [])) {
+    const uid = (a.keywords as any)?.user_id
+    if (!uid) continue
+    if (!recicladosPorUsuario.has(uid)) recicladosPorUsuario.set(uid, [])
+    recicladosPorUsuario.get(uid)!.push(a)
+  }
 
-    if (!porUsuario.has(uid)) {
-      porUsuario.set(uid, { topAlerta: a, todasAsIds: [a.id] })
-    } else {
-      const entrada = porUsuario.get(uid)!
-      if (a.licitacao_id === entrada.topAlerta.licitacao_id) {
-        // Mesma licitação, keyword diferente — só adiciona o ID
-        entrada.todasAsIds.push(a.id)
-      }
-      // Licitações diferentes são ignoradas nesta rodada (próximas rodadas cobrem)
-    }
+  // Por usuário: se tem pendentes usa esses; senão recicla os enviados há >24h
+  type EntradaUsuario = { topAlerta: any; todasAsIds: string[]; reciclado: boolean }
+  const porUsuario = new Map<string, EntradaUsuario>()
+  const todosUids  = new Set([...pendentesPorUsuario.keys(), ...recicladosPorUsuario.keys()])
+
+  for (const uid of todosUids) {
+    const pend = pendentesPorUsuario.get(uid) ?? []
+    const recic = (recicladosPorUsuario.get(uid) ?? []).filter(a => !a.enviado_em || a.enviado_em < h24)
+    const pool  = pend.length ? pend : recic
+    if (!pool.length) continue
+
+    const top = pool[0]
+    const ids = pool
+      .filter(a => a.licitacao_id === top.licitacao_id)
+      .map(a => a.id)
+
+    porUsuario.set(uid, { topAlerta: top, todasAsIds: ids, reciclado: pend.length === 0 })
   }
 
   const userIds = [...porUsuario.keys()]
@@ -117,7 +117,7 @@ export async function GET(request: Request) {
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
-  for (const [userId, { topAlerta, todasAsIds }] of porUsuario.entries()) {
+  for (const [userId, { topAlerta, todasAsIds, reciclado }] of porUsuario.entries()) {
     const perfil = profileMap[userId]
     if (!perfil || perfil.status === 'expired') continue
 
@@ -176,6 +176,7 @@ export async function GET(request: Request) {
       canais:   canaisEnviados,
       telegram: telegramOk,
       whatsapp: whatsappOk,
+      reciclado,
     }
   }
 
@@ -183,10 +184,10 @@ export async function GET(request: Request) {
     await registrarCronLog({
       job:      'alertar-urgente',
       status:   'ok',
-      mensagem: `${enviados} alerta(s) via Telegram/WA para ${Object.keys(resultado).length} usuário(s)${filaVazia ? ' (reciclados)' : ''}`,
-      detalhes: { ...resultado, filaVazia },
+      mensagem: `${enviados} alerta(s) via Telegram/WA para ${Object.keys(resultado).length} usuário(s)`,
+      detalhes: resultado,
     })
   }
 
-  return NextResponse.json({ ok: true, enviados, filaVazia, usuarios: Object.keys(resultado).length, detalhes: resultado })
+  return NextResponse.json({ ok: true, enviados, usuarios: Object.keys(resultado).length, detalhes: resultado })
 }
