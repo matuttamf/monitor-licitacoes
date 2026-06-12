@@ -38,8 +38,8 @@ async function main() {
     const { data: leads, error } = await supabase
       .from('leads')
       .select('id, cnpj, email')
-      .is('situacao', null)
       .eq('status', 'invalido')
+      .is('email', null)
       .range(offset, offset + LOTE - 1)
 
     if (error) { console.error('Erro ao buscar leads:', error.message); break }
