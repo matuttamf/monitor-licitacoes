@@ -421,8 +421,13 @@ export default function LandingPage() {
         <div className="max-w-[960px] mx-auto">
           <div className="bg-[#FAF6F0] rounded-[20px] p-8 md:p-12 flex flex-col md:flex-row gap-10 md:gap-14 items-start md:items-center border border-[#D5D2C8]">
             <div className="flex-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(107,15,26,0.07)] mb-4">
-                <span className="text-[11px] font-bold tracking-wider uppercase text-[#6B0F1A]">Ferramenta exclusiva</span>
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(107,15,26,0.07)]">
+                  <span className="text-[11px] font-bold tracking-wider uppercase text-[#6B0F1A]">Ferramenta exclusiva</span>
+                </div>
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,166,90,0.12)', border: '1px solid rgba(201,166,90,0.35)' }}>
+                  <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: '#92610a' }}>✦ Novidade</span>
+                </div>
               </div>
               <h3 className="text-2xl md:text-[30px] font-black text-[#1A1A1C] mb-3 tracking-tight leading-snug">
                 Sua empresa visível para quem<br className="hidden md:block" /> está buscando parceiros agora.
