@@ -13,8 +13,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
-const MAX_LEADS       = 2000
-const MAX_LINHAS      = 500_000
+const MAX_LEADS       = 50_000   // por arquivo — processa inteiro, sem paginação por linhas
 const COL     = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 const COL_EMP = { BASICO: 0, RAZAO: 1 }
 
@@ -24,7 +23,7 @@ const CNAE_SEED = new Set([
 ])
 
 interface CnaeEstado {
-  file_idx: number; rows_processed: number; ano: number; mes: number
+  file_idx: number; ano: number; mes: number   // sem rows_processed: arquivo inteiro por execução
 }
 
 const RF_NEXTCLOUD_BASE = 'https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9'
@@ -142,10 +141,10 @@ Deno.serve(async (_req: Request) => {
   // Carregar estado
   const { data: cfgEstado } = await supabase.from('configuracoes').select('valor').eq('chave','coletar_leads_cnae_estado').maybeSingle()
   const { ano: anoAtual, mes: mesAtual } = getAnoMes()
-  const estado: CnaeEstado = cfgEstado?.valor ?? { file_idx: 0, rows_processed: 0, ano: anoAtual, mes: mesAtual }
+  const estado: CnaeEstado = cfgEstado?.valor ?? { file_idx: 0, ano: anoAtual, mes: mesAtual }
 
   if (estado.ano !== anoAtual || estado.mes !== mesAtual) {
-    estado.file_idx = 0; estado.rows_processed = 0
+    estado.file_idx = 0
     estado.ano = anoAtual; estado.mes = mesAtual
   }
   if (estado.file_idx > 9) {
@@ -154,7 +153,7 @@ Deno.serve(async (_req: Request) => {
 
   const targetCnaes = await getTargetCnaes(supabase)
   const urls = getRFUrls(estado.file_idx, estado.ano, estado.mes)
-  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} skip=${estado.rows_processed} cnae_alvo=${targetCnaes.size}`)
+  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} cnae_alvo=${targetCnaes.size}`)
 
   // Descobre qual URL está disponível (HEAD request para não abrir body)
   let urlUsada = ''
@@ -175,16 +174,10 @@ Deno.serve(async (_req: Request) => {
   type Lead = { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'invalido'; situacao: null; origem: 'cnae' }
   const leads: Lead[] = []
   let rowsProcessed = 0
-  let esgotado = false
-  let rowsSkipped = 0
-  let stop = false
 
-  // ── Passo 1: stream Estabelecimentos ──────────────────────────────────────
+  // ── Passo 1: stream Estabelecimentos — arquivo inteiro, sem paginação ─────
   await streamZipLinhas(urlUsada, (line) => {
     rowsProcessed++
-    if (rowsProcessed > MAX_LINHAS) { stop = true; return false }
-    if (rowsSkipped < estado.rows_processed) { rowsSkipped++; return true }
-
     const cols = line.split('|')
     if (cols.length < 28) return true
     if (cols[COL.MATFIL]  !== '1')  return true
@@ -196,7 +189,7 @@ Deno.serve(async (_req: Request) => {
 
     leads.push({
       cnpj,
-      razao_social: cnpj,                          // placeholder, enriquecido no passo 2
+      razao_social: cnpj,
       email:     cols[COL.EMAIL]?.trim()    || null,
       uf:        cols[COL.UF]?.trim()       || null,
       municipio: cols[COL.MUNICIPIO]?.trim() || null,
@@ -204,11 +197,9 @@ Deno.serve(async (_req: Request) => {
       status: 'invalido', situacao: null, origem: 'cnae',
     })
 
-    if (leads.length >= MAX_LEADS) { stop = true; return false }
+    if (leads.length >= MAX_LEADS) return false   // limite de segurança
     return true
   })
-
-  esgotado = !stop && rowsProcessed < MAX_LINHAS
 
   // ── Passo 2: enriquecer razão social via arquivo Empresas (mesmo índice) ──
   if (leads.length > 0) {
@@ -241,16 +232,11 @@ Deno.serve(async (_req: Request) => {
     if (!error) inseridos += Math.min(100, leads.length - i)
   }
 
-  // ── Atualizar estado ───────────────────────────────────────────────────────
-  const novoEstado: CnaeEstado = {
-    ...estado,
-    rows_processed: esgotado ? 0 : estado.rows_processed + rowsProcessed,
-    file_idx:       esgotado ? estado.file_idx + 1 : estado.file_idx,
-    ano: anoAtual, mes: mesAtual,
-  }
+  // ── Atualizar estado: avança para o próximo arquivo ───────────────────────
+  const novoEstado: CnaeEstado = { file_idx: estado.file_idx + 1, ano: anoAtual, mes: mesAtual }
   await supabase.from('configuracoes').upsert({ chave: 'coletar_leads_cnae_estado', valor: novoEstado }, { onConflict: 'chave' })
 
-  const resultado = { ok: true, inseridos, leads_encontrados: leads.length, linhas_varridas: rowsProcessed, esgotado, file_idx: estado.file_idx }
+  const resultado = { ok: true, inseridos, leads_encontrados: leads.length, linhas_varridas: rowsProcessed, file_idx: estado.file_idx }
   await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'ok', mensagem: `${inseridos} inseridos (edge fn)`, detalhes: resultado })
   return new Response(JSON.stringify(resultado), { headers: { 'Content-Type': 'application/json' } })
 })
