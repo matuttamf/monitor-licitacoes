@@ -57,6 +57,8 @@ type Kpis = {
   ticketMedio: number
   churnMensal: number
   taxaConversao: number
+  novas7d: number
+  receita7d: number
   receitaPorPlano: ReceitaPlano[]
 }
 
@@ -285,12 +287,13 @@ export default function FinanceiroPage() {
               </div>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
             {[
-              { label: 'Pagantes',  value: kpis.totalPagantes,  sub: 'assinaturas ativas', cor: '#10b981' },
-              { label: 'Em trial',  value: kpis.totalTrials,    sub: 'período gratuito',   cor: '#C9A65A' },
-              { label: 'Expirados', value: kpis.totalExpirados, sub: 'sem renovação',      cor: '#ef4444' },
-              { label: 'Churn/30d', value: kpis.churnMensal,    sub: 'trials expirados',   cor: '#f97316' },
+              { label: 'Pagantes',  value: kpis.totalPagantes,  sub: 'assinaturas ativas',  cor: '#10b981' },
+              { label: 'Em trial',  value: kpis.totalTrials,    sub: 'período gratuito',    cor: '#C9A65A' },
+              { label: 'Expirados', value: kpis.totalExpirados, sub: 'sem renovação',       cor: '#ef4444' },
+              { label: 'Churn/30d', value: kpis.churnMensal,    sub: 'encerramentos 30d',   cor: '#f97316' },
+              { label: 'Novos 7d',  value: kpis.novas7d,        sub: moeda(kpis.receita7d), cor: '#3b82f6' },
             ].map(({ label, value, sub, cor }) => (
               <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '14px', padding: '14px 18px' }}>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>{value}</div>

@@ -104,17 +104,23 @@ export async function GET() {
   const totalConvertidos = pagantes.length
   const totalTrials      = totalConvertidos + trialsNaoConvert.length
 
+  // Novas assinaturas nos últimos 7 dias
+  const h7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const novas7d = pagantes.filter(a => a.assinatura_inicio && new Date(a.assinatura_inicio) >= h7)
+  const receita7d = novas7d.reduce((s, a) => s + (a.valor_mensalidade ?? 0), 0)
+
   const kpis = {
     mrr,
     arr:                  mrr * 12,
     totalPagantes:        pagantes.length,
     totalTrials:          trials.length,
-    // trials que fizeram cadastro mas nunca assinaram (sem histórico de mp)
     totalTrialsNaoConvert: trialsNaoConvert.length,
     totalExpirados:       expirados.length,
     ticketMedio:          pagantes.length ? mrr / pagantes.length : 0,
     churnMensal,
     taxaConversao:        totalTrials ? Math.round((totalConvertidos / totalTrials) * 100) : 0,
+    novas7d:              novas7d.length,
+    receita7d,
     receitaPorPlano: Object.entries(PRECOS).map(([plano, preco]) => ({
       plano,
       count:   pagantes.filter(a => a.plano === plano).length,

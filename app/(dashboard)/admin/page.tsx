@@ -44,7 +44,7 @@ type Stats = {
 type CronLog = { id: string; job: string; status: string; mensagem: string; detalhes: unknown; criado_em: string }
 type CronData = { logs: CronLog[]; ultimasPorJob: Record<string, { status: string; mensagem: string; criado_em: string } | null> }
 
-type PreviewFinanceiro = { kpis: { mrr: number; totalPagantes: number; totalTrials: number; taxaConversao: number; churnMensal: number } } | null
+type PreviewFinanceiro = { kpis: { mrr: number; arr: number; totalPagantes: number; totalTrials: number; totalExpirados: number; ticketMedio: number; taxaConversao: number; churnMensal: number; novas7d: number; receita7d: number } } | null
 type PreviewCampanhas  = { totais: { total: number; comAtribuicao: number }; campanhas: { metricas: { mrr: number; conversoes: number } }[] } | null
 
 // ─── Config visual ────────────────────────────────────────────────────────────
@@ -324,6 +324,7 @@ export default function AdminPage() {
           nota?: string
           notaCor?: string
           lista?: { nome: string; status: string; hora: string; erro: boolean }[]
+          miniGrid?: { rows: { label: string; val: string; cor: string }[][]; footer?: string }
           vazio: boolean
           vazioMsg: string
         }
@@ -366,12 +367,23 @@ export default function AdminPage() {
             cor: '#10b981', bg: 'rgba(16,185,129,0.05)', border: 'rgba(16,185,129,0.2)',
             kpiVal:   prevFinanceiro ? prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }) : '—',
             kpiLabel: 'MRR mensal',
-            chips: [
-              { label: 'Pagantes',  val: prevFinanceiro ? String(prevFinanceiro.kpis.totalPagantes) : '—', cor: '#10b981' },
-              { label: 'Trials',    val: prevFinanceiro ? String(prevFinanceiro.kpis.totalTrials)   : '—', cor: '#C9A65A' },
-              { label: 'Conversão', val: prevFinanceiro ? `${prevFinanceiro.kpis.taxaConversao}%`   : '—', cor: '#3b82f6' },
-            ],
-            nota:    prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? `⚠ ${prevFinanceiro.kpis.churnMensal} churn nos últimos 30d` : undefined,
+            chips: [],
+            miniGrid: prevFinanceiro ? {
+              rows: [
+                [
+                  { label: 'ARR',          val: prevFinanceiro.kpis.arr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#3b82f6' },
+                  { label: 'Ticket médio', val: prevFinanceiro.kpis.ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#8b5cf6' },
+                  { label: 'Conversão',    val: `${prevFinanceiro.kpis.taxaConversao}%`, cor: '#C9A65A' },
+                ],
+                [
+                  { label: 'Pagantes',  val: String(prevFinanceiro.kpis.totalPagantes),  cor: '#10b981' },
+                  { label: 'Em trial',  val: String(prevFinanceiro.kpis.totalTrials),    cor: '#C9A65A' },
+                  { label: 'Expirados', val: String(prevFinanceiro.kpis.totalExpirados), cor: '#ef4444' },
+                ],
+              ],
+              footer: `Novos 7d: ${prevFinanceiro.kpis.novas7d} assinatura${prevFinanceiro.kpis.novas7d !== 1 ? 's' : ''} · ${prevFinanceiro.kpis.receita7d.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}`,
+            } : undefined,
+            nota:    prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? `⚠ Churn 30d: ${prevFinanceiro.kpis.churnMensal}` : undefined,
             notaCor: '#ef4444',
             vazio:   !prevFinanceiro,
             vazioMsg: carregando ? 'Carregando…' : 'Aguardando migração DB',
@@ -416,18 +428,41 @@ export default function AdminPage() {
                   {card.kpiLabel}
                 </div>
 
-                {/* 3 chips uniformes */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                  {card.chips.map(chip => (
-                    <div key={chip.label} style={{
-                      padding: '6px 4px', borderRadius: '8px', background: 'white',
-                      textAlign: 'center', border: '1px solid var(--cinza-light)',
-                    }}>
-                      <div style={{ fontSize: '12px', fontWeight: 800, color: chip.cor, letterSpacing: '-0.02em' }}>{chip.val}</div>
-                      <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '2px', lineHeight: 1.2 }}>{chip.label}</div>
-                    </div>
-                  ))}
-                </div>
+                {/* Chips normais ou mini-grid (Financeiro) */}
+                {card.miniGrid ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {card.miniGrid.rows.map((row, ri) => (
+                      <div key={ri} style={{ display: 'grid', gridTemplateColumns: `repeat(${row.length}, 1fr)`, gap: '5px' }}>
+                        {row.map(chip => (
+                          <div key={chip.label} style={{
+                            padding: '5px 4px', borderRadius: '7px', background: 'white',
+                            textAlign: 'center', border: '1px solid var(--cinza-light)',
+                          }}>
+                            <div style={{ fontSize: '11px', fontWeight: 800, color: chip.cor, letterSpacing: '-0.02em' }}>{chip.val}</div>
+                            <div style={{ fontSize: '8px', color: 'var(--cinza)', marginTop: '1px', lineHeight: 1.2 }}>{chip.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                    {card.miniGrid.footer && (
+                      <div style={{ fontSize: '10px', color: '#3b82f6', fontWeight: 600, marginTop: '2px' }}>
+                        📈 {card.miniGrid.footer}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {card.chips.map(chip => (
+                      <div key={chip.label} style={{
+                        padding: '6px 4px', borderRadius: '8px', background: 'white',
+                        textAlign: 'center', border: '1px solid var(--cinza-light)',
+                      }}>
+                        <div style={{ fontSize: '12px', fontWeight: 800, color: chip.cor, letterSpacing: '-0.02em' }}>{chip.val}</div>
+                        <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '2px', lineHeight: 1.2 }}>{chip.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Lista de execuções (Saúde) ou nota/alerta (demais) */}
                 {card.lista ? (
