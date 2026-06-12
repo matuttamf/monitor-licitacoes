@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const ADMIN  = process.env.ADMIN_EMAIL ?? 'djardelreis@gmail.com'
+const ADMIN  = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
 export async function POST(req: NextRequest) {
   const { nome, email, assunto, mensagem } = await req.json()
