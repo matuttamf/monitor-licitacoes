@@ -76,7 +76,7 @@ export default function CampanhasPage() {
   const [editando, setEditando]     = useState<Campanha | null>(null)
   const [salvando, setSalvando]     = useState(false)
   const [testando, setTestando]     = useState(false)
-  const [testeRes, setTesteRes]     = useState<{ ok: boolean; mensagem?: string; erro?: string } | null>(null)
+  const [testeRes, setTesteRes]     = useState<{ ok: boolean; mensagem?: string; erro?: string; detalhe?: string } | null>(null)
   const [linkCopiado, setLinkCopiado] = useState<string | null>(null)
   const [filtroTipo, setFiltroTipo] = useState('todos')
   const [filtroAtivo, setFiltroAtivo] = useState<'todos' | 'ativo' | 'inativo'>('ativo')
