@@ -13,9 +13,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
-const MAX_LEADS       = 50_000   // por arquivo — processa inteiro, sem paginação por linhas
-const COL     = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
-const COL_EMP = { BASICO: 0, RAZAO: 1 }
+// Processa até 800k linhas por execução — ~30-60s na edge function
+const MAX_LINHAS   = 800_000
+const MAX_LEADS    = 20_000
+const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 
 const CNAE_SEED = new Set([
   '4789005','6209100','8121400','4322301','4330404',
@@ -23,10 +24,11 @@ const CNAE_SEED = new Set([
 ])
 
 interface CnaeEstado {
-  file_idx: number; ano: number; mes: number   // sem rows_processed: arquivo inteiro por execução
+  file_idx: number
+  rows_processed: number
+  ano: number
+  mes: number
 }
-
-const RF_NEXTCLOUD_BASE = 'https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9'
 
 function getAnoMes() {
   const d = new Date()
@@ -34,43 +36,37 @@ function getAnoMes() {
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
-function getStorageUrl(tipo: string, fileIdx: number): string {
+function getStorageUrl(fileIdx: number): string {
   const base = Deno.env.get('SUPABASE_URL') ?? ''
-  return `${base}/storage/v1/object/public/rf-cnpj/${tipo}${fileIdx}.zip`
+  return `${base}/storage/v1/object/public/rf-cnpj/Estabelecimentos${fileIdx}.zip`
 }
 
-function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
-  const mesStr = String(mes).padStart(2, '0')
-  const base = Deno.env.get('SUPABASE_URL') ?? ''
-  return [
-    `${base}/storage/v1/object/public/rf-cnpj/Estabelecimentos${fileIdx}.zip`,
-    `${RF_NEXTCLOUD_BASE}/download?path=%2F${ano}-${mesStr}&files=Estabelecimentos${fileIdx}.zip`,
-  ]
-}
-
-// Helper: stream um ZIP do Storage e chama onLine para cada linha CSV
-// onLine retorna false para parar o streaming antecipadamente
+// Stream ZIP do Storage, chama onLine por linha CSV
+// onLine retorna false para parar; AbortController evita buffering excessivo
 async function streamZipLinhas(url: string, onLine: (linha: string) => boolean): Promise<void> {
+  const abort = new AbortController()
   let res: Response
   try {
     res = await fetch(url, {
       headers: { 'User-Agent': 'MonitorLicitacoes/1.0' },
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.any([abort.signal, AbortSignal.timeout(120000)]),
     })
   } catch { return }
   if (!res.ok || !res.body) return
 
-  const concat = (a: Uint8Array, b: Uint8Array) => { const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c }
+  const concat = (a: Uint8Array, b: Uint8Array) => {
+    const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c
+  }
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
   const writer = writable.getWriter()
   const reader = res.body.getReader()
   let headerBuf = new Uint8Array(0)
   let headerParsed = false
-  let deflateStart = -1
 
+  // Goroutine: lê ZIP e alimenta o TransformStream
   ;(async () => {
     try {
-      while (true) {
+      while (!abort.signal.aborted) {
         const { done, value } = await reader.read()
         if (done) { await writer.close(); break }
         const chunk = value as Uint8Array
@@ -78,7 +74,7 @@ async function streamZipLinhas(url: string, onLine: (linha: string) => boolean):
           headerBuf = concat(headerBuf, chunk)
           if (headerBuf.length >= 30) {
             const view = new DataView(headerBuf.buffer)
-            deflateStart = 30 + view.getUint16(26, true) + view.getUint16(28, true)
+            const deflateStart = 30 + view.getUint16(26, true) + view.getUint16(28, true)
             if (headerBuf.length >= deflateStart) {
               headerParsed = true
               const rest = headerBuf.slice(deflateStart)
@@ -90,7 +86,9 @@ async function streamZipLinhas(url: string, onLine: (linha: string) => boolean):
           await writer.write(chunk)
         }
       }
-    } catch { await writer.abort() }
+    } catch { /* abortado */ }
+    try { await writer.abort() } catch { /* ok */ }
+    try { reader.cancel() } catch { /* ok */ }
   })()
 
   const decompReader = readable.pipeThrough(new DecompressionStream('deflate-raw')).getReader()
@@ -110,6 +108,9 @@ async function streamZipLinhas(url: string, onLine: (linha: string) => boolean):
       }
     }
   } catch { /* stream interrompido */ }
+  // Cancela tudo ao parar — libera memória imediatamente
+  abort.abort()
+  try { await decompReader.cancel() } catch { /* ok */ }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,43 +142,51 @@ Deno.serve(async (_req: Request) => {
   // Carregar estado
   const { data: cfgEstado } = await supabase.from('configuracoes').select('valor').eq('chave','coletar_leads_cnae_estado').maybeSingle()
   const { ano: anoAtual, mes: mesAtual } = getAnoMes()
-  const estado: CnaeEstado = cfgEstado?.valor ?? { file_idx: 0, ano: anoAtual, mes: mesAtual }
+  const estado: CnaeEstado = cfgEstado?.valor ?? { file_idx: 0, rows_processed: 0, ano: anoAtual, mes: mesAtual }
 
+  // Novo mês → reinicia do zero
   if (estado.ano !== anoAtual || estado.mes !== mesAtual) {
     estado.file_idx = 0
-    estado.ano = anoAtual; estado.mes = mesAtual
+    estado.rows_processed = 0
+    estado.ano = anoAtual
+    estado.mes = mesAtual
   }
   if (estado.file_idx > 9) {
     return new Response(JSON.stringify({ ok: true, motivo: 'todos os arquivos processados neste mês' }))
   }
 
   const targetCnaes = await getTargetCnaes(supabase)
-  const urls = getRFUrls(estado.file_idx, estado.ano, estado.mes)
-  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} cnae_alvo=${targetCnaes.size}`)
+  const url = getStorageUrl(estado.file_idx)
+  console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} skip=${estado.rows_processed} cnae_alvo=${targetCnaes.size}`)
 
-  // Descobre qual URL está disponível (HEAD request para não abrir body)
-  let urlUsada = ''
-  for (const u of urls) {
-    try {
-      const r = await fetch(u, { method: 'HEAD', signal: AbortSignal.timeout(15000) })
-      if (r.ok) { urlUsada = u; break }
-      console.log(`[coletar-leads-cnae] ${u} → HTTP ${r.status}, tentando próximo`)
-    } catch (e) { console.log(`[coletar-leads-cnae] ${u} falhou: ${e}, tentando próximo`) }
-  }
-  if (!urlUsada) {
-    const erro = `Todos os URLs falharam para arquivo ${estado.file_idx}`
+  // Verifica se o arquivo existe
+  try {
+    const head = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(15000) })
+    if (!head.ok) {
+      const erro = `Arquivo não encontrado: Estabelecimentos${estado.file_idx}.zip (HTTP ${head.status})`
+      await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
+      return new Response(JSON.stringify({ ok: false, erro }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    }
+  } catch (e) {
+    const erro = `HEAD falhou: ${e}`
     await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
     return new Response(JSON.stringify({ ok: false, erro }), { status: 500, headers: { 'Content-Type': 'application/json' } })
   }
-  console.log(`[coletar-leads-cnae] usando ${urlUsada}`)
 
   type Lead = { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'invalido'; situacao: null; origem: 'cnae' }
   const leads: Lead[] = []
-  let rowsProcessed = 0
+  let rowsLidas = 0
+  let esgotado = false
 
-  // ── Passo 1: stream Estabelecimentos — arquivo inteiro, sem paginação ─────
-  await streamZipLinhas(urlUsada, (line) => {
-    rowsProcessed++
+  await streamZipLinhas(url, (line) => {
+    rowsLidas++
+    const row = estado.rows_processed + rowsLidas
+
+    // Pula linhas já processadas em execuções anteriores
+    if (row <= estado.rows_processed) return true
+
+    if (rowsLidas > MAX_LINHAS) return false  // parar — continua na próxima execução
+
     const cols = line.split('|')
     if (cols.length < 28) return true
     if (cols[COL.MATFIL]  !== '1')  return true
@@ -189,7 +198,7 @@ Deno.serve(async (_req: Request) => {
 
     leads.push({
       cnpj,
-      razao_social: cnpj,
+      razao_social: cnpj,   // enriquecer-receita preencherá depois
       email:     cols[COL.EMAIL]?.trim()    || null,
       uf:        cols[COL.UF]?.trim()       || null,
       municipio: cols[COL.MUNICIPIO]?.trim() || null,
@@ -197,46 +206,43 @@ Deno.serve(async (_req: Request) => {
       status: 'invalido', situacao: null, origem: 'cnae',
     })
 
-    if (leads.length >= MAX_LEADS) return false   // limite de segurança
+    if (leads.length >= MAX_LEADS) return false
     return true
   })
 
-  // ── Passo 2: enriquecer razão social via arquivo Empresas (mesmo índice) ──
-  if (leads.length > 0) {
-    // Map de cnpj_basico → índice no array leads para lookup O(1)
-    const basMap = new Map<string, number>()
-    for (let i = 0; i < leads.length; i++) basMap.set(leads[i].cnpj.slice(0, 8), i)
+  // Determina se esgotou o arquivo
+  esgotado = rowsLidas < MAX_LINHAS
 
-    const empresasUrl = getStorageUrl('Empresas', estado.file_idx)
-    let encontrados = 0
-    await streamZipLinhas(empresasUrl, (line) => {
-      if (encontrados >= leads.length) return false   // todos enriquecidos → para
-      const sep = line.indexOf('|')
-      if (sep === -1) return true
-      const cnpjBasico = line.slice(0, sep).trim()
-      const idx = basMap.get(cnpjBasico)
-      if (idx !== undefined) {
-        const cols = line.split('|')
-        const razao = cols[COL_EMP.RAZAO]?.trim()
-        if (razao) { leads[idx].razao_social = razao; encontrados++ }
-      }
-      return true
-    })
-    console.log(`[coletar-leads-cnae] razão social enriquecida: ${encontrados}/${leads.length}`)
-  }
-
-  // ── Inserir leads ──────────────────────────────────────────────────────────
+  // Inserir leads
   let inseridos = 0
   for (let i = 0; i < leads.length; i += 100) {
     const { error } = await supabase.from('leads').upsert(leads.slice(i, i+100), { onConflict: 'cnpj', ignoreDuplicates: true })
     if (!error) inseridos += Math.min(100, leads.length - i)
   }
 
-  // ── Atualizar estado: avança para o próximo arquivo ───────────────────────
-  const novoEstado: CnaeEstado = { file_idx: estado.file_idx + 1, ano: anoAtual, mes: mesAtual }
+  // Atualizar estado
+  let novoEstado: CnaeEstado
+  if (esgotado) {
+    // Arquivo concluído → avança para o próximo
+    novoEstado = { file_idx: estado.file_idx + 1, rows_processed: 0, ano: anoAtual, mes: mesAtual }
+    console.log(`[coletar-leads-cnae] arquivo ${estado.file_idx} concluído, avançando para ${estado.file_idx + 1}`)
+  } else {
+    // Arquivo parcial → continua no próximo cron
+    novoEstado = { file_idx: estado.file_idx, rows_processed: estado.rows_processed + rowsLidas, ano: anoAtual, mes: mesAtual }
+    console.log(`[coletar-leads-cnae] arquivo ${estado.file_idx} parcial, processadas ${novoEstado.rows_processed} linhas no total`)
+  }
+
   await supabase.from('configuracoes').upsert({ chave: 'coletar_leads_cnae_estado', valor: novoEstado }, { onConflict: 'chave' })
 
-  const resultado = { ok: true, inseridos, leads_encontrados: leads.length, linhas_varridas: rowsProcessed, file_idx: estado.file_idx }
-  await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'ok', mensagem: `${inseridos} inseridos (edge fn)`, detalhes: resultado })
+  const resultado = {
+    ok: true,
+    inseridos,
+    leads_encontrados: leads.length,
+    linhas_varridas: rowsLidas,
+    arquivo_concluido: esgotado,
+    file_idx: estado.file_idx,
+    proximo_estado: novoEstado,
+  }
+  await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'ok', mensagem: `${inseridos} inseridos`, detalhes: resultado })
   return new Response(JSON.stringify(resultado), { headers: { 'Content-Type': 'application/json' } })
 })

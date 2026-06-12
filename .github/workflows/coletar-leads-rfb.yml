@@ -1,0 +1,73 @@
+name: Coleta Leads RFB (mensal)
+
+on:
+  # Roda todo dia 15 às 6h UTC (RFB publica entre dias 10-15 do mês seguinte)
+  schedule:
+    - cron: '0 6 15 * *'
+  # Permite disparo manual pelo GitHub UI (Actions → Run workflow)
+  workflow_dispatch:
+    inputs:
+      idx_start:
+        description: 'Índice inicial (0-9)'
+        default: '0'
+      idx_end:
+        description: 'Índice final (0-9)'
+        default: '9'
+      ano:
+        description: 'Ano dos dados (ex: 2026). Vazio = mês anterior'
+        default: ''
+      mes:
+        description: 'Mês dos dados (ex: 5). Vazio = mês anterior'
+        default: ''
+
+jobs:
+  coletar:
+    name: Coleta e inserção de leads
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # até 6h para processar todos os arquivos
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Coletar leads (Estabelecimentos + Empresas + e-mails)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END" "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END"
+          fi
+
+      - name: Enriquecer e-mails de leads existentes
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/enriquecer-emails-rfb.ts
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          STATUS="${{ job.status }}"
+          npx tsx scripts/notificar-cron.ts "coleta-leads-rfb" "$STATUS"

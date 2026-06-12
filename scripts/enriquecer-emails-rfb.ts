@@ -1,0 +1,197 @@
+/**
+ * Script local: enriquece e-mails de TODOS os leads no banco usando arquivos
+ * de Estabelecimentos da RFB que estão no Supabase Storage.
+ *
+ * Útil para leads coletados via outros caminhos (participantes, transparência)
+ * que não têm e-mail preenchido.
+ *
+ * Uso:
+ *   npx tsx scripts/enriquecer-emails-rfb.ts          # arquivos 0-9
+ *   npx tsx scripts/enriquecer-emails-rfb.ts 0 3
+ */
+
+import { createClient } from '@supabase/supabase-js'
+import { createReadStream, existsSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { createInflateRaw } from 'node:zlib'
+import { createInterface } from 'node:readline'
+import { Readable } from 'node:stream'
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config()
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const BUCKET       = 'rf-cnpj'
+
+const args     = process.argv.slice(2)
+const idxStart = Number(args[0] ?? 0)
+const idxEnd   = Number(args[1] ?? 9)
+
+const COL_EST = { BASICO: 0, ORDEM: 1, DV: 2, EMAIL: 27 }
+
+const RE_EMAIL = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+const DOMINIOS_INVALIDOS = new Set([
+  'naotem.com','naopossui.com','sempossui.com','semcadastro.com',
+  'naoinformado.com','naoconsta.com','inexistente.com','nenhum.com',
+  'naodisponivel.com','nodomain.com','domain.com','test.com','example.com',
+  'email.com','mail.com','fake.com','null.com','none.com',
+])
+
+function validarEmail(email: string | null): string | null {
+  if (!email) return null
+  const e = email.trim().toLowerCase()
+  if (!RE_EMAIL.test(e)) return null
+  if (e.length > 100) return null
+  const [, dominio] = e.split('@')
+  if (DOMINIOS_INVALIDOS.has(dominio)) return null
+  if (/\b(nao|sem|null|fake|none|test|dummy|exemplo)\b/.test(dominio)) return null
+  return e
+}
+
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+
+async function carregarCnpjsSemEmail(): Promise<Set<string>> {
+  const cnpjs = new Set<string>()
+  let offset = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('cnpj')
+      .or('email.is.null,email.eq.')
+      .range(offset, offset + batchSize - 1)
+    if (error || !data?.length) break
+    for (const r of data) cnpjs.add((r.cnpj as string).slice(0, 8))
+    if (data.length < batchSize) break
+    offset += batchSize
+  }
+  return cnpjs
+}
+
+async function downloadStorage(fileIdx: number, tmpPath: string): Promise<boolean> {
+  if (existsSync(tmpPath)) {
+    console.log(`  Usando cache local`)
+    return true
+  }
+  console.log(`  Baixando Estabelecimentos${fileIdx}.zip do Storage...`)
+  const { data, error } = await supabase.storage.from(BUCKET).download(`Estabelecimentos${fileIdx}.zip`)
+  if (error || !data) { console.error(`  ✗ ${error?.message ?? 'não encontrado'}`); return false }
+  writeFileSync(tmpPath, Buffer.from(await data.arrayBuffer()))
+  return true
+}
+
+async function extrairEmailsDoArquivo(
+  tmpPath: string,
+  cnpjsAlvo: Set<string>,
+): Promise<Map<string, string>> {
+  const mapa = new Map<string, string>() // cnpj_14 → email
+
+  await new Promise<void>((resolve, reject) => {
+    const inflate = createInflateRaw()
+    const fileStream = createReadStream(tmpPath)
+    let headerBuf = Buffer.alloc(0)
+    let headerParsed = false
+
+    const processDeflate = (src: NodeJS.ReadableStream) => {
+      inflate.on('error', reject)
+      src.pipe(inflate)
+      const rl = createInterface({ input: inflate, crlfDelay: Infinity })
+      rl.on('line', (line) => {
+        const cols = line.split('|')
+        if (cols.length < 28) return
+        const cnpjBasico = cols[COL_EST.BASICO]?.trim()
+        if (!cnpjBasico || !cnpjsAlvo.has(cnpjBasico)) return
+        const email = validarEmail(cols[COL_EST.EMAIL] ?? null)
+        if (!email) return
+        const cnpj = (cols[COL_EST.BASICO] + cols[COL_EST.ORDEM] + cols[COL_EST.DV]).replace(/\D/g, '')
+        if (cnpj.length === 14) mapa.set(cnpj, email)
+      })
+      rl.on('close', resolve)
+      rl.on('error', reject)
+    }
+
+    fileStream.on('data', (chunk: Buffer) => {
+      if (headerParsed) return
+      headerBuf = Buffer.concat([headerBuf, chunk])
+      if (headerBuf.length >= 30) {
+        const deflateStart = 30 + headerBuf.readUInt16LE(26) + headerBuf.readUInt16LE(28)
+        if (headerBuf.length >= deflateStart) {
+          headerParsed = true
+          fileStream.pause()
+          fileStream.removeAllListeners('data')
+          const combined = new Readable({ read() {} })
+          combined.push(headerBuf.slice(deflateStart))
+          fileStream.on('data', (d: Buffer) => combined.push(d))
+          fileStream.on('end', () => combined.push(null))
+          fileStream.on('error', (e: Error) => combined.destroy(e))
+          fileStream.resume()
+          processDeflate(combined)
+        }
+      }
+    })
+    fileStream.on('error', reject)
+  })
+
+  return mapa
+}
+
+async function atualizarEmails(emailMap: Map<string, string>): Promise<number> {
+  let atualizados = 0
+  const entries = Array.from(emailMap.entries())
+  for (let i = 0; i < entries.length; i += 100) {
+    const batch = entries.slice(i, i + 100)
+    for (const [cnpj, email] of batch) {
+      const { error } = await supabase
+        .from('leads')
+        .update({ email })
+        .eq('cnpj', cnpj)
+        .or('email.is.null,email.eq.')
+      if (!error) atualizados++
+    }
+  }
+  return atualizados
+}
+
+async function main() {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    console.error('Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env.local')
+    process.exit(1)
+  }
+
+  console.log('Carregando CNPJs sem e-mail no banco...')
+  const semEmail = await carregarCnpjsSemEmail()
+  console.log(`Total de leads sem e-mail: ${semEmail.size}`)
+  if (!semEmail.size) { console.log('Nenhum lead sem e-mail. Nada a fazer.'); return }
+
+  let totalAtualizados = 0
+
+  for (let i = idxStart; i <= idxEnd; i++) {
+    const tmpPath = join(tmpdir(), `rf-estabelecimentos-${i}.zip`)
+    console.log(`\n=== Estabelecimentos${i} ===`)
+
+    const ok = await downloadStorage(i, tmpPath)
+    if (!ok) continue
+
+    console.log(`  Extraindo e-mails para ${semEmail.size} CNPJs-alvo...`)
+    const t0 = Date.now()
+    const emailMap = await extrairEmailsDoArquivo(tmpPath, semEmail)
+    console.log(`  Encontrados: ${emailMap.size} e-mails válidos em ${((Date.now()-t0)/1000).toFixed(1)}s`)
+
+    if (emailMap.size > 0) {
+      console.log(`  Atualizando banco...`)
+      const atualizados = await atualizarEmails(emailMap)
+      console.log(`  ✓ ${atualizados} leads atualizados com e-mail`)
+      totalAtualizados += atualizados
+      // Remove do set os CNPJs já enriquecidos (CNPJ básico)
+      for (const cnpj of emailMap.keys()) semEmail.delete(cnpj.slice(0, 8))
+    }
+
+    if (!semEmail.size) { console.log('\nTodos os leads enriquecidos!'); break }
+  }
+
+  console.log(`\n✓ Concluído. Total de leads enriquecidos com e-mail: ${totalAtualizados}`)
+}
+
+main().catch(e => { console.error(e); process.exit(1) })
