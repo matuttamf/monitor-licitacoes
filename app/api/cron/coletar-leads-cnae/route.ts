@@ -77,7 +77,8 @@ async function getTargetCnaes(supabase: any): Promise<Set<string>> {
     .select('cnae_codigo')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .not('cnae_codigo' as any, 'is', null)
-    .limit(5000)
+    .neq('origem', 'cnae')
+    .limit(10000)
 
   const rows = (data ?? []) as { cnae_codigo: string | null }[]
   if (!rows.length) return CNAE_SEED
@@ -169,15 +170,16 @@ async function processarArquivoRF(
       const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g, '')
       if (cnpj.length !== 14) continue
 
+      const emailRaw = cols[COL.EMAIL]?.trim() || null
       leads.push({
         cnpj,
         razao_social: cnpj,                                  // Receita preencherá depois
-        email:        cols[COL.EMAIL]?.trim()   || null,
-        uf:           cols[COL.UF]?.trim()      || null,
+        email:        emailRaw,
+        uf:           cols[COL.UF]?.trim()        || null,
         municipio:    cols[COL.MUNICIPIO]?.trim() || null,
         cnae_codigo:  cnae || null,
-        status:       'invalido',
-        situacao:     null,
+        status:       emailRaw ? 'pendente' : 'invalido',
+        situacao:     'ATIVA',
         origem:       'cnae',
       })
 

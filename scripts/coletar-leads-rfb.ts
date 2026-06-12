@@ -107,28 +107,21 @@ const CNAE_POR_SEGMENTO: Record<string, string[]> = {
 }
 
 async function getTargetCnaes(): Promise<Set<string>> {
-  // 1. CNAEs mais frequentes nos leads já existentes (comportamento histórico)
+  // Top 200 CNAEs das empresas coletadas via licitações/contratos (excluindo origem='cnae')
   const { data: leadsData } = await supabase
-    .from('leads').select('cnae_codigo').not('cnae_codigo','is',null).limit(5000)
+    .from('leads')
+    .select('cnae_codigo')
+    .not('cnae_codigo', 'is', null)
+    .neq('origem', 'cnae')
+    .limit(10000)
   const counts: Record<string, number> = {}
   for (const r of (leadsData ?? []) as { cnae_codigo: string | null }[]) {
     const code = String(r.cnae_codigo).replace(/\D/g,'').slice(0,7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
-  const topLeads = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
-
-  // 2. CNAEs inferidos das keywords cadastradas pelos usuários
-  const { data: kwData } = await supabase.from('keywords').select('termo').limit(1000)
-  const cnaesDasKeywords = new Set<string>()
-  for (const { termo } of (kwData ?? []) as { termo: string }[]) {
-    const t = termo.toLowerCase()
-    for (const [segmento, cnaes] of Object.entries(CNAE_POR_SEGMENTO)) {
-      if (t.includes(segmento)) cnaes.forEach(c => cnaesDasKeywords.add(c))
-    }
-  }
-
-  const todos = new Set([...topLeads, ...cnaesDasKeywords, ...CNAE_SEED])
-  console.log(`  CNAEs-alvo: ${todos.size} (${topLeads.length} histórico + ${cnaesDasKeywords.size} keywords + seed)`)
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
+  const todos = top.length ? new Set(top) : CNAE_SEED
+  console.log(`  CNAEs-alvo: ${todos.size} (de licitações/contratos)`)
   return todos
 }
 
@@ -309,8 +302,8 @@ async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, str
     uf: l.uf,
     municipio: l.municipio,
     cnae_codigo: l.cnae,
-    status: 'invalido' as const,
-    situacao: null,
+    status: (l.email ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
+    situacao: 'ATIVA' as const,
     origem: 'cnae' as const,
   }))
 

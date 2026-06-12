@@ -115,7 +115,13 @@ async function streamZipLinhas(url: string, onLine: (linha: string) => boolean):
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getTargetCnaes(supabase: any): Promise<Set<string>> {
-  const { data } = await supabase.from('leads').select('cnae_codigo').not('cnae_codigo','is',null).limit(5000)
+  // Apenas leads oriundos de licitações/contratos (não os próprios leads CNAE)
+  const { data } = await supabase
+    .from('leads')
+    .select('cnae_codigo')
+    .not('cnae_codigo', 'is', null)
+    .neq('origem', 'cnae')
+    .limit(10000)
   const rows = (data ?? []) as { cnae_codigo: string | null }[]
   if (!rows.length) return CNAE_SEED
   const counts: Record<string, number> = {}
@@ -196,14 +202,17 @@ Deno.serve(async (_req: Request) => {
     const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
     if (cnpj.length !== 14) return true
 
+    const emailRaw = cols[COL.EMAIL]?.trim() || null
     leads.push({
       cnpj,
       razao_social: cnpj,   // enriquecer-receita preencherá depois
-      email:     cols[COL.EMAIL]?.trim()    || null,
-      uf:        cols[COL.UF]?.trim()       || null,
-      municipio: cols[COL.MUNICIPIO]?.trim() || null,
-      cnae_codigo: cnae || null,
-      status: 'invalido', situacao: null, origem: 'cnae',
+      email:        emailRaw,
+      uf:           cols[COL.UF]?.trim()        || null,
+      municipio:    cols[COL.MUNICIPIO]?.trim() || null,
+      cnae_codigo:  cnae || null,
+      status:       emailRaw ? 'pendente' : 'invalido',
+      situacao:     'ATIVA',
+      origem:       'cnae',
     })
 
     if (leads.length >= MAX_LEADS) return false
