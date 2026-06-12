@@ -105,11 +105,22 @@ export async function POST(request: Request) {
       const valorMensalidade = PLANOS_MP[planoId] ?? null
 
       // Registra assinatura_inicio apenas na primeira ativação (não sobrescreve renovações)
+      // Também verifica bloqueio administrativo — se bloqueado_admin=true, não reativa o acesso
       const { data: perfilAtual } = await supabase
         .from('profiles')
-        .select('assinatura_inicio')
+        .select('assinatura_inicio, bloqueado_admin')
         .eq('id', userId)
         .maybeSingle()
+
+      if (perfilAtual?.bloqueado_admin) {
+        console.warn(`[webhook/mp] Usuário ${userId} bloqueado administrativamente — pagamento registrado mas acesso NÃO reativado`)
+        // Grava apenas o vínculo da assinatura e valor, sem alterar status/acesso
+        await supabase.from('profiles').update({
+          mp_subscription_id: subscriptionId,
+          valor_mensalidade:  valorMensalidade,
+        }).eq('id', userId)
+        return NextResponse.json({ ok: true })
+      }
 
       const updateData: Record<string, unknown> = {
         status:             'active',

@@ -11,6 +11,13 @@ function CadastroConteudo() {
   const searchParams  = useSearchParams()
   const conviteToken  = searchParams.get('convite')
 
+  // Captura de atribuição: ?ref=CODIGO ou parâmetros UTM padrão
+  const utmRef      = searchParams.get('ref')      ?? ''
+  const utmSource   = searchParams.get('utm_source')   ?? ''
+  const utmMedium   = searchParams.get('utm_medium')   ?? ''
+  const utmCampaign = searchParams.get('utm_campaign') ?? ''
+  const utmContent  = searchParams.get('utm_content')  ?? ''
+
   const [email, setEmail]                           = useState('')
   const [senha, setSenha]                           = useState('')
   const [confirmarSenha, setConfirmarSenha]         = useState('')
@@ -52,10 +59,23 @@ function CadastroConteudo() {
     }
 
     const supabase = createClient()
+
+    // Monta metadados de atribuição (passados para auth.users.user_metadata,
+    // lidos depois em /auth/callback para gravar no profile)
+    const atribuicao: Record<string, string> = {}
+    if (utmRef)      atribuicao.ref          = utmRef
+    if (utmSource)   atribuicao.utm_source   = utmSource
+    if (utmMedium)   atribuicao.utm_medium   = utmMedium
+    if (utmCampaign) atribuicao.utm_campaign = utmCampaign
+    if (utmContent)  atribuicao.utm_content  = utmContent
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback?next=/onboarding` },
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback?next=/onboarding`,
+        data: Object.keys(atribuicao).length ? atribuicao : undefined,
+      },
     })
 
     if (error) {

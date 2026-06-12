@@ -19,7 +19,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, owner_id')
+    .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, owner_id, bloqueado_admin')
     .order('criado_em', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -58,11 +58,12 @@ export async function GET() {
     return {
       ...p,
       email,
-      is_admin: email === ADMIN_EMAIL,
+      is_admin:       email === ADMIN_EMAIL,
       trial_expirado: p.status === 'trial' && new Date(p.trial_fim) < new Date(),
-      keyword_count: kwPorUser[p.id] ?? 0,
-      alerta_count:  alertaPorUser[p.id]?.count ?? 0,
-      ultimo_alerta: alertaPorUser[p.id]?.ultimo ?? null,
+      bloqueado_admin: p.bloqueado_admin ?? false,
+      keyword_count:  kwPorUser[p.id] ?? 0,
+      alerta_count:   alertaPorUser[p.id]?.count ?? 0,
+      ultimo_alerta:  alertaPorUser[p.id]?.ultimo ?? null,
     }
   })
 
@@ -75,18 +76,22 @@ export async function PATCH(request: Request) {
 
   const supabase = createAdminClient()
 
-  const { id, status, nome, telefone, whatsapp, empresa, plano } = await request.json()
+  const { id, status, nome, telefone, whatsapp, empresa, plano, bloqueado_admin } = await request.json()
 
-  const atualizacao: Record<string, string> = {}
-  if (status) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const atualizacao: Record<string, any> = {}
+  if (status !== undefined) {
     if (!['trial', 'active', 'expired', 'bloqueado'].includes(status))
       return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
     atualizacao.status = status
   }
-  if (nome !== undefined) atualizacao.nome = nome
-  if (telefone !== undefined) atualizacao.telefone = telefone
-  if (empresa !== undefined) atualizacao.empresa = empresa
-  if (plano !== undefined) atualizacao.plano = plano
+  // Bloqueio administrativo: independente de pagamento, não é sobrescrito pelo webhook MP
+  if (bloqueado_admin !== undefined) atualizacao.bloqueado_admin = Boolean(bloqueado_admin)
+  if (nome      !== undefined) atualizacao.nome      = nome
+  if (telefone  !== undefined) atualizacao.telefone  = telefone
+  if (whatsapp  !== undefined) atualizacao.whatsapp  = whatsapp
+  if (empresa   !== undefined) atualizacao.empresa   = empresa
+  if (plano     !== undefined) atualizacao.plano     = plano
 
   const { error } = await supabase
     .from('profiles')

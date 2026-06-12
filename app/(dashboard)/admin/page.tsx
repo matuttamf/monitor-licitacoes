@@ -22,6 +22,7 @@ type Usuario = {
   alerta_count: number
   ultimo_alerta: string | null
   owner_id?: string | null
+  bloqueado_admin?: boolean
 }
 
 type Keyword    = { id: string; termo: string; ativo: boolean; criado_em: string }
@@ -311,6 +312,25 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* ── Campanhas & Marketing ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #2e1065 100%)', border: '1px solid rgba(139,92,246,0.3)' }}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-white mb-1">📣 Campanhas & Marketing</h2>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              Influenciadores · Meta · Google · UTM tracking · Comissões · Taxa de conversão por origem
+            </p>
+          </div>
+          <a
+            href="/admin/campanhas"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
+            style={{ background: '#a78bfa', color: '#2e1065' }}
+          >
+            Ver campanhas →
+          </a>
+        </div>
+      </div>
+
       {/* ── Configurações ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Configurações</h2>
@@ -495,6 +515,11 @@ export default function AdminPage() {
                                 {expirado ? 'Expirado' : cfg.label}
                                 {u.status === 'trial' && !expirado && ` (${diasAte(u.trial_fim)}d)`}
                               </span>
+                              {u.bloqueado_admin && (
+                                <span className="text-xs font-bold px-2 py-0.5 rounded-lg inline-block mb-1 ml-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+                                  🔒 Bloq. Admin
+                                </span>
+                              )}
                               <div className="text-xs" style={{ color: 'var(--cinza)' }}>{(['basic','profissional','pro','empresarial'].includes(u.plano) ? u.plano : 'basic')}</div>
                             </>
                           )}
@@ -527,6 +552,7 @@ export default function AdminPage() {
                                   style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
                                   Editar
                                 </button>
+                                {/* Bloqueio financeiro: altera status de pagamento */}
                                 {statusEfetivo !== 'active' && (
                                   <button onClick={() => alterarStatus(u.id, 'active')}
                                     style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}>
@@ -539,15 +565,24 @@ export default function AdminPage() {
                                     Expirar
                                   </button>
                                 )}
-                                {statusEfetivo !== 'bloqueado' ? (
-                                  <button onClick={() => alterarStatus(u.id, 'bloqueado')}
-                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.1)', color: '#6B0F1A', border: 'none', cursor: 'pointer' }}>
-                                    Bloquear
+                                {/* Bloqueio administrativo: independente de pagamento, sobrevive a webhooks MP */}
+                                {!u.bloqueado_admin ? (
+                                  <button onClick={async () => {
+                                    await fetch('/api/admin/usuarios', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: u.id, bloqueado_admin: true }) })
+                                    carregar()
+                                  }}
+                                    title="Bloquear acesso independente do pagamento (não é sobrescrito pelo MercadoPago)"
+                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.1)', color: '#6B0F1A', border: '1.5px dashed rgba(107,15,26,0.3)', cursor: 'pointer' }}>
+                                    🔒 Bloquear
                                   </button>
                                 ) : (
-                                  <button onClick={() => alterarStatus(u.id, 'active')}
-                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer' }}>
-                                    Desbloquear
+                                  <button onClick={async () => {
+                                    await fetch('/api/admin/usuarios', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: u.id, bloqueado_admin: false }) })
+                                    carregar()
+                                  }}
+                                    title="Remover bloqueio administrativo"
+                                    style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.3)', cursor: 'pointer' }}>
+                                    🔓 Desbloquear
                                   </button>
                                 )}
                               </>

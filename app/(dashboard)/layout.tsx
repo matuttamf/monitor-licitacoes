@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plano, owner_id, status, trial_fim, nome, empresa, membro_ativo')
+    .select('plano, owner_id, status, trial_fim, nome, empresa, membro_ativo, bloqueado_admin, acesso_ate')
     .eq('id', user.id)
     .single()
 
@@ -34,18 +34,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const empresaExibida = profile?.empresa?.trim() || 'Monitor de Licitações'
   const inicialExibida = nomeExibido.charAt(0).toUpperCase()
 
-  // Bloquear acesso ao painel se trial expirado (exceto admin)
+  // Bloquear acesso ao painel (exceto admin)
   const isAdmin = user.email === ADMIN_EMAIL
   if (!isAdmin && profile) {
-    if (profile.status === 'bloqueado') redirect('/bloqueado')
+    // Bloqueio administrativo — independente do status de pagamento
+    if (profile.bloqueado_admin) redirect('/bloqueado')
 
     // Sub-usuário desativado pelo owner
     if (profile.owner_id && profile.membro_ativo === false) redirect('/expirado')
 
+    // Assinatura cancelada mas ainda dentro do período pago → permite acesso
+    const emCarencia = profile.acesso_ate && new Date(profile.acesso_ate) > new Date()
+
     const expirado =
       profile.status === 'expired' ||
+      profile.status === 'bloqueado' ||
       (profile.status === 'trial' && profile.trial_fim && new Date(profile.trial_fim) < new Date())
-    if (expirado) redirect('/expirado')
+
+    if (expirado && !emCarencia) redirect('/expirado')
   }
 
   // Equipe visível apenas para owners de planos Pro/Empresarial
