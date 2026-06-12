@@ -145,7 +145,7 @@ async function processarEstabelecimentos(
 
     fileStream.on('data', (chunk: Buffer | string) => {
       if (headerParsed) return  // já processando via pipe
-      headerBuffer = Buffer.concat([headerBuffer, chunk])
+      headerBuffer = Buffer.concat([headerBuffer, Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)])
       if (headerBuffer.length >= 30) {
         const fnameLen = headerBuffer.readUInt16LE(26)
         const extraLen = headerBuffer.readUInt16LE(28)
@@ -214,7 +214,7 @@ async function enriquecerEmpresasRazaoSocial(
 
     fileStream.on('data', (chunk: Buffer | string) => {
       if (headerParsed) return
-      headerBuffer = Buffer.concat([headerBuffer, chunk])
+      headerBuffer = Buffer.concat([headerBuffer, Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)])
       if (headerBuffer.length >= 30) {
         const fnameLen = headerBuffer.readUInt16LE(26)
         const extraLen = headerBuffer.readUInt16LE(28)
