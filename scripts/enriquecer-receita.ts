@@ -5,7 +5,10 @@
  * Usa fetch direto à REST API do Supabase (sem postgrest-js client).
  */
 
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '').trim().replace(/\/$/, '')
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '')
+  .trim()
+  .replace(/\/rest\/v1\/?$/, '')  // remove /rest/v1 se vier no final (Supabase v2 vs v3)
+  .replace(/\/$/, '')
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
 const CONCORRENCIA = 5

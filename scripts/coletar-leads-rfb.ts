@@ -21,7 +21,10 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 config()
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+  .trim()
+  .replace(/\/rest\/v1\/?$/, '')
+  .replace(/\/$/, '')
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const cliArgs  = process.argv.slice(2)
