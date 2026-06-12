@@ -72,9 +72,20 @@ async function consultarCNPJ(cnpj: string) {
 async function main() {
   console.log('=== Enriquecer Receita Federal ===')
 
-  // Teste rápido de conectividade
+  // Diagnóstico: testar múltiplas tabelas e JWT info
+  const jwtPayload = SERVICE_KEY.split('.')[1]
+  try {
+    const decoded = JSON.parse(Buffer.from(jwtPayload, 'base64').toString())
+    console.log('JWT role:', decoded.role, '| iss:', decoded.iss)
+  } catch { console.log('JWT: falha ao decodificar payload') }
+
+  for (const tabela of ['leads', 'profiles', 'licitacoes', 'keywords']) {
+    const r = await fetch(`${REST}/${tabela}?select=id&limit=1`, { headers: HEADERS_GET })
+    const body = r.ok ? 'OK' : (await r.text()).slice(0, 150)
+    console.log(`  ${tabela}: ${r.status} ${body}`)
+  }
+
   const teste = await fetch(`${REST}/leads?select=id&limit=1`, { headers: HEADERS_GET })
-  console.log('Teste REST API:', teste.status, teste.ok ? 'OK' : await teste.text())
   if (!teste.ok) { process.exit(1) }
 
   let offset = 0
