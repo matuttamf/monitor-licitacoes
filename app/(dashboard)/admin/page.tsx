@@ -590,32 +590,32 @@ export default function AdminPage() {
       {/* ── Trigger manual ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
-        <div className="flex gap-2 flex-wrap">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
           {[
-            { acao: 'coletar',          label: '🔍 Coletar',         desc: 'Busca novos editais' },
-            { acao: 'coletar-abertos', label: '📂 Abertos (PNCP)',  desc: 'Todos com prazo futuro' },
-            { acao: 'matching',        label: '🤖 Matching',        desc: 'Gera candidatos' },
-            { acao: 'alertar',        label: '📧 Alertar',        desc: 'Envia alertas' },
-            { acao: 'emails',         label: '📩 E-mails trial',  desc: 'Sequência trial' },
-            { acao: 'coletar-leads',       label: '🎯 Coletar leads',       desc: 'Busca CNPJs/PNCP' },
-            { acao: 'enriquecer-receita',  label: '🏛️ Receita Federal',     desc: 'Verifica CNPJs (lote 120)' },
-            { acao: 'enriquecer-emails',   label: '🔎 Buscar e-mails',      desc: 'Google/Bing/DDG (lote 60)' },
-            { acao: 'disparar-leads',      label: '✉️ Disparar leads',      desc: 'Envia e-mails captação' },
-            { acao: 'radar-alertas',       label: '📡 Radar',               desc: 'Atualiza cache contratos' },
+            { acao: 'coletar',             label: '🔍 Coletar',            desc: 'Busca novos editais' },
+            { acao: 'coletar-abertos',     label: '📂 Abertos (PNCP)',     desc: 'Todos com prazo futuro' },
+            { acao: 'matching',            label: '🤖 Matching',           desc: 'Gera candidatos' },
+            { acao: 'alertar',             label: '📧 Alertar',            desc: 'Envia alertas' },
+            { acao: 'emails',              label: '📩 E-mails trial',      desc: 'Sequência trial' },
+            { acao: 'coletar-leads',       label: '🎯 Coletar leads',      desc: 'Busca CNPJs/PNCP' },
+            { acao: 'enriquecer-receita',  label: '🏛️ Receita Federal',    desc: 'Verifica CNPJs (lote 120)' },
+            { acao: 'enriquecer-emails',   label: '🔎 Buscar e-mails',     desc: 'Google/Bing/DDG (lote 60)' },
+            { acao: 'disparar-leads',      label: '✉️ Disparar leads',     desc: 'Envia e-mails captação' },
+            { acao: 'radar-alertas',       label: '📡 Radar',              desc: 'Atualiza cache contratos' },
           ].map(({ acao, label, desc }) => (
             <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
               style={{
-                padding: '10px 16px', borderRadius: '12px', textAlign: 'left',
+                padding: '10px 14px', borderRadius: '12px', textAlign: 'left', width: '100%',
                 background: disparando === acao ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)',
-                border: '1px solid var(--cinza-light)',
+                border: `1px solid ${disparando === acao ? 'rgba(107,15,26,0.25)' : 'var(--cinza-light)'}`,
                 cursor: disparando ? 'not-allowed' : 'pointer',
-                opacity: disparando && disparando !== acao ? 0.5 : 1,
-                minWidth: '130px',
+                opacity: disparando && disparando !== acao ? 0.45 : 1,
+                transition: 'opacity 0.15s',
               }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {disparando === acao ? '⏳ Executando…' : label}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '2px' }}>{desc}</div>
+              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</div>
             </button>
           ))}
         </div>

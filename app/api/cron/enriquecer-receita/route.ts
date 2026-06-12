@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
   const { data: semReceita } = await supabase
     .from('leads')
-    .select('id, cnpj')
+    .select('id, cnpj, email')
     .is('situacao', null)
     .eq('status', 'invalido')
     .limit(120)
@@ -92,7 +92,9 @@ export async function GET(req: NextRequest) {
       if (!dados) return
 
       verificados++
-      const emailRaw = dados.email?.trim()
+      const emailDaReceita = dados.email?.trim()?.toLowerCase() || null
+      // Preserva email já existente (ex: capturado do CSV da RF pelo coletar-leads-cnae)
+      const emailFinal = emailDaReceita ?? (lead as { email?: string | null }).email ?? null
       const ativa = dados.situacao_cadastral === 2
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,7 +117,7 @@ export async function GET(req: NextRequest) {
       await supabase.from('leads').update({
         razao_social:  dados.razao_social,
         nome_fantasia: dados.nome_fantasia ?? null,
-        email:         emailRaw ? emailRaw.toLowerCase() : null,
+        email:         emailFinal,
         telefone:      dados.ddd_telefone_1 ?? null,
         municipio:     dados.municipio ?? null,
         uf:            dados.uf ?? null,
@@ -123,7 +125,7 @@ export async function GET(req: NextRequest) {
         porte:         dados.porte ?? null,
         cnae:          dados.cnae_fiscal_descricao ?? null,
         cnae_codigo:   cnaeCode,
-        status:        emailRaw ? 'pendente' : 'invalido',
+        status:        emailFinal ? 'pendente' : 'invalido',
       }).eq('id', lead.id)
     }))
     await sleep(200)

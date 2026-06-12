@@ -95,6 +95,21 @@ function slugDominio(razao: string): string {
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
+const MINHARECEITA = 'https://minhareceita.org'
+
+async function consultarReceita(cnpj: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${MINHARECEITA}/${cnpj}`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'MonitorLicitacoes/1.0' },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!res.ok) return null
+    const dados = await res.json()
+    const email = dados.email?.trim()?.toLowerCase()
+    return email || null
+  } catch { return null }
+}
+
 // ── Estratégia 1: Google Custom Search JSON API ───────────────────────────────
 async function buscarGoogle(query: string): Promise<{ emails: string[]; urls: string[]; debug: string }> {
   const apiKey = process.env.GOOGLE_SEARCH_API_KEY
@@ -330,14 +345,26 @@ export async function GET(req: NextRequest) {
     let emailFinal: string | null = null
     let metodo = ''
 
-    // 0. Domínio deduzido — gratuito, zero queries de API
-    const emailsDom0 = await buscarEmailPorDominio(lead.razao_social)
-    emailFinal = melhorEmail(emailsDom0)
-    if (emailFinal) {
-      metodo = 'dominio_deduzido'
-      debugLog.push(`dominio: encontrou ${emailFinal}`)
+    // -1. Retry Receita Federal — pode ter e-mail agora que não tinha antes
+    const emailReceita = await consultarReceita(lead.cnpj)
+    if (emailReceita) {
+      emailFinal = emailReceita
+      metodo = 'receita_federal'
+      debugLog.push(`receita: encontrou ${emailFinal}`)
     } else {
-      debugLog.push('dominio: sem resultado')
+      debugLog.push('receita: sem e-mail registrado')
+    }
+
+    // 0. Domínio deduzido — gratuito, zero queries de API
+    if (!emailFinal) {
+      const emailsDom0 = await buscarEmailPorDominio(lead.razao_social)
+      emailFinal = melhorEmail(emailsDom0)
+      if (emailFinal) {
+        metodo = 'dominio_deduzido'
+        debugLog.push(`dominio: encontrou ${emailFinal}`)
+      } else {
+        debugLog.push('dominio: sem resultado')
+      }
     }
 
     // 1. Google Custom Search (principal — JSON confiável, 100/dia grátis)
