@@ -123,7 +123,13 @@ export default function FornecedoresPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>Diretório de Fornecedores</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>Diretório de Fornecedores</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase"
+              style={{ background: 'rgba(201,166,90,0.12)', color: '#92610a', border: '1px solid rgba(201,166,90,0.35)' }}>
+              Novidade
+            </span>
+          </div>
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>
             Empresas cadastradas abertas a negociações e parcerias com outros usuários da plataforma.
           </p>
@@ -310,14 +316,27 @@ export default function FornecedoresPage() {
         </div>
       ) : fornecedores.length === 0 ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-          <div className="text-3xl mb-3">🏭</div>
-          <p className="text-sm mb-4" style={{ color: 'var(--cinza)' }}>Nenhum fornecedor encontrado com esses filtros.</p>
-          {(busca || regiao) && (
-            <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '') }}
-              className="px-4 py-2 rounded-xl text-sm font-medium"
-              style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
-              Ver todos os fornecedores
-            </button>
+          {(busca || regiao) ? (
+            <>
+              <div className="text-3xl mb-3">🔍</div>
+              <p className="text-sm mb-4" style={{ color: 'var(--cinza)' }}>Nenhum fornecedor encontrado com esses filtros.</p>
+              <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '') }}
+                className="px-4 py-2 rounded-xl text-sm font-medium"
+                style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
+                Ver todos os fornecedores
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="text-3xl mb-3">🌱</div>
+              <p className="text-sm font-semibold mb-1" style={{ color: 'var(--preto)' }}>O diretório está crescendo!</p>
+              <p className="text-sm mb-1" style={{ color: 'var(--cinza)' }}>
+                Esta é uma ferramenta nova — os primeiros cadastros estão sendo aprovados.
+              </p>
+              <p className="text-xs" style={{ color: 'var(--cinza)' }}>
+                Seja um dos primeiros a aparecer e ganhe visibilidade máxima para outros usuários da plataforma.
+              </p>
+            </>
           )}
         </div>
       ) : (
