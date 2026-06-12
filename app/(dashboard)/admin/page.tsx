@@ -292,6 +292,25 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* ── Financeiro ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)', border: '1px solid rgba(16,185,129,0.3)' }}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-white mb-1">💰 Financeiro</h2>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              MRR · ARR · Assinantes · Planos · Ticket médio · Bloqueios · Dados para NF
+            </p>
+          </div>
+          <a
+            href="/admin/financeiro"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
+            style={{ background: '#34d399', color: '#064e3b' }}
+          >
+            Ver financeiro →
+          </a>
+        </div>
+      </div>
+
       {/* ── Configurações ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Configurações</h2>

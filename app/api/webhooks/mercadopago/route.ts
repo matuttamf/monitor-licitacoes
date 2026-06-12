@@ -12,6 +12,13 @@ const PRECOS_PLANO: Record<string, number> = {
   empresarial:  497,
 }
 
+const PLANOS_MP: Record<string, number> = {
+  basic:        49.90,
+  profissional: 97.90,
+  pro:          197.90,
+  empresarial:  497.00,
+}
+
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
   : process.env.MP_ACCESS_TOKEN_TEST!
@@ -95,14 +102,28 @@ export async function POST(request: Request) {
 
     if (subscription.status === 'authorized') {
       const limites = getLimites(planoId)
+      const valorMensalidade = PLANOS_MP[planoId] ?? null
 
-      await supabase.from('profiles').update({
+      // Registra assinatura_inicio apenas na primeira ativação (não sobrescreve renovações)
+      const { data: perfilAtual } = await supabase
+        .from('profiles')
+        .select('assinatura_inicio')
+        .eq('id', userId)
+        .maybeSingle()
+
+      const updateData: Record<string, unknown> = {
         status:             'active',
         plano:              planoId,
         mp_subscription_id: subscriptionId,
         max_keywords:       limites.maxKeywords,
         max_usuarios:       limites.maxUsers,
-      }).eq('id', userId)
+        valor_mensalidade:  valorMensalidade,
+      }
+      if (!perfilAtual?.assinatura_inicio) {
+        updateData.assinatura_inicio = new Date().toISOString()
+      }
+
+      await supabase.from('profiles').update(updateData).eq('id', userId)
 
       console.log(`[webhook/mp] Assinatura ativada: user=${userId} plano=${planoId} keywords=${limites.maxKeywords}`)
 
