@@ -271,161 +271,145 @@ export default function AdminPage() {
       )}
 
       {/* ── Módulos com prévias ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+      {(() => {
+        // Dados pré-calculados para Saúde
+        const jobs     = cronData ? Object.entries(cronData.ultimasPorJob) : []
+        const jobsOk   = jobs.filter(([, v]) => v?.status === 'ok' || v?.status === 'sucesso').length
+        const jobsErro = jobs.filter(([, v]) => v?.status === 'erro').length
+        const jobsSem  = jobs.filter(([, v]) => !v).length
+        const ultimoLog = cronData?.logs[0] ?? null
 
-        {/* Financeiro */}
-        <a href="/admin/financeiro" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#10b981' }}>💰 Financeiro</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
-          </div>
-          {prevFinanceiro ? (
-            <>
-              <div style={{ fontSize: '22px', fontWeight: 900, color: '#10b981', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                {prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>MRR</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                {[
-                  { label: 'Pagantes',  val: String(prevFinanceiro.kpis.totalPagantes), cor: '#10b981' },
-                  { label: 'Trials',    val: String(prevFinanceiro.kpis.totalTrials),   cor: '#C9A65A' },
-                  { label: 'Conversão', val: `${prevFinanceiro.kpis.taxaConversao}%`,   cor: '#3b82f6' },
-                ].map(({ label, val, cor }) => (
-                  <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
-                    <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-              {prevFinanceiro.kpis.churnMensal > 0 && (
-                <div style={{ marginTop: '8px', fontSize: '10px', color: '#ef4444' }}>
-                  ⚠ {prevFinanceiro.kpis.churnMensal} churn nos últimos 30d
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Aguardando migração DB'}</span>
-            </div>
-          )}
-        </a>
+        // Dados pré-calculados para Campanhas
+        const campTotal    = prevCampanhas?.campanhas?.length ?? 0
+        const campUTM      = prevCampanhas?.totais?.comAtribuicao ?? 0
+        const campConv     = prevCampanhas?.campanhas?.reduce((s: number, c: { metricas: { conversoes: number } }) => s + (c.metricas?.conversoes ?? 0), 0) ?? 0
+        const campMRR      = prevCampanhas?.campanhas?.reduce((s: number, c: { metricas: { mrr: number } }) => s + (c.metricas?.mrr ?? 0), 0) ?? 0
 
-        {/* Campanhas */}
-        <a href="/admin/campanhas" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#8b5cf6' }}>📣 Campanhas</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
-          </div>
-          {prevCampanhas ? (
-            <>
-              <div style={{ fontSize: '22px', fontWeight: 900, color: '#8b5cf6', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                {prevCampanhas.campanhas?.length ?? 0}
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>campanhas ativas</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                {[
-                  { label: 'Com UTM',     val: String(prevCampanhas.totais?.comAtribuicao ?? 0), cor: '#8b5cf6' },
-                  { label: 'Conversões',  val: String(prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { conversoes: number } }) => s + (c.metricas?.conversoes ?? 0), 0) ?? 0), cor: '#10b981' },
-                  { label: 'MRR gerado',  val: (prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { mrr: number } }) => s + (c.metricas?.mrr ?? 0), 0) ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#10b981' },
-                ].map(({ label, val, cor }) => (
-                  <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
-                    <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Aguardando migração DB'}</span>
-            </div>
-          )}
-        </a>
+        type CardDef = {
+          href: string
+          titulo: string
+          cor: string
+          bg: string
+          border: string
+          kpiVal: string
+          kpiLabel: string
+          chips: { label: string; val: string; cor: string }[]
+          nota?: string
+          notaCor?: string
+          vazio: boolean
+          vazioMsg: string
+        }
 
-        {/* Captação */}
-        <a href="/admin/captacao" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(201,166,90,0.05)', border: '1px solid rgba(201,166,90,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#a07a20' }}>🎯 Captação</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
-          </div>
-          {stats ? (
-            <>
-              <div style={{ fontSize: '22px', fontWeight: 900, color: '#a07a20', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                {stats.leadsTotal.toLocaleString('pt-BR')}
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>leads coletados</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                {[
-                  { label: 'Pendentes', val: stats.leadsPendentes.toLocaleString('pt-BR'),  cor: '#C9A65A' },
-                  { label: 'Enviados',  val: stats.leadsEnviados.toLocaleString('pt-BR'),   cor: '#10b981' },
-                  { label: 'Taxa',      val: stats.leadsTotal > 0 ? `${Math.round(stats.leadsEnviados / stats.leadsTotal * 100)}%` : '—', cor: '#3b82f6' },
-                ].map(({ label, val, cor }) => (
-                  <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
-                    <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-              {cadastroBloqueado && (
-                <div style={{ marginTop: '8px', fontSize: '10px', color: '#ef4444' }}>
-                  ⚠ Cadastro bloqueado
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
-            </div>
-          )}
-        </a>
+        const cards: CardDef[] = [
+          {
+            href: '/admin/financeiro',
+            titulo: '💰 Financeiro',
+            cor: '#10b981', bg: 'rgba(16,185,129,0.05)', border: 'rgba(16,185,129,0.2)',
+            kpiVal:   prevFinanceiro ? prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }) : '—',
+            kpiLabel: 'MRR mensal',
+            chips: [
+              { label: 'Pagantes',  val: prevFinanceiro ? String(prevFinanceiro.kpis.totalPagantes) : '—', cor: '#10b981' },
+              { label: 'Trials',    val: prevFinanceiro ? String(prevFinanceiro.kpis.totalTrials)   : '—', cor: '#C9A65A' },
+              { label: 'Conversão', val: prevFinanceiro ? `${prevFinanceiro.kpis.taxaConversao}%`   : '—', cor: '#3b82f6' },
+            ],
+            nota:    prevFinanceiro && prevFinanceiro.kpis.churnMensal > 0 ? `⚠ ${prevFinanceiro.kpis.churnMensal} churn nos últimos 30d` : undefined,
+            notaCor: '#ef4444',
+            vazio:   !prevFinanceiro,
+            vazioMsg: carregando ? 'Carregando…' : 'Aguardando migração DB',
+          },
+          {
+            href: '/admin/campanhas',
+            titulo: '📣 Campanhas',
+            cor: '#8b5cf6', bg: 'rgba(139,92,246,0.05)', border: 'rgba(139,92,246,0.2)',
+            kpiVal:   prevCampanhas ? String(campTotal) : '—',
+            kpiLabel: 'campanhas ativas',
+            chips: [
+              { label: 'Com UTM',    val: prevCampanhas ? String(campUTM)  : '—', cor: '#8b5cf6' },
+              { label: 'Conversões', val: prevCampanhas ? String(campConv) : '—', cor: '#10b981' },
+              { label: 'MRR gerado', val: prevCampanhas ? campMRR.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }) : '—', cor: '#10b981' },
+            ],
+            vazio:   !prevCampanhas,
+            vazioMsg: carregando ? 'Carregando…' : 'Aguardando migração DB',
+          },
+          {
+            href: '/admin/captacao',
+            titulo: '🎯 Captação',
+            cor: '#a07a20', bg: 'rgba(201,166,90,0.05)', border: 'rgba(201,166,90,0.2)',
+            kpiVal:   stats ? stats.leadsTotal.toLocaleString('pt-BR') : '—',
+            kpiLabel: 'leads coletados',
+            chips: [
+              { label: 'Pendentes', val: stats ? stats.leadsPendentes.toLocaleString('pt-BR') : '—', cor: '#C9A65A' },
+              { label: 'Enviados',  val: stats ? stats.leadsEnviados.toLocaleString('pt-BR')  : '—', cor: '#10b981' },
+              { label: 'Taxa',      val: stats && stats.leadsTotal > 0 ? `${Math.round(stats.leadsEnviados / stats.leadsTotal * 100)}%` : '—', cor: '#3b82f6' },
+            ],
+            nota:    cadastroBloqueado ? '⚠ Cadastro bloqueado' : undefined,
+            notaCor: '#ef4444',
+            vazio:   !stats,
+            vazioMsg: carregando ? 'Carregando…' : 'Sem dados',
+          },
+          {
+            href: '/admin/saude',
+            titulo: '🏥 Saúde',
+            cor: jobsErro > 0 ? '#ef4444' : '#f97316',
+            bg:     'rgba(249,115,22,0.05)', border: 'rgba(249,115,22,0.2)',
+            kpiVal:   cronData ? (jobsErro > 0 ? `${jobsErro} erro${jobsErro > 1 ? 's' : ''}` : `${jobsOk}/${jobs.length} OK`) : '—',
+            kpiLabel: cronData ? (jobsErro > 0 ? 'jobs com falha' : 'jobs rodando bem') : '',
+            chips: [
+              { label: 'Monitorados',  val: cronData ? String(jobs.length) : '—', cor: '#f97316' },
+              { label: 'Com erro',     val: cronData ? String(jobsErro)    : '—', cor: jobsErro > 0 ? '#ef4444' : 'var(--cinza)' },
+              { label: 'Sem execução', val: cronData ? String(jobsSem)     : '—', cor: jobsSem  > 0 ? '#C9A65A' : 'var(--cinza)' },
+            ],
+            nota:    ultimoLog ? `Último: ${JOB_LABELS[ultimoLog.job] ?? ultimoLog.job} · ${fmtHora(ultimoLog.criado_em)}` : undefined,
+            notaCor: 'var(--cinza)',
+            vazio:   !cronData,
+            vazioMsg: carregando ? 'Carregando…' : 'Sem dados',
+          },
+        ]
 
-        {/* Saúde dos jobs */}
-        <a href="/admin/saude" style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#f97316' }}>🏥 Saúde</span>
-            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>→</span>
-          </div>
-          {cronData ? (() => {
-            const jobs     = Object.entries(cronData.ultimasPorJob)
-            const ok       = jobs.filter(([, v]) => v?.status === 'ok' || v?.status === 'sucesso').length
-            const erros    = jobs.filter(([, v]) => v?.status === 'erro').length
-            const semDados = jobs.filter(([, v]) => !v).length
-            const ultimoLog = cronData.logs[0]
-            return (
-              <>
-                <div style={{ fontSize: '22px', fontWeight: 900, color: erros > 0 ? '#ef4444' : '#10b981', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {erros > 0 ? `${erros} erro${erros > 1 ? 's' : ''}` : `${ok}/${jobs.length} OK`}
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+            {cards.map(card => (
+              <a key={card.href} href={card.href} style={{
+                textDecoration: 'none', display: 'flex', flexDirection: 'column',
+                padding: '16px', borderRadius: '14px',
+                background: card.bg, border: `1px solid ${card.border}`,
+              }}>
+                {/* Cabeçalho */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: card.cor, letterSpacing: '0.01em' }}>{card.titulo}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--cinza)', opacity: 0.6 }}>→</span>
                 </div>
-                <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '2px', marginBottom: '10px' }}>
-                  {erros > 0 ? 'jobs com falha' : 'jobs rodando bem'}
+
+                {/* KPI principal */}
+                <div style={{ fontSize: '24px', fontWeight: 900, color: card.cor, letterSpacing: '-0.04em', lineHeight: 1 }}>
+                  {card.kpiVal}
                 </div>
+                <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '3px', marginBottom: '12px', minHeight: '14px' }}>
+                  {card.kpiLabel}
+                </div>
+
+                {/* 3 chips uniformes */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                  {[
-                    { label: 'Jobs',         val: String(jobs.length),  cor: '#f97316' },
-                    { label: 'Com erro',     val: String(erros),         cor: erros > 0 ? '#ef4444' : 'var(--cinza)' },
-                    { label: 'Sem execução', val: String(semDados),      cor: semDados > 0 ? '#C9A65A' : 'var(--cinza)' },
-                  ].map(({ label, val, cor }) => (
-                    <div key={label} style={{ padding: '6px 8px', borderRadius: '8px', background: 'white', textAlign: 'center' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: cor }}>{val}</div>
-                      <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                  {card.chips.map(chip => (
+                    <div key={chip.label} style={{
+                      padding: '6px 4px', borderRadius: '8px', background: 'white',
+                      textAlign: 'center', border: '1px solid var(--cinza-light)',
+                    }}>
+                      <div style={{ fontSize: '12px', fontWeight: 800, color: chip.cor, letterSpacing: '-0.02em' }}>{chip.val}</div>
+                      <div style={{ fontSize: '9px', color: 'var(--cinza)', marginTop: '2px', lineHeight: 1.2 }}>{chip.label}</div>
                     </div>
                   ))}
                 </div>
-                {ultimoLog && (
-                  <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--cinza)' }}>
-                    Último: {JOB_LABELS[ultimoLog.job] ?? ultimoLog.job} · {fmtHora(ultimoLog.criado_em)}
-                  </div>
-                )}
-              </>
-            )
-          })() : (
-            <div style={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
-            </div>
-          )}
-        </a>
 
-      </div>
+                {/* Nota/alerta (linha fixa para manter altura) */}
+                <div style={{ marginTop: '10px', fontSize: '10px', color: card.notaCor ?? 'transparent', minHeight: '14px', lineHeight: 1.3 }}>
+                  {card.nota ?? ''}
+                </div>
+              </a>
+            ))}
+          </div>
+        )
+      })()}
 
       {/* ── Configurações ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
