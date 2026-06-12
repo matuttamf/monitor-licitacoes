@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
     .from('leads')
     .select('id, cnpj')
     .is('situacao', null)
-    .eq('status', 'invalido')
+    .eq('status', 'pendente')
     .limit(120)
 
   if (!semReceita?.length) {
