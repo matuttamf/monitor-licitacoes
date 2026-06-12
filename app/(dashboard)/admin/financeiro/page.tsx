@@ -19,6 +19,8 @@ type Assinante = {
   trial_fim: string | null
   criado_em: string
   mp_subscription_id: string | null
+  campanha_nome: string | null
+  comissao_mensal: number
   // NF
   cnpj: string | null
   cpf: string | null
@@ -50,6 +52,8 @@ type ReceitaPlano = { plano: string; count: number; receita: number }
 
 type Kpis = {
   mrr: number
+  mrrLiquido: number
+  comissaoMensal: number
   arr: number
   totalPagantes: number
   totalTrials: number
@@ -189,12 +193,18 @@ export default function FinanceiroPage() {
       })
     }
 
+    const totalComissoesMes = pagantesAtivos.reduce((s, a) => s + (a.comissao_mensal ?? 0), 0)
+    const mrrBruto = pagantesAtivos.reduce((s, a) => s + (a.valor_mensalidade ?? 0), 0)
+    const mrrLiquidoCalc = mrrBruto - totalComissoesMes
+
     const rowsAssinantes = pagantesAtivos.map(a => {
       const pc = PLANO_CORES[a.plano] ?? PLANO_CORES.basic
       return `<tr>
         <td>${a.nome || a.email}</td>
         <td><span style="background:${pc.bg};color:${pc.cor};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:capitalize">${a.plano}</span></td>
         <td style="font-family:monospace">${moeda(a.valor_mensalidade ?? 0)}/mês</td>
+        <td style="font-family:monospace;color:${(a.comissao_mensal ?? 0) > 0 ? '#f59e0b' : '#94a3b8'}">${(a.comissao_mensal ?? 0) > 0 ? moeda(a.comissao_mensal) + '/mês' : '—'}</td>
+        <td style="color:#64748b;font-size:11px">${a.campanha_nome || '—'}</td>
         <td>${a.assinatura_inicio ? new Date(a.assinatura_inicio).toLocaleDateString('pt-BR') : '—'}</td>
         ${tipo === 'ano' ? `<td style="font-family:monospace">
           ${(() => { const ini = a.assinatura_inicio ? new Date(a.assinatura_inicio) : new Date(ano, 0, 1); const from = ini > new Date(ano, 0, 1) ? ini : new Date(ano, 0, 1); const m = Math.max(0, Math.round((agora.getTime() - from.getTime()) / (30.44 * 24 * 3600 * 1000))); return `${m} mês${m !== 1 ? 'es' : ''} × ${moeda(a.valor_mensalidade ?? 0)} = ${moeda((a.valor_mensalidade ?? 0) * m)}` })()}
@@ -202,15 +212,24 @@ export default function FinanceiroPage() {
       </tr>`
     }).join('')
 
+    const blocoComissoes = totalComissoesMes > 0 ? `
+      <h3 style="margin:20px 0 10px;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Custos com comissões</h3>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><div class="kpi-val" style="color:#f59e0b">${moeda(totalComissoesMes)}</div><div class="kpi-lbl">Comissões/mês</div><div class="kpi-sub">${mrrBruto > 0 ? Math.round(totalComissoesMes/mrrBruto*100) : 0}% do MRR bruto</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#10b981">${moeda(mrrLiquidoCalc)}</div><div class="kpi-lbl">MRR líquido</div><div class="kpi-sub">após comissões</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#f59e0b">${moeda(totalComissoesMes * 12)}</div><div class="kpi-lbl">Comissões/ano (est.)</div><div class="kpi-sub">projeção anual</div></div>
+      </div>` : ''
+
     const kpiCards = tipo === 'mes' ? `
       <div class="kpi-grid">
-        <div class="kpi"><div class="kpi-val green">${moeda(kpis.mrr)}</div><div class="kpi-lbl">MRR</div><div class="kpi-sub">receita mensal recorrente</div></div>
-        <div class="kpi"><div class="kpi-val">${moeda(kpis.arr)}</div><div class="kpi-lbl">ARR projetado</div><div class="kpi-sub">MRR × 12</div></div>
+        <div class="kpi"><div class="kpi-val green">${moeda(mrrBruto)}</div><div class="kpi-lbl">MRR Bruto</div><div class="kpi-sub">receita mensal recorrente</div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(mrrLiquidoCalc)}</div><div class="kpi-lbl">MRR Líquido</div><div class="kpi-sub">após comissões</div></div>
         <div class="kpi"><div class="kpi-val">${kpis.totalPagantes}</div><div class="kpi-lbl">Assinantes ativos</div><div class="kpi-sub"></div></div>
         <div class="kpi"><div class="kpi-val">${kpis.totalTrials}</div><div class="kpi-lbl">Em trial</div><div class="kpi-sub"></div></div>
         <div class="kpi"><div class="kpi-val">${moeda(kpis.ticketMedio)}</div><div class="kpi-lbl">Ticket médio</div><div class="kpi-sub"></div></div>
         <div class="kpi"><div class="kpi-val">${kpis.taxaConversao}%</div><div class="kpi-lbl">Taxa conversão</div><div class="kpi-sub">trial → assinante</div></div>
       </div>
+      ${blocoComissoes}
       <h3 style="margin:20px 0 10px;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Receita por plano</h3>
       <table><thead><tr><th>Plano</th><th>Assinantes</th><th>Receita mensal</th></tr></thead><tbody>
         ${kpis.receitaPorPlano.filter(r => r.count > 0).map(r => `<tr><td style="text-transform:capitalize">${r.plano}</td><td>${r.count}</td><td style="font-family:monospace;font-weight:700">${moeda(r.receita)}</td></tr>`).join('')}
@@ -218,15 +237,16 @@ export default function FinanceiroPage() {
       <div class="kpi-grid">
         <div class="kpi"><div class="kpi-val green">${moeda(receitaAnoCalc)}</div><div class="kpi-lbl">Receita acumulada ${ano}</div><div class="kpi-sub">01/01/${ano} até hoje</div></div>
         <div class="kpi"><div class="kpi-val">${moeda(kpis.arr)}</div><div class="kpi-lbl">ARR projetado</div><div class="kpi-sub">MRR atual × 12</div></div>
-        <div class="kpi"><div class="kpi-val">${moeda(kpis.mrr)}</div><div class="kpi-lbl">MRR atual</div><div class="kpi-sub">dezembro/${ano}</div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(mrrBruto)}</div><div class="kpi-lbl">MRR bruto</div><div class="kpi-sub">dezembro/${ano}</div></div>
+        <div class="kpi"><div class="kpi-val">${moeda(mrrLiquidoCalc)}</div><div class="kpi-lbl">MRR líquido</div><div class="kpi-sub">após comissões</div></div>
         <div class="kpi"><div class="kpi-val">${kpis.totalPagantes}</div><div class="kpi-lbl">Assinantes ativos</div><div class="kpi-sub"></div></div>
-        <div class="kpi"><div class="kpi-val">${moeda(kpis.ticketMedio)}</div><div class="kpi-lbl">Ticket médio</div><div class="kpi-sub"></div></div>
         <div class="kpi"><div class="kpi-val">${kpis.churnMensal}</div><div class="kpi-lbl">Churn (últimos 30d)</div><div class="kpi-sub"></div></div>
-      </div>`
+      </div>
+      ${blocoComissoes}`
 
     const colHead = tipo === 'ano'
-      ? '<th>Assinante</th><th>Plano</th><th>Valor/mês</th><th>Desde</th><th>Contribuição estimada</th>'
-      : '<th>Assinante</th><th>Plano</th><th>Valor/mês</th><th>Assinante desde</th>'
+      ? '<th>Assinante</th><th>Plano</th><th>Valor/mês</th><th>Comissão/mês</th><th>Parceiro</th><th>Desde</th><th>Contribuição estimada</th>'
+      : '<th>Assinante</th><th>Plano</th><th>Valor/mês</th><th>Comissão/mês</th><th>Parceiro</th><th>Assinante desde</th>'
 
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <title>${titulo}</title>
@@ -405,8 +425,8 @@ ${kpiCards}
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
             {[
-              { label: 'MRR',          value: moeda(kpis.mrr),           sub: 'receita mensal recorrente', cor: '#10b981', destaque: true },
-              { label: 'ARR',          value: moeda(kpis.arr),           sub: 'receita anual projetada',   cor: '#3b82f6' },
+              { label: 'MRR Bruto',    value: moeda(kpis.mrr),           sub: 'receita mensal recorrente', cor: '#10b981', destaque: true },
+              { label: 'MRR Líquido',  value: moeda(kpis.mrrLiquido),    sub: `após comissões (${moeda(kpis.comissaoMensal)})`, cor: '#3b82f6' },
               { label: 'Ticket médio', value: moeda(kpis.ticketMedio),   sub: `${kpis.totalPagantes} pagantes`, cor: '#8b5cf6' },
               { label: 'Conversão',    value: `${kpis.taxaConversao}%`,  sub: 'trials → assinantes',       cor: '#C9A65A' },
             ].map(({ label, value, sub, cor, destaque }) => (
@@ -419,12 +439,12 @@ ${kpiCards}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
             {[
-              { label: 'Pagantes',  value: kpis.totalPagantes,  sub: 'assinaturas ativas',  cor: '#10b981' },
-              { label: 'Em trial',  value: kpis.totalTrials,    sub: 'período gratuito',    cor: '#C9A65A' },
-              { label: 'Expirados', value: kpis.totalExpirados, sub: 'sem renovação',       cor: '#ef4444' },
-              { label: 'Churn/30d', value: kpis.churnMensal,    sub: 'encerramentos 30d',   cor: '#f97316' },
-              { label: 'Novos 7d',  value: kpis.novas7d,        sub: moeda(kpis.receita7d), cor: '#3b82f6' },
-            ].map(({ label, value, sub, cor }) => (
+              { label: 'Pagantes',      value: kpis.totalPagantes,  sub: 'assinaturas ativas',  cor: '#10b981' },
+              { label: 'Em trial',      value: kpis.totalTrials,    sub: 'período gratuito',    cor: '#C9A65A' },
+              { label: 'Expirados',     value: kpis.totalExpirados, sub: 'sem renovação',       cor: '#ef4444' },
+              { label: 'Churn/30d',     value: kpis.churnMensal,    sub: 'encerramentos 30d',   cor: '#f97316' },
+              { label: 'Comissões/mês', value: moeda(kpis.comissaoMensal), sub: `${kpis.totalPagantes ? Math.round(kpis.comissaoMensal / kpis.mrr * 100) : 0}% do MRR bruto`, cor: '#f59e0b', texto: true },
+            ].map(({ label, value, sub, cor, texto }) => (
               <div key={label} style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: '14px', padding: '14px 18px' }}>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: cor, letterSpacing: '-0.03em' }}>{value}</div>
                 <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--preto)', marginTop: '4px' }}>{label}</div>
@@ -508,7 +528,7 @@ ${kpiCards}
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-                  {['Assinante', 'Plano / Valor', 'Status', 'Assinante desde', 'Acesso até', 'MercadoPago', 'Ações'].map(h => (
+                  {['Assinante', 'Plano / Valor', 'Comissão', 'Status', 'Assinante desde', 'Acesso até', 'MercadoPago', 'Ações'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -532,6 +552,16 @@ ${kpiCards}
                         <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', marginTop: '4px' }}>
                           {a.valor_mensalidade ? moeda(a.valor_mensalidade) + '/mês' : '—'}
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {a.comissao_mensal > 0 ? (
+                          <>
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#f59e0b' }}>{moeda(a.comissao_mensal)}/mês</div>
+                            <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{a.campanha_nome}</div>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'var(--cinza)' }}>—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: '8px', background: sc.bg, color: sc.cor }}>

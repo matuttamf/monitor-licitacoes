@@ -34,11 +34,18 @@ export async function GET() {
       id, status, plano, trial_inicio, trial_fim, criado_em,
       nome, empresa, telefone, whatsapp,
       mp_subscription_id, assinatura_inicio, valor_mensalidade, acesso_ate,
+      campanha_id,
       cnpj, cpf, tipo_pessoa, razao_social, nome_fantasia, ie,
       cep, logradouro, numero, complemento, bairro, cidade, estado_uf
     `)
     .is('owner_id', null)
     .order('criado_em', { ascending: false })
+
+  // Campanhas com comissão para cruzar com os assinantes
+  const { data: campanhas } = await supabase
+    .from('campanhas')
+    .select('id, nome, codigo, comissao_tipo, comissao_valor')
+    .neq('comissao_tipo', 'nenhum')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -50,10 +57,28 @@ export async function GET() {
   // Admin não é assinante — excluir das métricas financeiras
   const profilesSemAdmin = (profiles ?? []).filter(p => emailMap[p.id] !== ADMIN_EMAIL)
 
+  const campanhaMap = Object.fromEntries((campanhas ?? []).map(c => [c.id, c]))
+
   const assinantes = profilesSemAdmin.map(p => {
     const preco = p.valor_mensalidade ?? PRECOS[p.plano ?? ''] ?? null
     const email = emailMap[p.id] ?? ''
     const trialExpirado = p.status === 'trial' && p.trial_fim && new Date(p.trial_fim) < hoje
+    const statusFinal = trialExpirado ? 'expired' : p.status
+
+    // Calcular comissão mensal deste assinante
+    let comissaoMensal = 0
+    let campanhaNome: string | null = null
+    if (p.campanha_id && statusFinal === 'active' && preco) {
+      const camp = campanhaMap[p.campanha_id]
+      if (camp) {
+        campanhaNome = camp.nome
+        if (camp.comissao_tipo === 'percentual') {
+          comissaoMensal = Math.round(preco * camp.comissao_valor / 100 * 100) / 100
+        } else if (camp.comissao_tipo === 'fixo') {
+          comissaoMensal = camp.comissao_valor
+        }
+      }
+    }
 
     return {
       id:                  p.id,
@@ -62,7 +87,7 @@ export async function GET() {
       empresa:             p.empresa,
       telefone:            p.telefone,
       whatsapp:            p.whatsapp,
-      status:              trialExpirado ? 'expired' : p.status,
+      status:              statusFinal,
       plano:               p.plano ?? 'basic',
       valor_mensalidade:   preco,
       assinatura_inicio:   p.assinatura_inicio,
@@ -70,6 +95,8 @@ export async function GET() {
       criado_em:           p.criado_em,
       mp_subscription_id:  p.mp_subscription_id,
       acesso_ate:          p.acesso_ate ?? null,
+      campanha_nome:       campanhaNome,
+      comissao_mensal:     comissaoMensal,
       // Dados NF
       cnpj:        p.cnpj,
       cpf:         p.cpf,
@@ -110,8 +137,13 @@ export async function GET() {
   const novas7d = pagantes.filter(a => a.assinatura_inicio && new Date(a.assinatura_inicio) >= h7)
   const receita7d = novas7d.reduce((s, a) => s + (a.valor_mensalidade ?? 0), 0)
 
+  const comissaoMensal = pagantes.reduce((s, a) => s + (a.comissao_mensal ?? 0), 0)
+  const mrrLiquido = mrr - comissaoMensal
+
   const kpis = {
     mrr,
+    mrrLiquido,
+    comissaoMensal,
     arr:                  mrr * 12,
     totalPagantes:        pagantes.length,
     totalTrials:          trials.length,
