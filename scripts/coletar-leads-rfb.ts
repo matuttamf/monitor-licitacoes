@@ -375,6 +375,16 @@ async function main() {
   console.log(`Período: ${ANO}-${MES_PAD} | Índices: ${IDX_START}–${IDX_END}`)
   console.log(`Fonte: ${RF_BASE}`)
 
+  // Reseta email_tentativas de leads bloqueados (>=3) sem email — nova chance com dados frescos da RFB
+  console.log('Resetando email_tentativas de leads bloqueados...')
+  const { count: bloqueados } = await supabase
+    .from('leads').select('id', { count: 'exact', head: true })
+    .is('email', null).gte('email_tentativas', 3)
+  await supabase
+    .from('leads').update({ email_tentativas: 0 })
+    .is('email', null).gte('email_tentativas', 3)
+  console.log(`  ${bloqueados ?? 0} leads desbloqueados para nova tentativa`)
+
   const [targetCnaes, contatados] = await Promise.all([
     getTargetCnaes(),
     getCnpjsContatados(),

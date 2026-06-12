@@ -151,7 +151,7 @@ async function atualizarEmails(emailMap: Map<string, string>): Promise<number> {
     for (const [cnpj, email] of batch) {
       const { error } = await supabase
         .from('leads')
-        .update({ email })
+        .update({ email, status: 'pendente', email_tentativas: 0 })
         .eq('cnpj', cnpj)
         .or('email.is.null,email.eq.')
       if (!error) atualizados++
