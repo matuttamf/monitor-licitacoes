@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   const supabase = await createServiceClient()
   const hoje = new Date().toISOString().substring(0, 10)
-  const h24  = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const h24  = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
 
   const SELECT_URGENTE = `
     id, licitacao_id, canais, score, enviado_em,
