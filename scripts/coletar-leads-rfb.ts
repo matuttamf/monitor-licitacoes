@@ -71,17 +71,83 @@ function validarEmail(raw: string | null): string | null {
 // ── Supabase ──────────────────────────────────────────────────────────────────
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
+// CNAEs por segmento: palavras-chave dos usuários → CNAEs relacionados
+const CNAE_POR_SEGMENTO: Record<string, string[]> = {
+  limpeza:       ['8121400','8122200','8129000'],
+  conservacao:   ['8121400','8111700','8129000'],
+  seguranca:     ['8011101','8011102','8012900'],
+  ti:            ['6209100','6201500','6202300','6203100','6204000','6311900'],
+  software:      ['6209100','6201500','6202300'],
+  informatica:   ['6209100','4751200','4752100'],
+  construcao:    ['4120400','4211101','4221901','4292801','4299501'],
+  reforma:       ['4330404','4329101','4391600'],
+  eletrica:      ['4321500','4322301'],
+  hidraulica:    ['4322302','4322399'],
+  manutencao:    ['8121400','3313901','3314700','3319800'],
+  jardinagem:    ['8130300'],
+  paisagismo:    ['8130300'],
+  alimentacao:   ['5611201','5612100','4721102'],
+  refeicao:      ['5611201','5612100'],
+  transporte:    ['4921301','4922101','4930201','4950700'],
+  logistica:     ['5250801','5229099','4930201'],
+  saude:         ['8630501','8630502','8650001','8650099'],
+  medicina:      ['8630501','8630502'],
+  laboratorio:   ['8640201','8640202'],
+  mobiliario:    ['3101200','3102100','3103900','4754701'],
+  moveis:        ['3101200','4754701'],
+  papelaria:     ['4761001','4761003','1721400'],
+  grafica:       ['1811301','1811302','1812100'],
+  impressao:     ['1811301','1812100'],
+  uniformes:     ['1412601','1412602','4781400'],
+  vestuario:     ['1412601','4781400'],
+  combustivel:   ['4731800','4732600'],
+  material:      ['4744001','4744002','4744003'],
+  ferramentas:   ['4744001','4744002'],
+  equipamentos:  ['4669999','3314700','4662100'],
+}
+
 async function getTargetCnaes(): Promise<Set<string>> {
-  const { data } = await supabase.from('leads').select('cnae_codigo').not('cnae_codigo','is',null).limit(5000)
-  const rows = (data ?? []) as { cnae_codigo: string | null }[]
-  if (!rows.length) return CNAE_SEED
+  // 1. CNAEs mais frequentes nos leads já existentes (comportamento histórico)
+  const { data: leadsData } = await supabase
+    .from('leads').select('cnae_codigo').not('cnae_codigo','is',null).limit(5000)
   const counts: Record<string, number> = {}
-  for (const r of rows) {
+  for (const r of (leadsData ?? []) as { cnae_codigo: string | null }[]) {
     const code = String(r.cnae_codigo).replace(/\D/g,'').slice(0,7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
-  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,50).map(([c]) => c)
-  return top.length ? new Set(top) : CNAE_SEED
+  const topLeads = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,30).map(([c]) => c)
+
+  // 2. CNAEs inferidos das keywords cadastradas pelos usuários
+  const { data: kwData } = await supabase.from('keywords').select('termo').limit(1000)
+  const cnaesDasKeywords = new Set<string>()
+  for (const { termo } of (kwData ?? []) as { termo: string }[]) {
+    const t = termo.toLowerCase()
+    for (const [segmento, cnaes] of Object.entries(CNAE_POR_SEGMENTO)) {
+      if (t.includes(segmento)) cnaes.forEach(c => cnaesDasKeywords.add(c))
+    }
+  }
+
+  const todos = new Set([...topLeads, ...cnaesDasKeywords, ...CNAE_SEED])
+  console.log(`  CNAEs-alvo: ${todos.size} (${topLeads.length} histórico + ${cnaesDasKeywords.size} keywords + seed)`)
+  return todos
+}
+
+// CNPJs já contatados — não reinserir nem reprocessar
+async function getCnpjsContatados(): Promise<Set<string>> {
+  const cnpjs = new Set<string>()
+  let offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('cnpj')
+      .not('disparado_em', 'is', null)
+      .range(offset, offset + 999)
+    if (error || !data?.length) break
+    for (const r of data) cnpjs.add((r.cnpj as string).slice(0, 8))
+    if (data.length < 1000) break
+    offset += 1000
+  }
+  return cnpjs
 }
 
 // ── Download com retry e Range ────────────────────────────────────────────────
@@ -181,17 +247,24 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
 // ── Processamento por índice ──────────────────────────────────────────────────
 type LeadRFB = { cnpj: string; email: string|null; uf: string|null; municipio: string|null; cnae: string }
 
-async function coletarEstabelecimentos(tmpPath: string, targetCnaes: Set<string>): Promise<Map<string, LeadRFB>> {
+async function coletarEstabelecimentos(
+  tmpPath: string,
+  targetCnaes: Set<string>,
+  contatados: Set<string>,
+): Promise<Map<string, LeadRFB>> {
   const leads = new Map<string, LeadRFB>()
+  let pulados = 0
   await processarZip(tmpPath, (cols) => {
     if (cols.length < 28) return
     if (cols[COL.MATFIL] !== '1') return
     if (cols[COL.SITUACAO] !== '02') return
     const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
     if (!targetCnaes.has(cnae)) return
+    const basico = cols[COL.BASICO].trim()
+    if (contatados.has(basico)) { pulados++; return }
     const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
     if (cnpj.length !== 14) return
-    leads.set(cnpj.slice(0,8), {
+    leads.set(basico, {
       cnpj,
       email: validarEmail(cols[COL.EMAIL] ?? null),
       uf: cols[COL.UF]?.trim() || null,
@@ -199,6 +272,7 @@ async function coletarEstabelecimentos(tmpPath: string, targetCnaes: Set<string>
       cnae,
     })
   })
+  if (pulados > 0) console.log(`  Pulados (já contatados): ${pulados}`)
   return leads
 }
 
@@ -251,7 +325,7 @@ async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, str
 }
 
 // ── Pipeline por arquivo ──────────────────────────────────────────────────────
-async function processarArquivo(idx: number, targetCnaes: Set<string>) {
+async function processarArquivo(idx: number, targetCnaes: Set<string>, contatados: Set<string>) {
   const tmpEst = join(tmpdir(), `rf-est-${idx}.zip`)
   const tmpEmp = join(tmpdir(), `rf-emp-${idx}.zip`)
 
@@ -263,9 +337,9 @@ async function processarArquivo(idx: number, targetCnaes: Set<string>) {
   if (!await downloadComRetry(urlEst, tmpEst)) { console.log('  ✗ Pulando.'); return }
 
   // 2. Filtra por CNAE
-  console.log(`  ⚙ Filtrando por CNAE (${targetCnaes.size} códigos-alvo)...`)
+  console.log(`  ⚙ Filtrando por CNAE (${targetCnaes.size} códigos-alvo, ${contatados.size} já contatados ignorados)...`)
   const t0 = Date.now()
-  const leads = await coletarEstabelecimentos(tmpEst, targetCnaes)
+  const leads = await coletarEstabelecimentos(tmpEst, targetCnaes, contatados)
   const emailsValidos = Array.from(leads.values()).filter(l => l.email).length
   console.log(`  → ${leads.size} leads | ${emailsValidos} com e-mail | ${((Date.now()-t0)/1000).toFixed(1)}s`)
   if (existsSync(tmpEst)) unlinkSync(tmpEst)
@@ -301,11 +375,14 @@ async function main() {
   console.log(`Período: ${ANO}-${MES_PAD} | Índices: ${IDX_START}–${IDX_END}`)
   console.log(`Fonte: ${RF_BASE}`)
 
-  const targetCnaes = await getTargetCnaes()
-  console.log(`CNAEs-alvo: ${targetCnaes.size}`)
+  const [targetCnaes, contatados] = await Promise.all([
+    getTargetCnaes(),
+    getCnpjsContatados(),
+  ])
+  console.log(`Contatados a ignorar: ${contatados.size}`)
 
   for (let i = IDX_START; i <= IDX_END; i++) {
-    await processarArquivo(i, targetCnaes)
+    await processarArquivo(i, targetCnaes, contatados)
   }
 
   console.log('\n✓ Coleta concluída.')
