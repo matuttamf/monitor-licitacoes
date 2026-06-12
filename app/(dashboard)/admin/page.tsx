@@ -44,6 +44,9 @@ type Stats = {
 type CronLog = { id: string; job: string; status: string; mensagem: string; detalhes: unknown; criado_em: string }
 type CronData = { logs: CronLog[]; ultimasPorJob: Record<string, { status: string; mensagem: string; criado_em: string } | null> }
 
+type PreviewFinanceiro = { kpis: { mrr: number; totalPagantes: number; totalTrials: number; taxaConversao: number; churnMensal: number } } | null
+type PreviewCampanhas  = { totais: { total: number; comAtribuicao: number }; campanhas: { metricas: { mrr: number; conversoes: number } }[] } | null
+
 // ─── Config visual ────────────────────────────────────────────────────────────
 
 const statusConfig: Record<string, { label: string; cor: string; bg: string }> = {
@@ -102,21 +105,33 @@ export default function AdminPage() {
   // Configurações
   const [cadastroBloqueado, setCadastroBloqueado] = useState(false)
   const [togglingCadastro, setTogglingCadastro]   = useState(false)
+  const [prevFinanceiro, setPrevFinanceiro] = useState<PreviewFinanceiro>(null)
+  const [prevCampanhas,  setPrevCampanhas]  = useState<PreviewCampanhas>(null)
 
   async function carregar() {
     setCarregando(true)
-    const [resU, resS, resC, resCfg] = await Promise.all([
+    setErro('')
+    const [resU, resS, resC, resCfg, resF, resCamp] = await Promise.all([
       fetch('/api/admin/usuarios'),
       fetch('/api/admin/stats'),
       fetch('/api/admin/cron-logs'),
       fetch('/api/admin/captacao-config?chave=cadastro_bloqueado'),
+      fetch('/api/admin/financeiro'),
+      fetch('/api/admin/campanhas'),
     ])
-    if (!resU.ok) { setErro('Acesso negado ou erro ao carregar.'); setCarregando(false); return }
+    if (!resU.ok) {
+      const body = await resU.json().catch(() => ({}))
+      setErro(`Erro ao carregar (${resU.status}): ${(body as { error?: string }).error ?? 'verifique se ADMIN_EMAIL está correto na Vercel'}`)
+      setCarregando(false)
+      return
+    }
     const [u, s, c, cfg] = await Promise.all([resU.json(), resS.json(), resC.json(), resCfg.json()])
     setUsuarios(u)
     setStats(s)
     setCronData(c)
     setCadastroBloqueado(cfg.valor === 'true' || cfg.valor === true)
+    if (resF.ok) setPrevFinanceiro(await resF.json())
+    if (resCamp.ok) setPrevCampanhas(await resCamp.json())
     setCarregando(false)
   }
 
@@ -255,24 +270,150 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ── Módulos ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px', marginBottom: '24px' }}>
-        {[
-          { href: '/admin/financeiro',   icon: '💰', label: 'Financeiro',   desc: 'MRR · Assinantes · NF',                  cor: '#10b981', bg: 'rgba(16,185,129,0.06)',  border: 'rgba(16,185,129,0.2)'  },
-          { href: '/admin/campanhas',    icon: '📣', label: 'Campanhas',    desc: 'UTM · Influenciadores · Comissões',        cor: '#8b5cf6', bg: 'rgba(139,92,246,0.06)', border: 'rgba(139,92,246,0.2)' },
-          { href: '/admin/captacao',     icon: '🎯', label: 'Captação',     desc: 'Leads · Disparo · Reconversão',            cor: '#C9A65A', bg: 'rgba(201,166,90,0.06)', border: 'rgba(201,166,90,0.2)' },
-          { href: '/admin/inteligencia', icon: '📊', label: 'Inteligência', desc: 'Gráficos · Fontes · Timeline',             cor: '#3b82f6', bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.2)' },
-          { href: '/admin/saude',        icon: '🏥', label: 'Saúde',        desc: 'Status jobs · Erros · Monitoramento',      cor: '#f97316', bg: 'rgba(249,115,22,0.06)', border: 'rgba(249,115,22,0.2)'  },
-        ].map(({ href, icon, label, desc, cor, bg, border }) => (
-          <a key={href} href={href} style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: bg, border: `1px solid ${border}`, transition: 'opacity .15s' }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '16px' }}>{icon}</span>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: cor }}>{label}</span>
+      {/* ── Módulos com prévias ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+
+        {/* Financeiro */}
+        <a href="/admin/financeiro" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>💰 Financeiro</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+          </div>
+          {prevFinanceiro ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {[
+                { label: 'MRR', val: prevFinanceiro.kpis.mrr.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#10b981' },
+                { label: 'Pagantes', val: String(prevFinanceiro.kpis.totalPagantes), cor: '#10b981' },
+                { label: 'Em trial', val: String(prevFinanceiro.kpis.totalTrials), cor: '#C9A65A' },
+                { label: 'Conversão', val: `${prevFinanceiro.kpis.taxaConversao}%`, cor: '#3b82f6' },
+              ].map(({ label, val, cor }) => (
+                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                </div>
+              ))}
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--cinza)', margin: 0, lineHeight: 1.4 }}>{desc}</p>
-          </a>
-        ))}
+          ) : (
+            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            </div>
+          )}
+        </a>
+
+        {/* Campanhas */}
+        <a href="/admin/campanhas" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#8b5cf6' }}>📣 Campanhas</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+          </div>
+          {prevCampanhas ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {[
+                { label: 'Campanhas ativas', val: String(prevCampanhas.campanhas?.length ?? 0), cor: '#8b5cf6' },
+                { label: 'Com atribuição', val: String(prevCampanhas.totais?.comAtribuicao ?? 0), cor: '#8b5cf6' },
+                { label: 'Conversões', val: String(prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { conversoes: number } }) => s + (c.metricas?.conversoes ?? 0), 0) ?? 0), cor: '#10b981' },
+                { label: 'MRR campanhas', val: (prevCampanhas.campanhas?.reduce((s: number, c: { metricas: { mrr: number } }) => s + (c.metricas?.mrr ?? 0), 0) ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }), cor: '#10b981' },
+              ].map(({ label, val, cor }) => (
+                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            </div>
+          )}
+        </a>
+
+        {/* Captação */}
+        <a href="/admin/captacao" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(201,166,90,0.05)', border: '1px solid rgba(201,166,90,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#a07a20' }}>🎯 Captação</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+          </div>
+          {stats ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {[
+                { label: 'Leads coletados', val: stats.leadsTotal.toLocaleString('pt-BR'), cor: '#a07a20' },
+                { label: 'Aguardando envio', val: stats.leadsPendentes.toLocaleString('pt-BR'), cor: '#C9A65A' },
+                { label: 'E-mails enviados', val: stats.leadsEnviados.toLocaleString('pt-BR'), cor: '#10b981' },
+                { label: 'Taxa envio', val: stats.leadsTotal > 0 ? `${Math.round(stats.leadsEnviados / stats.leadsTotal * 100)}%` : '—', cor: '#3b82f6' },
+              ].map(({ label, val, cor }) => (
+                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            </div>
+          )}
+        </a>
+
+        {/* Saúde dos jobs */}
+        <a href="/admin/saude" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#f97316' }}>🏥 Saúde dos jobs</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+          </div>
+          {cronData ? (() => {
+            const jobs = Object.entries(cronData.ultimasPorJob)
+            const ok    = jobs.filter(([, v]) => v?.status === 'ok' || v?.status === 'sucesso').length
+            const erros = jobs.filter(([, v]) => v?.status === 'erro').length
+            const semDados = jobs.filter(([, v]) => !v).length
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {[
+                  { label: 'Jobs monitorados', val: String(jobs.length),  cor: '#f97316' },
+                  { label: 'Rodando OK',        val: String(ok),           cor: '#10b981' },
+                  { label: 'Com erro',           val: String(erros),        cor: erros > 0 ? '#ef4444' : 'var(--cinza)' },
+                  { label: 'Sem execução',       val: String(semDados),     cor: semDados > 0 ? '#C9A65A' : 'var(--cinza)' },
+                ].map(({ label, val, cor }) => (
+                  <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            )
+          })() : (
+            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            </div>
+          )}
+        </a>
+
+        {/* Inteligência */}
+        <a href="/admin/inteligencia" style={{ textDecoration: 'none', display: 'block', padding: '16px 18px', borderRadius: '16px', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6' }}>📊 Inteligência</span>
+            <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>Ver tudo →</span>
+          </div>
+          {stats ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {[
+                { label: 'Licitações no banco', val: stats.totalLicitacoes.toLocaleString('pt-BR'), cor: '#3b82f6' },
+                { label: 'Alertas hoje',         val: String(stats.alertasHoje),                     cor: '#3b82f6' },
+                { label: 'Alertas 7 dias',       val: String(stats.alertas7d),                       cor: '#8b5cf6' },
+                { label: 'Keywords ativas',      val: stats.totalKeywords.toLocaleString('pt-BR'),   cor: '#6B0F1A' },
+              ].map(({ label, val, cor }) => (
+                <div key={label} style={{ padding: '8px 10px', borderRadius: '10px', background: 'white' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: cor }}>{val}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '1px' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--cinza)' }}>{carregando ? 'Carregando…' : 'Sem dados'}</span>
+            </div>
+          )}
+        </a>
+
       </div>
 
       {/* ── Configurações ── */}
