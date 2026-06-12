@@ -15,7 +15,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const MAX_LEADS       = 2000
 const MAX_LINHAS      = 500_000
-const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
+const COL     = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
+const COL_EMP = { BASICO: 0, RAZAO: 1 }
 
 const CNAE_SEED = new Set([
   '4789005','6209100','8121400','4322301','4330404',
@@ -34,6 +35,12 @@ function getAnoMes() {
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
+function getStorageUrl(tipo: string, fileIdx: number, ano: number, mes: number): string {
+  const mesStr = String(mes).padStart(2, '0')
+  const base = Deno.env.get('SUPABASE_URL') ?? ''
+  return `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/${tipo}${fileIdx}.zip`
+}
+
 function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
   const mesStr = String(mes).padStart(2, '0')
   const base = Deno.env.get('SUPABASE_URL') ?? ''
@@ -41,6 +48,70 @@ function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
     `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
     `${RF_NEXTCLOUD_BASE}/download?path=%2F${ano}-${mesStr}&files=Estabelecimentos${fileIdx}.zip`,
   ]
+}
+
+// Helper: stream um ZIP do Storage e chama onLine para cada linha CSV
+// onLine retorna false para parar o streaming antecipadamente
+async function streamZipLinhas(url: string, onLine: (linha: string) => boolean): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch(url, {
+      headers: { 'User-Agent': 'MonitorLicitacoes/1.0' },
+      signal: AbortSignal.timeout(60000),
+    })
+  } catch { return }
+  if (!res.ok || !res.body) return
+
+  const concat = (a: Uint8Array, b: Uint8Array) => { const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c }
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
+  const writer = writable.getWriter()
+  const reader = res.body.getReader()
+  let headerBuf = new Uint8Array(0)
+  let headerParsed = false
+  let deflateStart = -1
+
+  ;(async () => {
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) { await writer.close(); break }
+        const chunk = value as Uint8Array
+        if (!headerParsed) {
+          headerBuf = concat(headerBuf, chunk)
+          if (headerBuf.length >= 30) {
+            const view = new DataView(headerBuf.buffer)
+            deflateStart = 30 + view.getUint16(26, true) + view.getUint16(28, true)
+            if (headerBuf.length >= deflateStart) {
+              headerParsed = true
+              const rest = headerBuf.slice(deflateStart)
+              if (rest.length > 0) await writer.write(rest)
+              headerBuf = new Uint8Array(0)
+            }
+          }
+        } else {
+          await writer.write(chunk)
+        }
+      }
+    } catch { await writer.abort() }
+  })()
+
+  const decompReader = readable.pipeThrough(new DecompressionStream('deflate-raw')).getReader()
+  const decoder = new TextDecoder('latin1')
+  let buf = ''
+  let stop = false
+  try {
+    while (!stop) {
+      const { done, value } = await decompReader.read()
+      if (done) break
+      buf += decoder.decode(value, { stream: true })
+      let nl: number
+      while ((nl = buf.indexOf('\n')) !== -1) {
+        const linha = buf.slice(0, nl).trimEnd()
+        buf = buf.slice(nl + 1)
+        if (!onLine(linha)) { stop = true; break }
+      }
+    }
+  } catch { /* stream interrompido */ }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,130 +157,92 @@ Deno.serve(async (_req: Request) => {
   const urls = getRFUrls(estado.file_idx, estado.ano, estado.mes)
   console.log(`[coletar-leads-cnae] arquivo=${estado.file_idx} skip=${estado.rows_processed} cnae_alvo=${targetCnaes.size}`)
 
-  // Tenta Supabase Storage primeiro, depois RF direto
-  let res: Response | null = null
+  // Descobre qual URL está disponível (HEAD request para não abrir body)
   let urlUsada = ''
   for (const u of urls) {
     try {
-      const r = await fetch(u, { headers: { 'User-Agent': 'MonitorLicitacoes/1.0' }, signal: AbortSignal.timeout(30000) })
-      if (r.ok && r.body) { res = r; urlUsada = u; break }
+      const r = await fetch(u, { method: 'HEAD', signal: AbortSignal.timeout(15000) })
+      if (r.ok) { urlUsada = u; break }
       console.log(`[coletar-leads-cnae] ${u} → HTTP ${r.status}, tentando próximo`)
     } catch (e) { console.log(`[coletar-leads-cnae] ${u} falhou: ${e}, tentando próximo`) }
   }
-  if (!res || !res.body) {
+  if (!urlUsada) {
     const erro = `Todos os URLs falharam para arquivo ${estado.file_idx}`
     await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
     return new Response(JSON.stringify({ ok: false, erro }), { status: 500, headers: { 'Content-Type': 'application/json' } })
   }
   console.log(`[coletar-leads-cnae] usando ${urlUsada}`)
 
-  // Descomprime o ZIP via DecompressionStream (Deno nativo)
-  // O ZIP contém um único arquivo deflate — pula o header local (30 + fnameLen + extraLen bytes)
-  const leads: { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'invalido'; situacao: null; origem: 'cnae' }[] = []
+  type Lead = { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'invalido'; situacao: null; origem: 'cnae' }
+  const leads: Lead[] = []
   let rowsProcessed = 0
   let esgotado = false
+  let rowsSkipped = 0
+  let stop = false
 
-  try {
-    const reader = res.body.getReader()
-    let headerBuf = new Uint8Array(0)
-    let headerParsed = false
-    let deflateStart = -1
+  // ── Passo 1: stream Estabelecimentos ──────────────────────────────────────
+  await streamZipLinhas(urlUsada, (line) => {
+    rowsProcessed++
+    if (rowsProcessed > MAX_LINHAS) { stop = true; return false }
+    if (rowsSkipped < estado.rows_processed) { rowsSkipped++; return true }
 
-    // Junta chunks até ter o header completo do ZIP (mínimo 30 bytes)
-    const concat = (a: Uint8Array, b: Uint8Array) => { const c = new Uint8Array(a.length + b.length); c.set(a); c.set(b, a.length); return c }
+    const cols = line.split('|')
+    if (cols.length < 28) return true
+    if (cols[COL.MATFIL]  !== '1')  return true
+    if (cols[COL.SITUACAO] !== '02') return true
+    const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
+    if (!targetCnaes.has(cnae)) return true
+    const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
+    if (cnpj.length !== 14) return true
 
-    // Cria um TransformStream para receber os dados deflate
-    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
-    const writer = writable.getWriter()
+    leads.push({
+      cnpj,
+      razao_social: cnpj,                          // placeholder, enriquecido no passo 2
+      email:     cols[COL.EMAIL]?.trim()    || null,
+      uf:        cols[COL.UF]?.trim()       || null,
+      municipio: cols[COL.MUNICIPIO]?.trim() || null,
+      cnae_codigo: cnae || null,
+      status: 'invalido', situacao: null, origem: 'cnae',
+    })
 
-    // Lê o ZIP e alimenta o writer com apenas o bloco deflate
-    ;(async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) { await writer.close(); break }
-          const chunk = value as Uint8Array
-          if (!headerParsed) {
-            headerBuf = concat(headerBuf, chunk)
-            if (headerBuf.length >= 30) {
-              const view = new DataView(headerBuf.buffer)
-              const fnameLen  = view.getUint16(26, true)
-              const extraLen  = view.getUint16(28, true)
-              deflateStart    = 30 + fnameLen + extraLen
-              if (headerBuf.length >= deflateStart) {
-                headerParsed = true
-                const deflateData = headerBuf.slice(deflateStart)
-                if (deflateData.length > 0) await writer.write(deflateData)
-                headerBuf = new Uint8Array(0)
-              }
-            }
-          } else {
-            await writer.write(chunk)
-          }
-        }
-      } catch { await writer.abort() }
-    })()
+    if (leads.length >= MAX_LEADS) { stop = true; return false }
+    return true
+  })
 
-    // Descomprime e processa linha a linha
-    const decomp    = new DecompressionStream('deflate-raw')
-    const decompReader = readable.pipeThrough(decomp).getReader()
-    const decoder   = new TextDecoder('latin1')
-    let lineBuffer  = ''
-    let rowsSkipped = 0
-    let stop        = false
+  esgotado = !stop && rowsProcessed < MAX_LINHAS
 
-    while (!stop) {
-      const { done, value } = await decompReader.read()
-      if (done) { esgotado = true; break }
-      lineBuffer += decoder.decode(value, { stream: true })
+  // ── Passo 2: enriquecer razão social via arquivo Empresas (mesmo índice) ──
+  if (leads.length > 0) {
+    // Map de cnpj_basico → índice no array leads para lookup O(1)
+    const basMap = new Map<string, number>()
+    for (let i = 0; i < leads.length; i++) basMap.set(leads[i].cnpj.slice(0, 8), i)
 
-      let nl: number
-      while ((nl = lineBuffer.indexOf('\n')) !== -1) {
-        const line = lineBuffer.slice(0, nl).trimEnd()
-        lineBuffer  = lineBuffer.slice(nl + 1)
-        rowsProcessed++
-
-        if (rowsProcessed > MAX_LINHAS) { stop = true; break }
-        if (rowsSkipped < estado.rows_processed) { rowsSkipped++; continue }
-
+    const empresasUrl = getStorageUrl('Empresas', estado.file_idx, estado.ano, estado.mes)
+    let encontrados = 0
+    await streamZipLinhas(empresasUrl, (line) => {
+      if (encontrados >= leads.length) return false   // todos enriquecidos → para
+      const sep = line.indexOf('|')
+      if (sep === -1) return true
+      const cnpjBasico = line.slice(0, sep).trim()
+      const idx = basMap.get(cnpjBasico)
+      if (idx !== undefined) {
         const cols = line.split('|')
-        if (cols.length < 28) continue
-        if (cols[COL.MATFIL]   !== '1')  continue
-        if (cols[COL.SITUACAO]  !== '02') continue
-        const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
-        if (!targetCnaes.has(cnae)) continue
-        const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
-        if (cnpj.length !== 14) continue
-
-        leads.push({
-          cnpj,
-          razao_social: cnpj,
-          email:        cols[COL.EMAIL]?.trim()      || null,
-          uf:           cols[COL.UF]?.trim()         || null,
-          municipio:    cols[COL.MUNICIPIO]?.trim()  || null,
-          cnae_codigo:  cnae || null,
-          status:       'invalido',
-          situacao:     null,
-          origem:       'cnae',
-        })
-
-        if (leads.length >= MAX_LEADS) { stop = true; break }
+        const razao = cols[COL_EMP.RAZAO]?.trim()
+        if (razao) { leads[idx].razao_social = razao; encontrados++ }
       }
-    }
-  } catch (e) {
-    const erro = `stream erro: ${e}`
-    await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'erro', mensagem: erro })
-    return new Response(JSON.stringify({ ok: false, erro }), { status: 500 })
+      return true
+    })
+    console.log(`[coletar-leads-cnae] razão social enriquecida: ${encontrados}/${leads.length}`)
   }
 
-  // Inserir leads
+  // ── Inserir leads ──────────────────────────────────────────────────────────
   let inseridos = 0
   for (let i = 0; i < leads.length; i += 100) {
     const { error } = await supabase.from('leads').upsert(leads.slice(i, i+100), { onConflict: 'cnpj', ignoreDuplicates: true })
     if (!error) inseridos += Math.min(100, leads.length - i)
   }
 
-  // Atualizar estado
+  // ── Atualizar estado ───────────────────────────────────────────────────────
   const novoEstado: CnaeEstado = {
     ...estado,
     rows_processed: esgotado ? 0 : estado.rows_processed + rowsProcessed,
