@@ -118,9 +118,9 @@ async function extrairEmailsDoArquivo(
       rl.on('error', reject)
     }
 
-    fileStream.on('data', (chunk: Buffer) => {
+    fileStream.on('data', (chunk: Buffer | string) => {
       if (headerParsed) return
-      headerBuf = Buffer.concat([headerBuf, chunk])
+      headerBuf = Buffer.concat([headerBuf, Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)])
       if (headerBuf.length >= 30) {
         const deflateStart = 30 + headerBuf.readUInt16LE(26) + headerBuf.readUInt16LE(28)
         if (headerBuf.length >= deflateStart) {
@@ -129,7 +129,7 @@ async function extrairEmailsDoArquivo(
           fileStream.removeAllListeners('data')
           const combined = new Readable({ read() {} })
           combined.push(headerBuf.slice(deflateStart))
-          fileStream.on('data', (d: Buffer) => combined.push(d))
+          fileStream.on('data', (d: Buffer | string) => combined.push(Buffer.isBuffer(d) ? d : Buffer.from(d)))
           fileStream.on('end', () => combined.push(null))
           fileStream.on('error', (e: Error) => combined.destroy(e))
           fileStream.resume()
