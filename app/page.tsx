@@ -396,7 +396,7 @@ export default function LandingPage() {
               <div className="text-[11px] font-black tracking-wider uppercase text-[#6B0F1A] mb-5">✓ Com o Monitor</div>
               {[
                 'Todos os portais monitorados automaticamente',
-                'IA lê o contexto — não só palavras exatas',
+                'Lê o contexto do edital — não só palavras exatas',
                 'Alerta chega antes do prazo começar a correr',
                 'E-mail, Telegram ou WhatsApp — você escolhe',
                 'Você chega primeiro. A proposta é sua.',

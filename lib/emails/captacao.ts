@@ -103,7 +103,7 @@ const COPY_POR_SETOR: Record<string, SetorCopy> = {
     subject: '{{NOME}}, encontramos licitações para a sua empresa — e sua concorrente já está de olho',
     dor: 'Todo dia, mais de <strong>2.000 novos editais são publicados</strong> no PNCP, ComprasNet, BLL e Diários Oficiais de todo o Brasil. A maioria das empresas fornecedoras sequer fica sabendo.',
     agitacao: 'Enquanto você não monitora, seus concorrentes que têm alertas configurados <strong>já estão elaborando as propostas</strong>. O edital perfeito para a sua empresa pode ter sido publicado ontem.',
-    beneficioSetor: '🎯 <strong>Matching inteligente com IA</strong> — nosso sistema aprende o perfil da sua empresa e só te avisa quando surge algo realmente relevante.',
+    beneficioSetor: '🎯 <strong>Matching inteligente</strong> — nosso sistema aprende o perfil da sua empresa e só te avisa quando surge algo realmente relevante.',
     ps: '⚠️ <strong>P.S.:</strong> Empresas que monitoram licitações ativamente participam de 3× mais processos do que as que dependem de busca manual. O trial é gratuito — o custo é não tentar.',
   },
 }
@@ -366,7 +366,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text"><strong>Nossa IA monitora 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div>
+        <div class="step-text"><strong>Monitoramos 7+ fontes simultaneamente</strong>PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais e mais.</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
@@ -426,7 +426,7 @@ ATENÇÃO: ${copy.agitacao.replace(/<[^>]+>/g, '')}
 O Monitor de Licitações resolve isso em 3 passos:
 
 1. Você define suas palavras-chave (menos de 5 minutos)
-2. Nossa IA monitora 7+ fontes: PNCP, ComprasNet, BLL, Licitações-e e mais
+2. Monitoramos 7+ fontes: PNCP, ComprasNet, BLL, Licitações-e e mais
 3. Você recebe o alerta na hora — e-mail + Telegram, antes da concorrência
 
 ${copy.beneficioSetor.replace(/<[^>]+>/g, '')}

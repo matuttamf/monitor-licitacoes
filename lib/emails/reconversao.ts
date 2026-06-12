@@ -100,7 +100,7 @@ export function emailReconversao(p: ParamsReconversao) {
       <li><strong>Plano Basic a partir de R$ 97/mês</strong> — menos que uma hora de consultoria</li>
       <li><strong>Monitoramento 24/7</strong> de mais de 7 fontes nacionais</li>
       <li><strong>Alertas por e-mail + Telegram</strong> no instante que o edital sai</li>
-      <li><strong>IA filtrando</strong> só os editais relevantes para você</li>
+      <li><strong>Filtragem inteligente</strong> — só os editais relevantes para você</li>
       <li><strong>Cancele quando quiser</strong> — sem multa, sem burocracia</li>
     </ul>
 

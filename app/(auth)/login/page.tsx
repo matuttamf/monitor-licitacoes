@@ -62,7 +62,7 @@ function LoginForm() {
 
         {/* Stats */}
         <div className="relative grid grid-cols-3 gap-6">
-          {[['346 fontes', 'Monitoradas'], ['Público + Privado', 'Setores'], ['IA', 'Cruzamento']].map(([num, label]) => (
+          {[['346 fontes', 'Monitoradas'], ['Público + Privado', 'Setores'], ['Automático', 'Cruzamento']].map(([num, label]) => (
             <div key={label}>
               <div className="font-bold text-lg text-[#C9A65A]">{num}</div>
               <div className="text-xs text-[rgba(255,255,255,0.35)] mt-0.5">{label}</div>

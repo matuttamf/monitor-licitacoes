@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-const MIN = 221
+const MIN = 154
 const MAX = 241
 
 export default function ContadorAoVivo() {
