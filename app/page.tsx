@@ -97,9 +97,36 @@ const PLANOS = [
   },
 ]
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Monitor de Licitações',
+  url: APP_URL,
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  description:
+    'Plataforma de monitoramento de licitações públicas brasileiras com alertas automáticos por e-mail, Telegram e WhatsApp.',
+  offers: [
+    { '@type': 'Offer', price: '0', priceCurrency: 'BRL', name: 'Trial 7 dias' },
+    { '@type': 'Offer', price: '97', priceCurrency: 'BRL', name: 'Plano Basic', billingDuration: 'P1M' },
+    { '@type': 'Offer', price: '197', priceCurrency: 'BRL', name: 'Plano Empresarial', billingDuration: 'P1M' },
+  ],
+  publisher: {
+    '@type': 'Organization',
+    name: 'Monitor de Licitações',
+    url: APP_URL,
+  },
+}
+
 export default function LandingPage() {
   return (
     <div className="font-sans bg-[#FAF6F0] text-[#1A1A1C]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[60px] h-[68px] bg-[rgba(250,246,240,0.97)] backdrop-blur-xl border-b border-[rgba(201,166,90,0.12)]">

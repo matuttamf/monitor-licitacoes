@@ -132,9 +132,23 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
     const startDeflate = (src: NodeJS.ReadableStream) => {
       inflate.on('error', reject)
       src.pipe(inflate)
+
+      // Detecta separador (| ou ;) na primeira linha para compatibilidade
+      // com todas as versões dos arquivos da RFB
+      let sep = '|'
+      let primeiraLinha = true
+
       const rl = createInterface({ input: inflate, crlfDelay: Infinity })
       rl.on('line', (line) => {
-        const cols = line.split('|')
+        if (primeiraLinha) {
+          primeiraLinha = false
+          // Conta ocorrências de cada separador candidato
+          const contPipe  = (line.match(/\|/g) ?? []).length
+          const contPonto = (line.match(/;/g)  ?? []).length
+          sep = contPonto > contPipe ? ';' : '|'
+          console.log(`  Separador detectado: "${sep}" (|=${contPipe} ;=${contPonto})`)
+        }
+        const cols = line.split(sep)
         if (cols.length >= 2) onLine(cols)
       })
       rl.on('close', resolve)

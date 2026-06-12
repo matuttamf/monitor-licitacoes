@@ -115,9 +115,15 @@ async function processarEstabelecimentos(
       inflate.on('error', reject)
       deflateStream.pipe(inflate)
 
+      let sep = '|'
+      let primeiraLinha = true
       const rl = createInterface({ input: inflate, crlfDelay: Infinity })
       rl.on('line', (line) => {
-        const cols = line.split('|')
+        if (primeiraLinha) {
+          primeiraLinha = false
+          sep = (line.match(/;/g) ?? []).length > (line.match(/\|/g) ?? []).length ? ';' : '|'
+        }
+        const cols = line.split(sep)
         if (cols.length < 28) return
         if (cols[COL.MATFIL] !== '1') return
         if (cols[COL.SITUACAO] !== '02') return
@@ -137,7 +143,7 @@ async function processarEstabelecimentos(
       rl.on('error', reject)
     }
 
-    fileStream.on('data', (chunk: Buffer) => {
+    fileStream.on('data', (chunk: Buffer | string) => {
       if (headerParsed) return  // já processando via pipe
       headerBuffer = Buffer.concat([headerBuffer, chunk])
       if (headerBuffer.length >= 30) {
@@ -184,14 +190,20 @@ async function enriquecerEmpresasRazaoSocial(
       inflate.on('error', reject)
       deflateStream.pipe(inflate)
 
+      let sepEmp = '|'
+      let primeiraLinhaEmp = true
       const rl = createInterface({ input: inflate, crlfDelay: Infinity })
       rl.on('line', (line) => {
+        if (primeiraLinhaEmp) {
+          primeiraLinhaEmp = false
+          sepEmp = (line.match(/;/g) ?? []).length > (line.match(/\|/g) ?? []).length ? ';' : '|'
+        }
         if (encontrados >= leads.size) { rl.close(); return }
-        const sep = line.indexOf('|')
-        if (sep === -1) return
-        const cnpjBasico = line.slice(0, sep).trim()
+        const firstSep = line.indexOf(sepEmp)
+        if (firstSep === -1) return
+        const cnpjBasico = line.slice(0, firstSep).trim()
         if (leads.has(cnpjBasico)) {
-          const cols = line.split('|')
+          const cols = line.split(sepEmp)
           const razao = cols[COL_EMP.RAZAO]?.trim()
           if (razao) { razoes.set(cnpjBasico, razao); encontrados++ }
         }
@@ -200,7 +212,7 @@ async function enriquecerEmpresasRazaoSocial(
       rl.on('error', reject)
     }
 
-    fileStream.on('data', (chunk: Buffer) => {
+    fileStream.on('data', (chunk: Buffer | string) => {
       if (headerParsed) return
       headerBuffer = Buffer.concat([headerBuffer, chunk])
       if (headerBuffer.length >= 30) {

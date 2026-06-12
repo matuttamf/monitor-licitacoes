@@ -47,68 +47,41 @@ export async function GET(request: Request) {
     keywords (termo, user_id)
   `
 
-  // Pendentes (nunca enviados via telegram/whatsapp) e já enviados (para reciclagem)
-  const [{ data: pendentes, error }, { data: reciclados }] = await Promise.all([
-    supabase
-      .from('alertas')
-      .select(SELECT_URGENTE)
-      .not('canais', 'cs', '{"telegram"}')
-      .not('canais', 'cs', '{"whatsapp"}')
-      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
-      .order('score', { ascending: false })
-      .limit(500),
-    supabase
-      .from('alertas')
-      .select(SELECT_URGENTE)
-      .or('canais.cs.{"telegram"},canais.cs.{"whatsapp"}')
-      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
-      .order('score', { ascending: false })
-      .limit(500),
-  ])
+  // Somente alertas nunca enviados via telegram/whatsapp — sem reciclagem
+  const { data: pendentes, error } = await supabase
+    .from('alertas')
+    .select(SELECT_URGENTE)
+    .not('canais', 'cs', '{"telegram"}')
+    .not('canais', 'cs', '{"whatsapp"}')
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
+    .order('score', { ascending: false })
+    .limit(500)
 
   if (error) {
     console.error('alertar-urgente erro:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const h24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-
-  // Agrupar pendentes e reciclados por usuário
+  // Agrupar por usuário
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pendentesPorUsuario  = new Map<string, any[]>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recicladosPorUsuario = new Map<string, any[]>()
-
+  const pendentesPorUsuario = new Map<string, any[]>()
   for (const a of (pendentes ?? [])) {
     const uid = (a.keywords as any)?.user_id
     if (!uid) continue
     if (!pendentesPorUsuario.has(uid)) pendentesPorUsuario.set(uid, [])
     pendentesPorUsuario.get(uid)!.push(a)
   }
-  for (const a of (reciclados ?? [])) {
-    const uid = (a.keywords as any)?.user_id
-    if (!uid) continue
-    if (!recicladosPorUsuario.has(uid)) recicladosPorUsuario.set(uid, [])
-    recicladosPorUsuario.get(uid)!.push(a)
-  }
 
-  // Por usuário: se tem pendentes usa esses; senão recicla os enviados há >24h
-  type EntradaUsuario = { topAlerta: any; todasAsIds: string[]; reciclado: boolean }
+  type EntradaUsuario = { topAlerta: any; todasAsIds: string[] }
   const porUsuario = new Map<string, EntradaUsuario>()
-  const todosUids  = new Set([...pendentesPorUsuario.keys(), ...recicladosPorUsuario.keys()])
 
-  for (const uid of todosUids) {
-    const pend = pendentesPorUsuario.get(uid) ?? []
-    const recic = (recicladosPorUsuario.get(uid) ?? []).filter(a => !a.enviado_em || a.enviado_em < h24)
-    const pool  = pend.length ? pend : recic
-    if (!pool.length) continue
-
-    const top = pool[0]
-    const ids = pool
+  for (const [uid, pend] of pendentesPorUsuario.entries()) {
+    if (!pend.length) continue
+    const top = pend[0]
+    const ids = pend
       .filter(a => a.licitacao_id === top.licitacao_id)
       .map(a => a.id)
-
-    porUsuario.set(uid, { topAlerta: top, todasAsIds: ids, reciclado: pend.length === 0 })
+    porUsuario.set(uid, { topAlerta: top, todasAsIds: ids })
   }
 
   const userIds = [...porUsuario.keys()]
@@ -121,7 +94,7 @@ export async function GET(request: Request) {
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
-  for (const [userId, { topAlerta, todasAsIds, reciclado }] of porUsuario.entries()) {
+  for (const [userId, { topAlerta, todasAsIds }] of porUsuario.entries()) {
     const perfil = profileMap[userId]
     if (!perfil || perfil.status === 'expired') continue
 
@@ -180,7 +153,6 @@ export async function GET(request: Request) {
       canais:   canaisEnviados,
       telegram: telegramOk,
       whatsapp: whatsappOk,
-      reciclado,
     }
   }
 

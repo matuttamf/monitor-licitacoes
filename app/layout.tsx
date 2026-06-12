@@ -15,9 +15,44 @@ const instrument = Instrument_Serif({
   style: ["normal", "italic"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+
 export const metadata: Metadata = {
-  title: "Monitor de Licitações",
-  description: "Monitoramento de licitações públicas brasileiras",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: 'Monitor de Licitações — Alertas de Editais em Tempo Real',
+    template: '%s | Monitor de Licitações',
+  },
+  description:
+    'Receba alertas automáticos de licitações públicas que combinam com o seu negócio. Monitoramos PNCP, ComprasNet, BLL e portais estaduais. Teste grátis por 7 dias.',
+  keywords: [
+    'licitações públicas', 'monitor de licitações', 'alertas de editais',
+    'PNCP', 'ComprasNet', 'pregão eletrônico', 'licitação federal',
+    'licitação estadual', 'licitação municipal', 'edital público',
+    'fornecedor governo', 'contratação pública',
+  ],
+  authors: [{ name: 'Monitor de Licitações', url: APP_URL }],
+  creator: 'Monitor de Licitações',
+  publisher: 'Monitor de Licitações',
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: APP_URL,
+    siteName: 'Monitor de Licitações',
+    title: 'Monitor de Licitações — Alertas de Editais em Tempo Real',
+    description:
+      'Receba alertas automáticos de licitações públicas que combinam com o seu negócio. Monitoramos PNCP, ComprasNet, BLL e portais estaduais.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Monitor de Licitações' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Monitor de Licitações — Alertas de Editais em Tempo Real',
+    description:
+      'Receba alertas automáticos de licitações públicas que combinam com o seu negócio.',
+    images: ['/og-image.png'],
+  },
 };
 
 export default function RootLayout({

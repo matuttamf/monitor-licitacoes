@@ -97,9 +97,15 @@ async function extrairEmailsDoArquivo(
     const processDeflate = (src: NodeJS.ReadableStream) => {
       inflate.on('error', reject)
       src.pipe(inflate)
+      let sep = '|'
+      let primeiraLinha = true
       const rl = createInterface({ input: inflate, crlfDelay: Infinity })
       rl.on('line', (line) => {
-        const cols = line.split('|')
+        if (primeiraLinha) {
+          primeiraLinha = false
+          sep = (line.match(/;/g) ?? []).length > (line.match(/\|/g) ?? []).length ? ';' : '|'
+        }
+        const cols = line.split(sep)
         if (cols.length < 28) return
         const cnpjBasico = cols[COL_EST.BASICO]?.trim()
         if (!cnpjBasico || !cnpjsAlvo.has(cnpjBasico)) return

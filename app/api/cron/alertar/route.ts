@@ -98,17 +98,13 @@ export async function GET(request: Request) {
   for (const uid of todosUids) {
     const novosUid    = novosPorUsuario.get(uid)    ?? []
     const reenviosUid = reenviosPorUsuario.get(uid) ?? []
-    // filaVazia por usuário: se não há novos, recicla todos os já enviados
-    // caso contrário, só reenvios com > 7 dias (evita duplicação)
-    const filaVaziaUid = novosUid.length === 0
-    const reenviosFiltrados = filaVaziaUid
-      ? reenviosUid
-      : reenviosUid.filter(a => a.enviado_em && a.enviado_em <= umaSemanAAtras)
-
-    const combinados = [
-      ...novosUid,
-      ...reenviosFiltrados.map(a => ({ ...a, _reenvio: true })),
-    ]
+    // Só envia alertas genuinamente novos (nunca enviados via e-mail).
+    // Reenvios com >7 dias são incluídos apenas se houver novos também —
+    // nunca reciclagem pura para evitar repetição de licitações.
+    const reenviosFiltrados = reenviosUid.filter(a => a.enviado_em && a.enviado_em <= umaSemanAAtras)
+    const combinados = novosUid.length
+      ? [...novosUid, ...reenviosFiltrados.map(a => ({ ...a, _reenvio: true }))]
+      : []
     if (combinados.length) alertasPorUsuario.set(uid, combinados)
   }
 
