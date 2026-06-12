@@ -26,9 +26,11 @@ interface CnaeEstado {
   file_idx: number; rows_processed: number; ano: number; mes: number
 }
 
+const RF_NEXTCLOUD_BASE = 'https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9'
+
 function getAnoMes() {
   const d = new Date()
-  d.setMonth(d.getMonth() - 2)
+  d.setMonth(d.getMonth() - 1)
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
@@ -37,7 +39,7 @@ function getRFUrls(fileIdx: number, ano: number, mes: number): string[] {
   const base = Deno.env.get('SUPABASE_URL') ?? ''
   return [
     `${base}/storage/v1/object/public/rf-cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
-    `https://dados.rfb.gov.br/CNPJ/dados_abertos_cnpj/${ano}-${mesStr}/Estabelecimentos${fileIdx}.zip`,
+    `${RF_NEXTCLOUD_BASE}/download?path=/${ano}-${mesStr}&files=Estabelecimentos${fileIdx}.zip`,
   ]
 }
 

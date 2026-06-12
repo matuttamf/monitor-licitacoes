@@ -16,7 +16,9 @@ import { createWriteStream, createReadStream, existsSync, unlinkSync } from 'nod
 import { pipeline } from 'node:stream/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import 'dotenv/config'
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config() // fallback .env
 
 const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -26,9 +28,11 @@ const args     = process.argv.slice(2)
 const idxStart = Number(args[0] ?? 0)
 const idxEnd   = Number(args[1] ?? 0)
 
+const RF_NEXTCLOUD_BASE = 'https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9'
+
 function getAnoMes(): { ano: number; mes: number } {
   const d = new Date()
-  d.setMonth(d.getMonth() - 2)
+  d.setMonth(d.getMonth() - 1)
   return { ano: d.getFullYear(), mes: d.getMonth() + 1 }
 }
 
@@ -38,7 +42,7 @@ const mesFinal = Number(args[3] ?? mes)
 const mesPad   = String(mesFinal).padStart(2, '0')
 
 async function uploadArquivo(fileIdx: number) {
-  const rfUrl   = `https://dados.rfb.gov.br/CNPJ/dados_abertos_cnpj/${anoFinal}-${mesPad}/Estabelecimentos${fileIdx}.zip`
+  const rfUrl   = `${RF_NEXTCLOUD_BASE}/download?path=/${anoFinal}-${mesPad}&files=Estabelecimentos${fileIdx}.zip`
   const destKey = `${anoFinal}-${mesPad}/Estabelecimentos${fileIdx}.zip`
   const tmpPath = join(tmpdir(), `rf-estab-${fileIdx}.zip`)
 
