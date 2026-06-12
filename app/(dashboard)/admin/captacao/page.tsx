@@ -275,6 +275,16 @@ export default function CaptacaoPage() {
     setToggling(false)
   }
 
+  async function dispararGitHub(workflow: string) {
+    setDisparando(workflow); setResultadoCron(null)
+    const res = await fetch('/api/admin/trigger-github', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflow }),
+    })
+    setResultadoCron({ acao: workflow, ok: res.ok, data: await res.json() })
+    setDisparando(null)
+  }
+
   async function acionarCron(acao: string) {
     setDisparando(acao); setResultadoCron(null)
     const res = await fetch('/api/admin/trigger', {
@@ -492,6 +502,16 @@ export default function CaptacaoPage() {
               <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>{desc}</p>
             </div>
           ))}
+
+          {/* Botão GitHub Actions — roda fora da Vercel, sem limite de tempo */}
+          <div>
+            <button onClick={() => dispararGitHub('coletar-leads-rfb.yml')} disabled={disparando !== null}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: disparando === 'coletar-leads-rfb.yml' ? 'var(--cinza-light)' : '#1a7f37', color: disparando === 'coletar-leads-rfb.yml' ? 'var(--cinza)' : 'white', border: 'none', cursor: disparando !== null ? 'not-allowed' : 'pointer', opacity: disparando !== null && disparando !== 'coletar-leads-rfb.yml' ? 0.5 : 1 }}>
+              {disparando === 'coletar-leads-rfb.yml' ? '⏳ Disparando…' : '🏭 Coletar CNAE (RFB)'}
+            </button>
+            <p style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>GitHub Actions · ~13min · base completa RF</p>
+          </div>
 
         </div>
 
