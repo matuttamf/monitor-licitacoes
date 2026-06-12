@@ -39,7 +39,6 @@ async function main() {
       .from('leads')
       .select('id, cnpj, email')
       .eq('status', 'invalido')
-      .is('email', null)
       .range(offset, offset + LOTE - 1)
 
     if (error) { console.error('Erro ao buscar leads:', error.message); break }
