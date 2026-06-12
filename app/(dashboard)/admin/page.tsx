@@ -203,9 +203,13 @@ export default function AdminPage() {
     setDisparando(acao)
     setResultadoTrigger(null)
 
-    // coletar-leads-cnae roda via GitHub Actions (sem limite de tempo, IP brasileiro)
-    if (acao === 'coletar-leads-cnae') {
-      const res = await fetch('/api/admin/trigger-github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflow: 'coletar-leads-rfb.yml' }) })
+    // Ações que rodam via GitHub Actions (sem limite de tempo)
+    const githubWorkflows: Record<string, string> = {
+      'coletar-leads-cnae': 'coletar-leads-rfb.yml',
+      'enriquecer-receita': 'enriquecer-receita.yml',
+    }
+    if (githubWorkflows[acao]) {
+      const res = await fetch('/api/admin/trigger-github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflow: githubWorkflows[acao] }) })
       setResultadoTrigger({ ok: res.ok, status: res.status, data: await res.json() })
       setDisparando(null)
       return
