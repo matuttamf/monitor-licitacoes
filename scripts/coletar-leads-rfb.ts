@@ -44,9 +44,60 @@ const RF_BASE = `https://arquivos.receitafederal.gov.br/public.php/dav/files/Ygg
 const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 const COL_EMP = { BASICO: 0, RAZAO: 1 }
 
+// Seed amplo: top CNAEs em licitações públicas brasileiras (~200 códigos)
 const CNAE_SEED = new Set([
-  '4789005','6209100','8121400','4322301','4330404',
-  '4744001','4771701','4754701','8111700','5250801',
+  // TI e Software
+  '6201500','6202300','6203100','6204000','6209100','6311900','6312600','6190601','6190699',
+  // Limpeza e conservação
+  '8121400','8122200','8129000','8111700',
+  // Segurança
+  '8011101','8011102','8012900',
+  // Construção civil
+  '4120400','4211101','4211102','4212000','4213800','4221901','4221902','4222701','4222702',
+  '4223500','4291000','4292801','4292802','4299501','4299502','4299599',
+  // Reforma e instalações
+  '4311801','4311802','4312600','4313400','4319300','4321500','4322301','4322302','4322399',
+  '4329101','4329102','4329103','4329104','4329105','4330404','4330405','4391600','4399101',
+  // Elétrica
+  '4321500',
+  // Móveis e equipamentos
+  '3101200','3102100','3103900','3104700','3105100','3109800','4754701','4756300',
+  // Material de construção
+  '4744001','4744002','4744003','4744004','4744005','4744006','4744099',
+  // Saúde e medicina
+  '8630501','8630502','8630503','8630504','8630506','8630507','8630508','8650001','8650002',
+  '8650003','8650004','8650099','8640201','8640202','8660700',
+  // Laboratório e equipamentos médicos
+  '4645101','4645102','4773300','4789005',
+  // Alimentação
+  '5611201','5611202','5611203','5612100','4721101','4721102','4721103','4722901','4722902',
+  // Transporte e logística
+  '4921301','4921302','4922101','4922102','4922103','4930201','4930202','4950700','5229099',
+  '5250801','5250802','4912401','4912402','4929901','4929902','4929903','4929904','4929999',
+  // Impressão e gráfica
+  '1811301','1811302','1812100','1813099',
+  // Papelaria e escritório
+  '4761001','4761002','4761003','4763601','4763602','4763603','4763604','4763605','4763699',
+  // Combustível
+  '4731800','4732600',
+  // Uniformes e vestuário
+  '1412601','1412602','4781400','4782201','4782202',
+  // Consultoria e engenharia
+  '7111100','7112000','7119701','7119703','7119799','7490101','7490104','7490199',
+  // Jardinagem e paisagismo
+  '8130300',
+  // Manutenção e reparação
+  '3311200','3312101','3312102','3312103','3312104','3313901','3313902','3314700','3319800',
+  // Eventos e comunicação
+  '8230001','8230002','9001901','9001902','9001903','7319001','7319002','7319003','7319099',
+  // Telecomunicações
+  '6110801','6110802','6110803','6120501','6120502','6130200','6141800','6142600','6143400',
+  // Energia e utilidades
+  '3511501','3511502','3512300','3513100','3600601','3600602',
+  // Educação e treinamento
+  '8512100','8513900','8520100','8531700','8532500','8541400','8542200','8550301','8550302',
+  // Outros serviços frequentes
+  '6920601','6920602','6911701','6911702','6912500','7020400','7410202','7500100',
 ])
 
 // ── Validação de e-mail ───────────────────────────────────────────────────────
@@ -107,21 +158,22 @@ const CNAE_POR_SEGMENTO: Record<string, string[]> = {
 }
 
 async function getTargetCnaes(): Promise<Set<string>> {
-  // Top 200 CNAEs dos leads já coletados via licitações/contratos (coluna 'cnae', excluindo origem='cnae')
+  // Top 200 CNAEs por frequência nos leads (coluna cnae_codigo — código numérico 7 dígitos)
   const { data: leadsData } = await supabase
     .from('leads')
-    .select('cnae')
-    .not('cnae', 'is', null)
+    .select('cnae_codigo')
+    .not('cnae_codigo', 'is', null)
     .neq('origem', 'cnae')
     .limit(50000)
   const counts: Record<string, number> = {}
-  for (const r of (leadsData ?? []) as { cnae: string | null }[]) {
-    const code = String(r.cnae).replace(/\D/g,'').slice(0,7)
+  for (const r of (leadsData ?? []) as { cnae_codigo: string | null }[]) {
+    const code = String(r.cnae_codigo).replace(/\D/g,'').slice(0,7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
-  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
-  const todos = top.length >= 10 ? new Set(top) : CNAE_SEED
-  console.log(`  CNAEs-alvo: ${todos.size} (de licitações/contratos)`)
+  const top200 = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
+  // Sempre inclui o seed amplo para garantir cobertura mesmo com base escassa
+  const todos = new Set([...top200, ...CNAE_SEED])
+  console.log(`  CNAEs-alvo: ${todos.size} (${top200.length} da base + seed)`)
   return todos
 }
 

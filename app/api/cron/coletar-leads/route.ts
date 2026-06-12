@@ -332,8 +332,10 @@ export async function GET(req: NextRequest) {
     brasilApiOk++
     trackEnrichment()
 
-    const emailRaw = dados.email?.trim()
-    const cnae     = dados.cnae_fiscal_descricao ?? null
+    const emailRaw  = dados.email?.trim()
+    const cnae      = dados.cnae_fiscal_descricao ?? null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cnae_codigo = String((dados as any).cnae_fiscal ?? '').replace(/\D/g, '') || null
     const ativa    = dados.situacao_cadastral === 2
 
     if (!ativa) {
@@ -342,7 +344,7 @@ export async function GET(req: NextRequest) {
       await supabase.from('leads').update({
         razao_social:  dados.razao_social,
         situacao:      dados.descricao_situacao_cadastral ?? 'INATIVA',
-        cnae, porte: dados.porte ?? null,
+        cnae, cnae_codigo, porte: dados.porte ?? null,
         status: 'invalido',
       }).eq('cnpj', cnpj).is('situacao', null)  // só se ainda não verificada
       situacaoAtualizada++
@@ -374,7 +376,7 @@ export async function GET(req: NextRequest) {
       uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? null,
       situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
       porte:         dados.porte ?? null,
-      cnae, segmento: mapearSegmento(cnae), modalidade,
+      cnae, cnae_codigo, segmento: mapearSegmento(cnae), modalidade,
       status:        emailRaw ? 'pendente' : 'invalido',
     }).eq('cnpj', cnpj)
     if (!error) {
