@@ -237,7 +237,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
   const followupCopy = COPY_FOLLOWUP[numeroEmail]
 
   const campanha = isFollowup ? `followup${numeroEmail}` : 'trial7d'
-  const ctaDest = `${url}/cadastro?utm_source=captacao&utm_medium=email&utm_campaign=${campanha}&utm_content=${setor}`
+  const ctaDest = `${url}/cadastro?ref=captacao-email&utm_source=captacao&utm_medium=email&utm_campaign=${campanha}&utm_content=${setor}`
   const ctaHref = p.id
     ? `${url}/api/track/click/${p.id}?url=${encodeURIComponent(ctaDest)}`
     : ctaDest
