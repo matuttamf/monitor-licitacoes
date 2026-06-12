@@ -147,6 +147,12 @@ export default function CampanhasPage() {
     carregar()
   }
 
+  async function excluirCampanha(c: Campanha) {
+    if (!confirm(`Excluir campanha "${c.nome}"? O histórico de atribuição é preservado.`)) return
+    await fetch(`/api/admin/campanhas?id=${c.id}`, { method: 'DELETE' })
+    carregar()
+  }
+
   async function toggleAtivo(c: Campanha) {
     await fetch('/api/admin/campanhas', {
       method: 'PATCH',
@@ -313,6 +319,7 @@ export default function CampanhasPage() {
                         <button onClick={() => toggleAtivo(c)} style={{ fontSize: '11px', padding: '4px 9px', borderRadius: '7px', background: c.ativo ? 'rgba(239,68,68,0.07)' : 'rgba(16,185,129,0.1)', color: c.ativo ? '#ef4444' : '#10b981', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                           {c.ativo ? 'Pausar' : 'Ativar'}
                         </button>
+                        <button onClick={() => excluirCampanha(c)} style={{ fontSize: '11px', padding: '4px 9px', borderRadius: '7px', background: 'rgba(100,116,139,0.08)', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Excluir</button>
                       </div>
                     </div>
 
