@@ -359,12 +359,12 @@ export default function LandingPage() {
                 )}
 
                 {/* Nome + descrição */}
-                <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 ${p.destaque ? 'text-[#C9A65A]' : p.id === 'profissional' ? 'text-[#6B0F1A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
-                <div className={`text-xs mb-4 leading-snug ${p.destaque ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
+                <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 text-center ${p.destaque ? 'text-[#C9A65A]' : p.id === 'profissional' ? 'text-[#6B0F1A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
+                <div className={`text-xs mb-4 leading-snug text-center ${p.destaque ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
 
                 {/* Preço */}
                 {p.preco ? (
-                  <div className="flex items-end gap-1 mb-1">
+                  <div className="flex items-end gap-1 mb-1 justify-center">
                     <span className={`text-xs font-medium mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
                     <span className={`text-[32px] font-black tracking-tight leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
                       {p.preco.split(',')[0]}
@@ -373,12 +373,12 @@ export default function LandingPage() {
                     <span className={`text-[11px] mb-1 ${p.destaque ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
                   </div>
                 ) : (
-                  <div className="flex items-end gap-1 mb-1">
+                  <div className="flex items-end gap-1 mb-1 justify-center">
                     <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
                   </div>
                 )}
 
-                <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded inline-block w-fit ${
+                <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded text-center ${
                   p.destaque
                     ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]'
                     : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
@@ -389,7 +389,7 @@ export default function LandingPage() {
                 {/* Features */}
                 <div className="flex-1 mb-5 space-y-2.5">
                   {p.features.map(f => (
-                    <div key={f.text} className="flex items-start gap-2">
+                    <div key={f.text} className="flex items-start gap-2 justify-center">
                       <span className={`font-bold text-sm shrink-0 mt-0.5 ${p.destaque ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
                       <span className={`text-xs leading-snug ${
                         p.destaque
