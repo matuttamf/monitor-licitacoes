@@ -56,9 +56,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Equipe visível apenas para owners de planos Pro/Empresarial
   const exibirEquipe = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
-  // Radar visível para Pro/Empresarial (owners e membros herdam do owner)
+  // Radar visível para Pro/Empresarial (owners e membros herdam do owner); admin vê sempre
   const planoEfetivo = profile?.plano ?? 'basic'
-  const exibirRadar  = temRadar(planoEfetivo)
+  const exibirRadar  = isAdmin || temRadar(planoEfetivo)
 
   const allNavItems: { href: string; label: string; icon: string; sub?: boolean }[] = [
     ...navItems,
