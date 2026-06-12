@@ -61,11 +61,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const exibirRadar        = isAdmin || temRadar(planoEfetivo)
   const exibirFornecedores = isAdmin || temFornecedores(planoEfetivo)
 
-  const allNavItems: { href: string; label: string; icon: string; sub?: boolean; badge?: string }[] = [
+  const allNavItems: { href: string; label: string; icon: string; sub?: boolean; badge?: string; locked?: boolean; planoNecessario?: string }[] = [
     ...navItems,
-    ...(exibirRadar        ? [{ href: '/radar',        label: 'Radar',        icon: '🎯' }] : []),
-    ...(exibirFornecedores ? [{ href: '/fornecedores', label: 'Fornecedores', icon: '🏭', badge: 'Novo' }] : []),
-    ...(exibirEquipe       ? [{ href: '/equipe',       label: 'Minha Equipe', icon: '◫' }] : []),
+    exibirRadar
+      ? { href: '/radar',        label: 'Radar',        icon: '🎯' }
+      : { href: '/radar',        label: 'Radar',        icon: '🎯', locked: true, planoNecessario: 'Profissional' },
+    exibirFornecedores
+      ? { href: '/fornecedores', label: 'Fornecedores', icon: '🏭', badge: 'Novo' }
+      : { href: '/fornecedores', label: 'Fornecedores', icon: '🏭', locked: true, planoNecessario: 'Profissional' },
+    exibirEquipe
+      ? { href: '/equipe',       label: 'Minha Equipe', icon: '◫' }
+      : { href: '/equipe',       label: 'Minha Equipe', icon: '◫', locked: true, planoNecessario: 'Pro' },
     ...(user.email === ADMIN_EMAIL ? [
       { href: '/admin',               label: 'Admin',          icon: '⚙' },
       { href: '/admin/campanhas',     label: '↳ Campanhas',    icon: '📣', sub: true },
@@ -118,7 +124,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-0.5">
           {allNavItems.map(item => (
-            <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} sub={item.sub} badge={item.badge} />
+            <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} sub={item.sub} badge={item.badge} locked={item.locked} planoNecessario={item.planoNecessario} />
           ))}
         </nav>
 
