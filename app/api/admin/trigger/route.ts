@@ -60,6 +60,7 @@ export async function POST(request: Request) {
     emails:            `${baseUrl}/api/cron/emails-trial`,
     'expirar-trials':  `${baseUrl}/api/cron/expirar-trials`,
     'coletar-leads':               `${baseUrl}/api/cron/coletar-leads`,
+    'coletar-leads-cnae':          `${baseUrl}/api/cron/coletar-leads-cnae`,
     'coletar-participantes':       `${baseUrl}/api/cron/coletar-participantes`,
     'coletar-leads-transparencia': `${baseUrl}/api/cron/coletar-leads-transparencia`,
     'enriquecer-emails':           `${baseUrl}/api/cron/enriquecer-emails`,
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
     'coletar-participantes':         'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
     'coletar-leads-transparencia':  'Coleta Portal Transparência disparada em background. Verifique os leads em breve.',
     'coletar-leads':                'Coleta de leads PNCP disparada em background (~5 min). Verifique os leads em breve.',
+    'coletar-leads-cnae':           'Coleta CNAE via Storage disparada em background. Verifique os leads em breve.',
   }
   const fireAndForget = acao in MSGS_BACKGROUND
 
