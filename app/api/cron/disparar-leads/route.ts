@@ -122,9 +122,9 @@ export async function GET(req: NextRequest) {
   if (cfgCaptacao.data && (cfgCaptacao.data.valor === false || cfgCaptacao.data.valor === 'false')) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'sistema pausado' })
   }
-  // Ativo por padrão — só pausa quando admin define explicitamente como false
-  const disparoPausado = cfgDisparo.data?.valor === false || cfgDisparo.data?.valor === 'false'
-  if (disparoPausado) {
+  // Opt-in: só envia se explicitamente true — null/inexistente = pausado (consistente com a UI)
+  const disparoAtivo = cfgDisparo.data?.valor === true || cfgDisparo.data?.valor === 'true'
+  if (!disparoAtivo) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'disparo pausado pelo admin' })
   }
 
