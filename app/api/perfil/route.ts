@@ -9,7 +9,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from('profiles')
-    .select('nome, telefone, whatsapp, empresa, telegram_chat_id, min_valor_interesse, max_valor_interesse, emails_por_dia, itens_por_email, plano, status, trial_fim, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
+    .select('nome, telefone, whatsapp, empresa, cnpj, telegram_chat_id, min_valor_interesse, max_valor_interesse, emails_por_dia, itens_por_email, plano, status, trial_fim, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
     .eq('id', user.id)
     .single()
 

@@ -24,6 +24,7 @@ type Perfil = {
   nome: string
   email: string
   empresa: string
+  cnpj: string
   telefone: string
   whatsapp: string
   telegram_chat_id: string
@@ -40,7 +41,7 @@ type Perfil = {
 }
 
 export default function PerfilPage() {
-  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', status: 'trial', trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
+  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', cnpj: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', status: 'trial', trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
   const [salvandoAlerta, setSalvandoAlerta] = useState(false)
   const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [pausandoCanal, setPausandoCanal] = useState<string | null>(null)
@@ -60,45 +61,43 @@ export default function PerfilPage() {
   const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'monitorlic_bot'
 
   useEffect(() => {
-    fetch('/api/fornecedor')
-      .then(r => r.json())
-      .then(d => {
-        if (d) setFornecedor({
-          ativo:            d.ativo ?? false,
-          razao_social:     d.razao_social ?? '',
-          cnpj:             d.cnpj ?? '',
-          descricao:        d.descricao ?? '',
-          regioes:          d.regioes ?? [],
-          email_contato:    d.email_contato ?? '',
-          telefone_contato: d.telefone_contato ?? '',
-          website:          d.website ?? '',
-        })
+    Promise.all([
+      fetch('/api/fornecedor').then(r => r.json()).catch(() => null),
+      fetch('/api/perfil').then(r => r.json()).catch(() => null),
+    ]).then(([forn, prof]) => {
+      const cnpjPerfil = prof?.cnpj ?? ''
+      if (forn) setFornecedor({
+        ativo:            forn.ativo ?? false,
+        razao_social:     forn.razao_social ?? '',
+        cnpj:             forn.cnpj || cnpjPerfil,
+        descricao:        forn.descricao ?? '',
+        regioes:          forn.regioes ?? [],
+        email_contato:    forn.email_contato ?? '',
+        telefone_contato: forn.telefone_contato ?? '',
+        website:          forn.website ?? '',
       })
-      .catch(() => {})
+      else setFornecedor(prev => ({ ...prev, cnpj: cnpjPerfil }))
+      if (prof) setPerfil({
+        nome:                prof.nome ?? '',
+        email:               prof.email ?? '',
+        empresa:             prof.empresa ?? '',
+        cnpj:                prof.cnpj ?? '',
+        telefone:            prof.telefone ?? '',
+        whatsapp:            prof.whatsapp ?? '',
+        telegram_chat_id:    prof.telegram_chat_id ?? '',
+        min_valor_interesse: prof.min_valor_interesse ?? 0,
+        max_valor_interesse: prof.max_valor_interesse ?? 0,
+        emails_por_dia:      prof.emails_por_dia  ?? 5,
+        itens_por_email:     prof.itens_por_email ?? ((['basic','trial'].includes(prof.plano ?? 'trial')) ? 10 : 20),
+        plano:               prof.plano ?? 'basic',
+        status:              prof.status ?? 'trial',
+        trial_fim:           prof.trial_fim ?? null,
+        email_pausado_ate:   prof.email_pausado_ate ?? null,
+        telegram_pausado_ate: prof.telegram_pausado_ate ?? null,
+        whatsapp_pausado_ate: prof.whatsapp_pausado_ate ?? null,
+      })
+    }).finally(() => setCarregando(false))
 
-    fetch('/api/perfil')
-      .then(r => r.json())
-      .then(d => {
-        setPerfil({
-          nome:                d.nome ?? '',
-          email:               d.email ?? '',
-          empresa:             d.empresa ?? '',
-          telefone:            d.telefone ?? '',
-          whatsapp:            d.whatsapp ?? '',
-          telegram_chat_id:    d.telegram_chat_id ?? '',
-          min_valor_interesse: d.min_valor_interesse ?? 0,
-          max_valor_interesse: d.max_valor_interesse ?? 0,
-          emails_por_dia:        d.emails_por_dia  ?? 5,
-          itens_por_email:       d.itens_por_email ?? ((['basic','trial'].includes(d.plano ?? 'trial')) ? 10 : 20),
-          plano:                 d.plano ?? 'basic',
-          status:                d.status ?? 'trial',
-          trial_fim:             d.trial_fim ?? null,
-          email_pausado_ate:     d.email_pausado_ate ?? null,
-          telegram_pausado_ate:  d.telegram_pausado_ate ?? null,
-          whatsapp_pausado_ate:  d.whatsapp_pausado_ate ?? null,
-        })
-      })
-      .finally(() => setCarregando(false))
   }, [])
 
   async function salvar(e: React.FormEvent) {
@@ -156,6 +155,29 @@ export default function PerfilPage() {
         ? prev.regioes.filter(x => x !== r)
         : [...prev.regioes, r],
     }))
+  }
+
+  function camposFaltando(): string[] {
+    const falta: string[] = []
+    if (!fornecedor.razao_social.trim()) falta.push('Razão Social')
+    if (!fornecedor.cnpj.trim())         falta.push('CNPJ')
+    if (!fornecedor.descricao.trim())    falta.push('Descrição')
+    if (fornecedor.regioes.length === 0) falta.push('ao menos 1 região')
+    if (!fornecedor.email_contato.trim()) falta.push('E-mail de contato')
+    if (!fornecedor.telefone_contato.trim()) falta.push('Telefone')
+    return falta
+  }
+
+  function handleToggleAtivo() {
+    if (!fornecedor.ativo) {
+      const falta = camposFaltando()
+      if (falta.length > 0) {
+        setFornecedorMsg({ tipo: 'erro', texto: `Preencha antes de publicar: ${falta.join(', ')}.` })
+        return
+      }
+    }
+    setFornecedorMsg(null)
+    setFornecedor(prev => ({ ...prev, ativo: !prev.ativo }))
   }
 
   async function salvarTelegram(e: React.FormEvent) {
@@ -441,7 +463,7 @@ export default function PerfilPage() {
             </div>
             <button
               type="button"
-              onClick={() => setFornecedor(prev => ({ ...prev, ativo: !prev.ativo }))}
+              onClick={handleToggleAtivo}
               className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
               style={{ background: fornecedor.ativo ? 'var(--vinho)' : 'var(--cinza-light)', border: 'none', cursor: 'pointer' }}
             >
@@ -462,16 +484,18 @@ export default function PerfilPage() {
               style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
           </div>
 
-          {/* CNPJ */}
+          {/* CNPJ — bloqueado ao CNPJ do cadastro */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              CNPJ <span className="normal-case font-normal" style={{ opacity: 0.6 }}>(opcional)</span>
+              CNPJ
+              <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>
+                {fornecedor.cnpj ? '(preenchido a partir do seu cadastro)' : '(cadastre seu CNPJ no perfil primeiro)'}
+              </span>
             </label>
-            <input type="text" value={fornecedor.cnpj}
-              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: e.target.value }))}
-              placeholder="00.000.000/0001-00"
+            <input type="text" value={fornecedor.cnpj} readOnly
+              placeholder="Preencha o CNPJ no perfil"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'var(--surface-2)', color: 'var(--preto)', outline: 'none', cursor: 'default' }} />
           </div>
 
           {/* Descrição */}
