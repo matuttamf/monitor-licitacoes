@@ -165,6 +165,20 @@ async function downloadComRetry(url: string, tmpPath: string, tentativas = 5): P
       const res = await fetch(url, { headers })
       if (!res.ok || !res.body) {
         console.error(`  HTTP ${res.status}`)
+        // 416 = arquivo local maior/igual ao remoto (RF atualizou) — recomeça do zero
+        if (res.status === 416) {
+          if (existsSync(tmpPath)) { unlinkSync(tmpPath); console.log('  Arquivo local removido, reiniciando download') }
+          bytesJaBaixados = 0
+          delete headers['Range']
+          const res2 = await fetch(url, { headers })
+          if (!res2.ok || !res2.body) { console.error(`  HTTP ${res2.status} na segunda tentativa`); return false }
+          const cl = res2.headers.get('content-length')
+          if (cl) console.log(`  Tamanho: ${(Number(cl) / 1024 / 1024).toFixed(0)} MB`)
+          const writer2 = createWriteStream(tmpPath, { flags: 'w' })
+          await pipeline(res2.body as unknown as NodeJS.ReadableStream, writer2)
+          console.log(`  ✓ Download concluído`)
+          return true
+        }
         if (t < tentativas) { await new Promise(r => setTimeout(r, 10000 * t)); continue }
         return false
       }
