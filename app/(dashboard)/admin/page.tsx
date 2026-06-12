@@ -255,80 +255,24 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ── Sistema de Captação ── */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #6B0F1A 0%, #3d0a10 100%)', border: '1px solid rgba(201,166,90,0.3)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-sm font-bold text-white mb-1">🎯 Sistema de Captação</h2>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Coleta automática de leads via PNCP · Disparo de e-mails · Reconversão de trials expirados · Controle liga/desliga
-            </p>
-          </div>
-          <a
-            href="/admin/captacao"
-            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
-            style={{ background: '#C9A65A', color: '#1A1A1C' }}
-          >
-            Gerenciar captação →
+      {/* ── Módulos ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px', marginBottom: '24px' }}>
+        {[
+          { href: '/admin/financeiro',   icon: '💰', label: 'Financeiro',   desc: 'MRR · Assinantes · NF',                  cor: '#10b981', bg: 'rgba(16,185,129,0.06)',  border: 'rgba(16,185,129,0.2)'  },
+          { href: '/admin/campanhas',    icon: '📣', label: 'Campanhas',    desc: 'UTM · Influenciadores · Comissões',        cor: '#8b5cf6', bg: 'rgba(139,92,246,0.06)', border: 'rgba(139,92,246,0.2)' },
+          { href: '/admin/captacao',     icon: '🎯', label: 'Captação',     desc: 'Leads · Disparo · Reconversão',            cor: '#C9A65A', bg: 'rgba(201,166,90,0.06)', border: 'rgba(201,166,90,0.2)' },
+          { href: '/admin/inteligencia', icon: '📊', label: 'Inteligência', desc: 'Gráficos · Fontes · Timeline',             cor: '#3b82f6', bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.2)' },
+          { href: '/admin/saude',        icon: '🏥', label: 'Saúde',        desc: 'Status jobs · Erros · Monitoramento',      cor: '#f97316', bg: 'rgba(249,115,22,0.06)', border: 'rgba(249,115,22,0.2)'  },
+        ].map(({ href, icon, label, desc, cor, bg, border }) => (
+          <a key={href} href={href} style={{ textDecoration: 'none', display: 'block', padding: '14px 16px', borderRadius: '14px', background: bg, border: `1px solid ${border}`, transition: 'opacity .15s' }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '16px' }}>{icon}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: cor }}>{label}</span>
+            </div>
+            <p style={{ fontSize: '11px', color: 'var(--cinza)', margin: 0, lineHeight: 1.4 }}>{desc}</p>
           </a>
-        </div>
-      </div>
-
-      {/* ── Painel de Inteligência ── */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2040 100%)', border: '1px solid rgba(59,130,246,0.3)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-sm font-bold text-white mb-1">📊 Painel de Inteligência</h2>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Licitações por estado · Por fonte · Timeline 30 dias · Top órgãos · Distribuição de valores · Leads por segmento e UF
-            </p>
-          </div>
-          <a
-            href="/admin/inteligencia"
-            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
-            style={{ background: '#3b82f6', color: '#fff' }}
-          >
-            Ver inteligência →
-          </a>
-        </div>
-      </div>
-
-      {/* ── Financeiro ── */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)', border: '1px solid rgba(16,185,129,0.3)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-sm font-bold text-white mb-1">💰 Financeiro</h2>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              MRR · ARR · Assinantes · Planos · Ticket médio · Bloqueios · Dados para NF
-            </p>
-          </div>
-          <a
-            href="/admin/financeiro"
-            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
-            style={{ background: '#34d399', color: '#064e3b' }}
-          >
-            Ver financeiro →
-          </a>
-        </div>
-      </div>
-
-      {/* ── Campanhas & Marketing ── */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #2e1065 100%)', border: '1px solid rgba(139,92,246,0.3)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-sm font-bold text-white mb-1">📣 Campanhas & Marketing</h2>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Influenciadores · Meta · Google · UTM tracking · Comissões · Taxa de conversão por origem
-            </p>
-          </div>
-          <a
-            href="/admin/campanhas"
-            className="px-5 py-2.5 rounded-xl text-sm font-bold no-underline"
-            style={{ background: '#a78bfa', color: '#2e1065' }}
-          >
-            Ver campanhas →
-          </a>
-        </div>
+        ))}
       </div>
 
       {/* ── Configurações ── */}

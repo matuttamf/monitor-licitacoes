@@ -46,7 +46,10 @@ export async function GET() {
 
   const hoje = new Date()
 
-  const assinantes = (profiles ?? []).map(p => {
+  // Admin não é assinante — excluir das métricas financeiras
+  const profilesSemAdmin = (profiles ?? []).filter(p => emailMap[p.id] !== ADMIN_EMAIL)
+
+  const assinantes = profilesSemAdmin.map(p => {
     const preco = p.valor_mensalidade ?? PRECOS[p.plano ?? ''] ?? null
     const email = emailMap[p.id] ?? ''
     const trialExpirado = p.status === 'trial' && p.trial_fim && new Date(p.trial_fim) < hoje
@@ -83,31 +86,35 @@ export async function GET() {
     }
   })
 
-  const pagantes  = assinantes.filter(a => a.status === 'active')
-  const trials    = assinantes.filter(a => a.status === 'trial')
-  const expirados = assinantes.filter(a => a.status === 'expired' || a.status === 'bloqueado')
+  const pagantes         = assinantes.filter(a => a.status === 'active')
+  const trials           = assinantes.filter(a => a.status === 'trial')
+  // "expirados" = trials que não converteram + assinaturas encerradas + bloqueados financeiros
+  const expirados        = assinantes.filter(a => a.status === 'expired' || a.status === 'bloqueado')
+  const trialsNaoConvert = expirados.filter(a => !a.mp_subscription_id && !a.assinatura_inicio)
 
   const mrr = pagantes.reduce((acc, a) => acc + (a.valor_mensalidade ?? 0), 0)
 
-  // Churn: trials que expiraram sem converter (últimos 30 dias)
+  // Churn: assinaturas pagas que encerraram nos últimos 30 dias
   const h30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  const expiradosRecentes = expirados.filter(a =>
-    a.trial_fim && new Date(a.trial_fim) >= h30 && !a.mp_subscription_id
+  const churnMensal = expirados.filter(a =>
+    a.assinatura_inicio && a.trial_fim && new Date(a.trial_fim) >= h30
   ).length
 
-  // Conversão: quantos trials viraram assinantes no total
+  // Conversão: (pagantes atuais) / (pagantes + trials que nunca converteram)
   const totalConvertidos = pagantes.length
-  const totalTrials      = totalConvertidos + expirados.filter(a => !a.mp_subscription_id).length
+  const totalTrials      = totalConvertidos + trialsNaoConvert.length
 
   const kpis = {
     mrr,
-    arr:             mrr * 12,
-    totalPagantes:   pagantes.length,
-    totalTrials:     trials.length,
-    totalExpirados:  expirados.length,
-    ticketMedio:     pagantes.length ? mrr / pagantes.length : 0,
-    churnMensal:     expiradosRecentes,
-    taxaConversao:   totalTrials ? Math.round((totalConvertidos / totalTrials) * 100) : 0,
+    arr:                  mrr * 12,
+    totalPagantes:        pagantes.length,
+    totalTrials:          trials.length,
+    // trials que fizeram cadastro mas nunca assinaram (sem histórico de mp)
+    totalTrialsNaoConvert: trialsNaoConvert.length,
+    totalExpirados:       expirados.length,
+    ticketMedio:          pagantes.length ? mrr / pagantes.length : 0,
+    churnMensal,
+    taxaConversao:        totalTrials ? Math.round((totalConvertidos / totalTrials) * 100) : 0,
     receitaPorPlano: Object.entries(PRECOS).map(([plano, preco]) => ({
       plano,
       count:   pagantes.filter(a => a.plano === plano).length,
