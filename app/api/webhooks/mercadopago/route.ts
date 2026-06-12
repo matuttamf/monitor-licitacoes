@@ -6,16 +6,18 @@ import { Resend } from 'resend'
 import { emailConfirmacaoAssinatura } from '@/lib/emails/confirmacao-assinatura'
 
 const PRECOS_PLANO: Record<string, number> = {
-  basic:        97,
-  profissional: 197,
-  pro:          297,
-  empresarial:  497,
+  basic:        49.90,
+  profissional: 97.90,
+  gestao:       197.90,
+  pro:          197.90,  // retrocompatibilidade
+  empresarial:  497.00,
 }
 
 const PLANOS_MP: Record<string, number> = {
   basic:        49.90,
   profissional: 97.90,
-  pro:          197.90,
+  gestao:       197.90,
+  pro:          197.90,  // retrocompatibilidade
   empresarial:  497.00,
 }
 

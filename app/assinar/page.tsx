@@ -18,14 +18,16 @@ const PLANOS = [
     nome: 'Profissional',
     preco: '97,90',
     destaque: false,
+    popular: true,
     descricao: 'Para quem fornece ativamente ao governo',
     itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', 'Suporte via WhatsApp'],
   },
   {
-    id: 'pro',
-    nome: 'Pro',
+    id: 'gestao',
+    nome: 'Gestão',
     preco: '197,90',
     destaque: true,
+    popular: false,
     descricao: 'Para equipes comerciais',
     itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', 'Suporte prioritário via WhatsApp'],
   },
@@ -156,9 +158,14 @@ function AssinarConteudo() {
                 : 'bg-white border border-[#D5D2C8] shadow-[0_4px_20px_rgba(0,0,0,0.06)]'
             }`}
           >
+            {p.popular && (
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#6B0F1A] text-[#C9A65A] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap border border-[#C9A65A]">
+                🔥 MAIS POPULAR
+              </div>
+            )}
             {p.destaque && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
-                ⭐ MAIS POPULAR
+                ⭐ RECOMENDADO
               </div>
             )}
 

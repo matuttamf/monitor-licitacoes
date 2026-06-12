@@ -21,8 +21,8 @@ const PLANOS = [
     itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Suporte via WhatsApp'],
   },
   {
-    id: 'pro',
-    nome: 'Pro',
+    id: 'gestao',
+    nome: 'Gestão',
     preco: '197,90',
     destaque: true,
     descricao: 'Para equipes comerciais',

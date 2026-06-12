@@ -9,13 +9,14 @@ export interface LimitesPlano {
 export const LIMITES_PLANO: Record<string, LimitesPlano> = {
   basic:        { maxKeywords: 20,    maxUsers: 1,  nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
   profissional: { maxKeywords: 99999, maxUsers: 1,  nome: 'Profissional', maxEmailsPorDia: 5, maxItensPorEmail: 10 },
-  pro:          { maxKeywords: 99999, maxUsers: 5,  nome: 'Pro',          maxEmailsPorDia: 5, maxItensPorEmail: 10 },
+  gestao:       { maxKeywords: 99999, maxUsers: 5,  nome: 'Gestão',       maxEmailsPorDia: 5, maxItensPorEmail: 10 },
   empresarial:  { maxKeywords: 99999, maxUsers: 15, nome: 'Empresarial',  maxEmailsPorDia: 5, maxItensPorEmail: 10 },
 }
 
 /** trial = acesso completo por 7 dias (mesmo limite do basic) */
 export function getLimites(plano: string): LimitesPlano {
   if (plano === 'trial') return { ...LIMITES_PLANO.basic }
+  if (plano === 'pro') return { ...LIMITES_PLANO.gestao }  // retrocompatibilidade
   return LIMITES_PLANO[plano] ?? LIMITES_PLANO.basic
 }
 
@@ -23,14 +24,14 @@ export function temMultiUsuario(plano: string): boolean {
   return getLimites(plano).maxUsers > 1
 }
 
-/** WhatsApp disponível apenas para Profissional, Pro e Empresarial */
+/** WhatsApp disponível apenas para Profissional, Gestão e Empresarial */
 export function temWhatsApp(plano: string): boolean {
-  return ['profissional', 'pro', 'empresarial'].includes(plano)
+  return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
 }
 
-/** Radar de Inteligência disponível para Profissional, Pro e Empresarial */
+/** Radar de Inteligência disponível para Profissional, Gestão e Empresarial */
 export function temRadar(plano: string): boolean {
-  return ['profissional', 'pro', 'empresarial'].includes(plano)
+  return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
 }
 
 /** Horários BRT por quantidade de e-mails/dia (sem 7 e 9) */

@@ -485,8 +485,8 @@ ${kpiCards}
           <select value={filtroPlano} onChange={e => setFiltroPlano(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', outline: 'none', color: 'var(--preto)', background: 'white' }}>
             <option value="todos">Todos os planos</option>
-            {['basic','profissional','pro','empresarial'].map(p => (
-              <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+            {[['basic','Basic'],['profissional','Profissional'],['gestao','Gestão'],['empresarial','Empresarial']].map(([v,l]) => (
+              <option key={v} value={v}>{l}</option>
             ))}
           </select>
           <select value={ordem} onChange={e => setOrdem(e.target.value as 'novo' | 'antigo')}
@@ -740,8 +740,8 @@ ${kpiCards}
                   content: (
                     <select value={editando.plano} onChange={e => setEditando({ ...editando, plano: e.target.value })}
                       style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                      {['basic','profissional','pro','empresarial'].map(p => (
-                        <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                      {[['basic','Basic'],['profissional','Profissional'],['gestao','Gestão'],['empresarial','Empresarial']].map(([v,l]) => (
+                        <option key={v} value={v}>{l}</option>
                       ))}
                     </select>
                   ),

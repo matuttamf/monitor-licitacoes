@@ -9,7 +9,8 @@ interface ParamsConfirmacao {
 const NOMES_PLANO: Record<string, string> = {
   basic:        'Basic',
   profissional: 'Profissional',
-  pro:          'Pro',
+  gestao:       'Gestão',
+  pro:          'Gestão',  // retrocompatibilidade
   empresarial:  'Empresarial',
 }
 

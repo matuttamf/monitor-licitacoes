@@ -741,7 +741,7 @@ export default function AdminPage() {
                                   🔒 Bloq. Admin
                                 </span>
                               )}
-                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{(['basic','profissional','pro','empresarial'].includes(u.plano) ? u.plano : 'basic')}</div>
+                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{(['basic','profissional','gestao','pro','empresarial'].includes(u.plano) ? (u.plano === 'pro' ? 'gestao' : u.plano) : 'basic')}</div>
                             </>
                           )}
                         </td>
@@ -929,7 +929,7 @@ export default function AdminPage() {
                 <select value={editando.plano ?? 'basic'} onChange={e => setEditando({ ...editando, plano: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl text-sm"
                   style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}>
-                  {['basic', 'profissional', 'pro', 'empresarial'].map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+                  {[['basic','Basic'],['profissional','Profissional'],['gestao','Gestão'],['empresarial','Empresarial']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
               <div>

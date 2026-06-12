@@ -8,7 +8,7 @@ const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   : process.env.MP_ACCESS_TOKEN_TEST!
 
 const PRECOS: Record<string, number> = {
-  basic: 49.90, profissional: 97.90, pro: 197.90, empresarial: 497.00,
+  basic: 49.90, profissional: 97.90, gestao: 197.90, pro: 197.90, empresarial: 497.00,
 }
 
 export const dynamic = 'force-dynamic'

@@ -7,7 +7,8 @@ import Link from 'next/link'
 const NOMES: Record<string, string> = {
   basic:        'Basic — R$49,90/mês',
   profissional: 'Profissional — R$97,90/mês',
-  pro:          'Pro — R$197,90/mês',
+  gestao:       'Gestão — R$197,90/mês',
+  pro:          'Gestão — R$197,90/mês',  // retrocompatibilidade
   empresarial:  'Empresarial — R$497/mês',
 }
 

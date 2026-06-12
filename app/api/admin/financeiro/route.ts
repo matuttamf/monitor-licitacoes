@@ -13,7 +13,8 @@ async function verificarAdmin() {
 const PRECOS: Record<string, number> = {
   basic:        49.90,
   profissional: 97.90,
-  pro:          197.90,
+  gestao:       197.90,
+  pro:          197.90,  // retrocompatibilidade
   empresarial:  497.00,
 }
 

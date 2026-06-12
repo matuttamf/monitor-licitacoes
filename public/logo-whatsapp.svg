@@ -1,0 +1,47 @@
+<svg width="640" height="640" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="680" fill="#6B0F1A"/>
+
+  <circle cx="340" cy="300" r="195" fill="none" stroke="#C9A65A" stroke-width="1.5" opacity="0.15"/>
+  <circle cx="340" cy="300" r="148" fill="none" stroke="#C9A65A" stroke-width="1" opacity="0.12"/>
+  <circle cx="340" cy="300" r="168" fill="none" stroke="#C9A65A" stroke-width="22" opacity="0.08"/>
+  <circle cx="340" cy="300" r="132" fill="rgba(201,166,90,0.07)" stroke="#C9A65A" stroke-width="1.5" opacity="0.3"/>
+
+  <line x1="340" y1="170" x2="340" y2="300" stroke="#C9A65A" stroke-width="3" opacity="0.5" stroke-linecap="round"/>
+  <line x1="340" y1="300" x2="435" y2="232" stroke="#C9A65A" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+  <line x1="340" y1="300" x2="260" y2="370" stroke="#C9A65A" stroke-width="1.5" opacity="0.2" stroke-linecap="round"/>
+
+  <polygon points="340,160 328,182 340,175 352,182" fill="#C9A65A" opacity="0.85"/>
+
+  <circle cx="340" cy="300" r="9" fill="#C9A65A" opacity="0.9"/>
+  <circle cx="340" cy="300" r="4" fill="#6B0F1A"/>
+
+  <circle cx="435" cy="232" r="5" fill="#C9A65A" opacity="0.6"/>
+  <circle cx="260" cy="370" r="3.5" fill="#C9A65A" opacity="0.35"/>
+  <circle cx="460" cy="310" r="2.5" fill="#C9A65A" opacity="0.25"/>
+
+  <text x="340" y="370" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="110"
+        font-weight="700"
+        fill="#C9A65A"
+        letter-spacing="-4"
+        opacity="0.97">ML</text>
+
+  <line x1="200" y1="430" x2="480" y2="430" stroke="#C9A65A" stroke-width="0.75" opacity="0.25"/>
+
+  <text x="340" y="490" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="22"
+        font-weight="400"
+        fill="#C9A65A"
+        letter-spacing="8"
+        opacity="0.65">MONITOR</text>
+
+  <text x="340" y="516" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="13"
+        font-weight="400"
+        fill="#C9A65A"
+        letter-spacing="5"
+        opacity="0.4">LICITAÇÕES</text>
+</svg>
