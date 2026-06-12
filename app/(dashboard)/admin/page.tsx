@@ -293,7 +293,18 @@ export default function AdminPage() {
         const jobsOk   = jobs.filter(([, v]) => v?.status === 'ok' || v?.status === 'sucesso').length
         const jobsErro = jobs.filter(([, v]) => v?.status === 'erro').length
         const jobsSem  = jobs.filter(([, v]) => !v).length
-        const ultimoLog = cronData?.logs[0] ?? null
+
+        // Últimas execuções por job, ordenadas pela mais recente
+        const jogsRecentes = jobs
+          .filter(([, v]) => !!v)
+          .sort(([, a], [, b]) => new Date((b!).criado_em).getTime() - new Date((a!).criado_em).getTime())
+          .slice(0, 6)
+          .map(([nome, v]) => ({
+            nome: JOB_LABELS[nome] ?? nome,
+            status: v!.status,
+            hora: fmtHora(v!.criado_em),
+            erro: v!.status === 'erro',
+          }))
 
         // Dados pré-calculados para Campanhas
         const campTotal    = prevCampanhas?.campanhas?.length ?? 0
@@ -312,6 +323,7 @@ export default function AdminPage() {
           chips: { label: string; val: string; cor: string }[]
           nota?: string
           notaCor?: string
+          lista?: { nome: string; status: string; hora: string; erro: boolean }[]
           vazio: boolean
           vazioMsg: string
         }
@@ -376,8 +388,7 @@ export default function AdminPage() {
               { label: 'Com erro',     val: cronData ? String(jobsErro)    : '—', cor: jobsErro > 0 ? '#ef4444' : 'var(--cinza)' },
               { label: 'Sem execução', val: cronData ? String(jobsSem)     : '—', cor: jobsSem  > 0 ? '#C9A65A' : 'var(--cinza)' },
             ],
-            nota:    ultimoLog ? `Último: ${JOB_LABELS[ultimoLog.job] ?? ultimoLog.job} · ${fmtHora(ultimoLog.criado_em)}` : undefined,
-            notaCor: 'var(--cinza)',
+            lista: jogsRecentes,
             vazio:   !cronData,
             vazioMsg: carregando ? 'Carregando…' : 'Sem dados',
           },
@@ -418,10 +429,34 @@ export default function AdminPage() {
                   ))}
                 </div>
 
-                {/* Nota/alerta (linha fixa para manter altura) */}
-                <div style={{ marginTop: '10px', fontSize: '10px', color: card.notaCor ?? 'transparent', minHeight: '14px', lineHeight: 1.3 }}>
-                  {card.nota ?? ''}
-                </div>
+                {/* Lista de execuções (Saúde) ou nota/alerta (demais) */}
+                {card.lista ? (
+                  <div style={{ marginTop: '10px' }}>
+                    {card.lista.map((item, i) => (
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '3px 0',
+                        borderTop: i > 0 ? '1px solid var(--cinza-light)' : undefined,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+                          <span style={{ fontSize: '8px', color: item.erro ? '#ef4444' : '#10b981', flexShrink: 0 }}>
+                            {item.erro ? '✕' : '✓'}
+                          </span>
+                          <span style={{
+                            fontSize: '10px', color: item.erro ? '#ef4444' : 'var(--preto)',
+                            fontWeight: item.erro ? 600 : 400,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>{item.nome}</span>
+                        </div>
+                        <span style={{ fontSize: '9px', color: 'var(--cinza)', flexShrink: 0, marginLeft: '4px' }}>{item.hora}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '10px', fontSize: '10px', color: card.notaCor ?? 'transparent', minHeight: '14px', lineHeight: 1.3 }}>
+                    {card.nota ?? ''}
+                  </div>
+                )}
               </a>
             ))}
           </div>
