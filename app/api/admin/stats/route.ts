@@ -51,8 +51,8 @@ export async function GET() {
       .gte('criado_em', new Date(Date.now() - 86400000).toISOString()),
     service.from('alertas').select('*', { count: 'exact', head: true })
       .gte('criado_em', new Date(Date.now() - 7 * 86400000).toISOString()),
-    // Leads — ignorar erro se tabela ainda não existir
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    // Leads — pendente COM email = prontos para disparo; ignorar erro se tabela ainda não existir
+    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente').not('email', 'is', null).neq('email', '')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
     Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
     Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true })).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
     Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
