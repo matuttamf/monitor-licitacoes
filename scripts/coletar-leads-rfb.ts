@@ -163,7 +163,6 @@ async function getTargetCnaes(): Promise<Set<string>> {
     .from('leads')
     .select('cnae_codigo')
     .not('cnae_codigo', 'is', null)
-    .neq('origem', 'cnae')
     .limit(50000)
   const counts: Record<string, number> = {}
   for (const r of (leadsData ?? []) as { cnae_codigo: string | null }[]) {
