@@ -390,11 +390,13 @@ async function coletarEstabelecimentos(
     if (contatados.has(basico)) { pulados++; return }
     const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
     if (cnpj.length !== 14) return
+    const mun = cols[COL.MUNICIPIO]?.trim() || null
     leads.set(basico, {
       cnpj,
       email: validarEmail(cols[COL.EMAIL] ?? null),
       uf: cols[COL.UF]?.trim() || null,
-      municipio: cols[COL.MUNICIPIO]?.trim() || null,
+      // RFB armazena município como código IBGE numérico; não salvar — enriquecer-receita popula o nome real
+      municipio: mun && /[a-zA-ZÀ-ÿ]/.test(mun) ? mun : null,
       cnae,
     })
   })
@@ -418,7 +420,7 @@ async function enriquecerRazaoSocial(tmpPath: string, leads: Map<string, LeadRFB
 async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, string>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
   const rows = Array.from(leads.values()).map(l => ({
     cnpj: l.cnpj,
-    razao_social: razoes.get(l.cnpj.slice(0,8)) ?? l.cnpj,
+    razao_social: razoes.get(l.cnpj.slice(0,8)) ?? null,
     email: l.email,
     uf: l.uf,
     municipio: l.municipio,
