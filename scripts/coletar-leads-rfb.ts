@@ -44,7 +44,7 @@ const MES_PAD = String(MES).padStart(2, '0')
 // URL pública do Nextcloud da Receita Federal
 const RF_BASE = `https://arquivos.receitafederal.gov.br/public.php/dav/files/YggdBLfdninEJX9/${ANO}-${MES_PAD}`
 
-const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
+const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 18, MUNICIPIO: 19, EMAIL: 26 }
 const COL_EMP = { BASICO: 0, RAZAO: 1 }
 
 // Seed amplo: top CNAEs em licitações públicas brasileiras (~200 códigos)
