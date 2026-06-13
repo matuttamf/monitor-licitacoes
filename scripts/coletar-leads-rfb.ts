@@ -418,17 +418,24 @@ async function enriquecerRazaoSocial(tmpPath: string, leads: Map<string, LeadRFB
 }
 
 async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, string>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
-  const rows = Array.from(leads.values()).map(l => ({
-    cnpj: l.cnpj,
-    razao_social: razoes.get(l.cnpj.slice(0,8)) ?? l.cnpj,
-    email: l.email,
-    uf: l.uf,
-    municipio: l.municipio,
-    cnae_codigo: l.cnae,
-    status: (l.email ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
-    situacao: 'ATIVA' as const,
-    origem: 'cnae' as const,
-  }))
+  const rows = Array.from(leads.values()).map(l => {
+    const razaoSocial = razoes.get(l.cnpj.slice(0, 8)) ?? l.cnpj
+    // Razão social verificada = veio do arquivo Empresas (tem letras). Se caiu no fallback
+    // (só dígitos = o próprio CNPJ), o lead fica como 'invalido' até enriquecer-receita confirmar
+    // via minhareceita.org — assim e-mails nunca saem com nome errado.
+    const razaoVerificada = /[a-zA-ZÀ-ÿ]/.test(razaoSocial)
+    return {
+      cnpj: l.cnpj,
+      razao_social: razaoSocial,
+      email: l.email,
+      uf: l.uf,
+      municipio: l.municipio,
+      cnae_codigo: l.cnae,
+      status: (l.email && razaoVerificada ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
+      situacao: 'ATIVA' as const,
+      origem: 'cnae' as const,
+    }
+  })
 
   // Insere novos leads sem sobrescrever existentes
   let inseridos = 0
