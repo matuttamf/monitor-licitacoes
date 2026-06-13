@@ -7,7 +7,7 @@
   "crons": [
     { "path": "/api/cron/expirar-trials",        "schedule": "0 3 * * *"         },
     { "path": "/api/cron/coletar-abertos",       "schedule": "0 4,10,16,22 * * *" },
-    { "path": "/api/cron/coletar",               "schedule": "0 5,11,17,23 * * 1-6" },
+    { "path": "/api/cron/coletar",               "schedule": "0 5,7,9,11,13,15,17,19,21,23 * * 1-6" },
     { "path": "/api/cron/matching",              "schedule": "*/10 * * * *"           },
     { "path": "/api/cron/emails-trial",          "schedule": "0 12 * * 1-5"      },
 
