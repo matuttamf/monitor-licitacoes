@@ -182,6 +182,8 @@ export async function GET(req: NextRequest) {
     .eq('chave', 'captacao_ativa')
     .maybeSingle()
   if (cfg && (cfg.valor === false || cfg.valor === 'false')) {
+    await registrarCronLog({ job: 'coletar-participantes', status: 'ok', mensagem: 'sistema pausado', detalhes: { motivo: 'captacao_ativa=false' } })
+    await salvarResultadoCron(supabase, 'coletar-participantes', { ok: true, novos: 0, motivo: 'sistema pausado' })
     return NextResponse.json({ ok: true, novos: 0, motivo: 'sistema pausado' })
   }
 
