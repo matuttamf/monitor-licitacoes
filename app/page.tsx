@@ -225,21 +225,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PORTAIS MONITORADOS ── */}
-      <section className="px-6 md:px-[60px] py-5 bg-[#111113] border-t border-[rgba(255,255,255,0.05)]">
-        <div className="max-w-[960px] mx-auto flex items-center gap-4 flex-wrap justify-center md:justify-start">
-          <span className="text-[11px] font-bold tracking-wider uppercase text-[rgba(255,255,255,0.25)] shrink-0">Fontes monitoradas:</span>
-          <div className="flex flex-wrap gap-2 items-center justify-center">
-            {['PNCP','ComprasNet','Licitações-e','BLL','SABESP','Petrobras','Caixa','Correios','Eletrobras','Diário Oficial'].map(p => (
-              <span key={p} className="text-[11px] font-semibold px-3 py-1 rounded-full text-[rgba(255,255,255,0.4)]"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                {p}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── DOR ── */}
       <section className="px-6 md:px-[60px] py-[70px] md:py-[100px] bg-[#FAF6F0]">
         <div className="max-w-[960px] mx-auto">
