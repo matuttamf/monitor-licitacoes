@@ -179,7 +179,11 @@ Deno.serve(async (_req: Request) => {
     return new Response(JSON.stringify({ ok: false, erro }), { status: 500, headers: { 'Content-Type': 'application/json' } })
   }
 
-  type Lead = { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'pendente' | 'invalido'; situacao: 'ATIVA'; origem: 'cnae'; fonte: 'cnae' }
+  // razao_social e cnae_descricao não existem no arquivo Estabelecimentos (estão em Empresas/CNAE).
+  // Salvamos situacao=null para que enriquecer-receita consulte minhareceita.org e preencha:
+  // razao_social, nome_fantasia, municipio (nome real), uf, cnae (descricao), telefone.
+  // E-mail e UF/municipio-code do arquivo são preservados como ponto de partida.
+  type Lead = { cnpj: string; razao_social: null; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'invalido'; situacao: null; origem: 'cnae'; fonte: 'cnae' }
   const leads: Lead[] = []
   let rowsLidas = 0
   let esgotado = false
@@ -205,13 +209,13 @@ Deno.serve(async (_req: Request) => {
     const emailRaw = cols[COL.EMAIL]?.trim() || null
     leads.push({
       cnpj,
-      razao_social: cnpj,   // enriquecer-receita preencherá depois
+      razao_social: null,   // preenchido pelo enriquecer-receita via minhareceita.org
       email:        emailRaw,
       uf:           cols[COL.UF]?.trim()        || null,
       municipio:    cols[COL.MUNICIPIO]?.trim() || null,
       cnae_codigo:  cnae || null,
-      status:       emailRaw ? 'pendente' : 'invalido',
-      situacao:     'ATIVA',
+      status:       'invalido', // enriquecer-receita muda para 'pendente' se empresa ativa com email
+      situacao:     null,       // sinaliza para enriquecer-receita processar este lead
       origem:       'cnae',
       fonte:        'cnae',
     })
