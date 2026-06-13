@@ -93,7 +93,7 @@ async function main() {
   if (!teste.ok) { process.exit(1) }
 
   let offset = 0
-  let totalVerificados = 0, totalAtivos = 0, totalInativos = 0, totalSemDados = 0
+  let totalVerificados = 0, totalAtivos = 0, totalInativos = 0, totalSemDados = 0, totalComEmail = 0
 
   while (true) {
     const leads = await buscarLeads(offset)
@@ -135,6 +135,7 @@ async function main() {
         }
 
         totalAtivos++
+        if (emailFinal) totalComEmail++
         await atualizarLead(lead.id, {
           razao_social:  dados.razao_social,
           nome_fantasia: dados.nome_fantasia ?? null,
@@ -152,13 +153,13 @@ async function main() {
       await sleep(200)
     }
 
-    console.log(`  verificados=${totalVerificados} ativos=${totalAtivos} inativas=${totalInativos} sem_dados=${totalSemDados}`)
+    console.log(`  verificados=${totalVerificados} ativos=${totalAtivos} com_email=${totalComEmail} inativas=${totalInativos} sem_dados=${totalSemDados}`)
     offset += LOTE
 
     if (leads.length < LOTE) break
   }
 
-  console.log(`\n✓ Concluído: ${totalVerificados} verificados, ${totalAtivos} ativos, ${totalInativos} inativas, ${totalSemDados} sem dados`)
+  console.log(`\n✓ Concluído: ${totalVerificados} verificados, ${totalAtivos} ativos, ${totalComEmail} com e-mail, ${totalInativos} inativas, ${totalSemDados} sem dados`)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })
