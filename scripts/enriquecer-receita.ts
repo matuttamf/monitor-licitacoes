@@ -149,7 +149,7 @@ async function main() {
     })
   }
 
-  async function rodarPasse(filtro: 'sem-email' | 'invalido-com-email') {
+  async function rodarPasse(filtro: 'sem-email' | 'invalido-com-email' | 'pendente-sem-cidade') {
     console.log(`\n── Passe: ${filtro} ──`)
     let offset = 0
     let lote = 1
