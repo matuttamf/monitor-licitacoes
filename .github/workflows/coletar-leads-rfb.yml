@@ -44,6 +44,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
         run: |
           IDX_START="${{ github.event.inputs.idx_start || '0' }}"
           IDX_END="${{ github.event.inputs.idx_end || '9' }}"

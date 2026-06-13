@@ -39,7 +39,8 @@ const HEADERS_PATCH: Record<string, string> = {
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
 async function buscarLeads(offset: number): Promise<{ id: string; cnpj: string; email: string | null }[]> {
-  const url = `${REST}/leads?select=id,cnpj,email&status=eq.invalido&offset=${offset}&limit=${LOTE}`
+  // Busca leads sem e-mail (invalido OU pendente sem email) para tentar via minhareceita
+  const url = `${REST}/leads?select=id,cnpj,email&email=is.null&offset=${offset}&limit=${LOTE}`
   const res = await fetch(url, { headers: HEADERS_GET })
   if (!res.ok) {
     const txt = await res.text()
