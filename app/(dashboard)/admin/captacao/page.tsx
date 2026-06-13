@@ -12,6 +12,7 @@ type LeadDB = {
   objeto: string | null; valor: number | null; data_contrato: string | null
   status: 'pendente' | 'enviado' | 'erro' | 'invalido' | 'descadastrado'
   fonte: 'pncp_contrato' | 'pncp_proposta' | 'portal_transparencia' | 'busca_manual' | 'cnae' | null
+  origem: string | null
   enviado_em: string | null; erro_msg: string | null; created_at: string
 }
 
