@@ -197,6 +197,25 @@ async function getCnpjsContatados(): Promise<Set<string>> {
   return cnpjs
 }
 
+// Basicós (8 dígitos) de leads ativos na base sem e-mail — para enriquecimento via RFB
+async function getBasicosSemEmail(): Promise<Set<string>> {
+  const set = new Set<string>()
+  let offset = 0
+  while (true) {
+    const { data } = await supabase
+      .from('leads')
+      .select('cnpj')
+      .is('email', null)
+      .eq('situacao', 'ATIVA')
+      .range(offset, offset + 4999)
+    if (!data?.length) break
+    for (const r of data) set.add((r.cnpj as string).slice(0, 8))
+    if (data.length < 5000) break
+    offset += 5000
+  }
+  return set
+}
+
 // ── Download com retry e Range ────────────────────────────────────────────────
 async function downloadComRetry(url: string, tmpPath: string, tentativas = 5): Promise<boolean> {
   for (let t = 1; t <= tentativas; t++) {
@@ -308,6 +327,43 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
 // ── Processamento por índice ──────────────────────────────────────────────────
 type LeadRFB = { cnpj: string; email: string|null; uf: string|null; municipio: string|null; cnae: string }
 
+// Varre arquivo de estabelecimentos coletando e-mails de leads JÁ existentes na base
+// (independente de CNAE) — uma passagem única, sem carregar tudo em memória
+async function coletarEmailsExistentes(
+  tmpPath: string,
+  basicosSemEmail: Set<string>,
+): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>() // basico → email
+  await processarZip(tmpPath, (cols) => {
+    if (cols.length < 27) return
+    if (cols[COL.SITUACAO] !== '02') return  // só ativas
+    const basico = cols[COL.BASICO].trim()
+    if (!basicosSemEmail.has(basico)) return
+    if (emailMap.has(basico)) return          // já temos email para este basico
+    const email = validarEmail(cols[COL.EMAIL] ?? null)
+    if (email) emailMap.set(basico, email)
+  })
+  return emailMap
+}
+
+async function aplicarEmailsExistentes(emailMap: Map<string, string>): Promise<number> {
+  if (!emailMap.size) return 0
+  let atualizados = 0
+  const entries = [...emailMap.entries()]
+  for (let i = 0; i < entries.length; i += 200) {
+    const lote = entries.slice(i, i + 200)
+    for (const [basico, email] of lote) {
+      const { error } = await supabase
+        .from('leads')
+        .update({ email, status: 'pendente' })
+        .like('cnpj', `${basico}%`)
+        .is('email', null)
+      if (!error) atualizados++
+    }
+  }
+  return atualizados
+}
+
 async function coletarEstabelecimentos(
   tmpPath: string,
   targetCnaes: Set<string>,
@@ -319,7 +375,7 @@ async function coletarEstabelecimentos(
   const cnaesSample: string[] = []
   await processarZip(tmpPath, (cols) => {
     totalLinhas++
-    if (cols.length < 28) return
+    if (cols.length < 27) return
     passouLen++
     if (cols[COL.MATFIL] !== '1') return
     passouMatfil++
@@ -395,7 +451,12 @@ async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, str
 }
 
 // ── Pipeline por arquivo ──────────────────────────────────────────────────────
-async function processarArquivo(idx: number, targetCnaes: Set<string>, contatados: Set<string>) {
+async function processarArquivo(
+  idx: number,
+  targetCnaes: Set<string>,
+  contatados: Set<string>,
+  basicosSemEmail: Set<string>,
+) {
   const tmpEst = join(tmpdir(), `rf-est-${idx}.zip`)
   const tmpEmp = join(tmpdir(), `rf-emp-${idx}.zip`)
 
@@ -406,15 +467,29 @@ async function processarArquivo(idx: number, targetCnaes: Set<string>, contatado
   console.log(`  ↓ Estabelecimentos${idx}.zip`)
   if (!await downloadComRetry(urlEst, tmpEst)) { console.log('  ✗ Pulando.'); return }
 
-  // 2. Filtra por CNAE
+  // 2a. Enriquece e-mail de leads existentes na base (independente de CNAE)
+  if (basicosSemEmail.size > 0) {
+    console.log(`  ⚙ Buscando e-mails para ${basicosSemEmail.size} leads existentes sem e-mail...`)
+    const t0 = Date.now()
+    const emailMap = await coletarEmailsExistentes(tmpEst, basicosSemEmail)
+    console.log(`  → ${emailMap.size} e-mails encontrados nos arquivos RFB | ${((Date.now()-t0)/1000).toFixed(1)}s`)
+    if (emailMap.size > 0) {
+      const atualizados = await aplicarEmailsExistentes(emailMap)
+      console.log(`  ✓ ${atualizados} leads existentes atualizados com e-mail da RFB`)
+      // Remove basicós já enriquecidos para não re-processar nos próximos arquivos
+      for (const basico of emailMap.keys()) basicosSemEmail.delete(basico)
+    }
+  }
+
+  // 2b. Filtra novos leads por CNAE
   console.log(`  ⚙ Filtrando por CNAE (${targetCnaes.size} códigos-alvo, ${contatados.size} já contatados ignorados)...`)
-  const t0 = Date.now()
+  const t1 = Date.now()
   const leads = await coletarEstabelecimentos(tmpEst, targetCnaes, contatados)
   const emailsValidos = Array.from(leads.values()).filter(l => l.email).length
-  console.log(`  → ${leads.size} leads | ${emailsValidos} com e-mail | ${((Date.now()-t0)/1000).toFixed(1)}s`)
+  console.log(`  → ${leads.size} leads novos | ${emailsValidos} com e-mail | ${((Date.now()-t1)/1000).toFixed(1)}s`)
   if (existsSync(tmpEst)) unlinkSync(tmpEst)
 
-  if (!leads.size) { console.log('  Nenhum lead encontrado. Pulando Empresas.'); return }
+  if (!leads.size) { console.log('  Nenhum lead novo por CNAE.'); return }
 
   // 3. Download Empresas → razão social
   const urlEmp = `${RF_BASE}/Empresas${idx}.zip`
@@ -422,13 +497,13 @@ async function processarArquivo(idx: number, targetCnaes: Set<string>, contatado
   let razoes = new Map<string, string>()
   if (await downloadComRetry(urlEmp, tmpEmp)) {
     console.log(`  ⚙ Enriquecendo razão social...`)
-    const t1 = Date.now()
+    const t2 = Date.now()
     razoes = await enriquecerRazaoSocial(tmpEmp, leads)
-    console.log(`  → ${razoes.size}/${leads.size} razões encontradas | ${((Date.now()-t1)/1000).toFixed(1)}s`)
+    console.log(`  → ${razoes.size}/${leads.size} razões encontradas | ${((Date.now()-t2)/1000).toFixed(1)}s`)
     if (existsSync(tmpEmp)) unlinkSync(tmpEmp)
   }
 
-  // 4. Inserção + enriquecimento de e-mail
+  // 4. Inserção
   console.log(`  ⚙ Inserindo no Supabase...`)
   const { inseridos, emailsEnriquecidos } = await inserirLeads(leads, razoes)
   console.log(`  ✓ ${inseridos} inseridos | ${emailsEnriquecidos} e-mails enriquecidos em leads existentes`)
@@ -455,14 +530,16 @@ async function main() {
     .is('email', null).gte('email_tentativas', 3)
   console.log(`  ${bloqueados ?? 0} leads desbloqueados para nova tentativa`)
 
-  const [targetCnaes, contatados] = await Promise.all([
+  const [targetCnaes, contatados, basicosSemEmail] = await Promise.all([
     getTargetCnaes(),
     getCnpjsContatados(),
+    getBasicosSemEmail(),
   ])
   console.log(`Contatados a ignorar: ${contatados.size}`)
+  console.log(`Leads sem e-mail para enriquecer: ${basicosSemEmail.size}`)
 
   for (let i = IDX_START; i <= IDX_END; i++) {
-    await processarArquivo(i, targetCnaes, contatados)
+    await processarArquivo(i, targetCnaes, contatados, basicosSemEmail)
   }
 
   console.log('\n✓ Coleta concluída.')
