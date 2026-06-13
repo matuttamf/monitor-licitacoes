@@ -179,7 +179,7 @@ Deno.serve(async (_req: Request) => {
     return new Response(JSON.stringify({ ok: false, erro }), { status: 500, headers: { 'Content-Type': 'application/json' } })
   }
 
-  type Lead = { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'invalido'; situacao: null; origem: 'cnae' }
+  type Lead = { cnpj: string; razao_social: string; email: string|null; uf: string|null; municipio: string|null; cnae_codigo: string|null; status: 'pendente' | 'invalido'; situacao: 'ATIVA'; origem: 'cnae'; fonte: 'cnae' }
   const leads: Lead[] = []
   let rowsLidas = 0
   let esgotado = false
@@ -213,6 +213,7 @@ Deno.serve(async (_req: Request) => {
       status:       emailRaw ? 'pendente' : 'invalido',
       situacao:     'ATIVA',
       origem:       'cnae',
+      fonte:        'cnae',
     })
 
     if (leads.length >= MAX_LEADS) return false
