@@ -39,8 +39,8 @@ const HEADERS_PATCH: Record<string, string> = {
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
 async function buscarLeads(offset: number): Promise<{ id: string; cnpj: string; email: string | null }[]> {
-  // Busca leads sem e-mail OU sem razão social — ambos precisam de enriquecimento via minhareceita
-  const url = `${REST}/leads?select=id,cnpj,email&or=(email.is.null,razao_social.is.null)&offset=${offset}&limit=${LOTE}`
+  // Busca leads sem e-mail OU com razão social igual ao CNPJ (fallback quando Empresas falha)
+  const url = `${REST}/leads?select=id,cnpj,email&or=(email.is.null,razao_social.is.null,razao_social.~.^\\d{14}$)&offset=${offset}&limit=${LOTE}`
   const res = await fetch(url, { headers: HEADERS_GET })
   if (!res.ok) {
     const txt = await res.text()

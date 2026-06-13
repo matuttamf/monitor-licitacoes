@@ -420,7 +420,7 @@ async function enriquecerRazaoSocial(tmpPath: string, leads: Map<string, LeadRFB
 async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, string>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
   const rows = Array.from(leads.values()).map(l => ({
     cnpj: l.cnpj,
-    razao_social: razoes.get(l.cnpj.slice(0,8)) ?? null,
+    razao_social: razoes.get(l.cnpj.slice(0,8)) ?? l.cnpj,
     email: l.email,
     uf: l.uf,
     municipio: l.municipio,
