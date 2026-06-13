@@ -41,11 +41,16 @@ function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 // PostgREST não suporta regex (~) dentro de or() — usamos duas queries separadas.
 // Query A: leads sem e-mail (status=invalido por falta de email).
 // Query B: leads invalidos com e-mail e situação ATIVA (razão social não verificada).
-async function buscarLeads(offset: number, filtro: 'sem-email' | 'invalido-com-email'): Promise<{ id: string; cnpj: string; email: string | null }[]> {
+async function buscarLeads(offset: number, filtro: 'sem-email' | 'invalido-com-email' | 'pendente-sem-cidade'): Promise<{ id: string; cnpj: string; email: string | null }[]> {
   const base: Record<string, string> = { select: 'id,cnpj,email', offset: String(offset), limit: String(LOTE) }
-  const qs = filtro === 'sem-email'
-    ? new URLSearchParams({ ...base, 'email': 'is.null' })
-    : new URLSearchParams({ ...base, 'status': 'eq.invalido', 'situacao': 'eq.ATIVA', 'email': 'not.is.null' })
+  let qs: URLSearchParams
+  if (filtro === 'sem-email') {
+    qs = new URLSearchParams({ ...base, 'email': 'is.null' })
+  } else if (filtro === 'invalido-com-email') {
+    qs = new URLSearchParams({ ...base, 'status': 'eq.invalido', 'situacao': 'eq.ATIVA', 'email': 'not.is.null' })
+  } else {
+    qs = new URLSearchParams({ ...base, 'status': 'eq.pendente', 'municipio': 'is.null' })
+  }
   const url = `${REST}/leads?${qs}`
   const res = await fetch(url, { headers: HEADERS_GET })
   if (!res.ok) {
@@ -164,6 +169,7 @@ async function main() {
 
   await rodarPasse('sem-email')
   await rodarPasse('invalido-com-email')
+  await rodarPasse('pendente-sem-cidade')
 
   console.log(`\n✓ Concluído: ${totalVerificados} verificados, ${totalAtivos} ativos, ${totalComEmail} com e-mail, ${totalInativos} inativas, ${totalSemDados} sem dados`)
 }
