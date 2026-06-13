@@ -11,7 +11,7 @@ type LeadDB = {
   situacao: string | null; porte: string | null; cnae: string | null
   objeto: string | null; valor: number | null; data_contrato: string | null
   status: 'pendente' | 'enviado' | 'erro' | 'invalido' | 'descadastrado'
-  fonte: 'pncp_contrato' | 'pncp_proposta' | 'portal_transparencia' | 'busca_manual' | null
+  fonte: 'pncp_contrato' | 'pncp_proposta' | 'portal_transparencia' | 'busca_manual' | 'cnae' | null
   enviado_em: string | null; erro_msg: string | null; created_at: string
 }
 
@@ -776,6 +776,7 @@ export default function CaptacaoPage() {
                 <option value="pncp_proposta">👥 Proponente</option>
                 <option value="portal_transparencia">🏛️ Transparência</option>
                 <option value="busca_manual">🔍 Manual</option>
+                <option value="cnae">🏭 CNAE / RF</option>
               </select>
             </div>
             <div>
@@ -912,6 +913,7 @@ export default function CaptacaoPage() {
                               pncp_proposta:        { label: '👥 Proponente',     bg: 'rgba(59,130,246,0.08)', color: '#1e40af' },
                               portal_transparencia: { label: '🏛️ Transparência', bg: 'rgba(139,92,246,0.08)', color: '#5b21b6' },
                               busca_manual:         { label: '🔍 Manual',         bg: 'rgba(107,114,128,0.1)', color: '#374151' },
+                              cnae:                 { label: '🏭 CNAE/RF',        bg: 'rgba(16,185,129,0.08)', color: '#065f46' },
                             }
                             const f = map[fonte ?? ''] ?? { label: fonte ?? '—', bg: 'rgba(107,114,128,0.1)', color: '#374151' }
                             return (

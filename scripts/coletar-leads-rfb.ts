@@ -438,6 +438,7 @@ async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, str
       status: (l.email && razaoVerificada ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
       situacao: 'ATIVA' as const,
       origem: 'cnae' as const,
+      fonte: 'cnae' as const,
     }
   })
 
