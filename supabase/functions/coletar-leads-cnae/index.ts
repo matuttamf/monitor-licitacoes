@@ -129,7 +129,7 @@ async function getTargetCnaes(supabase: any): Promise<Set<string>> {
     const code = String(r.cnae_codigo).replace(/\D/g,'').slice(0,7)
     if (code.length >= 4) counts[code] = (counts[code] ?? 0) + 1
   }
-  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,200).map(([c]) => c)
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,600).map(([c]) => c)
   return top.length ? new Set(top) : CNAE_SEED
 }
 
