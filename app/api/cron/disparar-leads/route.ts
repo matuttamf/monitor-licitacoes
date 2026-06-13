@@ -145,14 +145,18 @@ export async function GET(req: NextRequest) {
     .eq('status', 'erro')
     .lt('enviado_em', h4ago)
 
-  // ── Step 1: Leads pendentes (primeiro e-mail) ─────────────────────────────
+  // ── Step 1: Fila de disparo ordenada por prioridade ─────────────────────────
+  // prioridade_disparo (coluna gerada): 1=pncp_contrato 2=pncp_proposta
+  //   3=portal_transparencia 4=busca_manual 5=cnae 6=outros
+  // Novos leads entram automaticamente na fila com a prioridade correta.
   const { data: leadsPendentes } = await supabase
     .from('leads')
     .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
     .eq('status', 'pendente')
     .not('email', 'is', null)
     .neq('email', '')
-    .order('created_at', { ascending: true })
+    .order('prioridade_disparo', { ascending: true })
+    .order('created_at',         { ascending: true })
     .limit(MAX_LOTE_NOVOS)
 
   // ── Step 2: Follow-up (D+4 e D+8 para quem não abriu) ────────────────────
