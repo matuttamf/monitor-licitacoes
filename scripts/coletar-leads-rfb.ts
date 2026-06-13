@@ -419,7 +419,7 @@ async function coletarEstabelecimentos(
     leads.set(basico, {
       cnpj,
       email: validarEmail(cols[COL.EMAIL] ?? null),
-      uf: cols[COL.UF]?.trim() || null,
+      uf: /^[A-Z]{2}$/.test(cols[COL.UF]?.trim() ?? '') ? cols[COL.UF]!.trim() : null,
       // RFB armazena município como código IBGE numérico; não salvar — enriquecer-receita popula o nome real
       municipio: mun && /[a-zA-ZÀ-ÿ]/.test(mun) ? mun : null,
       cnae,
