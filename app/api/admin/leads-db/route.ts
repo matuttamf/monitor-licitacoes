@@ -42,8 +42,14 @@ export async function GET(req: NextRequest) {
   if (status !== 'todos') query = query.eq('status', status)
   if (uf !== 'todos')     query = query.eq('uf', uf)
   if (cnae)               query = query.ilike('cnae', `%${cnae}%`)
-  if (fonte === 'cnae')   query = query.eq('origem', 'cnae')
-  else if (fonte !== 'todos') query = query.eq('fonte', fonte)
+  if (fonte === 'cnae') {
+    query = query.eq('origem', 'cnae')
+  } else if (fonte !== 'todos') {
+    query = query.eq('fonte', fonte).neq('origem', 'cnae')
+  } else {
+    // "todos" — ainda assim mostra cada lead uma única vez; CNAE/RF não duplica com Contrato
+    // (sem filtro extra: todos aparecem, origem='cnae' incluído)
+  }
   if (q)                  query = query.or(`email.ilike.%${q}%,razao_social.ilike.%${q}%,nome_fantasia.ilike.%${q}%`)
 
   const { data, count, error } = await query

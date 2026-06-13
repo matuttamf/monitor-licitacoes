@@ -62,12 +62,28 @@ export async function GET(req: NextRequest) {
     .eq('status', 'pendente')
     .is('email', null)
 
-  const { data: semReceita } = await supabase
-    .from('leads')
-    .select('id, cnpj, email')
-    .is('situacao', null)
-    .eq('status', 'invalido')
-    .limit(120)
+  // Processa: (a) leads sem verificação de Receita (situacao=null)
+  //           (b) leads CNAE com razao_social = cnpj (placeholder da Edge Function)
+  //               detectado via regex ^\d{14}$ — só dígitos, 14 chars
+  const [{ data: semSituacao }, { data: placeholderCnae }] = await Promise.all([
+    supabase.from('leads').select('id, cnpj, email')
+      .is('situacao', null)
+      .in('status', ['invalido', 'pendente'])
+      .limit(100),
+    supabase.from('leads').select('id, cnpj, email')
+      .eq('origem', 'cnae')
+      .filter('razao_social', 'match', '^[0-9]{14}$')
+      .in('status', ['invalido', 'pendente'])
+      .limit(20),
+  ])
+
+  // Deduplica por id — um lead pode estar nos dois grupos
+  const visto = new Set<string>()
+  const semReceita = [...(semSituacao ?? []), ...(placeholderCnae ?? [])].filter(l => {
+    if (visto.has(l.id)) return false
+    visto.add(l.id)
+    return true
+  }).slice(0, 120)
 
   if (!semReceita?.length) {
     return NextResponse.json({
