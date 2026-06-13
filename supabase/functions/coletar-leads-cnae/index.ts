@@ -113,6 +113,30 @@ async function streamZipLinhas(url: string, onLine: (linha: string) => boolean):
   try { await decompReader.cancel() } catch { /* ok */ }
 }
 
+function parseCSVLine(line: string, sep: string): string[] {
+  const result: string[] = []
+  let i = 0
+  while (i <= line.length) {
+    if (line[i] === '"') {
+      i++
+      let val = ''
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { val += '"'; i += 2 }
+        else if (line[i] === '"') { i++; break }
+        else { val += line[i++] }
+      }
+      result.push(val)
+      if (line[i] === sep) i++
+    } else {
+      const end = line.indexOf(sep, i)
+      if (end === -1) { result.push(line.slice(i)); break }
+      result.push(line.slice(i, end))
+      i = end + 1
+    }
+  }
+  return result
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getTargetCnaes(supabase: any): Promise<Set<string>> {
   // Apenas leads oriundos de licitações/contratos (não os próprios leads CNAE)
@@ -206,7 +230,7 @@ Deno.serve(async (_req: Request) => {
       sepDetectado = true
       console.log(`[coletar-leads-cnae] separador="${sep}" (|=${pipes} ;=${pts})`)
     }
-    const cols = line.split(sep)
+    const cols = parseCSVLine(line, sep)
     if (cols.length < 28) return true
     if (cols[COL.MATFIL]  !== '1')  return true
     if (cols[COL.SITUACAO] !== '02') return true

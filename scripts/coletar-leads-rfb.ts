@@ -286,6 +286,33 @@ async function downloadComRetry(urls: string | string[], tmpPath: string, tentat
   return false
 }
 
+// ── Parser CSV com suporte a campos entre aspas ───────────────────────────────
+// Necessário porque o arquivo RFB usa aspas duplas em todos os campos,
+// e alguns campos (ex: NOME_FANTASIA) podem conter o separador ";" dentro das aspas.
+function parseCSVLine(line: string, sep: string): string[] {
+  const result: string[] = []
+  let i = 0
+  while (i <= line.length) {
+    if (line[i] === '"') {
+      i++ // abre aspas
+      let val = ''
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { val += '"'; i += 2 } // aspas escapadas
+        else if (line[i] === '"') { i++; break } // fecha aspas
+        else { val += line[i++] }
+      }
+      result.push(val)
+      if (line[i] === sep) i++ // pula separador
+    } else {
+      const end = line.indexOf(sep, i)
+      if (end === -1) { result.push(line.slice(i)); break }
+      result.push(line.slice(i, end))
+      i = end + 1
+    }
+  }
+  return result
+}
+
 // ── Processamento ZIP (stream local) ─────────────────────────────────────────
 type OnLine = (cols: string[]) => void
 
@@ -314,13 +341,13 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
           const contPonto = (line.match(/;/g)  ?? []).length
           sep = contPonto > contPipe ? ';' : '|'
           console.log(`  Separador detectado: "${sep}" (|=${contPipe} ;=${contPonto})`)
-          const colsDebug = line.split(sep).map(c => c.replace(/^"|"$/g, ''))
+          const colsDebug = parseCSVLine(line, sep)
           console.log(`  [DEBUG] Primeira linha (${colsDebug.length} cols):`)
           console.log(`    cols 0-11 :`, colsDebug.slice(0, 12).map((c, i) => `[${i}]=${JSON.stringify(c)}`).join(' '))
           console.log(`    cols 12-19:`, colsDebug.slice(12, 20).map((c, i) => `[${i+12}]=${JSON.stringify(c)}`).join(' '))
           console.log(`    cols 20-29:`, colsDebug.slice(20, 30).map((c, i) => `[${i+20}]=${JSON.stringify(c)}`).join(' '))
         }
-        const cols = line.split(sep).map(c => c.replace(/^"|"$/g, ''))
+        const cols = parseCSVLine(line, sep)
         if (cols.length >= 2) onLine(cols)
       })
       rl.on('close', resolve)
@@ -422,7 +449,7 @@ async function coletarEstabelecimentos(
     leads.set(basico, {
       cnpj,
       email: validarEmail(cols[COL.EMAIL] ?? null),
-      uf: /^[A-Z]{2}$/.test(cols[COL.UF]?.trim() ?? '') ? cols[COL.UF]!.trim() : null,
+      uf: cols[COL.UF]?.trim() || null,
       // RFB armazena município como código IBGE numérico; não salvar — enriquecer-receita popula o nome real
       municipio: mun && /[a-zA-ZÀ-ÿ]/.test(mun) ? mun : null,
       cnae,
