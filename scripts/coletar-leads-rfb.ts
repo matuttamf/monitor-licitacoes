@@ -315,7 +315,10 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
           sep = contPonto > contPipe ? ';' : '|'
           console.log(`  Separador detectado: "${sep}" (|=${contPipe} ;=${contPonto})`)
           const colsDebug = line.split(sep).map(c => c.replace(/^"|"$/g, ''))
-          console.log(`  [DEBUG] Primeira linha (${colsDebug.length} cols):`, colsDebug.slice(0, 12).map((c, i) => `[${i}]=${JSON.stringify(c)}`).join(' '))
+          console.log(`  [DEBUG] Primeira linha (${colsDebug.length} cols):`)
+          console.log(`    cols 0-11 :`, colsDebug.slice(0, 12).map((c, i) => `[${i}]=${JSON.stringify(c)}`).join(' '))
+          console.log(`    cols 12-19:`, colsDebug.slice(12, 20).map((c, i) => `[${i+12}]=${JSON.stringify(c)}`).join(' '))
+          console.log(`    cols 20-29:`, colsDebug.slice(20, 30).map((c, i) => `[${i+20}]=${JSON.stringify(c)}`).join(' '))
         }
         const cols = line.split(sep).map(c => c.replace(/^"|"$/g, ''))
         if (cols.length >= 2) onLine(cols)
