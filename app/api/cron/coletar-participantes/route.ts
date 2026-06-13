@@ -229,7 +229,10 @@ export async function GET(req: NextRequest) {
 
   if (!processos.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)
-    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, processos: 0, pncp_debug: pncpDebug })
+    const r = { ok: true, novos: 0, modo: modoLabel, processos: 0, motivo: 'nenhum processo encontrado no período' }
+    await registrarCronLog({ job: 'coletar-participantes', status: 'ok', mensagem: r.motivo, detalhes: r })
+    await salvarResultadoCron(supabase, 'coletar-participantes', r)
+    return NextResponse.json(r)
   }
 
   // 2. Para cada processo → itens → propostas → CNPJs
@@ -255,7 +258,10 @@ export async function GET(req: NextRequest) {
 
   if (!cnpjSet.size) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)
-    return NextResponse.json({ ok: true, novos: 0, modo: modoLabel, processos: processos.length })
+    const r = { ok: true, novos: 0, modo: modoLabel, processos: processos.length, motivo: 'nenhum proponente com CNPJ encontrado' }
+    await registrarCronLog({ job: 'coletar-participantes', status: 'ok', mensagem: r.motivo, detalhes: r })
+    await salvarResultadoCron(supabase, 'coletar-participantes', r)
+    return NextResponse.json(r)
   }
 
   // 3. Verificar quais já existem
@@ -270,7 +276,10 @@ export async function GET(req: NextRequest) {
 
   if (!paraEnriquecer.length) {
     if (emBackfill) await avancarPonteiro(supabase, dataFinal)
-    return NextResponse.json({ ok: true, novos: 0, motivo: 'todos já na base', modo: modoLabel })
+    const r = { ok: true, novos: 0, modo: modoLabel, processos: processos.length, proponentes_coletados: cnpjSet.size, motivo: 'todos os CNPJs já estão na base' }
+    await registrarCronLog({ job: 'coletar-participantes', status: 'ok', mensagem: r.motivo, detalhes: r })
+    await salvarResultadoCron(supabase, 'coletar-participantes', r)
+    return NextResponse.json(r)
   }
 
   // 4. Inserir TODOS os CNPJs novos imediatamente com dados básicos disponíveis.
