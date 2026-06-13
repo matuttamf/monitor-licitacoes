@@ -258,5 +258,18 @@ Deno.serve(async (_req: Request) => {
     proximo_estado: novoEstado,
   }
   await supabase.from('cron_logs').insert({ job: 'coletar-leads-cnae', status: 'ok', mensagem: `${inseridos} inseridos`, detalhes: resultado })
+
+  // Dispara enriquecer-receita para processar os leads recém-inseridos sem esperar resposta
+  if (inseridos > 0) {
+    const appUrl   = (Deno.env.get('NEXT_PUBLIC_APP_URL') ?? '').replace(/\/$/, '')
+    const cronSec  = Deno.env.get('CRON_SECRET') ?? ''
+    if (appUrl && cronSec) {
+      fetch(`${appUrl}/api/cron/enriquecer-receita`, {
+        headers: { 'Authorization': `Bearer ${cronSec}` },
+        signal: AbortSignal.timeout(5000),
+      }).catch((e) => console.warn('[coletar-leads-cnae] disparo enriquecer-receita falhou:', e))
+    }
+  }
+
   return new Response(JSON.stringify(resultado), { headers: { 'Content-Type': 'application/json' } })
 })

@@ -41,8 +41,20 @@ const ANO = Number(cliArgs[2] ?? anoDefault)
 const MES = Number(cliArgs[3] ?? mesDefault)
 const MES_PAD = String(MES).padStart(2, '0')
 
-// URL pública do Nextcloud da Receita Federal
+// URL pública do Nextcloud da Receita Federal (fallback)
 const RF_BASE = `https://arquivos.receitafederal.gov.br/public.php/dav/files/YggdBLfdninEJX9/${ANO}-${MES_PAD}`
+
+// Supabase Storage (fonte primária — arquivos já enviados via upload-rf-cnpj.ts)
+const STORAGE_BASE = SUPABASE_URL
+  ? `${SUPABASE_URL}/storage/v1/object/public/rf-cnpj`
+  : null
+
+// Retorna lista de URLs para tentar, em ordem de preferência
+function getUrlsArquivo(tipo: 'Estabelecimentos' | 'Empresas', idx: number): string[] {
+  const rfUrl = `${RF_BASE}/${tipo}${idx}.zip`
+  if (!STORAGE_BASE) return [rfUrl]
+  return [`${STORAGE_BASE}/${tipo}${idx}.zip`, rfUrl]
+}
 
 const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 18, MUNICIPIO: 19, EMAIL: 26 }
 const COL_EMP = { BASICO: 0, RAZAO: 1 }
@@ -217,50 +229,59 @@ async function getBasicosSemEmail(): Promise<Set<string>> {
 }
 
 // ── Download com retry e Range ────────────────────────────────────────────────
-async function downloadComRetry(url: string, tmpPath: string, tentativas = 5): Promise<boolean> {
-  for (let t = 1; t <= tentativas; t++) {
-    try {
-      let bytesJaBaixados = 0
-      if (existsSync(tmpPath)) {
-        bytesJaBaixados = statSync(tmpPath).size
-        if (bytesJaBaixados > 0) console.log(`  Retomando do byte ${bytesJaBaixados} (tentativa ${t})`)
-      }
-      const headers: Record<string,string> = { 'User-Agent': 'Mozilla/5.0 (compatible; MonitorLicitacoes/1.0)' }
-      if (bytesJaBaixados > 0) headers['Range'] = `bytes=${bytesJaBaixados}-`
+// urls: lista de URLs tentadas em ordem — a primeira que funcionar é usada.
+async function downloadComRetry(urls: string | string[], tmpPath: string, tentativas = 5): Promise<boolean> {
+  const lista = Array.isArray(urls) ? urls : [urls]
 
-      const res = await fetch(url, { headers })
-      if (!res.ok || !res.body) {
-        console.error(`  HTTP ${res.status}`)
-        // 416 = arquivo local maior/igual ao remoto (RF atualizou) — recomeça do zero
-        if (res.status === 416) {
-          if (existsSync(tmpPath)) { unlinkSync(tmpPath); console.log('  Arquivo local removido, reiniciando download') }
-          bytesJaBaixados = 0
-          delete headers['Range']
-          const res2 = await fetch(url, { headers })
-          if (!res2.ok || !res2.body) { console.error(`  HTTP ${res2.status} na segunda tentativa`); return false }
-          const cl = res2.headers.get('content-length')
-          if (cl) console.log(`  Tamanho: ${(Number(cl) / 1024 / 1024).toFixed(0)} MB`)
-          const writer2 = createWriteStream(tmpPath, { flags: 'w' })
-          await pipeline(res2.body as unknown as NodeJS.ReadableStream, writer2)
-          console.log(`  ✓ Download concluído`)
-          return true
+  for (const url of lista) {
+    console.log(`  Tentando: ${url}`)
+    for (let t = 1; t <= tentativas; t++) {
+      try {
+        let bytesJaBaixados = 0
+        if (existsSync(tmpPath)) {
+          bytesJaBaixados = statSync(tmpPath).size
+          if (bytesJaBaixados > 0) console.log(`  Retomando do byte ${bytesJaBaixados} (tentativa ${t})`)
         }
-        if (t < tentativas) { await new Promise(r => setTimeout(r, 10000 * t)); continue }
-        return false
+        const headers: Record<string,string> = { 'User-Agent': 'Mozilla/5.0 (compatible; MonitorLicitacoes/1.0)' }
+        if (bytesJaBaixados > 0) headers['Range'] = `bytes=${bytesJaBaixados}-`
+
+        const res = await fetch(url, { headers, signal: AbortSignal.timeout(120_000) })
+        if (!res.ok || !res.body) {
+          console.error(`  HTTP ${res.status}`)
+          if (res.status === 404 || res.status === 403) break  // tenta próxima URL
+          // 416 = arquivo local maior/igual ao remoto — recomeça do zero
+          if (res.status === 416) {
+            if (existsSync(tmpPath)) { unlinkSync(tmpPath); console.log('  Arquivo local removido, reiniciando') }
+            bytesJaBaixados = 0
+            delete headers['Range']
+            const res2 = await fetch(url, { headers })
+            if (!res2.ok || !res2.body) { console.error(`  HTTP ${res2.status}`); break }
+            const cl = res2.headers.get('content-length')
+            if (cl) console.log(`  Tamanho: ${(Number(cl) / 1024 / 1024).toFixed(0)} MB`)
+            const writer2 = createWriteStream(tmpPath, { flags: 'w' })
+            await pipeline(res2.body as unknown as NodeJS.ReadableStream, writer2)
+            console.log(`  ✓ Download concluído`)
+            return true
+          }
+          if (t < tentativas) { await new Promise(r => setTimeout(r, 10000 * t)); continue }
+          break  // esgotou tentativas para esta URL — tenta próxima
+        }
+        if (t === 1) {
+          const cl = res.headers.get('content-length')
+          if (cl) console.log(`  Tamanho: ${(Number(cl) / 1024 / 1024).toFixed(0)} MB`)
+        }
+        const flags = bytesJaBaixados > 0 && res.status === 206 ? 'a' : 'w'
+        const writer = createWriteStream(tmpPath, { flags })
+        await pipeline(res.body as unknown as NodeJS.ReadableStream, writer)
+        console.log(`  ✓ Download concluído`)
+        return true
+      } catch (e) {
+        console.error(`  Tentativa ${t} falhou: ${e instanceof Error ? e.message : e}`)
+        if (t < tentativas) await new Promise(r => setTimeout(r, 10000 * t))
       }
-      if (t === 1) {
-        const cl = res.headers.get('content-length')
-        if (cl) console.log(`  Tamanho: ${(Number(cl) / 1024 / 1024).toFixed(0)} MB`)
-      }
-      const flags = bytesJaBaixados > 0 && res.status === 206 ? 'a' : 'w'
-      const writer = createWriteStream(tmpPath, { flags })
-      await pipeline(res.body as unknown as NodeJS.ReadableStream, writer)
-      console.log(`  ✓ Download concluído`)
-      return true
-    } catch (e) {
-      console.error(`  Tentativa ${t} falhou: ${e instanceof Error ? e.message : e}`)
-      if (t < tentativas) await new Promise(r => setTimeout(r, 10000 * t))
     }
+    // Falhou nesta URL — limpa arquivo parcial antes de tentar a próxima
+    if (existsSync(tmpPath)) { unlinkSync(tmpPath); }
   }
   return false
 }
@@ -478,10 +499,10 @@ async function processarArquivo(
 
   console.log(`\n╔═══ Arquivo ${idx}/${IDX_END} ════════════════════════════`)
 
-  // 1. Download Estabelecimentos
-  const urlEst = `${RF_BASE}/Estabelecimentos${idx}.zip`
+  // 1. Download Estabelecimentos (Storage primeiro, RF como fallback)
+  const urlsEst = getUrlsArquivo('Estabelecimentos', idx)
   console.log(`  ↓ Estabelecimentos${idx}.zip`)
-  if (!await downloadComRetry(urlEst, tmpEst)) { console.log('  ✗ Pulando.'); return }
+  if (!await downloadComRetry(urlsEst, tmpEst)) { console.log('  ✗ Pulando.'); return }
 
   // 2a. Enriquece e-mail de leads existentes na base (independente de CNAE)
   if (basicosSemEmail.size > 0) {
@@ -508,10 +529,10 @@ async function processarArquivo(
   if (!leads.size) { console.log('  Nenhum lead novo por CNAE.'); return }
 
   // 3. Download Empresas → razão social
-  const urlEmp = `${RF_BASE}/Empresas${idx}.zip`
+  const urlsEmp = getUrlsArquivo('Empresas', idx)
   console.log(`  ↓ Empresas${idx}.zip`)
   let razoes = new Map<string, string>()
-  if (await downloadComRetry(urlEmp, tmpEmp)) {
+  if (await downloadComRetry(urlsEmp, tmpEmp)) {
     console.log(`  ⚙ Enriquecendo razão social...`)
     const t2 = Date.now()
     razoes = await enriquecerRazaoSocial(tmpEmp, leads)

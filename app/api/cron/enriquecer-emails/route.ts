@@ -69,16 +69,26 @@ function extrairEmails(texto: string): string[] {
   )]
 }
 
-function scoreEmail(email: string): number {
+/**
+ * Pontua um e-mail considerando domínio corporativo, padrão de endereço e
+ * (opcionalmente) compatibilidade com a razão social da empresa.
+ * Scores: 0 = genérico/descartado, 1-3 = corporativo ok, 4-6 = corporativo preferido
+ */
+function scoreEmail(email: string, razaoSocial?: string): number {
   const dominio = email.split('@')[1] ?? ''
   if (DOMINIOS_GENERICOS.has(dominio)) return 0
-  if (/contato|comercial|vendas|financeiro|info|sac|atendimento|suporte|empresa/.test(email)) return 4
-  if (/^[a-z]+\.[a-z]+@/.test(email)) return 2   // nome.sobrenome@ — provavelmente corporativo
-  return 3  // qualquer outro email corporativo
+  let score = 1
+  // +2 se o domínio contém token da razão social → forte indício de que é da empresa
+  if (razaoSocial && emailDominioCompativel(email, razaoSocial)) score += 2
+  // +2 se é endereço de contato/departamento (mais estável que nome pessoal)
+  if (/^(contato|comercial|vendas|financeiro|info|sac|atendimento|suporte|compras|licitacao|licitacoes|faleconosco)@/.test(email)) score += 2
+  // +1 se parece nome pessoal corporativo (nome.sobrenome@empresa)
+  else if (/^[a-z]{2,}[._][a-z]{2,}@/.test(email)) score += 1
+  return score
 }
 
-function melhorEmail(emails: string[]): string | null {
-  const scored = emails.map(e => ({ e, s: scoreEmail(e) })).filter(x => x.s > 0)
+function melhorEmail(emails: string[], razaoSocial?: string): string | null {
+  const scored = emails.map(e => ({ e, s: scoreEmail(e, razaoSocial) })).filter(x => x.s > 0)
   if (!scored.length) return null
   scored.sort((a, b) => b.s - a.s)
   return scored[0].e
@@ -91,6 +101,46 @@ function slugDominio(razao: string): string {
     .replace(/[^a-z0-9]/g, '')
     .replace(/^(\d)/, 'x$1')
     .slice(0, 25)
+}
+
+/**
+ * Extrai tokens identificadores da razão social (palavras com ≥4 letras, sem stopwords).
+ * Usado para verificar se uma página ou domínio realmente pertence à empresa.
+ */
+function tokenizarRazao(razao: string): string[] {
+  return razao
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // remove acentos
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length >= 4 && !/^(ltda|eireli|eireli|comercio|comercial|industria|servicos|solucoes|empresa|brasil|grupo|nacional)$/.test(t))
+}
+
+/**
+ * Retorna true se o domínio do e-mail contém pelo menos 1 token identificador
+ * da razão social — sinal de que o email provavelmente pertence à empresa.
+ * Ex: "construtora silva" → tokens ["construtora","silva"] → "silva@construtora.com.br" ✓
+ */
+function emailDominioCompativel(email: string, razaoSocial: string): boolean {
+  const dominio = (email.split('@')[1] ?? '').replace(/\.(com\.br|com|net\.br|net|org\.br|org|br)$/i, '')
+  const tokens  = tokenizarRazao(razaoSocial)
+  return tokens.some(t => dominio.includes(t))
+}
+
+/**
+ * Verifica se um bloco de texto (snippet ou HTML) menciona o CNPJ ou
+ * pelo menos 2 tokens da razão social — confirma que a fonte realmente
+ * é sobre esta empresa, não um email achado por coincidência.
+ */
+function textoMencaonaEmpresa(texto: string, cnpj: string, razaoSocial: string): boolean {
+  const t = texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  // CNPJ formatado ou cru — mais forte, aceita só 1
+  const cnpjFormatado = cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+  if (t.includes(cnpj) || t.includes(cnpjFormatado.toLowerCase())) return true
+  // Tokens da razão social — exige ≥2 tokens presentes
+  const tokens = tokenizarRazao(razaoSocial)
+  const matches = tokens.filter(tk => t.includes(tk))
+  return matches.length >= 2
 }
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
@@ -239,7 +289,11 @@ async function buscarDDG(query: string): Promise<{ emails: string[]; urls: strin
 }
 
 // ── Estratégia 4: Fetch de página da empresa ─────────────────────────────────
-async function buscarEmailNaSite(baseUrl: string): Promise<string[]> {
+async function buscarEmailNaSite(
+  baseUrl: string,
+  cnpj?: string,
+  razaoSocial?: string,
+): Promise<string[]> {
   const paths = ['/contato', '/fale-conosco', '/sobre', '/sobre-nos', '', '/contact', '/quem-somos']
   const emails: string[] = []
   for (const path of paths.slice(0, 4)) {
@@ -252,8 +306,12 @@ async function buscarEmailNaSite(baseUrl: string): Promise<string[]> {
       })
       if (!res.ok) continue
       const html = await res.text()
+      // Verificação cruzada: só extrai emails da página se ela menciona a empresa
+      if (cnpj && razaoSocial && !textoMencaonaEmpresa(html, cnpj, razaoSocial)) {
+        continue
+      }
       emails.push(...extrairEmails(html))
-      if (melhorEmail(emails)) break
+      if (melhorEmail(emails, razaoSocial)) break
       await sleep(400)
     } catch { /* ignora */ }
   }
@@ -261,7 +319,7 @@ async function buscarEmailNaSite(baseUrl: string): Promise<string[]> {
 }
 
 // ── Estratégia 5: Domínio deduzido ──────────────────────────────────────────
-async function buscarEmailPorDominio(razao: string): Promise<string[]> {
+async function buscarEmailPorDominio(razao: string, cnpj?: string): Promise<string[]> {
   const slug = slugDominio(razao)
   if (slug.length < 3) return []
   const candidatos = [
@@ -277,7 +335,10 @@ async function buscarEmailPorDominio(razao: string): Promise<string[]> {
         redirect: 'follow',
       })
       if (!res.ok) continue
-      const emails = extrairEmails(await res.text())
+      const html = await res.text()
+      // Verificação: a página deve mencionar a empresa antes de extrair emails
+      if (cnpj && !textoMencaonaEmpresa(html, cnpj, razao)) continue
+      const emails = extrairEmails(html)
       if (emails.length) return emails
     } catch { /* ignora */ }
   }
@@ -340,13 +401,17 @@ export async function GET(req: NextRequest) {
   }
 
   async function processarLead(lead: NonNullable<typeof leads>[0]) {
-    const query    = `"${lead.razao_social.slice(0, 45)}" ${lead.municipio ?? ''} ${lead.uf ?? ''} email contato`
+    const razao = lead.razao_social ?? ''
+    const cnpj  = lead.cnpj ?? ''
+    // Query inclui CNPJ formatado para ancoragem — reduz falsos positivos em buscas
+    const cnpjFmt = cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+    const query = `"${razao.slice(0, 45)}" CNPJ ${cnpjFmt} email contato`
     const debugLog: string[] = []
     let emailFinal: string | null = null
     let metodo = ''
 
     // -1. Retry Receita Federal — pode ter e-mail agora que não tinha antes
-    const emailReceita = await consultarReceita(lead.cnpj)
+    const emailReceita = await consultarReceita(cnpj)
     if (emailReceita) {
       emailFinal = emailReceita
       metodo = 'receita_federal'
@@ -357,8 +422,8 @@ export async function GET(req: NextRequest) {
 
     // 0. Domínio deduzido — gratuito, zero queries de API
     if (!emailFinal) {
-      const emailsDom0 = await buscarEmailPorDominio(lead.razao_social)
-      emailFinal = melhorEmail(emailsDom0)
+      const emailsDom0 = await buscarEmailPorDominio(razao, cnpj)
+      emailFinal = melhorEmail(emailsDom0, razao)
       if (emailFinal) {
         metodo = 'dominio_deduzido'
         debugLog.push(`dominio: encontrou ${emailFinal}`)
@@ -371,13 +436,18 @@ export async function GET(req: NextRequest) {
     if (!emailFinal) {
       const google = await buscarGoogle(query)
       debugLog.push(google.debug)
-      emailFinal = melhorEmail(google.emails)
+      // Só aceita emails de snippets que mencionam a empresa (verificação cruzada)
+      const emailsVerificados = google.emails.filter(e => {
+        const snippetTotal = google.urls.join(' ') + ' ' + query
+        return textoMencaonaEmpresa(snippetTotal, cnpj, razao) || emailDominioCompativel(e, razao)
+      })
+      emailFinal = melhorEmail(emailsVerificados, razao)
       if (emailFinal) { metodo = 'google_snippet' }
 
       if (!emailFinal && google.urls.length) {
         for (const url of google.urls) {
-          const es = await buscarEmailNaSite(url)
-          emailFinal = melhorEmail(es)
+          const es = await buscarEmailNaSite(url, cnpj, razao)
+          emailFinal = melhorEmail(es, razao)
           if (emailFinal) { metodo = 'google_site'; break }
           await sleep(200)
         }
@@ -388,13 +458,16 @@ export async function GET(req: NextRequest) {
     if (!emailFinal) {
       const searx = await buscarSearX(query)
       debugLog.push(searx.debug)
-      emailFinal = melhorEmail(searx.emails)
+      const emailsVerificados = searx.emails.filter(e =>
+        textoMencaonaEmpresa(searx.urls.join(' '), cnpj, razao) || emailDominioCompativel(e, razao)
+      )
+      emailFinal = melhorEmail(emailsVerificados, razao)
       if (emailFinal) { metodo = 'searx_snippet' }
 
       if (!emailFinal && searx.urls.length) {
         for (const url of searx.urls) {
-          const es = await buscarEmailNaSite(url)
-          emailFinal = melhorEmail(es)
+          const es = await buscarEmailNaSite(url, cnpj, razao)
+          emailFinal = melhorEmail(es, razao)
           if (emailFinal) { metodo = 'searx_site'; break }
           await sleep(200)
         }
@@ -406,13 +479,16 @@ export async function GET(req: NextRequest) {
       await sleep(500)
       const bing = await buscarBing(query)
       debugLog.push(bing.debug)
-      emailFinal = melhorEmail(bing.emails)
+      const emailsVerificados = bing.emails.filter(e =>
+        textoMencaonaEmpresa(bing.urls.join(' '), cnpj, razao) || emailDominioCompativel(e, razao)
+      )
+      emailFinal = melhorEmail(emailsVerificados, razao)
       if (emailFinal) { metodo = 'bing_snippet' }
 
       if (!emailFinal && bing.urls.length) {
         for (const url of bing.urls) {
-          const es = await buscarEmailNaSite(url)
-          emailFinal = melhorEmail(es)
+          const es = await buscarEmailNaSite(url, cnpj, razao)
+          emailFinal = melhorEmail(es, razao)
           if (emailFinal) { metodo = 'bing_site'; break }
           await sleep(200)
         }

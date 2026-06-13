@@ -22,7 +22,10 @@ interface ParamsFornecedor {
 export function emailFornecedor(p: ParamsFornecedor) {
   const url     = (p.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
   const ctaHref = `${url}/dashboard`
-  const subject = `${p.nome}, você já monitora — agora vamos habilitar sua empresa para participar`
+  const nomeDisplay = p.nome && p.nome !== 'Prezado(a)' ? p.nome : null
+  const subject = nomeDisplay
+    ? `${nomeDisplay}, você já monitora — agora vamos habilitar sua empresa para participar`
+    : `Você já monitora — agora vamos habilitar sua empresa para participar`
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
