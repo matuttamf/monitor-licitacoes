@@ -188,6 +188,8 @@ Deno.serve(async (_req: Request) => {
   let rowsLidas = 0
   let esgotado = false
 
+  let sep = '|'
+  let sepDetectado = false
   await streamZipLinhas(url, (line) => {
     rowsLidas++
     const row = estado.rows_processed + rowsLidas
@@ -197,7 +199,14 @@ Deno.serve(async (_req: Request) => {
 
     if (rowsLidas > MAX_LINHAS) return false  // parar — continua na próxima execução
 
-    const cols = line.split('|')
+    if (!sepDetectado) {
+      const pipes = (line.match(/\|/g) ?? []).length
+      const pts   = (line.match(/;/g)  ?? []).length
+      sep = pts > pipes ? ';' : '|'
+      sepDetectado = true
+      console.log(`[coletar-leads-cnae] separador="${sep}" (|=${pipes} ;=${pts})`)
+    }
+    const cols = line.split(sep)
     if (cols.length < 28) return true
     if (cols[COL.MATFIL]  !== '1')  return true
     if (cols[COL.SITUACAO] !== '02') return true
