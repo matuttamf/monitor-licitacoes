@@ -56,7 +56,7 @@ function getUrlsArquivo(tipo: 'Estabelecimentos' | 'Empresas', idx: number): str
   return [`${STORAGE_BASE}/${tipo}${idx}.zip`, rfUrl]
 }
 
-const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 18, MUNICIPIO: 19, EMAIL: 26 }
+const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 const COL_EMP = { BASICO: 0, RAZAO: 1 }
 
 // Seed amplo: top CNAEs em licitações públicas brasileiras (~200 códigos)
@@ -358,7 +358,7 @@ async function coletarEmailsExistentes(
 ): Promise<Map<string, string>> {
   const emailMap = new Map<string, string>() // basico → email
   await processarZip(tmpPath, (cols) => {
-    if (cols.length < 27) return
+    if (cols.length < 28) return
     if (cols[COL.SITUACAO] !== '02') return  // só ativas
     const basico = cols[COL.BASICO].trim()
     if (!basicosSemEmail.has(basico)) return
@@ -402,7 +402,7 @@ async function coletarEstabelecimentos(
   const cnaesSample: string[] = []
   await processarZip(tmpPath, (cols) => {
     totalLinhas++
-    if (cols.length < 27) return
+    if (cols.length < 28) return
     passouLen++
     if (cols[COL.MATFIL] !== '1') return
     passouMatfil++
