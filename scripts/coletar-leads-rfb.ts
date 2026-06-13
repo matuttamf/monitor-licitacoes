@@ -315,11 +315,18 @@ async function coletarEstabelecimentos(
 ): Promise<Map<string, LeadRFB>> {
   const leads = new Map<string, LeadRFB>()
   let pulados = 0
+  let totalLinhas = 0, passouLen = 0, passouMatfil = 0, passouSituacao = 0
+  const cnaesSample: string[] = []
   await processarZip(tmpPath, (cols) => {
+    totalLinhas++
     if (cols.length < 28) return
+    passouLen++
     if (cols[COL.MATFIL] !== '1') return
+    passouMatfil++
     if (cols[COL.SITUACAO] !== '02') return
+    passouSituacao++
     const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
+    if (cnaesSample.length < 10) cnaesSample.push(`"${cnae}"(len=${cnae.length})`)
     if (!targetCnaes.has(cnae)) return
     const basico = cols[COL.BASICO].trim()
     if (contatados.has(basico)) { pulados++; return }
@@ -333,6 +340,8 @@ async function coletarEstabelecimentos(
       cnae,
     })
   })
+  console.log(`  [DEBUG] linhas=${totalLinhas} passouLen=${passouLen} passouMatfil=${passouMatfil} passouSituacao=${passouSituacao}`)
+  console.log(`  [DEBUG] CNAEs sample: ${cnaesSample.join(', ')}`)
   if (pulados > 0) console.log(`  Pulados (já contatados): ${pulados}`)
   return leads
 }
