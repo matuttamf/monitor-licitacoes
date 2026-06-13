@@ -907,7 +907,7 @@ export default function CaptacaoPage() {
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           {(() => {
-                            const fonte = l.fonte
+                            const fonte = l.origem === 'cnae' ? 'cnae' : l.fonte
                             const map: Record<string, { label: string; bg: string; color: string }> = {
                               pncp_contrato:        { label: '🏆 Contrato',       bg: 'rgba(107,15,26,0.08)',  color: '#6B0F1A' },
                               pncp_proposta:        { label: '👥 Proponente',     bg: 'rgba(59,130,246,0.08)', color: '#1e40af' },
