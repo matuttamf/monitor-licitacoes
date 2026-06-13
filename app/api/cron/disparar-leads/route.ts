@@ -146,18 +146,30 @@ export async function GET(req: NextRequest) {
     .lt('enviado_em', h4ago)
 
   // ── Step 1: Fila de disparo ordenada por prioridade ─────────────────────────
-  // prioridade_disparo (coluna gerada): 1=pncp_contrato 2=pncp_proposta
-  //   3=portal_transparencia 4=busca_manual 5=cnae 6=outros
-  // Novos leads entram automaticamente na fila com a prioridade correta.
-  const { data: leadsPendentes } = await supabase
+  // Prioridade: contrato(1) → proponente(2) → transparência(3) → manual(4) → CNAE/RF(5) → outros(6)
+  // Leads com origem='cnae' têm prioridade 5 independente do fonte (podem ter fonte='pncp_contrato').
+  // Busca o dobro do lote e ordena em JS para não depender da coluna gerada no banco.
+  const { data: leadsPendentesRaw } = await supabase
     .from('leads')
-    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
+    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados, fonte, origem')
     .eq('status', 'pendente')
     .not('email', 'is', null)
     .neq('email', '')
-    .order('prioridade_disparo', { ascending: true })
-    .order('created_at',         { ascending: true })
-    .limit(MAX_LOTE_NOVOS)
+    .order('created_at', { ascending: true })
+    .limit(MAX_LOTE_NOVOS * 4)
+
+  function prioridadeLead(l: { fonte: string | null; origem: string | null }): number {
+    if (l.origem === 'cnae')                return 5
+    if (l.fonte  === 'pncp_contrato')       return 1
+    if (l.fonte  === 'pncp_proposta')       return 2
+    if (l.fonte  === 'portal_transparencia') return 3
+    if (l.fonte  === 'busca_manual')        return 4
+    return 6
+  }
+
+  const leadsPendentes = (leadsPendentesRaw ?? [])
+    .sort((a, b) => prioridadeLead(a) - prioridadeLead(b))
+    .slice(0, MAX_LOTE_NOVOS)
 
   // ── Step 2: Follow-up (D+4 e D+8 para quem não abriu) ────────────────────
   const agora = new Date().toISOString()
