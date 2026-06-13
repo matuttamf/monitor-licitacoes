@@ -1,6 +1,8 @@
 name: Enriquecer Receita Federal
 
 on:
+  schedule:
+    - cron: '0 4 * * *'  # 1h BRT (UTC-3) = 4h UTC
   workflow_dispatch:
 
 jobs:
