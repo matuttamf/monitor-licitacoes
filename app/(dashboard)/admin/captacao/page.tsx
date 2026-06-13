@@ -87,6 +87,7 @@ export default function CaptacaoPage() {
   const [paginaDB, setPaginaDB]           = useState(1)
   const [filtroStatus, setFiltroStatus]   = useState('todos')
   const [filtroUF, setFiltroUF]           = useState('todos')
+  const [filtroFonte, setFiltroFonte]     = useState('todos')
   const [filtroCNAE, setFiltroCNAE]       = useState('')
   const [filtroQ, setFiltroQ]             = useState('')
   const [carregandoDB, setCarregandoDB]   = useState(false)
@@ -214,6 +215,7 @@ export default function CaptacaoPage() {
       page:   String(pag),
       status: filtroStatus,
       uf:     filtroUF,
+      fonte:  filtroFonte,
       cnae:   filtroCNAE,
       q:      filtroQ,
     })
@@ -226,7 +228,7 @@ export default function CaptacaoPage() {
       setPaginaDB(d.page)
     }
     setCarregandoDB(false)
-  }, [filtroStatus, filtroUF, filtroCNAE, filtroQ])
+  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ])
 
   useEffect(() => { carregarStats() }, [carregarStats])
   useEffect(() => {
@@ -765,6 +767,18 @@ export default function CaptacaoPage() {
               </select>
             </div>
             <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)' }}>Fonte</label>
+              <select value={filtroFonte} onChange={e => setFiltroFonte(e.target.value)}
+                className="px-3 py-1.5 rounded-lg text-xs"
+                style={{ border: '1px solid var(--cinza-light)', background: 'white', color: 'var(--preto)' }}>
+                <option value="todos">Todos</option>
+                <option value="pncp_contrato">🏆 Contrato</option>
+                <option value="pncp_proposta">👥 Proponente</option>
+                <option value="portal_transparencia">🏛️ Transparência</option>
+                <option value="busca_manual">🔍 Manual</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)' }}>CNAE / Setor</label>
               <div className="flex gap-1 flex-wrap items-center">
                 <input value={filtroCNAE} onChange={e => setFiltroCNAE(e.target.value)}
@@ -789,8 +803,8 @@ export default function CaptacaoPage() {
                 className="px-3 py-1.5 rounded-lg text-xs"
                 style={{ border: '1px solid var(--cinza-light)', background: 'white', width: 180 }} />
             </div>
-            {filtroQ || filtroStatus !== 'todos' || filtroUF !== 'todos' || filtroCNAE ? (
-              <button onClick={() => { setFiltroQ(''); setFiltroStatus('todos'); setFiltroUF('todos'); setFiltroCNAE('') }}
+            {filtroQ || filtroStatus !== 'todos' || filtroUF !== 'todos' || filtroFonte !== 'todos' || filtroCNAE ? (
+              <button onClick={() => { setFiltroQ(''); setFiltroStatus('todos'); setFiltroUF('todos'); setFiltroFonte('todos'); setFiltroCNAE('') }}
                 className="px-3 py-1.5 rounded-lg text-xs"
                 style={{ border: '1px solid var(--cinza-light)', background: 'white', color: 'var(--cinza)', cursor: 'pointer' }}>
                 ✕ Limpar

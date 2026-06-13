@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
   const q      = (sp.get('q') ?? '').trim().toLowerCase()
   const uf     = sp.get('uf') ?? 'todos'
   const cnae   = (sp.get('cnae') ?? '').trim()
+  const fonte  = sp.get('fonte') ?? 'todos'
 
   const service = createAdminClient()
   const from    = (page - 1) * PAGE_SIZE
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
   if (status !== 'todos') query = query.eq('status', status)
   if (uf !== 'todos')     query = query.eq('uf', uf)
   if (cnae)               query = query.ilike('cnae', `%${cnae}%`)
+  if (fonte !== 'todos')  query = query.eq('fonte', fonte)
   if (q)                  query = query.or(`email.ilike.%${q}%,razao_social.ilike.%${q}%,nome_fantasia.ilike.%${q}%`)
 
   const { data, count, error } = await query
