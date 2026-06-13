@@ -355,11 +355,15 @@ async function aplicarEmailsExistentes(emailMap: Map<string, string>): Promise<n
   for (let i = 0; i < entries.length; i += 200) {
     const lote = entries.slice(i, i + 200)
     for (const [basico, email] of lote) {
+      // Só promove para 'pendente' se a razão social já foi verificada (tem letras).
+      // Leads com razão social = CNPJ numérico (fallback) ficam 'invalido' até enriquecer-receita confirmar.
       const { error } = await supabase
         .from('leads')
         .update({ email, status: 'pendente' })
         .like('cnpj', `${basico}%`)
         .is('email', null)
+        .not('razao_social', 'is', null)
+        .not('razao_social', 'match', '^\\d+$')
       if (!error) atualizados++
     }
   }
