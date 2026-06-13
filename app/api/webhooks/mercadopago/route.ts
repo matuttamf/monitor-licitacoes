@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { getLimites } from '@/lib/planos'
 import { Resend } from 'resend'
 import { emailConfirmacaoAssinatura } from '@/lib/emails/confirmacao-assinatura'
+import { emailFornecedor } from '@/lib/emails/fornecedor'
 
 const PRECOS_PLANO: Record<string, number> = {
   basic:        49.90,
@@ -175,6 +176,26 @@ export async function POST(request: Request) {
             subject, html, text,
           })
           console.log(`[webhook/mp] E-mail confirmação enviado para ${profile.email}`)
+
+          // E-mail guia de fornecedor — enviado junto, não bloqueia
+          try {
+            const nomePlanoDisplay: Record<string, string> = {
+              basic: 'Basic', profissional: 'Profissional', gestao: 'Gestão', pro: 'Pro', empresarial: 'Empresarial',
+            }
+            const { subject: sF, html: hF, text: tF } = emailFornecedor({
+              nome:  profile.nome ?? 'Prezado(a)',
+              email: profile.email,
+              plano: nomePlanoDisplay[planoId] ?? planoId,
+            })
+            await resend.emails.send({
+              from:    'Monitor de Licitações <noreply@monitordelicitacoes.com.br>',
+              to:      profile.email,
+              subject: sF, html: hF, text: tF,
+            })
+            console.log(`[webhook/mp] E-mail fornecedor enviado para ${profile.email}`)
+          } catch (ef) {
+            console.error('[webhook/mp] Erro ao enviar e-mail fornecedor:', ef)
+          }
         }
       } catch (e) {
         console.error('[webhook/mp] Erro ao enviar e-mail confirmação:', e)
