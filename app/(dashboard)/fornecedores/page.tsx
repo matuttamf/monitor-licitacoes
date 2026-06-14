@@ -209,7 +209,7 @@ export default function FornecedoresPage() {
               <textarea
                 value={form.descricao}
                 onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
-                placeholder="Ex: Distribuidora de materiais elétricos — atendemos órgãos públicos, construtoras e revendas em todo o Sudeste."
+                placeholder="Ex: Fabricamos janelas de alumínio, vendemos cadeiras e mesas para escritório, prestamos serviços de limpeza..."
                 rows={3}
                 className="w-full px-3 py-2 rounded-xl text-sm resize-none"
                 style={{ border: '1.5px solid var(--cinza-light)', background: 'var(--fundo)', color: 'var(--preto)', outline: 'none', boxSizing: 'border-box' }}
