@@ -385,7 +385,7 @@ export default function FornecedoresPage() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Paginação */}
       {totalPaginas > 1 && (
