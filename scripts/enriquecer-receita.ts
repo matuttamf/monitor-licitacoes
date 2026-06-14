@@ -145,7 +145,7 @@ async function main() {
       porte:         dados.porte ?? null,
       cnae:          dados.cnae_fiscal_descricao ?? null,
       cnae_codigo:   cnaeCode,
-      status:        emailFinal ? 'pendente' : 'invalido',
+      status:        (emailFinal && dados.municipio && cnaeCode) ? 'pendente' : 'invalido',
     })
   }
 

@@ -433,6 +433,8 @@ async function aplicarEmailsExistentes(emailMap: Map<string, string>): Promise<n
         .is('email', null)
         .not('razao_social', 'is', null)
         .not('razao_social', 'match', '^\\d+$')
+        .not('municipio', 'is', null)
+        .or('cnae.not.is.null,cnae_codigo.not.is.null')
       if (!error) atualizados++
     }
   }
@@ -522,7 +524,7 @@ async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, str
       municipio: l.municipio,
       cnae_codigo: l.cnae,
       data_abertura: l.data_abertura,
-      status: (l.email && razaoVerificada ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
+      status: (l.email && razaoVerificada && l.municipio && l.cnae ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
       situacao: 'ATIVA' as const,
       origem: 'cnae' as const,
       fonte: 'cnae' as const,

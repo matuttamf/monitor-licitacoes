@@ -178,6 +178,10 @@ async function atualizarEmails(emailMap: Map<string, string>): Promise<number> {
         .update({ email, status: 'pendente', email_tentativas: 0 })
         .eq('cnpj', cnpj)
         .or('email.is.null,email.eq.')
+        .not('razao_social', 'is', null)
+        .not('razao_social', 'match', '^\\d+$')
+        .not('municipio', 'is', null)
+        .or('cnae.not.is.null,cnae_codigo.not.is.null')
       if (!error) atualizados++
     }
   }
