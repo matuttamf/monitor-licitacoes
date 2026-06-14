@@ -37,34 +37,40 @@ export async function GET(req: NextRequest) {
     const from    = (page - 1) * PAGE_SIZE
     const to      = from + PAGE_SIZE - 1
 
-    let query = service
-      .from('leads')
-      .select('*', { count: 'estimated' })
-      .order(orderBy, { ascending: orderDir })
-      .range(from, to)
+    // Contagem separada sem ORDER BY — evita full sort em 9M+ linhas
+    // eslint-disable-next-line prefer-const
+    let countQ = service.from('leads').select('*', { count: 'estimated', head: true })
+    if (status !== 'todos') countQ = countQ.eq('status', status)
+    if (uf !== 'todos')     countQ = countQ.eq('uf', uf)
+    if (cnae)               countQ = countQ.ilike('cnae', `%${cnae}%`)
+    if (fonte === 'cnae')        { countQ = countQ.eq('origem', 'cnae') }
+    else if (fonte !== 'todos')  { countQ = countQ.eq('fonte', fonte).neq('origem', 'cnae') }
+    if (q)                  countQ = countQ.or(`email.ilike.%${q}%,razao_social.ilike.%${q}%,nome_fantasia.ilike.%${q}%`)
+    const { count, error: countError } = await countQ
+    if (countError) console.error('[leads-db] count error:', countError.message)
 
-    if (status !== 'todos') query = query.eq('status', status)
-    if (uf !== 'todos')     query = query.eq('uf', uf)
-    if (cnae)               query = query.ilike('cnae', `%${cnae}%`)
-    if (fonte === 'cnae') {
-      query = query.eq('origem', 'cnae')
-    } else if (fonte !== 'todos') {
-      query = query.eq('fonte', fonte).neq('origem', 'cnae')
-    }
-    if (q) query = query.or(`email.ilike.%${q}%,razao_social.ilike.%${q}%,nome_fantasia.ilike.%${q}%`)
-
-    const { data, count, error } = await query
+    // Query de dados com ORDER BY + paginação
+    // eslint-disable-next-line prefer-const
+    let dataQ = service.from('leads').select('*').order(orderBy, { ascending: orderDir }).range(from, to)
+    if (status !== 'todos') dataQ = dataQ.eq('status', status)
+    if (uf !== 'todos')     dataQ = dataQ.eq('uf', uf)
+    if (cnae)               dataQ = dataQ.ilike('cnae', `%${cnae}%`)
+    if (fonte === 'cnae')        { dataQ = dataQ.eq('origem', 'cnae') }
+    else if (fonte !== 'todos')  { dataQ = dataQ.eq('fonte', fonte).neq('origem', 'cnae') }
+    if (q)                  dataQ = dataQ.or(`email.ilike.%${q}%,razao_social.ilike.%${q}%,nome_fantasia.ilike.%${q}%`)
+    const { data, error } = await dataQ
     if (error) {
       console.error('[leads-db] Supabase error:', error)
       return NextResponse.json({ error: error.message, details: error.details, hint: error.hint }, { status: 500 })
     }
 
+    const total = count ?? 0
     return NextResponse.json({
       leads:      data ?? [],
-      total:      count ?? 0,
+      total,
       page,
       page_size:  PAGE_SIZE,
-      pages:      Math.ceil((count ?? 0) / PAGE_SIZE),
+      pages:      Math.ceil(total / PAGE_SIZE),
     })
   } catch (e) {
     console.error('[leads-db] Unhandled error:', e)
