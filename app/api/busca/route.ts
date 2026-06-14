@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   const cols = 'id, fonte, numero_edital, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade'
+  const hoje = new Date().toISOString().slice(0, 10)
 
   // Lista de UFs para filtro (null = sem filtro de localização)
   const ufs = expandirParaUFs(regioes)
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
   let textoQuery = supabase
     .from('licitacoes')
     .select(cols, { count: 'exact' })
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
     .order('coletado_em', { ascending: false })
 
   if (termo)      textoQuery = textoQuery.ilike('objeto', `%${termo}%`) as typeof textoQuery
@@ -91,6 +93,7 @@ export async function GET(request: NextRequest) {
         .from('licitacoes')
         .select(cols)
         .in('id', novosIds)
+        .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
         .order('coletado_em', { ascending: false })
         .limit(POR_PAGINA)
 
