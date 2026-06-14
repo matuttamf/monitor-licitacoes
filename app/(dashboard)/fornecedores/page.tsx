@@ -42,6 +42,7 @@ export default function FornecedoresPage() {
   const [msg, setMsg]             = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [jaCadastrado, setJaCadastrado] = useState(false)
   const [buscandoKws, setBuscandoKws]   = useState(false)
+  const [carregandoForm, setCarregandoForm] = useState(false)
 
   const carregar = useCallback(async (p: number, q: string, r: string) => {
     setCarregando(true)
@@ -78,6 +79,26 @@ export default function FornecedoresPage() {
     }))
   }
 
+  async function abrirForm() {
+    setShowForm(true)
+    setMsg(null)
+    setCarregandoForm(true)
+    const res = await fetch('/api/fornecedor')
+    if (res.ok) {
+      const d = await res.json()
+      if (d) setForm({
+        razao_social:     d.razao_social     ?? '',
+        cnpj:             d.cnpj             ?? '',
+        descricao:        d.descricao        ?? '',
+        email_contato:    d.email_contato    ?? '',
+        telefone_contato: d.telefone_contato ?? '',
+        website:          d.website          ?? '',
+        regioes:          d.regioes          ?? [],
+      })
+    }
+    setCarregandoForm(false)
+  }
+
   async function buscarPalavrasChave() {
     setBuscandoKws(true)
     const res = await fetch('/api/keywords')
@@ -107,10 +128,9 @@ export default function FornecedoresPage() {
     })
     const data = await res.json()
     if (res.ok) {
-      setMsg({ tipo: 'ok', texto: 'Cadastro enviado! Sua empresa aparecerá no diretório após revisão.' })
+      setMsg({ tipo: 'ok', texto: jaCadastrado ? '✓ Cadastro atualizado com sucesso!' : 'Cadastro enviado! Sua empresa aparecerá no diretório após revisão.' })
       setJaCadastrado(true)
-      setForm(FORM_VAZIO)
-      setTimeout(() => setShowForm(false), 3000)
+      if (!jaCadastrado) setTimeout(() => setShowForm(false), 3000)
     } else {
       setMsg({ tipo: 'erro', texto: data.error ?? 'Erro ao enviar.' })
     }
@@ -152,19 +172,20 @@ export default function FornecedoresPage() {
             Empresas cadastradas abertas a negociações e parcerias com outros usuários da plataforma.
           </p>
         </div>
-        {!jaCadastrado && (
+        {!showForm ? (
           <button
-            onClick={() => { setShowForm(v => !v); setMsg(null) }}
+            onClick={abrirForm}
             className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
-            style={{ background: showForm ? 'var(--cinza-light)' : 'var(--vinho)', color: showForm ? 'var(--cinza)' : 'white', border: 'none', cursor: 'pointer' }}>
-            {showForm ? '✕ Fechar' : '+ Cadastrar minha empresa'}
+            style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
+            {jaCadastrado ? '✏️ Editar cadastro' : '+ Cadastrar minha empresa'}
           </button>
-        )}
-        {jaCadastrado && (
-          <span className="px-4 py-2 rounded-xl text-xs font-semibold"
-            style={{ background: 'rgba(16,185,129,0.08)', color: '#065f46', border: '1px solid rgba(16,185,129,0.2)' }}>
-            ✓ Sua empresa está no diretório
-          </span>
+        ) : (
+          <button
+            onClick={() => { setShowForm(false); setMsg(null); setForm(FORM_VAZIO) }}
+            className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
+            style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
+            ✕ Fechar
+          </button>
         )}
       </div>
 
@@ -187,10 +208,22 @@ export default function FornecedoresPage() {
       {showForm && (
         <form onSubmit={enviarCadastro} className="rounded-2xl p-6 space-y-4"
           style={{ background: 'white', border: '1.5px solid var(--cinza-light)' }}>
-          <h2 className="text-base font-bold" style={{ color: 'var(--preto)' }}>Cadastrar minha empresa no diretório</h2>
-          <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-            Após envio, seu cadastro será revisado e publicado em até 48h.
-          </p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-base font-bold" style={{ color: 'var(--preto)' }}>
+              {jaCadastrado ? 'Editar cadastro no diretório' : 'Cadastrar minha empresa no diretório'}
+            </h2>
+            <a href="/perfil" className="text-xs font-semibold no-underline"
+              style={{ color: 'var(--vinho)', opacity: 0.8 }}>
+              Também editável em Perfil →
+            </a>
+          </div>
+          {carregandoForm ? (
+            <p className="text-xs" style={{ color: 'var(--cinza)' }}>Carregando dados…</p>
+          ) : (
+            <p className="text-xs" style={{ color: 'var(--cinza)' }}>
+              {jaCadastrado ? 'Atualize as informações da sua empresa no diretório.' : 'Após envio, seu cadastro será revisado e publicado em até 48h.'}
+            </p>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {([
