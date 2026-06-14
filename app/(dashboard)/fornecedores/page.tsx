@@ -267,7 +267,7 @@ export default function FornecedoresPage() {
       )}
 
       {/* Filtros de busca */}
-      <form onSubmit={buscar} className="flex gap-3 flex-wrap">
+      {!showForm && <form onSubmit={buscar} className="flex gap-3 flex-wrap">
         <input
           type="text"
           value={busca}
@@ -302,7 +302,7 @@ export default function FornecedoresPage() {
             Limpar
           </button>
         )}
-      </form>
+      </form>}
 
       {/* Contador */}
       {!carregando && total > 0 && (
