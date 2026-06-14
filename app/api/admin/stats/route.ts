@@ -58,7 +58,7 @@ export async function GET() {
     cnt(service.from('alertas').select('*', { count: 'exact', head: true }).gte('criado_em', new Date(Date.now() - 86400000).toISOString()) as never),
     cnt(service.from('alertas').select('*', { count: 'exact', head: true }).gte('criado_em', new Date(Date.now() - 7 * 86400000).toISOString()) as never),
     // Leads por status
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente').not('email', 'is', null).neq('email', '') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente') as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado') as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }) as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro') as never),
