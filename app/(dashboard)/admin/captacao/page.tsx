@@ -96,6 +96,10 @@ export default function CaptacaoPage() {
   const [filtroQ, setFiltroQ]             = useState('')
   const [ordemCol, setOrdemCol]           = useState<string | null>(null)
   const [ordemDir, setOrdemDir]           = useState<'asc' | 'desc'>('asc')
+  const ordemColRef = useRef<string | null>(null)
+  const ordemDirRef = useRef<'asc' | 'desc'>('asc')
+  ordemColRef.current = ordemCol   // sync: sempre o valor atual
+  ordemDirRef.current = ordemDir
   const [carregandoDB, setCarregandoDB]   = useState(false)
   const [selecionados, setSelecionados]   = useState<Set<string>>(new Set())
   const [acaoBulk, setAcaoBulk]          = useState('')
@@ -225,8 +229,11 @@ export default function CaptacaoPage() {
       fonte:  filtroFonte,
       cnae:   filtroCNAE,
       q:      filtroQ,
-      ...(ordemCol ? { order_by: ordemCol, order_dir: ordemDir } : {}),
     })
+    if (ordemColRef.current) {
+      params.set('order_by', ordemColRef.current)
+      params.set('order_dir', ordemDirRef.current)
+    }
     const res = await fetch(`/api/admin/leads-db?${params}`)
     if (res.ok) {
       const d: LeadsDBResult = await res.json()
@@ -236,7 +243,7 @@ export default function CaptacaoPage() {
       setPaginaDB(d.page)
     }
     setCarregandoDB(false)
-  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ, ordemCol, ordemDir])
+  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ])
 
   useEffect(() => { carregarStats() }, [carregarStats])
   useEffect(() => {
@@ -929,11 +936,16 @@ export default function CaptacaoPage() {
                             <button
                               onClick={() => {
                                 if (ordemCol === col) {
-                                  setOrdemDir(d => d === 'asc' ? 'desc' : 'asc')
+                                  const novaDir = ordemDir === 'asc' ? 'desc' : 'asc'
+                                  ordemDirRef.current = novaDir
+                                  setOrdemDir(novaDir)
                                 } else {
+                                  ordemColRef.current = col
+                                  ordemDirRef.current = 'asc'
                                   setOrdemCol(col)
                                   setOrdemDir('asc')
                                 }
+                                carregarLeadsDB(1)
                               }}
                               style={{
                                 background: 'none', border: 'none', cursor: 'pointer',
