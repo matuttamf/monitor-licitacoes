@@ -375,7 +375,7 @@ export async function GET(req: NextRequest) {
 
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, cnpj, razao_social, municipio, uf, porte, email_tentativas')
+    .select('id, cnpj, razao_social, nome_fantasia, municipio, uf, porte, email_tentativas')
     .is('email', null)
     .eq('status', 'invalido')
     .eq('situacao', 'ATIVA')
@@ -401,7 +401,7 @@ export async function GET(req: NextRequest) {
   }
 
   async function processarLead(lead: NonNullable<typeof leads>[0]) {
-    const razao = lead.razao_social ?? ''
+    const razao = lead.nome_fantasia?.trim() || (lead.razao_social ?? '').replace(/^\d{8}\s+/, '').trim()
     const cnpj  = lead.cnpj ?? ''
     // Query inclui CNPJ formatado para ancoragem — reduz falsos positivos em buscas
     const cnpjFmt = cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
