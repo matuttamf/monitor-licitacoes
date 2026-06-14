@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const trintaDiasAtras = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
   try {
     const { count, error } = await supabase
