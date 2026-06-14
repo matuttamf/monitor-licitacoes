@@ -56,8 +56,26 @@ function getUrlsArquivo(tipo: 'Estabelecimentos' | 'Empresas', idx: number): str
   return [`${STORAGE_BASE}/${tipo}${idx}.zip`, rfUrl]
 }
 
-const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
+const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, DATA_INICIO: 10, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 const COL_EMP = { BASICO: 0, RAZAO: 1 }
+
+// Domínios/palavras típicas de escritórios contábeis — e-mails desses domínios
+// costumam ser da contabilidade, não da empresa. Marcamos como inválido.
+const RE_CONTABIL = /contab[il]|escritorio|assessor[ia]|fiscal|tribut|contadora?|cgcontabil|escritcontab/i
+
+function isEmailContabilidade(email: string, emailsContagem: Map<string, number>): boolean {
+  const [, dominio] = email.split('@')
+  if (RE_CONTABIL.test(dominio)) return true
+  const contagem = emailsContagem.get(email) ?? 0
+  return contagem >= 3  // mesmo e-mail em 3+ CNPJs = provavelmente contabilidade
+}
+
+// Data limite para filtro de 60 dias (formato YYYYMMDD)
+function getDataLimite60Dias(): string {
+  const d = new Date()
+  d.setDate(d.getDate() - 60)
+  return d.toISOString().slice(0, 10).replace(/-/g, '')
+}
 
 // Seed amplo: top CNAEs em licitações públicas brasileiras (~200 códigos)
 const CNAE_SEED = new Set([
@@ -378,7 +396,7 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
 }
 
 // ── Processamento por índice ──────────────────────────────────────────────────
-type LeadRFB = { cnpj: string; email: string|null; uf: string|null; municipio: string|null; cnae: string }
+type LeadRFB = { cnpj: string; email: string|null; uf: string|null; municipio: string|null; cnae: string; data_abertura: string|null }
 
 // Varre arquivo de estabelecimentos coletando e-mails de leads JÁ existentes na base
 // (independente de CNAE) — uma passagem única, sem carregar tudo em memória
@@ -427,7 +445,9 @@ async function coletarEstabelecimentos(
   contatados: Set<string>,
 ): Promise<Map<string, LeadRFB>> {
   const leads = new Map<string, LeadRFB>()
-  let pulados = 0
+  const emailContagem = new Map<string, number>()
+  const dataLimite = getDataLimite60Dias()
+  let pulados = 0, foraJanela = 0
   let totalLinhas = 0, passouLen = 0, passouMatfil = 0, passouSituacao = 0
   const cnaesSample: string[] = []
   await processarZip(tmpPath, (cols) => {
@@ -438,6 +458,9 @@ async function coletarEstabelecimentos(
     passouMatfil++
     if (cols[COL.SITUACAO] !== '02') return
     passouSituacao++
+    // Filtro: apenas empresas abertas nos últimos 60 dias
+    const dataInicio = cols[COL.DATA_INICIO]?.trim() ?? ''
+    if (!dataInicio || dataInicio < dataLimite) { foraJanela++; return }
     const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
     if (cnaesSample.length < 10) cnaesSample.push(`"${cnae}"(len=${cnae.length})`)
     if (!targetCnaes.has(cnae)) return
@@ -446,17 +469,32 @@ async function coletarEstabelecimentos(
     const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
     if (cnpj.length !== 14) return
     const mun = cols[COL.MUNICIPIO]?.trim() || null
+    const emailRaw = validarEmail(cols[COL.EMAIL] ?? null)
+    if (emailRaw) emailContagem.set(emailRaw, (emailContagem.get(emailRaw) ?? 0) + 1)
+    // Converte YYYYMMDD → YYYY-MM-DD para salvar como date
+    const dataAberturaStr = dataInicio.length === 8
+      ? `${dataInicio.slice(0,4)}-${dataInicio.slice(4,6)}-${dataInicio.slice(6,8)}`
+      : null
     leads.set(basico, {
       cnpj,
-      email: validarEmail(cols[COL.EMAIL] ?? null),
+      email: emailRaw,
       uf: cols[COL.UF]?.trim() || null,
-      // RFB armazena município como código IBGE numérico; não salvar — enriquecer-receita popula o nome real
       municipio: mun && /[a-zA-ZÀ-ÿ]/.test(mun) ? mun : null,
       cnae,
+      data_abertura: dataAberturaStr,
     })
   })
-  console.log(`  [DEBUG] linhas=${totalLinhas} passouLen=${passouLen} passouMatfil=${passouMatfil} passouSituacao=${passouSituacao}`)
+  // Marca e-mails de contabilidade como null (serão inseridos como inválidos)
+  let emailsContabil = 0
+  for (const [basico, lead] of leads) {
+    if (lead.email && isEmailContabilidade(lead.email, emailContagem)) {
+      leads.set(basico, { ...lead, email: null })
+      emailsContabil++
+    }
+  }
+  console.log(`  [DEBUG] linhas=${totalLinhas} passouLen=${passouLen} passouMatfil=${passouMatfil} passouSituacao=${passouSituacao} foraJanela60d=${foraJanela}`)
   console.log(`  [DEBUG] CNAEs sample: ${cnaesSample.join(', ')}`)
+  if (emailsContabil > 0) console.log(`  E-mails de contabilidade descartados: ${emailsContabil}`)
   if (pulados > 0) console.log(`  Pulados (já contatados): ${pulados}`)
   return leads
 }
@@ -475,9 +513,6 @@ async function enriquecerRazaoSocial(tmpPath: string, leads: Map<string, LeadRFB
 async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, string>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
   const rows = Array.from(leads.values()).map(l => {
     const razaoSocial = razoes.get(l.cnpj.slice(0, 8)) ?? l.cnpj
-    // Razão social verificada = veio do arquivo Empresas (tem letras). Se caiu no fallback
-    // (só dígitos = o próprio CNPJ), o lead fica como 'invalido' até enriquecer-receita confirmar
-    // via minhareceita.org — assim e-mails nunca saem com nome errado.
     const razaoVerificada = /[a-zA-ZÀ-ÿ]/.test(razaoSocial)
     return {
       cnpj: l.cnpj,
@@ -486,6 +521,7 @@ async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, str
       uf: l.uf,
       municipio: l.municipio,
       cnae_codigo: l.cnae,
+      data_abertura: l.data_abertura,
       status: (l.email && razaoVerificada ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
       situacao: 'ATIVA' as const,
       origem: 'cnae' as const,

@@ -18,11 +18,14 @@ type LeadDB = {
 
 type LeadsDBResult = { leads: LeadDB[]; total: number; page: number; pages: number }
 
+type FonteItem = { fonte: string; total: number }
+
 type Stats = {
   leadsTotal: number; leadsPendentes: number; leadsEnviados: number
   leadsErro: number; leadsInvalido: number; leadsDescadastrado: number
   totalExpired: number; reconversaoEnviado: number
   leadsAbriram: number; leadsClicaram: number
+  fonteBreakdown: FonteItem[]
 }
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -205,6 +208,7 @@ export default function CaptacaoPage() {
         reconversaoEnviado: s.reconversaoEnviado  ?? 0,
         leadsAbriram:       s.leadsAbriram        ?? 0,
         leadsClicaram:      s.leadsClicaram       ?? 0,
+        fonteBreakdown:     s.fonteBreakdown      ?? [],
       })
     }
   }, [])
@@ -454,32 +458,73 @@ export default function CaptacaoPage() {
 
       {/* ── Funil de conversão ── */}
       {stats && stats.leadsTotal > 0 && (() => {
-        const etapas = [
-          { label: 'Coletados',   value: stats.leadsTotal,     cor: '#6B0F1A', icon: '📥' },
-          { label: 'E-mails env.', value: stats.leadsEnviados,  cor: '#C9A65A', icon: '✉️' },
-          { label: 'Abriram',     value: stats.leadsAbriram,   cor: '#3b82f6', icon: '👁️' },
-          { label: 'Clicaram',    value: stats.leadsClicaram,  cor: '#8b5cf6', icon: '🖱️' },
-        ]
+        const FONTE_META: Record<string, { icon: string; label: string; cor: string }> = {
+          cnae:                 { icon: '🏭', label: 'CNAE/RF',       cor: '#10b981' },
+          pncp_contrato:        { icon: '🏆', label: 'Contrato',      cor: '#6B0F1A' },
+          pncp_proposta:        { icon: '👥', label: 'Proponente',    cor: '#3b82f6' },
+          portal_transparencia: { icon: '🏛️', label: 'Transparência', cor: '#8b5cf6' },
+          busca_manual:         { icon: '🔍', label: 'Manual',        cor: '#6b7280' },
+        }
         const base = stats.leadsTotal || 1
+        const barMaxH = 80
         return (
           <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
             <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Funil de captação</h2>
-            <div className="flex items-end gap-2 flex-wrap">
-              {etapas.map((e, i) => {
+            <div className="flex items-end gap-3 flex-wrap">
+
+              {/* Total coletados */}
+              {(() => {
+                const pct = 100
+                const barH = barMaxH
+                return (
+                  <div className="flex flex-col items-center" style={{ minWidth: 72 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#6B0F1A' }}>{stats.leadsTotal.toLocaleString('pt-BR')}</div>
+                    <div style={{ width: 56, height: barH, background: '#6B0F1A', borderRadius: 4, opacity: 0.85, margin: '4px 0' }} />
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--cinza)', textAlign: 'center' }}>📥 Coletados</div>
+                    <div style={{ fontSize: 10, color: 'var(--cinza)' }}>{pct}%</div>
+                  </div>
+                )
+              })()}
+
+              {/* Breakdown por fonte (ordem decrescente, já vem da API) */}
+              {stats.fonteBreakdown.length > 0 && (
+                <>
+                  <div style={{ width: 1, height: 60, background: 'var(--cinza-light)', alignSelf: 'center' }} />
+                  {stats.fonteBreakdown.map(f => {
+                    const meta = FONTE_META[f.fonte] ?? { icon: '📦', label: f.fonte, cor: '#6b7280' }
+                    const pct = Math.round((f.total / base) * 100)
+                    const barH = Math.max(6, Math.round((f.total / base) * barMaxH))
+                    return (
+                      <div key={f.fonte} className="flex flex-col items-center" style={{ minWidth: 64 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: meta.cor }}>{f.total.toLocaleString('pt-BR')}</div>
+                        <div style={{ width: 48, height: barH, background: meta.cor, borderRadius: 4, opacity: 0.8, margin: '4px 0' }} />
+                        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--cinza)', textAlign: 'center' }}>{meta.icon} {meta.label}</div>
+                        <div style={{ fontSize: 9, color: 'var(--cinza)' }}>{pct}%</div>
+                      </div>
+                    )
+                  })}
+                  <div style={{ width: 1, height: 60, background: 'var(--cinza-light)', alignSelf: 'center' }} />
+                </>
+              )}
+
+              {/* Etapas do funil de e-mail */}
+              {[
+                { label: 'E-mails env.', value: stats.leadsEnviados, cor: '#C9A65A', icon: '✉️' },
+                { label: 'Abriram',      value: stats.leadsAbriram,  cor: '#3b82f6', icon: '👁️' },
+                { label: 'Clicaram',     value: stats.leadsClicaram, cor: '#8b5cf6', icon: '🖱️' },
+              ].map(e => {
                 const pct = Math.round((e.value / base) * 100)
-                const barH = Math.max(8, Math.round((e.value / base) * 80))
+                const barH = Math.max(6, Math.round((e.value / base) * barMaxH))
                 return (
                   <div key={e.label} className="flex flex-col items-center" style={{ minWidth: 72 }}>
-                    {i > 0 && (
-                      <div style={{ position: 'absolute', marginLeft: -20, color: 'var(--cinza)', fontSize: 16 }}>→</div>
-                    )}
                     <div style={{ fontSize: 18, fontWeight: 800, color: e.cor }}>{e.value.toLocaleString('pt-BR')}</div>
-                    <div style={{ width: 56, height: barH, background: e.cor, borderRadius: 4, opacity: 0.85, margin: '4px 0', transition: 'height 0.3s' }} />
+                    <div style={{ width: 56, height: barH, background: e.cor, borderRadius: 4, opacity: 0.85, margin: '4px 0' }} />
                     <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--cinza)', textAlign: 'center' }}>{e.icon} {e.label}</div>
                     <div style={{ fontSize: 10, color: 'var(--cinza)' }}>{pct}%</div>
                   </div>
                 )
               })}
+
               <div className="ml-auto pl-4" style={{ borderLeft: '1px solid var(--cinza-light)' }}>
                 <div style={{ fontSize: 11, color: 'var(--cinza)', marginBottom: 4 }}>Taxa de abertura</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#3b82f6' }}>

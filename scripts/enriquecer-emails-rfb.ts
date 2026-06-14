@@ -31,6 +31,30 @@ const idxEnd   = Number(args[1] ?? 9)
 
 const COL_EST = { BASICO: 0, ORDEM: 1, DV: 2, EMAIL: 27 }
 
+function parseCSVLine(line: string, sep: string): string[] {
+  const result: string[] = []
+  let i = 0
+  while (i <= line.length) {
+    if (line[i] === '"') {
+      i++
+      let val = ''
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { val += '"'; i += 2 }
+        else if (line[i] === '"') { i++; break }
+        else { val += line[i++] }
+      }
+      result.push(val)
+      if (line[i] === sep) i++
+    } else {
+      const end = line.indexOf(sep, i)
+      if (end === -1) { result.push(line.slice(i)); break }
+      result.push(line.slice(i, end))
+      i = end + 1
+    }
+  }
+  return result
+}
+
 const RE_EMAIL = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
 const DOMINIOS_INVALIDOS = new Set([
   'naotem.com','naopossui.com','sempossui.com','semcadastro.com',
@@ -105,7 +129,7 @@ async function extrairEmailsDoArquivo(
           primeiraLinha = false
           sep = (line.match(/;/g) ?? []).length > (line.match(/\|/g) ?? []).length ? ';' : '|'
         }
-        const cols = line.split(sep)
+        const cols = parseCSVLine(line, sep)
         if (cols.length < 28) return
         const cnpjBasico = cols[COL_EST.BASICO]?.trim()
         if (!cnpjBasico || !cnpjsAlvo.has(cnpjBasico)) return

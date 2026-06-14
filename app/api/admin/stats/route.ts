@@ -11,79 +11,99 @@ export async function GET() {
 
   const service = createAdminClient()
 
-  // Obter ID do admin para excluí-lo das métricas
   const { data: adminAuth } = await service.auth.admin.listUsers()
   const adminUser = adminAuth?.users?.find(u => u.email === ADMIN_EMAIL)
   const adminId = adminUser?.id ?? 'none'
 
+  const cnt = (p: Promise<{ count: number | null }>) =>
+    p.then(r => r.count ?? 0).catch(() => 0)
+
+  const leadsCount = (filter?: (q: ReturnType<typeof service.from>) => ReturnType<typeof service.from>) => {
+    const base = service.from('leads').select('*', { count: 'exact', head: true })
+    return cnt(Promise.resolve(filter ? filter(base as never) as never : base) as never)
+  }
+
   const [
-    { count: totalUsuarios },
-    { count: totalAtivos },
-    { count: totalTrial },
-    { count: totalMembros },
-    { count: totalKeywords },
-    { count: totalAlertas },
-    { count: totalLicitacoes },
-    { count: alertasHoje },
-    { count: alertas7d },
-    { count: leadsPendentes },
-    { count: leadsEnviados },
-    { count: leadsTotal },
-    { count: leadsErro },
-    { count: leadsInvalido },
-    { count: leadsDescadastrado },
-    { count: reconversaoEnviado },
-    { count: leadsAbriram },
-    { count: leadsClicaram },
+    totalUsuarios,
+    totalAtivos,
+    totalTrial,
+    totalMembros,
+    totalKeywords,
+    totalAlertas,
+    totalLicitacoes,
+    alertasHoje,
+    alertas7d,
+    leadsPendentes,
+    leadsEnviados,
+    leadsTotal,
+    leadsErro,
+    leadsInvalido,
+    leadsDescadastrado,
+    fonteCnae,
+    fontePncpContrato,
+    fontePncpProposta,
+    fontePortalTransparencia,
+    fonteBuscaManual,
+    reconversaoEnviado,
+    leadsAbriram,
+    leadsClicaram,
   ] = await Promise.all([
-    // Total geral — todos os usuários (owners + membros), exceto admin
-    service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId),
-    // Ativos pagos — apenas owners com status active
-    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId).is('owner_id', null),
-    // Em trial — apenas owners
-    service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial').neq('id', adminId).is('owner_id', null),
-    // Membros de equipe (sub-usuários)
-    service.from('profiles').select('*', { count: 'exact', head: true }).not('owner_id', 'is', null),
-    service.from('keywords').select('*', { count: 'exact', head: true }).eq('ativo', true),
-    service.from('alertas').select('*', { count: 'exact', head: true }),
-    service.from('licitacoes').select('*', { count: 'exact', head: true }),
-    service.from('alertas').select('*', { count: 'exact', head: true })
-      .gte('criado_em', new Date(Date.now() - 86400000).toISOString()),
-    service.from('alertas').select('*', { count: 'exact', head: true })
-      .gte('criado_em', new Date(Date.now() - 7 * 86400000).toISOString()),
-    // Leads — pendente COM email = prontos para disparo; ignorar erro se tabela ainda não existir
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente').not('email', 'is', null).neq('email', '')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true })).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'invalido')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'descadastrado')).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    // Reconversão — profiles com email de reconversão já enviado
-    Promise.resolve(service.from('profiles').select('*', { count: 'exact', head: true }).not('reconversao_email_em', 'is', null)).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    // Rastreamento — abriram e clicaram
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).not('abriu_em', 'is', null)).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
-    Promise.resolve(service.from('leads').select('*', { count: 'exact', head: true }).not('clicou_em', 'is', null)).then(r => ({ count: (r as { count: number | null }).count ?? 0 })).catch(() => ({ count: 0 })),
+    cnt(service.from('profiles').select('*', { count: 'exact', head: true }).neq('id', adminId) as never),
+    cnt(service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active').neq('id', adminId).is('owner_id', null) as never),
+    cnt(service.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'trial').neq('id', adminId).is('owner_id', null) as never),
+    cnt(service.from('profiles').select('*', { count: 'exact', head: true }).not('owner_id', 'is', null) as never),
+    cnt(service.from('keywords').select('*', { count: 'exact', head: true }).eq('ativo', true) as never),
+    cnt(service.from('alertas').select('*', { count: 'exact', head: true }) as never),
+    cnt(service.from('licitacoes').select('*', { count: 'exact', head: true }) as never),
+    cnt(service.from('alertas').select('*', { count: 'exact', head: true }).gte('criado_em', new Date(Date.now() - 86400000).toISOString()) as never),
+    cnt(service.from('alertas').select('*', { count: 'exact', head: true }).gte('criado_em', new Date(Date.now() - 7 * 86400000).toISOString()) as never),
+    // Leads por status
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente').not('email', 'is', null).neq('email', '') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }) as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'invalido') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'descadastrado') as never),
+    // Leads por fonte
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'cnae') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'pncp_contrato') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'pncp_proposta') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'portal_transparencia') as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'busca_manual') as never),
+    // Reconversão e rastreamento
+    cnt(service.from('profiles').select('*', { count: 'exact', head: true }).not('reconversao_email_em', 'is', null) as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).not('abriu_em', 'is', null) as never),
+    cnt(service.from('leads').select('*', { count: 'exact', head: true }).not('clicou_em', 'is', null) as never),
   ])
 
+  const fonteBreakdown = [
+    { fonte: 'cnae',                 total: fonteCnae },
+    { fonte: 'pncp_contrato',        total: fontePncpContrato },
+    { fonte: 'pncp_proposta',        total: fontePncpProposta },
+    { fonte: 'portal_transparencia', total: fontePortalTransparencia },
+    { fonte: 'busca_manual',         total: fonteBuscaManual },
+  ].filter(f => f.total > 0).sort((a, b) => b.total - a.total)
+
   return NextResponse.json({
-    totalUsuarios:   totalUsuarios  ?? 0,
-    totalAtivos:     totalAtivos    ?? 0,
-    totalTrial:      totalTrial     ?? 0,
-    totalMembros:    totalMembros   ?? 0,
-    totalExpired:    Math.max(0, (totalUsuarios ?? 0) - (totalAtivos ?? 0) - (totalTrial ?? 0) - (totalMembros ?? 0)),
-    totalKeywords:   totalKeywords  ?? 0,
-    totalAlertas:    totalAlertas   ?? 0,
-    totalLicitacoes: totalLicitacoes ?? 0,
-    alertasHoje:     alertasHoje    ?? 0,
-    alertas7d:       alertas7d      ?? 0,
-    leadsPendentes:      leadsPendentes   ?? 0,
-    leadsEnviados:       leadsEnviados    ?? 0,
-    leadsTotal:          leadsTotal       ?? 0,
-    leadsErro:           leadsErro        ?? 0,
-    leadsInvalido:       leadsInvalido    ?? 0,
-    leadsDescadastrado:  leadsDescadastrado ?? 0,
-    reconversaoEnviado:  reconversaoEnviado ?? 0,
-    leadsAbriram:        leadsAbriram       ?? 0,
-    leadsClicaram:       leadsClicaram      ?? 0,
+    totalUsuarios,
+    totalAtivos,
+    totalTrial,
+    totalMembros,
+    totalExpired:   Math.max(0, totalUsuarios - totalAtivos - totalTrial - totalMembros),
+    totalKeywords,
+    totalAlertas,
+    totalLicitacoes,
+    alertasHoje,
+    alertas7d,
+    leadsPendentes,
+    leadsEnviados,
+    leadsTotal,
+    leadsErro,
+    leadsInvalido,
+    leadsDescadastrado,
+    fonteBreakdown,
+    reconversaoEnviado,
+    leadsAbriram,
+    leadsClicaram,
   })
 }
