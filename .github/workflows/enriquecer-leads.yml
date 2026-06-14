@@ -1,10 +1,10 @@
 name: Enriquecer Leads
 
 on:
-  # Dia 2 de cada mês (após coleta RFB do dia 1) + diariamente para leads de outras fontes
+  # Dia 2 de cada mês (após coleta RFB do dia 1) + a cada 6 horas
   schedule:
     - cron: '0 6 2 * *'
-    - cron: '0 4 * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
     inputs:
       idx_start:
