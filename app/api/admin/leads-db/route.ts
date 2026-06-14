@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   let query = service
     .from('leads')
     .select('*', { count: 'exact' })
-    .order(orderBy, { ascending: orderDir, nullsFirst: orderDir })
+    .order(orderBy, { ascending: orderDir })
     .range(from, to)
 
   if (status !== 'todos') query = query.eq('status', status)
