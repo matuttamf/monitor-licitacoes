@@ -29,7 +29,26 @@ const args     = process.argv.slice(2)
 const idxStart = Number(args[0] ?? 0)
 const idxEnd   = Number(args[1] ?? 9)
 
-const COL_EST = { BASICO: 0, ORDEM: 1, DV: 2, EMAIL: 27 }
+// Índices fixos usados como fallback se o cabeçalho não for encontrado
+const COL_EST_FALLBACK = { BASICO: 0, ORDEM: 1, DV: 2, EMAIL: 27 }
+
+function detectarColunas(headerCols: string[]): typeof COL_EST_FALLBACK {
+  const norm = (s: string) => s.toUpperCase().replace(/[\s_\-]/g, '')
+  const col: Record<string, number> = {}
+  headerCols.forEach((name, idx) => { col[norm(name)] = idx })
+
+  const find = (...candidates: string[]) => {
+    for (const c of candidates) { const idx = col[norm(c)]; if (idx !== undefined) return idx }
+    return undefined
+  }
+
+  return {
+    BASICO: find('CNPJBASICO', 'NUBASICO', 'BASICO')          ?? COL_EST_FALLBACK.BASICO,
+    ORDEM:  find('CNPJORDEM',  'NUORDEM',  'ORDEM')           ?? COL_EST_FALLBACK.ORDEM,
+    DV:     find('CNPJDV',     'NUDV',     'DV')              ?? COL_EST_FALLBACK.DV,
+    EMAIL:  find('CORREIOELETRONICO', 'EMAIL', 'NOEMAIL')     ?? COL_EST_FALLBACK.EMAIL,
+  }
+}
 
 function parseCSVLine(line: string, sep: string): string[] {
   const result: string[] = []
@@ -123,14 +142,19 @@ async function extrairEmailsDoArquivo(
       src.pipe(inflate)
       let sep = '|'
       let primeiraLinha = true
+      let COL_EST = COL_EST_FALLBACK
       const rl = createInterface({ input: inflate, crlfDelay: Infinity })
       rl.on('line', (line) => {
         if (primeiraLinha) {
           primeiraLinha = false
           sep = (line.match(/;/g) ?? []).length > (line.match(/\|/g) ?? []).length ? ';' : '|'
+          const headerCols = parseCSVLine(line, sep)
+          COL_EST = detectarColunas(headerCols)
+          console.log(`  Separador: "${sep}" | Colunas: BASICO=${COL_EST.BASICO} ORDEM=${COL_EST.ORDEM} DV=${COL_EST.DV} EMAIL=${COL_EST.EMAIL}`)
+          return // pula a linha de cabeçalho
         }
         const cols = parseCSVLine(line, sep)
-        if (cols.length < 28) return
+        if (cols.length <= COL_EST.EMAIL) return
         const cnpjBasico = cols[COL_EST.BASICO]?.trim()
         if (!cnpjBasico || !cnpjsAlvo.has(cnpjBasico)) return
         const email = validarEmail(cols[COL_EST.EMAIL] ?? null)
