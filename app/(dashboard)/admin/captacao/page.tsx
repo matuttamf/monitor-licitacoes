@@ -94,6 +94,8 @@ export default function CaptacaoPage() {
   const [filtroFonte, setFiltroFonte]     = useState('todos')
   const [filtroCNAE, setFiltroCNAE]       = useState('')
   const [filtroQ, setFiltroQ]             = useState('')
+  const [ordemCol, setOrdemCol]           = useState<string | null>(null)
+  const [ordemDir, setOrdemDir]           = useState<'asc' | 'desc'>('asc')
   const [carregandoDB, setCarregandoDB]   = useState(false)
   const [selecionados, setSelecionados]   = useState<Set<string>>(new Set())
   const [acaoBulk, setAcaoBulk]          = useState('')
@@ -224,6 +226,10 @@ export default function CaptacaoPage() {
       cnae:   filtroCNAE,
       q:      filtroQ,
     })
+    if (ordemCol) {
+      params.set('order_by', ordemCol)
+      params.set('order_dir', ordemDir)
+    }
     const res = await fetch(`/api/admin/leads-db?${params}`)
     if (res.ok) {
       const d: LeadsDBResult = await res.json()
@@ -233,7 +239,7 @@ export default function CaptacaoPage() {
       setPaginaDB(d.page)
     }
     setCarregandoDB(false)
-  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ])
+  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ, ordemCol, ordemDir])
 
   useEffect(() => { carregarStats() }, [carregarStats])
   useEffect(() => {
@@ -906,10 +912,48 @@ export default function CaptacaoPage() {
                       <input type="checkbox" checked={selecionados.size === leadsDB.length && leadsDB.length > 0}
                         onChange={toggleTodos} />
                     </th>
-                    {['','Empresa','E-mail','Cidade/UF','Setor (CNAE)','Fonte','Status','Enviado em','Ações'].map(h => (
-                      <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: 'var(--cinza)' }}>{h}</th>
-                    ))}
+                    {([
+                      { label: '',           col: null              },
+                      { label: 'Empresa',    col: 'razao_social'    },
+                      { label: 'E-mail',     col: 'email'           },
+                      { label: 'Cidade/UF',  col: 'municipio'       },
+                      { label: 'Setor (CNAE)', col: 'cnae'          },
+                      { label: 'Fonte',      col: 'fonte'           },
+                      { label: 'Status',     col: 'status'          },
+                      { label: 'Enviado em', col: 'enviado_em'      },
+                      { label: 'Ações',      col: null              },
+                    ] as { label: string; col: string | null }[]).map(({ label, col }) => {
+                      const ativa = col && ordemCol === col
+                      return (
+                        <th key={label || '_check'}
+                          className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: 'var(--cinza)' }}>
+                          {col ? (
+                            <button
+                              onClick={() => {
+                                if (ordemCol === col) {
+                                  setOrdemDir(d => d === 'asc' ? 'desc' : 'asc')
+                                } else {
+                                  setOrdemCol(col)
+                                  setOrdemDir('asc')
+                                }
+                              }}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                color: ativa ? 'var(--vinho)' : 'var(--cinza)',
+                                fontWeight: 700, fontSize: 'inherit', letterSpacing: 'inherit',
+                                textTransform: 'inherit', padding: 0,
+                              }}>
+                              {label}
+                              <span style={{ fontSize: 10, lineHeight: 1, opacity: ativa ? 1 : 0.35 }}>
+                                {ativa ? (ordemDir === 'asc' ? '▲' : '▼') : '⇅'}
+                              </span>
+                            </button>
+                          ) : label}
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>

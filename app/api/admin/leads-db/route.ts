@@ -21,13 +21,16 @@ export async function GET(req: NextRequest) {
   const user = await checarAdmin()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
-  const sp     = req.nextUrl.searchParams
-  const status = sp.get('status') ?? 'todos'
-  const page   = Math.max(1, Number(sp.get('page') ?? 1))
-  const q      = (sp.get('q') ?? '').trim().toLowerCase()
-  const uf     = sp.get('uf') ?? 'todos'
-  const cnae   = (sp.get('cnae') ?? '').trim()
-  const fonte  = sp.get('fonte') ?? 'todos'
+  const sp       = req.nextUrl.searchParams
+  const status   = sp.get('status') ?? 'todos'
+  const page     = Math.max(1, Number(sp.get('page') ?? 1))
+  const q        = (sp.get('q') ?? '').trim().toLowerCase()
+  const uf       = sp.get('uf') ?? 'todos'
+  const cnae     = (sp.get('cnae') ?? '').trim()
+  const fonte    = sp.get('fonte') ?? 'todos'
+  const ORDER_COLS_ALLOWED = ['razao_social','email','municipio','cnae','fonte','status','enviado_em','created_at']
+  const orderBy  = ORDER_COLS_ALLOWED.includes(sp.get('order_by') ?? '') ? sp.get('order_by')! : 'created_at'
+  const orderDir = sp.get('order_dir') === 'asc'
 
   const service = createAdminClient()
   const from    = (page - 1) * PAGE_SIZE
@@ -36,7 +39,7 @@ export async function GET(req: NextRequest) {
   let query = service
     .from('leads')
     .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
+    .order(orderBy, { ascending: orderDir })
     .range(from, to)
 
   if (status !== 'todos') query = query.eq('status', status)
