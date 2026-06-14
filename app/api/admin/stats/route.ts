@@ -60,7 +60,7 @@ export async function GET() {
     // Leads por status
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente') as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }) as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }) as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro') as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'invalido') as never),
     cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'descadastrado') as never),
