@@ -58,6 +58,7 @@ type Despesa = {
   recorrente: boolean
   mes: number | null
   ano: number | null
+  numero_nf: string | null
   criado_em: string
 }
 
@@ -159,7 +160,7 @@ export default function FinanceiroPage() {
   const [editandoDesp, setEditandoDesp]   = useState<Despesa | null>(null)
   const [formDesp, setFormDesp] = useState({
     descricao: '', valor: '', categoria: 'outro', recorrente: false,
-    mes: String(agora.getMonth() + 1), ano: String(agora.getFullYear()),
+    mes: String(agora.getMonth() + 1), ano: String(agora.getFullYear()), numero_nf: '',
   })
 
   async function carregarDespesas(mes = mesFiltro, ano = anoFiltro) {
@@ -183,15 +184,14 @@ export default function FinanceiroPage() {
   async function salvarDespesa() {
     if (!formDesp.descricao.trim() || !formDesp.valor) return
     setSalvandoDesp(true)
-    const body = editandoDesp
-      ? { id: editandoDesp.id, descricao: formDesp.descricao, valor: Number(formDesp.valor),
-          categoria: formDesp.categoria, recorrente: formDesp.recorrente,
-          mes: formDesp.recorrente ? null : Number(formDesp.mes),
-          ano: formDesp.recorrente ? null : Number(formDesp.ano) }
-      : { descricao: formDesp.descricao, valor: Number(formDesp.valor),
-          categoria: formDesp.categoria, recorrente: formDesp.recorrente,
-          mes: formDesp.recorrente ? null : Number(formDesp.mes),
-          ano: formDesp.recorrente ? null : Number(formDesp.ano) }
+    const base = {
+      descricao: formDesp.descricao, valor: Number(formDesp.valor),
+      categoria: formDesp.categoria, recorrente: formDesp.recorrente,
+      mes: formDesp.recorrente ? null : Number(formDesp.mes),
+      ano: formDesp.recorrente ? null : Number(formDesp.ano),
+      numero_nf: formDesp.numero_nf.trim() || null,
+    }
+    const body = editandoDesp ? { id: editandoDesp.id, ...base } : base
     await fetch('/api/admin/financeiro/despesas', {
       method: editandoDesp ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -200,7 +200,7 @@ export default function FinanceiroPage() {
     setSalvandoDesp(false)
     setEditandoDesp(null)
     setFormDesp({ descricao: '', valor: '', categoria: 'outro', recorrente: false,
-      mes: String(mesFiltro), ano: String(anoFiltro) })
+      mes: String(mesFiltro), ano: String(anoFiltro), numero_nf: '' })
     carregarDespesas()
   }
 
@@ -217,6 +217,7 @@ export default function FinanceiroPage() {
       recorrente: d.recorrente,
       mes: d.mes ? String(d.mes) : String(mesFiltro),
       ano: d.ano ? String(d.ano) : String(anoFiltro),
+      numero_nf: d.numero_nf ?? '',
     })
   }
 
@@ -553,7 +554,7 @@ ${blocoDespesas}
           </div>
 
           {/* Receita por plano */}
-          <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+          <div className="rounded-2xl p-5 mb-4" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
             <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Receita por plano</h2>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {kpis.receitaPorPlano.filter(r => r.count > 0).map(r => {
@@ -569,6 +570,73 @@ ${blocoDespesas}
               {kpis.receitaPorPlano.every(r => r.count === 0) && (
                 <p style={{ fontSize: '13px', color: 'var(--cinza)' }}>Sem assinantes pagantes ainda.</p>
               )}
+            </div>
+          </div>
+
+          {/* Novo lançamento — sempre visível abaixo de receita */}
+          <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '14px' }}>
+              {editandoDesp ? 'Editar despesa' : 'Novo lançamento'}
+            </h3>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: '2 1 200px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Descrição</label>
+                <input value={formDesp.descricao} onChange={e => setFormDesp(p => ({ ...p, descricao: e.target.value }))}
+                  placeholder="Ex: Vercel Pro, Resend, …"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+              </div>
+              <div style={{ flex: '1 1 110px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Valor (R$)</label>
+                <input type="number" min="0" step="0.01" value={formDesp.valor} onChange={e => setFormDesp(p => ({ ...p, valor: e.target.value }))}
+                  placeholder="0,00"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+              </div>
+              <div style={{ flex: '1 1 100px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Nº NF</label>
+                <input value={formDesp.numero_nf} onChange={e => setFormDesp(p => ({ ...p, numero_nf: e.target.value }))}
+                  placeholder="Ex: 000123"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+              </div>
+              <div style={{ flex: '1 1 130px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Categoria</label>
+                <select value={formDesp.categoria} onChange={e => setFormDesp(p => ({ ...p, categoria: e.target.value }))}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                  {Object.entries(CATEGORIAS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </div>
+              {!formDesp.recorrente && (<>
+                <div style={{ flex: '0 0 90px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Mês</label>
+                  <select value={formDesp.mes} onChange={e => setFormDesp(p => ({ ...p, mes: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                    {MESES_NOMES.map((n, i) => <option key={i+1} value={String(i+1)}>{n}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: '0 0 80px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Ano</label>
+                  <select value={formDesp.ano} onChange={e => setFormDesp(p => ({ ...p, ano: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                    {[2024, 2025, 2026, 2027].map(a => <option key={a} value={String(a)}>{a}</option>)}
+                  </select>
+                </div>
+              </>)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', paddingBottom: '2px' }}>
+                <input type="checkbox" id="recorrente-top" checked={formDesp.recorrente} onChange={e => setFormDesp(p => ({ ...p, recorrente: e.target.checked }))}
+                  style={{ width: '16px', height: '16px', accentColor: 'var(--vinho)', cursor: 'pointer' }} />
+                <label htmlFor="recorrente-top" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', cursor: 'pointer', whiteSpace: 'nowrap' }}>Custo fixo (mensal)</label>
+              </div>
+              <div style={{ display: 'flex', gap: '7px', paddingBottom: '2px' }}>
+                {editandoDesp && (
+                  <button onClick={() => { setEditandoDesp(null); setFormDesp({ descricao: '', valor: '', categoria: 'outro', recorrente: false, mes: String(mesFiltro), ano: String(anoFiltro), numero_nf: '' }) }}
+                    style={{ padding: '8px 14px', borderRadius: '9px', fontSize: '13px', fontWeight: 600, border: '1.5px solid var(--cinza-light)', color: 'var(--cinza)', background: 'white', cursor: 'pointer' }}>
+                    Cancelar
+                  </button>
+                )}
+                <button onClick={salvarDespesa} disabled={salvandoDesp || !formDesp.descricao.trim() || !formDesp.valor}
+                  style={{ padding: '8px 20px', borderRadius: '9px', fontSize: '13px', fontWeight: 700, color: 'white', background: salvandoDesp ? '#9AA0A6' : 'var(--vinho)', border: 'none', cursor: (salvandoDesp || !formDesp.descricao.trim() || !formDesp.valor) ? 'not-allowed' : 'pointer' }}>
+                  {salvandoDesp ? 'Salvando…' : editandoDesp ? 'Atualizar' : '+ Adicionar'}
+                </button>
+              </div>
             </div>
           </div>
         </>
@@ -890,67 +958,6 @@ ${blocoDespesas}
             </div>
           </div>
 
-          {/* Formulário de nova despesa / edição */}
-          <div className="rounded-2xl p-5" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '14px' }}>
-              {editandoDesp ? 'Editar despesa' : 'Novo lançamento'}
-            </h3>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-              <div style={{ flex: '2 1 200px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Descrição</label>
-                <input value={formDesp.descricao} onChange={e => setFormDesp(p => ({ ...p, descricao: e.target.value }))}
-                  placeholder="Ex: Vercel Pro, Resend, …"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
-              </div>
-              <div style={{ flex: '1 1 110px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Valor (R$)</label>
-                <input type="number" min="0" step="0.01" value={formDesp.valor} onChange={e => setFormDesp(p => ({ ...p, valor: e.target.value }))}
-                  placeholder="0,00"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
-              </div>
-              <div style={{ flex: '1 1 130px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Categoria</label>
-                <select value={formDesp.categoria} onChange={e => setFormDesp(p => ({ ...p, categoria: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                  {Object.entries(CATEGORIAS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
-              </div>
-              {!formDesp.recorrente && (<>
-                <div style={{ flex: '0 0 90px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Mês</label>
-                  <select value={formDesp.mes} onChange={e => setFormDesp(p => ({ ...p, mes: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                    {MESES_NOMES.map((n, i) => <option key={i+1} value={String(i+1)}>{n}</option>)}
-                  </select>
-                </div>
-                <div style={{ flex: '0 0 80px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '5px' }}>Ano</label>
-                  <select value={formDesp.ano} onChange={e => setFormDesp(p => ({ ...p, ano: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                    {[2024, 2025, 2026, 2027].map(a => <option key={a} value={String(a)}>{a}</option>)}
-                  </select>
-                </div>
-              </>)}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', paddingBottom: '2px' }}>
-                <input type="checkbox" id="recorrente" checked={formDesp.recorrente} onChange={e => setFormDesp(p => ({ ...p, recorrente: e.target.checked }))}
-                  style={{ width: '16px', height: '16px', accentColor: 'var(--vinho)', cursor: 'pointer' }} />
-                <label htmlFor="recorrente" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--preto)', cursor: 'pointer', whiteSpace: 'nowrap' }}>Custo fixo (mensal)</label>
-              </div>
-              <div style={{ display: 'flex', gap: '7px', paddingBottom: '2px' }}>
-                {editandoDesp && (
-                  <button onClick={() => { setEditandoDesp(null); setFormDesp({ descricao: '', valor: '', categoria: 'outro', recorrente: false, mes: String(mesFiltro), ano: String(anoFiltro) }) }}
-                    style={{ padding: '8px 14px', borderRadius: '9px', fontSize: '13px', fontWeight: 600, border: '1.5px solid var(--cinza-light)', color: 'var(--cinza)', background: 'white', cursor: 'pointer' }}>
-                    Cancelar
-                  </button>
-                )}
-                <button onClick={salvarDespesa} disabled={salvandoDesp || !formDesp.descricao.trim() || !formDesp.valor}
-                  style={{ padding: '8px 20px', borderRadius: '9px', fontSize: '13px', fontWeight: 700, color: 'white', background: salvandoDesp ? '#9AA0A6' : 'var(--vinho)', border: 'none', cursor: (salvandoDesp || !formDesp.descricao.trim() || !formDesp.valor) ? 'not-allowed' : 'pointer' }}>
-                  {salvandoDesp ? 'Salvando…' : editandoDesp ? 'Atualizar' : '+ Adicionar'}
-                </button>
-              </div>
-            </div>
-          </div>
-
           {/* Lista de despesas */}
           <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cinza-light)' }}>
@@ -964,7 +971,7 @@ ${blocoDespesas}
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-                    {['Descrição', 'Categoria', 'Tipo', 'Mês/Ano', 'Valor', 'Ações'].map(h => (
+                    {['Descrição', 'Categoria', 'Tipo', 'Mês/Ano', 'Nº NF', 'Valor', 'Ações'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -988,6 +995,9 @@ ${blocoDespesas}
                         <td className="px-4 py-3" style={{ fontSize: '12px', color: 'var(--cinza)' }}>
                           {d.recorrente ? 'Todo mês' : `${d.mes ? MESES_NOMES[d.mes - 1] : '?'}/${d.ano ?? '?'}`}
                         </td>
+                        <td className="px-4 py-3" style={{ fontSize: '12px', color: 'var(--cinza)', fontFamily: 'monospace' }}>
+                          {d.numero_nf || '—'}
+                        </td>
                         <td className="px-4 py-3">
                           <span style={{ fontSize: '14px', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace' }}>{moeda(d.valor)}</span>
                         </td>
@@ -1009,7 +1019,7 @@ ${blocoDespesas}
                 </tbody>
                 <tfoot>
                   <tr style={{ borderTop: '2px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-                    <td colSpan={4} className="px-4 py-3" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</td>
+                    <td colSpan={5} className="px-4 py-3" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</td>
                     <td className="px-4 py-3" style={{ fontSize: '15px', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace' }}>{moeda(totalDespesasMes)}</td>
                     <td />
                   </tr>

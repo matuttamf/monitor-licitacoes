@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   if (!await verificarAdmin()) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
   const body = await req.json()
-  const { descricao, valor, categoria, recorrente, mes, ano } = body
+  const { descricao, valor, categoria, recorrente, mes, ano, numero_nf } = body
 
   if (!descricao?.trim()) return NextResponse.json({ error: 'Descrição obrigatória' }, { status: 400 })
   if (!valor || isNaN(Number(valor)) || Number(valor) <= 0) return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     recorrente: Boolean(recorrente),
     mes: recorrente ? null : (mes ? Number(mes) : null),
     ano: recorrente ? null : (ano ? Number(ano) : null),
+    numero_nf: numero_nf?.trim() || null,
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -77,8 +78,9 @@ export async function PATCH(req: Request) {
     update.recorrente = Boolean(campos.recorrente)
     if (update.recorrente) { update.mes = null; update.ano = null }
   }
-  if (campos.mes !== undefined) update.mes = campos.mes ? Number(campos.mes) : null
-  if (campos.ano !== undefined) update.ano = campos.ano ? Number(campos.ano) : null
+  if (campos.mes       !== undefined) update.mes       = campos.mes ? Number(campos.mes) : null
+  if (campos.ano       !== undefined) update.ano       = campos.ano ? Number(campos.ano) : null
+  if (campos.numero_nf !== undefined) update.numero_nf = campos.numero_nf?.trim() || null
 
   const { error } = await supabase.from('despesas').update(update).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
