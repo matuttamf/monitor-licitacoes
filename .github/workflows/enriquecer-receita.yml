@@ -1,13 +1,21 @@
-name: Enriquecer Receita Federal
+name: Enriquecer E-mails RFB
 
 on:
+  # Roda no dia 2 de cada mês (após coleta do dia 1)
   schedule:
-    - cron: '0 4 * * *'  # 1h BRT (UTC-3) = 4h UTC
+    - cron: '0 6 2 * *'
   workflow_dispatch:
+    inputs:
+      idx_start:
+        description: 'Índice inicial (0-9)'
+        default: '0'
+      idx_end:
+        description: 'Índice final (0-9)'
+        default: '9'
 
 jobs:
   enriquecer:
-    name: Enriquecer CNPJs via minhareceita.org
+    name: Enriquecer e-mails de leads existentes
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -24,18 +32,21 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Testar conectividade Supabase
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        run: |
-          HOST=$(echo "$NEXT_PUBLIC_SUPABASE_URL" | sed 's|https\?://||' | sed 's|/.*||' | tr -d '[:space:]')
-          echo "Hostname extraído: [$HOST]"
-          echo "Comprimento: ${#HOST}"
-          nslookup "$HOST" || echo "nslookup falhou"
-          curl -sI "https://$HOST/rest/v1/" | head -5 || echo "curl falhou"
-
-      - name: Enriquecer CNPJs
+      - name: Enriquecer e-mails
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: npx tsx scripts/enriquecer-receita.ts
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
+          npx tsx scripts/enriquecer-emails-rfb.ts "$IDX_START" "$IDX_END"
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "enriquecer-emails-rfb" "${{ job.status }}"
