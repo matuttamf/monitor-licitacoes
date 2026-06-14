@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     let query = service
       .from('leads')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'estimated' })
       .order(orderBy, { ascending: orderDir })
       .range(from, to)
 
