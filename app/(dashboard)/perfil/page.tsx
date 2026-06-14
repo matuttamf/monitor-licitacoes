@@ -501,18 +501,16 @@ export default function PerfilPage() {
               style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
           </div>
 
-          {/* CNPJ — bloqueado ao CNPJ do cadastro */}
+          {/* CNPJ */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              CNPJ
-              <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>
-                {fornecedor.cnpj ? '(preenchido a partir do seu cadastro)' : '(cadastre seu CNPJ no perfil primeiro)'}
-              </span>
+              CNPJ <span style={{ color: 'var(--vinho)' }}>*</span>
             </label>
-            <input type="text" value={fornecedor.cnpj} readOnly
-              placeholder="Preencha o CNPJ no perfil"
+            <input type="text" value={fornecedor.cnpj}
+              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: e.target.value }))}
+              placeholder="00.000.000/0000-00"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ border: '1.5px solid var(--cinza-light)', background: 'var(--surface-2)', color: 'var(--preto)', outline: 'none', cursor: 'default' }} />
+              style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
           </div>
 
           {/* Descrição */}
