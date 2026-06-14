@@ -57,6 +57,7 @@ export default function PerfilPage() {
   })
   const [salvandoFornecedor, setSalvandoFornecedor] = useState(false)
   const [fornecedorMsg, setFornecedorMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
+  const [buscandoKws, setBuscandoKws] = useState(false)
 
   const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'monitorlic_bot'
 
@@ -129,6 +130,22 @@ export default function PerfilPage() {
       const d = await res.json().catch(() => ({}))
       setAlertaMsg({ tipo: 'erro', texto: d.error ?? 'Erro ao salvar.' })
     }
+  }
+
+  async function buscarPalavrasChave() {
+    setBuscandoKws(true)
+    const res = await fetch('/api/keywords')
+    if (res.ok) {
+      const kws: { termo: string }[] = await res.json()
+      if (kws.length > 0) {
+        const termos = kws.map(k => k.termo).join(', ')
+        setFornecedor(prev => ({
+          ...prev,
+          descricao: prev.descricao ? `${prev.descricao}, ${termos}` : termos,
+        }))
+      }
+    }
+    setBuscandoKws(false)
   }
 
   async function salvarFornecedor(e: React.FormEvent) {
@@ -500,10 +517,27 @@ export default function PerfilPage() {
 
           {/* Descrição */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>
-              O que sua empresa oferece
-              <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>({fornecedor.descricao.length}/500)</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>
+                O que sua empresa oferece
+                <span className="ml-2 normal-case font-normal" style={{ opacity: 0.6 }}>({fornecedor.descricao.length}/500)</span>
+              </label>
+              <button
+                type="button"
+                onClick={buscarPalavrasChave}
+                disabled={buscandoKws}
+                className="text-xs font-semibold px-3 py-1 rounded-lg"
+                style={{
+                  background: 'rgba(107,15,26,0.07)',
+                  color: 'var(--vinho)',
+                  border: '1px solid rgba(107,15,26,0.18)',
+                  cursor: buscandoKws ? 'not-allowed' : 'pointer',
+                  opacity: buscandoKws ? 0.6 : 1,
+                  whiteSpace: 'nowrap',
+                }}>
+                {buscandoKws ? '⏳ Buscando…' : '🔑 Usar minhas palavras-chave'}
+              </button>
+            </div>
             <textarea
               value={fornecedor.descricao}
               onChange={e => setFornecedor(prev => ({ ...prev, descricao: e.target.value.slice(0, 500) }))}
