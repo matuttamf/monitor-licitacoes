@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
         .gte('criado_em', new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString())
         .order('criado_em', { ascending: false })
         .limit(500),
-      supabase.from('leads').select('*', { count: 'exact', head: true }),
+      supabase.from('leads').select('*', { count: 'estimated', head: true }),
       supabase.from('licitacoes').select('*', { count: 'exact', head: true }),
     ])
 

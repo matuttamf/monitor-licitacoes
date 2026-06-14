@@ -37,7 +37,7 @@ export async function GET() {
     leadsStatusCounts,
   ] = await Promise.all([
     service.from('licitacoes').select('id', { count: 'exact', head: true }),
-    service.from('leads').select('id', { count: 'exact', head: true }),
+    service.from('leads').select('id', { count: 'estimated', head: true }),
     service.from('licitacoes').select('id', { count: 'exact', head: true }).gte('coletado_em', d7Iso),
     service.from('licitacoes').select('id', { count: 'exact', head: true }).gte('coletado_em', hojeDayIso),
 
@@ -52,11 +52,11 @@ export async function GET() {
 
     // Leads por status — contagens separadas
     Promise.all([
-      service.from('leads').select('id', { count: 'exact', head: true }).or('status.is.null,status.eq.pendente'),
-      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'enviado'),
-      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'erro'),
-      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'invalido'),
-      service.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'descadastrado'),
+      service.from('leads').select('id', { count: 'estimated', head: true }).or('status.is.null,status.eq.pendente'),
+      service.from('leads').select('id', { count: 'estimated', head: true }).eq('status', 'enviado'),
+      service.from('leads').select('id', { count: 'estimated', head: true }).eq('status', 'erro'),
+      service.from('leads').select('id', { count: 'estimated', head: true }).eq('status', 'invalido'),
+      service.from('leads').select('id', { count: 'estimated', head: true }).eq('status', 'descadastrado'),
     ]),
   ])
 
