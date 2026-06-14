@@ -208,7 +208,7 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
   while (true) {
     const { data, error } = await supabase
       .from('leads').select('id,cnpj')
-      .gt('id', lastId).order('id', { ascending: true }).limit(5000)
+      .gt('id', lastId).order('id', { ascending: true }).limit(1000)
     if (error) { console.error('Erro:', error.message); break }
     if (!data?.length) break
     for (const r of data) {
@@ -216,8 +216,8 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
       basicosBase.add((r.cnpj as string).slice(0, 8))
     }
     lastId = data[data.length - 1].id as string
-    if (data.length < 5000) break
-    if (cnpjsBase.size % 500_000 < 5000) console.log(`  ${cnpjsBase.size.toLocaleString('pt-BR')} carregados...`)
+    if (data.length < 1000) break
+    if (cnpjsBase.size % 500_000 < 1000) console.log(`  ${cnpjsBase.size.toLocaleString('pt-BR')} carregados...`)
   }
   console.log(`  CNPJs: ${cnpjsBase.size.toLocaleString('pt-BR')} | Basicós únicos: ${basicosBase.size.toLocaleString('pt-BR')}`)
   return { cnpjsBase, basicosBase }
