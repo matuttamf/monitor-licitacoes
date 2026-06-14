@@ -96,8 +96,6 @@ export default function CaptacaoPage() {
   const [filtroQ, setFiltroQ]             = useState('')
   const [ordemCol, setOrdemCol]           = useState<string | null>(null)
   const [ordemDir, setOrdemDir]           = useState<'asc' | 'desc'>('asc')
-  const ordemColRef = useRef<string | null>(null)
-  const ordemDirRef = useRef<'asc' | 'desc'>('asc')
   const [carregandoDB, setCarregandoDB]   = useState(false)
   const [selecionados, setSelecionados]   = useState<Set<string>>(new Set())
   const [acaoBulk, setAcaoBulk]          = useState('')
@@ -227,14 +225,8 @@ export default function CaptacaoPage() {
       fonte:  filtroFonte,
       cnae:   filtroCNAE,
       q:      filtroQ,
+      ...(ordemCol ? { order_by: ordemCol, order_dir: ordemDir } : {}),
     })
-    // Usa refs para sempre ter os valores atuais de ordenação (evita closure stale)
-    const col = ordemColRef.current
-    const dir = ordemDirRef.current
-    if (col) {
-      params.set('order_by', col)
-      params.set('order_dir', dir)
-    }
     const res = await fetch(`/api/admin/leads-db?${params}`)
     if (res.ok) {
       const d: LeadsDBResult = await res.json()
@@ -244,7 +236,7 @@ export default function CaptacaoPage() {
       setPaginaDB(d.page)
     }
     setCarregandoDB(false)
-  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ])
+  }, [filtroStatus, filtroUF, filtroFonte, filtroCNAE, filtroQ, ordemCol, ordemDir])
 
   useEffect(() => { carregarStats() }, [carregarStats])
   useEffect(() => {
@@ -936,21 +928,12 @@ export default function CaptacaoPage() {
                           {col ? (
                             <button
                               onClick={() => {
-                                let novoCol: string | null
-                                let novaDir: 'asc' | 'desc'
                                 if (ordemCol === col) {
-                                  novoCol = col
-                                  novaDir = ordemDir === 'asc' ? 'desc' : 'asc'
-                                  setOrdemDir(novaDir)
+                                  setOrdemDir(d => d === 'asc' ? 'desc' : 'asc')
                                 } else {
-                                  novoCol = col
-                                  novaDir = 'asc'
                                   setOrdemCol(col)
                                   setOrdemDir('asc')
                                 }
-                                ordemColRef.current = novoCol
-                                ordemDirRef.current = novaDir
-                                carregarLeadsDB(1)
                               }}
                               style={{
                                 background: 'none', border: 'none', cursor: 'pointer',
