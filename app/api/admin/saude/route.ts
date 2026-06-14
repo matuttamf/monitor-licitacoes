@@ -57,9 +57,9 @@ export async function GET() {
     { count: totalUsuarios },
     { count: usuariosAtivos },
   ] = await Promise.all([
-    admin.from('leads').select('*', { count: 'exact', head: true }),
-    admin.from('leads').select('*', { count: 'exact', head: true }).not('email', 'is', null),
-    admin.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente'),
+    admin.from('leads').select('*', { count: 'estimated', head: true }),
+    admin.from('leads').select('*', { count: 'estimated', head: true }).not('email', 'is', null),
+    admin.from('leads').select('*', { count: 'estimated', head: true }).eq('status', 'pendente'),
     admin.from('licitacoes').select('*', { count: 'exact', head: true }),
     admin.from('licitacoes').select('*', { count: 'exact', head: true }).gte('data_abertura', new Date().toISOString().slice(0, 10)),
     admin.from('alertas').select('*', { count: 'exact', head: true }),
