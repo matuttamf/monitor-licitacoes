@@ -298,11 +298,9 @@ export default function FornecedoresPage() {
       </form>
 
       {/* Contador */}
-      {!carregando && (
+      {!carregando && total > 0 && (
         <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-          {total === 0
-            ? 'Nenhum fornecedor encontrado.'
-            : `${total} fornecedor${total !== 1 ? 'es' : ''} encontrado${total !== 1 ? 's' : ''}`}
+          {`${total} fornecedor${total !== 1 ? 'es' : ''} encontrado${total !== 1 ? 's' : ''}`}
         </p>
       )}
 
@@ -314,32 +312,17 @@ export default function FornecedoresPage() {
               style={{ background: 'white', border: '1px solid var(--cinza-light)' }} />
           ))}
         </div>
-      ) : fornecedores.length === 0 ? (
+      ) : fornecedores.length === 0 && (busca || regiao) ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-          {(busca || regiao) ? (
-            <>
-              <div className="text-3xl mb-3">🔍</div>
-              <p className="text-sm mb-4" style={{ color: 'var(--cinza)' }}>Nenhum fornecedor encontrado com esses filtros.</p>
-              <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '') }}
-                className="px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
-                Ver todos os fornecedores
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="text-3xl mb-3">🌱</div>
-              <p className="text-sm font-semibold mb-1" style={{ color: 'var(--preto)' }}>O diretório está crescendo!</p>
-              <p className="text-sm mb-1" style={{ color: 'var(--cinza)' }}>
-                Esta é uma ferramenta nova — os primeiros cadastros estão sendo aprovados.
-              </p>
-              <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-                Seja um dos primeiros a aparecer e ganhe visibilidade máxima para outros usuários da plataforma.
-              </p>
-            </>
-          )}
+          <div className="text-3xl mb-3">🔍</div>
+          <p className="text-sm mb-4" style={{ color: 'var(--cinza)' }}>Nenhum fornecedor encontrado com esses filtros.</p>
+          <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '') }}
+            className="px-4 py-2 rounded-xl text-sm font-medium"
+            style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
+            Limpar filtros
+          </button>
         </div>
-      ) : (
+      ) : fornecedores.length > 0 ? (
         <div className="space-y-4">
           {fornecedores.map(f => (
             <div key={f.id} className="rounded-2xl p-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
