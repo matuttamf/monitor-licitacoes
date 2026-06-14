@@ -41,6 +41,7 @@ export default function FornecedoresPage() {
   const [enviando, setEnviando]   = useState(false)
   const [msg, setMsg]             = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [jaCadastrado, setJaCadastrado] = useState(false)
+  const [buscandoKws, setBuscandoKws]   = useState(false)
 
   const carregar = useCallback(async (p: number, q: string, r: string) => {
     setCarregando(true)
@@ -75,6 +76,19 @@ export default function FornecedoresPage() {
       ...f,
       regioes: f.regioes.includes(r) ? f.regioes.filter(x => x !== r) : [...f.regioes, r],
     }))
+  }
+
+  async function buscarPalavrasChave() {
+    setBuscandoKws(true)
+    const res = await fetch('/api/keywords')
+    if (res.ok) {
+      const kws: { termo: string }[] = await res.json()
+      if (kws.length > 0) {
+        const termos = kws.map(k => k.termo).join(', ')
+        setForm(f => ({ ...f, descricao: f.descricao ? `${f.descricao}, ${termos}` : termos }))
+      }
+    }
+    setBuscandoKws(false)
   }
 
   async function enviarCadastro(e: React.FormEvent) {
@@ -203,9 +217,26 @@ export default function FornecedoresPage() {
             ))}
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--cinza)' }}>
-                O que sua empresa fornece? <span style={{ color: 'var(--vinho)' }}>*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold" style={{ color: 'var(--cinza)' }}>
+                  O que sua empresa fornece? <span style={{ color: 'var(--vinho)' }}>*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={buscarPalavrasChave}
+                  disabled={buscandoKws}
+                  className="text-xs font-semibold px-3 py-1 rounded-lg"
+                  style={{
+                    background: 'rgba(107,15,26,0.07)',
+                    color: 'var(--vinho)',
+                    border: '1px solid rgba(107,15,26,0.18)',
+                    cursor: buscandoKws ? 'not-allowed' : 'pointer',
+                    opacity: buscandoKws ? 0.6 : 1,
+                    whiteSpace: 'nowrap',
+                  }}>
+                  {buscandoKws ? '⏳ Buscando…' : '🔑 Usar minhas palavras-chave'}
+                </button>
+              </div>
               <textarea
                 value={form.descricao}
                 onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
