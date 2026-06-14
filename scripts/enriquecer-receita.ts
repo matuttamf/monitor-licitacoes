@@ -41,16 +41,18 @@ function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 // PostgREST não suporta regex (~) dentro de or() — usamos duas queries separadas.
 // Query A: leads sem e-mail (status=invalido por falta de email).
 // Query B: leads invalidos com e-mail e situação ATIVA (razão social não verificada).
-async function buscarLeads(offset: number, filtro: 'sem-email' | 'invalido-com-email' | 'pendente-sem-cidade'): Promise<{ id: string; cnpj: string; email: string | null }[]> {
-  const base: Record<string, string> = { select: 'id,cnpj,email', offset: String(offset), limit: String(LOTE) }
-  let qs: URLSearchParams
+// Usa cursor (id > lastId) em vez de OFFSET — evita full scan crescente em 9M+ linhas
+async function buscarLeads(lastId: string, filtro: 'sem-email' | 'invalido-com-email' | 'pendente-sem-cidade'): Promise<{ id: string; cnpj: string; email: string | null }[]> {
+  const base: Record<string, string> = { select: 'id,cnpj,email', 'id': `gt.${lastId}`, order: 'id.asc', limit: String(LOTE) }
+  let extra: Record<string, string>
   if (filtro === 'sem-email') {
-    qs = new URLSearchParams({ ...base, 'email': 'is.null' })
+    extra = { 'email': 'is.null' }
   } else if (filtro === 'invalido-com-email') {
-    qs = new URLSearchParams({ ...base, 'status': 'eq.invalido', 'situacao': 'eq.ATIVA', 'email': 'not.is.null' })
+    extra = { 'status': 'eq.invalido', 'situacao': 'eq.ATIVA', 'email': 'not.is.null' }
   } else {
-    qs = new URLSearchParams({ ...base, 'status': 'eq.pendente', 'municipio': 'is.null' })
+    extra = { 'status': 'eq.pendente', 'municipio': 'is.null' }
   }
+  const qs = new URLSearchParams({ ...base, ...extra })
   const url = `${REST}/leads?${qs}`
   const res = await fetch(url, { headers: HEADERS_GET })
   if (!res.ok) {
@@ -151,10 +153,10 @@ async function main() {
 
   async function rodarPasse(filtro: 'sem-email' | 'invalido-com-email' | 'pendente-sem-cidade') {
     console.log(`\n── Passe: ${filtro} ──`)
-    let offset = 0
+    let lastId = '00000000-0000-0000-0000-000000000000'
     let lote = 1
     while (true) {
-      const leads = await buscarLeads(offset, filtro)
+      const leads = await buscarLeads(lastId, filtro)
       if (leads.length === 0) break
       console.log(`\nLote ${lote++}: ${leads.length} leads`)
       for (let i = 0; i < leads.length; i += CONCORRENCIA) {
@@ -162,7 +164,7 @@ async function main() {
         await sleep(200)
       }
       console.log(`  verificados=${totalVerificados} ativos=${totalAtivos} com_email=${totalComEmail} inativas=${totalInativos} sem_dados=${totalSemDados}`)
-      offset += LOTE
+      lastId = leads[leads.length - 1].id
       if (leads.length < LOTE) break
     }
   }
