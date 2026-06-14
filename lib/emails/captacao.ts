@@ -568,8 +568,13 @@ function wrapEmail(opts: {
 
 // ─── Exportação principal ─────────────────────────────────────────────────────
 
+function limparNome(razao: string): string {
+  // MEIs têm CNPJ básico (8 dígitos) prefixado à razão social: "47568432 FULANO DE TAL"
+  return razao.replace(/^\d{8}\s+/, '').trim()
+}
+
 export function emailCaptacao(p: ParamsCaptacao) {
-  const nome   = p.nomeFantasia || p.razaoSocial
+  const nome   = p.nomeFantasia || limparNome(p.razaoSocial)
   const cidade = p.municipio ? `${p.municipio}${p.uf ? '/' + p.uf : ''}` : null
   const url    = (p.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
   const num    = p.numeroEmail ?? 1
