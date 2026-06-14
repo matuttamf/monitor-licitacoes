@@ -1,7 +1,7 @@
 ﻿/**
  * Cron: Radar de Inteligência — roda toda segunda-feira às 8h.
  * Envia digest de contratos vencendo nos próximos 90 dias
- * para usuários dos planos Pro e Empresarial.
+ * para usuários dos planos Profissional, Gestão e Empresarial.
  * Canais: e-mail (todos), Telegram e WhatsApp (se configurados).
  */
 
