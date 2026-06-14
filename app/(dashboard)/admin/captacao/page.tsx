@@ -989,8 +989,8 @@ export default function CaptacaoPage() {
                           </button>
                         </td>
                         <td className="px-3 py-2 max-w-[160px]">
-                          <div className="font-semibold truncate" style={{ color: 'var(--preto)' }} title={l.razao_social}>
-                            {l.nome_fantasia || l.razao_social}
+                          <div className="font-semibold truncate" style={{ color: 'var(--preto)' }} title={l.razao_social ?? l.nome_fantasia ?? ''}>
+                            {l.razao_social || l.nome_fantasia}
                           </div>
                           <div className="text-[10px] truncate" style={{ color: 'var(--cinza)' }}>
                             {l.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}
