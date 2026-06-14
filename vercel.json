@@ -29,6 +29,7 @@
     { "path": "/api/cron/disparar-leads",          "schedule": "*/10 11-21 * * 1-5" },
     { "path": "/api/cron/reconverter-trials",    "schedule": "0 8-18 * * 1-5"    },
     { "path": "/api/cron/sync-assinaturas",      "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/backup-db",             "schedule": "0 5 * * 0"          }
+    { "path": "/api/cron/backup-db",             "schedule": "0 5 * * 0"          },
+    { "path": "/api/cron/limpar-alertas",        "schedule": "0 3 1 * *"           }
   ]
 }

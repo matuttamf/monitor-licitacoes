@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     .not('canais', 'cs', '{"whatsapp"}')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
-    .limit(500)
+    .limit(2000)
 
   if (error) {
     console.error('alertar-urgente erro:', error.message)
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     .lt('enviado_em', h24)
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
-    .limit(500)
+    .limit(2000)
 
   // Agrupar por usuário
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,67 +118,72 @@ export async function GET(request: Request) {
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
-  for (const [userId, { topAlerta, todasAsIds, reciclado }] of porUsuario.entries()) {
-    const perfil = profileMap[userId]
-    if (!perfil || perfil.status === 'expired') continue
+  // Dispatch paralelo — 20 usuários simultâneos para suportar 10K+ usuários sem timeout
+  const CONCORRENCIA = 20
+  const entries = [...porUsuario.entries()]
+  for (let i = 0; i < entries.length; i += CONCORRENCIA) {
+    await Promise.all(entries.slice(i, i + CONCORRENCIA).map(async ([userId, { topAlerta, todasAsIds, reciclado }]) => {
+      const perfil = profileMap[userId]
+      if (!perfil || perfil.status === 'expired') return
 
-    const agora = new Date()
-    const telegramPausado = perfil.telegram_pausado_ate && new Date(perfil.telegram_pausado_ate) > agora
-    const whatsappPausado = perfil.whatsapp_pausado_ate && new Date(perfil.whatsapp_pausado_ate) > agora
+      const agora = new Date()
+      const telegramPausado = perfil.telegram_pausado_ate && new Date(perfil.telegram_pausado_ate) > agora
+      const whatsappPausado = perfil.whatsapp_pausado_ate && new Date(perfil.whatsapp_pausado_ate) > agora
 
-    const temTelegram = !!perfil.telegram_chat_id && !telegramPausado
-    const temWhatsApp = !!perfil.whatsapp         && !whatsappPausado
+      const temTelegram = !!perfil.telegram_chat_id && !telegramPausado
+      const temWhatsApp = !!perfil.whatsapp         && !whatsappPausado
 
-    if (!temTelegram && !temWhatsApp) continue
+      if (!temTelegram && !temWhatsApp) return
 
-    const licitacoes = [{
-      orgao:          (topAlerta.licitacoes as any).orgao,
-      objeto:         (topAlerta.licitacoes as any).objeto,
-      valor_estimado: (topAlerta.licitacoes as any).valor_estimado,
-      data_abertura:  (topAlerta.licitacoes as any).data_abertura,
-      url:            (topAlerta.licitacoes as any).url,
-      estado:         (topAlerta.licitacoes as any).estado,
-      cidade:         (topAlerta.licitacoes as any).cidade,
-      keyword:        (topAlerta.keywords as any).termo,
-    }]
+      const licitacoes = [{
+        orgao:          (topAlerta.licitacoes as any).orgao,
+        objeto:         (topAlerta.licitacoes as any).objeto,
+        valor_estimado: (topAlerta.licitacoes as any).valor_estimado,
+        data_abertura:  (topAlerta.licitacoes as any).data_abertura,
+        url:            (topAlerta.licitacoes as any).url,
+        estado:         (topAlerta.licitacoes as any).estado,
+        cidade:         (topAlerta.licitacoes as any).cidade,
+        keyword:        (topAlerta.keywords as any).termo,
+      }]
 
-    const [telegramOk, whatsappOk] = await Promise.all([
-      temTelegram ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)  : Promise.resolve(false),
-      temWhatsApp ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)          : Promise.resolve(false),
-    ])
+      const [telegramOk, whatsappOk] = await Promise.all([
+        temTelegram ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)  : Promise.resolve(false),
+        temWhatsApp ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)          : Promise.resolve(false),
+      ])
 
-    const canaisEnviados: string[] = []
-    if (telegramOk)  canaisEnviados.push('telegram')
-    if (whatsappOk)  canaisEnviados.push('whatsapp')
+      const canaisEnviados: string[] = []
+      if (telegramOk)  canaisEnviados.push('telegram')
+      if (whatsappOk)  canaisEnviados.push('whatsapp')
 
-    if (canaisEnviados.length === 0) continue
+      if (canaisEnviados.length === 0) return
 
-    // Marca TODOS os alertas da mesma licitação (todas as keywords) como enviados —
-    // evita reenvio em rodadas futuras por rows duplicadas da mesma licitação.
-    const { data: atuais } = await supabase
-      .from('alertas')
-      .select('id, canais')
-      .in('id', todasAsIds)
+      // Marca TODOS os alertas da mesma licitação (todas as keywords) como enviados —
+      // evita reenvio em rodadas futuras por rows duplicadas da mesma licitação.
+      const { data: atuais } = await supabase
+        .from('alertas')
+        .select('id, canais')
+        .in('id', todasAsIds)
 
-    await Promise.all(
-      (atuais ?? []).map(atual => {
-        const canaisNovos = [...new Set([...(atual.canais ?? []), ...canaisEnviados])]
-        return supabase
-          .from('alertas')
-          .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
-          .eq('id', atual.id)
-      })
-    )
+      await Promise.all(
+        (atuais ?? []).map(atual => {
+          const canaisNovos = [...new Set([...(atual.canais ?? []), ...canaisEnviados])]
+          return supabase
+            .from('alertas')
+            .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
+            .eq('id', atual.id)
+        })
+      )
 
-    enviados++
-    resultado[userId] = {
-      licitacao_id: topAlerta.licitacao_id,
-      ids_marcados: todasAsIds.length,
-      canais:       canaisEnviados,
-      telegram:     telegramOk,
-      whatsapp:     whatsappOk,
-      reciclado,
-    }
+      enviados++
+      resultado[userId] = {
+        licitacao_id: topAlerta.licitacao_id,
+        ids_marcados: todasAsIds.length,
+        canais:       canaisEnviados,
+        telegram:     telegramOk,
+        whatsapp:     whatsappOk,
+        reciclado,
+      }
+    }))
   }
 
   if (enviados > 0) {

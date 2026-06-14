@@ -27,7 +27,9 @@ export async function encontrarMatchesDetalhado(
 
   const resultados: MatchResult[] = []
   const erros: string[] = []
-  const termosTexto = keywords.map(k => `"${k.termo}"`).join(', ')
+  // Deduplica termos — N usuários podem ter o mesmo termo; o prompt usa só únicos
+  const termosUnicos = [...new Set(keywords.map(k => k.termo))]
+  const termosTexto  = termosUnicos.map(t => `"${t}"`).join(', ')
 
   for (let i = 0; i < licitacoes.length; i += 50) {
     const lote = licitacoes.slice(i, i + 50)

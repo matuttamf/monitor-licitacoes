@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     .select(SELECT_ALERTAS)
     .eq('canais', '{}')
     .order('criado_em', { ascending: false })
-    .limit(500)
+    .limit(2000)
 
   if (error) {
     console.error('Erro ao buscar alertas:', error.message)
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     .select(SELECT_ALERTAS)
     .neq('canais', '{}')
     .order('score', { ascending: false })
-    .limit(500)
+    .limit(2000)
 
   // Agrupar por usuário (novos + reenvios separados para decidir por fila individual)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,12 +113,16 @@ export async function GET(request: Request) {
   }
 
   const userIds = [...alertasPorUsuario.keys()]
-  const { data: authUsers } = await supabase.auth.admin.listUsers()
-  const emailMap = Object.fromEntries(
-    (authUsers?.users ?? [])
-      .filter(u => userIds.includes(u.id))
-      .map(u => [u.id, u.email!])
-  )
+
+  // listUsers retorna max 1000 por página — paginar para suportar 10K+ usuários
+  const allAuthUsers: { id: string; email?: string }[] = []
+  for (let page = 1; ; page++) {
+    const { data: authPage } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+    if (!authPage?.users?.length) break
+    allAuthUsers.push(...authPage.users.filter(u => userIds.includes(u.id)))
+    if (authPage.users.length < 1000) break
+  }
+  const emailMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u.email!]))
 
   const { data: profiles } = await supabase
     .from('profiles')
@@ -129,84 +133,90 @@ export async function GET(request: Request) {
   let totalEnviados = 0
   const resultadosPorUsuario: Record<string, unknown> = {}
 
-  for (const [userId, alertas] of alertasPorUsuario.entries()) {
-    const email  = emailMap[userId]
-    const perfil = profileMap[userId]
-    if (!email || perfil?.status === 'expired') continue
-    // Canal e-mail pausado?
-    if (perfil?.email_pausado_ate && new Date(perfil.email_pausado_ate) > new Date()) continue
+  // Dispatch paralelo — 20 usuários simultâneos; JS é single-thread, variáveis
+  // compartilhadas (totalEnviados, resultadosPorUsuario) são seguras com Promise.all
+  const CONCORRENCIA = 20
+  const entries = [...alertasPorUsuario.entries()]
+  for (let i = 0; i < entries.length; i += CONCORRENCIA) {
+    await Promise.all(entries.slice(i, i + CONCORRENCIA).map(async ([userId, alertas]) => {
+      const email  = emailMap[userId]
+      const perfil = profileMap[userId]
+      if (!email || perfil?.status === 'expired') return
+      // Canal e-mail pausado?
+      if (perfil?.email_pausado_ate && new Date(perfil.email_pausado_ate) > new Date()) return
 
-    const plano   = perfil?.plano ?? 'basic'
-    const limites = getLimites(plano)
+      const plano   = perfil?.plano ?? 'basic'
+      const limites = getLimites(plano)
 
-    // Padrão por plano: 5 e-mails/dia com 10 itens cada = 50 licitações/dia para todos
-    const emailsPorDia  = Math.min(perfil?.emails_por_dia  ?? 5,  limites.maxEmailsPorDia)
-    const itensPorEmail = Math.min(perfil?.itens_por_email ?? 10, limites.maxItensPorEmail)
+      // Padrão por plano: 5 e-mails/dia com 10 itens cada = 50 licitações/dia para todos
+      const emailsPorDia  = Math.min(perfil?.emails_por_dia  ?? 5,  limites.maxEmailsPorDia)
+      const itensPorEmail = Math.min(perfil?.itens_por_email ?? 10, limites.maxItensPorEmail)
 
-    // Verificar se este é um horário programado para o usuário
-    if (!horarioPermitidoParaUsuario(emailsPorDia, horaBRT)) continue
+      // Verificar se este é um horário programado para o usuário
+      if (!horarioPermitidoParaUsuario(emailsPorDia, horaBRT)) return
 
-    const planoEhTrial = perfil?.status === 'trial'
-    const trialInfo = planoEhTrial && perfil?.trial_fim
-      ? (() => {
-          const fim = new Date(perfil.trial_fim)
-          const dias = Math.max(0, Math.ceil((fim.getTime() - Date.now()) / 86400000))
-          return { diasRestantes: dias, appUrl }
-        })()
-      : undefined
+      const planoEhTrial = perfil?.status === 'trial'
+      const trialInfo = planoEhTrial && perfil?.trial_fim
+        ? (() => {
+            const fim = new Date(perfil.trial_fim)
+            const dias = Math.max(0, Math.ceil((fim.getTime() - Date.now()) / 86400000))
+            return { diasRestantes: dias, appUrl }
+          })()
+        : undefined
 
-    // Separar novos de reenvios
-    const novosAlertas    = alertas.filter(a => !(a as any)._reenvio)
-    const reenviosAlertas = alertas.filter(a =>  (a as any)._reenvio)
+      // Separar novos de reenvios
+      const novosAlertas    = alertas.filter(a => !(a as any)._reenvio)
+      const reenviosAlertas = alertas.filter(a =>  (a as any)._reenvio)
 
-    // Novos têm prioridade; reenvios preenchem o restante até o cap
-    const novosParaEnviar   = novosAlertas.slice(0, itensPorEmail)
-    const totalRestante     = novosAlertas.length - novosParaEnviar.length
-    const vagasReenvio      = Math.max(0, itensPorEmail - novosParaEnviar.length)
-    const reenviosParaEnviar = reenviosAlertas.slice(0, vagasReenvio)
+      // Novos têm prioridade; reenvios preenchem o restante até o cap
+      const novosParaEnviar    = novosAlertas.slice(0, itensPorEmail)
+      const totalRestante      = novosAlertas.length - novosParaEnviar.length
+      const vagasReenvio       = Math.max(0, itensPorEmail - novosParaEnviar.length)
+      const reenviosParaEnviar = reenviosAlertas.slice(0, vagasReenvio)
 
-    const alertasParaEnviar = [...novosParaEnviar, ...reenviosParaEnviar]
-    if (!alertasParaEnviar.length) continue
+      const alertasParaEnviar = [...novosParaEnviar, ...reenviosParaEnviar]
+      if (!alertasParaEnviar.length) return
 
-    // Montar lista de licitações
-    const licitacoesDoUsuario = alertasParaEnviar.map(a => ({
-      id:             a.licitacao_id,
-      orgao:          (a.licitacoes as any).orgao,
-      objeto:         (a.licitacoes as any).objeto,
-      valor_estimado: (a.licitacoes as any).valor_estimado,
-      data_abertura:  (a.licitacoes as any).data_abertura,
-      url:            (a.licitacoes as any).url,
-      estado:         (a.licitacoes as any).estado,
-      cidade:         (a.licitacoes as any).cidade,
-      keyword:        (a.keywords as any).termo,
-      reenvio:        !!(a as any)._reenvio,
-      score:          (a as any).score ?? 0,
+      // Montar lista de licitações
+      const licitacoesDoUsuario = alertasParaEnviar.map(a => ({
+        id:             a.licitacao_id,
+        orgao:          (a.licitacoes as any).orgao,
+        objeto:         (a.licitacoes as any).objeto,
+        valor_estimado: (a.licitacoes as any).valor_estimado,
+        data_abertura:  (a.licitacoes as any).data_abertura,
+        url:            (a.licitacoes as any).url,
+        estado:         (a.licitacoes as any).estado,
+        cidade:         (a.licitacoes as any).cidade,
+        keyword:        (a.keywords as any).termo,
+        reenvio:        !!(a as any)._reenvio,
+        score:          (a as any).score ?? 0,
+      }))
+
+      const canaisEnviados: string[] = []
+
+      // E-mail: todos (com info de trial se aplicável)
+      // Telegram/WA urgentes são gerenciados pelo /api/cron/alertar-urgente (a cada 5 min)
+      const emailOk = await enviarAlertaEmailUsuario(email, licitacoesDoUsuario, totalRestante, trialInfo)
+      if (emailOk) canaisEnviados.push('email')
+
+      if (canaisEnviados.length > 0) {
+        const ids = alertasParaEnviar.map(a => a.id)
+        await supabase
+          .from('alertas')
+          .update({ canais: canaisEnviados, enviado_em: new Date().toISOString() })
+          .in('id', ids)
+        totalEnviados += alertasParaEnviar.length
+      }
+
+      resultadosPorUsuario[email] = {
+        alertas:      alertasParaEnviar.length,
+        canais:       canaisEnviados,
+        emailsPorDia,
+        itensPorEmail,
+        horaBRT,
+        ok: canaisEnviados.length > 0,
+      }
     }))
-
-    const canaisEnviados: string[] = []
-
-    // E-mail: todos (com info de trial se aplicável)
-    // Telegram/WA urgentes são gerenciados pelo /api/cron/alertar-urgente (a cada 5 min)
-    const emailOk = await enviarAlertaEmailUsuario(email, licitacoesDoUsuario, totalRestante, trialInfo)
-    if (emailOk) canaisEnviados.push('email')
-
-    if (canaisEnviados.length > 0) {
-      const ids = alertasParaEnviar.map(a => a.id)
-      await supabase
-        .from('alertas')
-        .update({ canais: canaisEnviados, enviado_em: new Date().toISOString() })
-        .in('id', ids)
-      totalEnviados += alertasParaEnviar.length
-    }
-
-    resultadosPorUsuario[email] = {
-      alertas:      alertasParaEnviar.length,
-      canais:       canaisEnviados,
-      emailsPorDia,
-      itensPorEmail,
-      horaBRT,
-      ok: canaisEnviados.length > 0,
-    }
   }
 
   const totalUsuarios = Object.keys(resultadosPorUsuario).length
