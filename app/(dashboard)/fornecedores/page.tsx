@@ -79,6 +79,10 @@ export default function FornecedoresPage() {
 
   async function enviarCadastro(e: React.FormEvent) {
     e.preventDefault()
+    if (!form.razao_social.trim()) { setMsg({ tipo: 'erro', texto: 'Informe a razão social.' }); return }
+    if (!form.cnpj.trim()) { setMsg({ tipo: 'erro', texto: 'Informe o CNPJ.' }); return }
+    if (!form.email_contato.trim()) { setMsg({ tipo: 'erro', texto: 'Informe o e-mail de contato.' }); return }
+    if (!form.telefone_contato.trim()) { setMsg({ tipo: 'erro', texto: 'Informe o telefone.' }); return }
     if (!form.descricao.trim()) { setMsg({ tipo: 'erro', texto: 'Descreva o que sua empresa fornece.' }); return }
     if (form.regioes.length === 0) { setMsg({ tipo: 'erro', texto: 'Selecione ao menos uma região de atuação.' }); return }
     setEnviando(true); setMsg(null)
@@ -176,19 +180,22 @@ export default function FornecedoresPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {([
-              { field: 'razao_social',     label: 'Razão social',        placeholder: 'Nome da empresa',         required: false },
-              { field: 'cnpj',             label: 'CNPJ',                placeholder: '00.000.000/0000-00',      required: false },
-              { field: 'email_contato',    label: 'E-mail de contato',   placeholder: 'contato@empresa.com.br', required: false },
-              { field: 'telefone_contato', label: 'Telefone',            placeholder: '(11) 99999-9999',        required: false },
+              { field: 'razao_social',     label: 'Razão social',        placeholder: 'Nome da empresa',         required: true  },
+              { field: 'cnpj',             label: 'CNPJ',                placeholder: '00.000.000/0000-00',      required: true  },
+              { field: 'email_contato',    label: 'E-mail de contato',   placeholder: 'contato@empresa.com.br', required: true  },
+              { field: 'telefone_contato', label: 'Telefone',            placeholder: '(11) 99999-9999',        required: true  },
               { field: 'website',          label: 'Site',                placeholder: 'www.empresa.com.br',     required: false },
-            ] as const).map(({ field, label, placeholder }) => (
+            ] as const).map(({ field, label, placeholder, required }) => (
               <div key={field}>
-                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--cinza)' }}>{label}</label>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--cinza)' }}>
+                  {label}{required && <span style={{ color: 'var(--vinho)' }}> *</span>}
+                </label>
                 <input
                   type={field === 'email_contato' ? 'email' : 'text'}
                   value={form[field]}
                   onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
                   placeholder={placeholder}
+                  required={required}
                   className="w-full px-3 py-2 rounded-xl text-sm"
                   style={{ border: '1.5px solid var(--cinza-light)', background: 'var(--fundo)', color: 'var(--preto)', outline: 'none', boxSizing: 'border-box' }}
                 />
