@@ -150,6 +150,11 @@ export default function PerfilPage() {
 
   async function salvarFornecedor(e: React.FormEvent) {
     e.preventDefault()
+    const falta = camposFaltando()
+    if (falta.length > 0) {
+      setFornecedorMsg({ tipo: 'erro', texto: `Preencha os campos obrigatórios: ${falta.join(', ')}.` })
+      return
+    }
     setSalvandoFornecedor(true)
     setFornecedorMsg(null)
     const res = await fetch('/api/fornecedor', {
