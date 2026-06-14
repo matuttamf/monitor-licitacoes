@@ -294,7 +294,7 @@ export default function CaptacaoPage() {
 
   const GITHUB_WORKFLOWS: Record<string, string> = {
     'coletar-leads-cnae': 'coletar-leads-rfb.yml',
-    'enriquecer-receita': 'enriquecer-receita.yml',
+    'enriquecer-receita': 'enriquecer-leads.yml',
   }
 
   async function acionar(acao: string) {

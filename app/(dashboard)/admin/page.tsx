@@ -206,7 +206,7 @@ export default function AdminPage() {
     // Ações que rodam via GitHub Actions (sem limite de tempo)
     const githubWorkflows: Record<string, string> = {
       'coletar-leads-cnae': 'coletar-leads-rfb.yml',
-      'enriquecer-receita': 'enriquecer-receita.yml',
+      'enriquecer-receita': 'enriquecer-leads.yml',
     }
     if (githubWorkflows[acao]) {
       const res = await fetch('/api/admin/trigger-github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflow: githubWorkflows[acao] }) })
