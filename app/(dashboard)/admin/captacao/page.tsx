@@ -215,7 +215,7 @@ export default function CaptacaoPage() {
     }
   }, [])
 
-  const carregarLeadsDB = useCallback(async (pag = 1) => {
+  const carregarLeadsDB = useCallback(async (pag = 1, sortCol?: string | null, sortDir?: 'asc' | 'desc') => {
     setCarregandoDB(true)
     setSelecionados(new Set())
     const params = new URLSearchParams({
@@ -226,9 +226,12 @@ export default function CaptacaoPage() {
       cnae:   filtroCNAE,
       q:      filtroQ,
     })
-    if (ordemCol) {
-      params.set('order_by', ordemCol)
-      params.set('order_dir', ordemDir)
+    // sortCol/sortDir passados explicitamente têm precedência sobre o estado (evita closure stale)
+    const col = sortCol !== undefined ? sortCol : ordemCol
+    const dir = sortDir !== undefined ? sortDir : ordemDir
+    if (col) {
+      params.set('order_by', col)
+      params.set('order_dir', dir)
     }
     const res = await fetch(`/api/admin/leads-db?${params}`)
     if (res.ok) {
@@ -931,12 +934,18 @@ export default function CaptacaoPage() {
                           {col ? (
                             <button
                               onClick={() => {
+                                let novoCol = ordemCol
+                                let novaDir: 'asc' | 'desc'
                                 if (ordemCol === col) {
-                                  setOrdemDir(d => d === 'asc' ? 'desc' : 'asc')
+                                  novaDir = ordemDir === 'asc' ? 'desc' : 'asc'
+                                  setOrdemDir(novaDir)
                                 } else {
+                                  novoCol = col
+                                  novaDir = 'asc'
                                   setOrdemCol(col)
                                   setOrdemDir('asc')
                                 }
+                                carregarLeadsDB(1, novoCol, novaDir)
                               }}
                               style={{
                                 background: 'none', border: 'none', cursor: 'pointer',
