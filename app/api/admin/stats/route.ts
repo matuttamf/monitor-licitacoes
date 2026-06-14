@@ -57,23 +57,23 @@ export async function GET() {
     cnt(service.from('licitacoes').select('*', { count: 'exact', head: true }) as never),
     cnt(service.from('alertas').select('*', { count: 'exact', head: true }).gte('criado_em', new Date(Date.now() - 86400000).toISOString()) as never),
     cnt(service.from('alertas').select('*', { count: 'exact', head: true }).gte('criado_em', new Date(Date.now() - 7 * 86400000).toISOString()) as never),
-    // Leads por status
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'enviado') as never),
+    // Leads por status — estimated evita full scan em 9M+ linhas
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('status', 'pendente') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('status', 'enviado') as never),
     cnt(service.from('leads').select('*', { count: 'estimated', head: true }) as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'erro') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'invalido') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'descadastrado') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('status', 'erro') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('status', 'invalido') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('status', 'descadastrado') as never),
     // Leads por fonte
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'cnae') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'pncp_contrato') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'pncp_proposta') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'portal_transparencia') as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).eq('fonte', 'busca_manual') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('fonte', 'cnae') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('fonte', 'pncp_contrato') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('fonte', 'pncp_proposta') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('fonte', 'portal_transparencia') as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).eq('fonte', 'busca_manual') as never),
     // Reconversão e rastreamento
     cnt(service.from('profiles').select('*', { count: 'exact', head: true }).not('reconversao_email_em', 'is', null) as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).not('abriu_em', 'is', null) as never),
-    cnt(service.from('leads').select('*', { count: 'exact', head: true }).not('clicou_em', 'is', null) as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).not('abriu_em', 'is', null) as never),
+    cnt(service.from('leads').select('*', { count: 'estimated', head: true }).not('clicou_em', 'is', null) as never),
   ])
 
   const fonteBreakdown = [
