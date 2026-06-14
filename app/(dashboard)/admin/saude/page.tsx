@@ -16,7 +16,7 @@ interface SaudeData {
   limites: Record<string, UsoServico>
   tabelas: {
     leads:      { total: number; com_email: number; pendente: number }
-    licitacoes: { total: number }
+    licitacoes: { total: number; abertas: number }
     alertas:    { total: number; enviados: number }
     usuarios:   { total: number; ativos: number }
   }
@@ -255,7 +255,7 @@ export default function SaudePage() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <CardTabela label="Leads totais"   valor={data.tabelas.leads.total}      sub={`${data.tabelas.leads.com_email} com e-mail`} />
           <CardTabela label="Leads pendentes" valor={data.tabelas.leads.pendente}  sub="aguardando disparo" />
-          <CardTabela label="Licitações"      valor={data.tabelas.licitacoes.total} />
+          <CardTabela label="Licitações"      valor={data.tabelas.licitacoes.total} sub={`${data.tabelas.licitacoes.abertas.toLocaleString('pt-BR')} abertas`} />
           <CardTabela label="Alertas gerados" valor={data.tabelas.alertas.total}   sub={`${data.tabelas.alertas.enviados} enviados`} />
           <CardTabela label="Usuários"        valor={data.tabelas.usuarios.total}  sub={`${data.tabelas.usuarios.ativos} com acesso`} />
         </div>

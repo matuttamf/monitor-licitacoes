@@ -51,6 +51,7 @@ export async function GET() {
     { count: leadsEmail },
     { count: leadsPendente },
     { count: totalLicitacoes },
+    { count: licitacoesAbertas },
     { count: totalAlertas },
     { count: alertasEnviados },
     { count: totalUsuarios },
@@ -60,6 +61,7 @@ export async function GET() {
     admin.from('leads').select('*', { count: 'exact', head: true }).not('email', 'is', null),
     admin.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pendente'),
     admin.from('licitacoes').select('*', { count: 'exact', head: true }),
+    admin.from('licitacoes').select('*', { count: 'exact', head: true }).gte('data_abertura', new Date().toISOString().slice(0, 10)),
     admin.from('alertas').select('*', { count: 'exact', head: true }),
     admin.from('alertas').select('*', { count: 'exact', head: true }).not('enviado_em', 'is', null),
     admin.from('profiles').select('*', { count: 'exact', head: true }),
@@ -69,7 +71,7 @@ export async function GET() {
 
   const tabelas = {
     leads:       { total: totalLeads ?? 0, com_email: leadsEmail ?? 0, pendente: leadsPendente ?? 0 },
-    licitacoes:  { total: totalLicitacoes ?? 0 },
+    licitacoes:  { total: totalLicitacoes ?? 0, abertas: licitacoesAbertas ?? 0 },
     alertas:     { total: totalAlertas ?? 0, enviados: alertasEnviados ?? 0 },
     usuarios:    { total: totalUsuarios ?? 0, ativos: usuariosAtivos ?? 0 },
   }
