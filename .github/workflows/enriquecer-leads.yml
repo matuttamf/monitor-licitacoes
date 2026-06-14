@@ -5,6 +5,7 @@ on:
   schedule:
     - cron: '0 6 2 * *'
     - cron: '0 */6 * * *'
+    - cron: '0 8 3 * *'   # Dia 3: bulk enrichment de toda a base via RFB
   workflow_dispatch:
     inputs:
       idx_start:
@@ -13,6 +14,9 @@ on:
       idx_end:
         description: 'Índice final arquivos RFB (0-9)'
         default: '9'
+      run_bulk:
+        description: 'Rodar bulk enrichment RFB (true/false)'
+        default: 'false'
 
 jobs:
   emails-rfb:
@@ -85,3 +89,44 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "enriquecer-receita" "${{ job.status }}"
+
+  bulk-enrich-rfb:
+    name: Enriquecer toda a base via arquivos RFB
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    # Roda no dia 3 de cada mês OU se dispatch manual com run_bulk=true
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 8 3 * *') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.run_bulk == 'true')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Bulk enrichment via arquivos RFB
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
+          npx tsx scripts/enriquecer-bulk-rfb.ts "$IDX_START" "$IDX_END"
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "enriquecer-bulk-rfb" "${{ job.status }}"
