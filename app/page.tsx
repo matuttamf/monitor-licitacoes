@@ -384,7 +384,7 @@ export default function LandingPage() {
               <div className="text-[11px] font-black tracking-wider uppercase text-[#6B0F1A] mb-5">✓ Com o Monitor</div>
               {[
                 '5.500+ prefeituras e órgãos rastreados — zero esforço manual',
-                'IA lê o contexto do edital inteiro, não só a palavra exata',
+                'Lê o contexto do edital inteiro — encontra mesmo quando o nome é diferente',
                 'Alerta chega em média 18 dias antes da abertura — tempo de sobra para proposta',
                 'E-mail, Telegram ou WhatsApp — no canal que você já usa',
                 'Você chega primeiro. A proposta é sua.',
