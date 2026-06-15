@@ -1,9 +1,11 @@
 /**
  * Script: enriquecer-receita
  * Consulta minhareceita.org para todos os leads com status=invalido.
- * Atualiza: razao_social, situacao, cnae, cnae_codigo, porte, email, telefone, municipio, uf, status.
+ * Atualiza: razao_social, situacao, cnae, cnae_codigo, porte, email, telefone, municipio, uf, segmento, status.
  * Usa fetch direto à REST API do Supabase (sem postgrest-js client).
  */
+
+import { mapearSegmento } from '../lib/leads/segmento'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '')
   .trim()
@@ -11,7 +13,7 @@ const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABA
   .replace(/\/$/, '')
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
-const CONCORRENCIA = 5
+const CONCORRENCIA = 8
 const LOTE         = 500
 
 console.log('SUPABASE_URL:', SUPABASE_URL || '*** UNDEFINED ***')
@@ -46,7 +48,7 @@ async function buscarLeads(lastId: string, filtro: 'sem-email' | 'invalido-com-e
   const base: Record<string, string> = { select: 'id,cnpj,email', 'id': `gt.${lastId}`, order: 'id.asc', limit: String(LOTE) }
   let extra: Record<string, string>
   if (filtro === 'sem-email') {
-    extra = { 'email': 'is.null' }
+    extra = { 'email': 'is.null', 'status': 'in.(invalido,pendente)' }
   } else if (filtro === 'invalido-com-email') {
     extra = { 'status': 'eq.invalido', 'situacao': 'eq.ATIVA', 'email': 'not.is.null' }
   } else {
@@ -136,6 +138,7 @@ async function main() {
 
     totalAtivos++
     if (emailFinal) totalComEmail++
+    const cnaeDesc = dados.cnae_fiscal_descricao ?? null
     await atualizarLead(lead.id, {
       razao_social:  dados.razao_social,
       nome_fantasia: dados.nome_fantasia ?? null,
@@ -145,8 +148,9 @@ async function main() {
       uf:            dados.uf ?? null,
       situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
       porte:         dados.porte ?? null,
-      cnae:          dados.cnae_fiscal_descricao ?? null,
+      cnae:          cnaeDesc,
       cnae_codigo:   cnaeCode,
+      segmento:      mapearSegmento(cnaeDesc),
       status:        (emailFinal && dados.razao_social && /[a-zA-ZÀ-ÿ]/.test(dados.razao_social) && dados.municipio && cnaeCode) ? 'pendente' : 'invalido',
     })
   }
