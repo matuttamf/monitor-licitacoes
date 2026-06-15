@@ -76,6 +76,10 @@ export async function POST(
   if (!cpf) return NextResponse.json({ error: 'CPF obrigatório.' }, { status: 400 })
   if (!validarCPF(cpf)) return NextResponse.json({ error: 'CPF inválido.' }, { status: 400 })
 
+  // Validar CNPJ (obrigatório)
+  if (!cnpj) return NextResponse.json({ error: 'CNPJ obrigatório para confirmar vínculo com a empresa.' }, { status: 400 })
+  if (!validarCNPJ(cnpj)) return NextResponse.json({ error: 'CNPJ inválido.' }, { status: 400 })
+
   // Validar declaração de vínculo (obrigatória)
   if (!declaracao) return NextResponse.json({ error: 'Declaração de vínculo obrigatória.' }, { status: 400 })
 
@@ -106,21 +110,15 @@ export async function POST(
 
   const planoOwner = ownerProfile?.plano ?? 'basic'
 
-  // Validar CNPJ do membro se fornecido (base deve coincidir com a do owner)
-  let cnpjFormatado: string | null = null
-  if (cnpj?.trim()) {
-    if (!validarCNPJ(cnpj)) {
-      return NextResponse.json({ error: 'CNPJ inválido.' }, { status: 400 })
-    }
-    const cnpjBase = cnpj.replace(/\D/g, '').slice(0, 8)
-    const ownerBase = ownerProfile?.cnpj?.replace(/\D/g, '').slice(0, 8)
-    if (ownerBase && cnpjBase !== ownerBase) {
-      return NextResponse.json({
-        error: 'O CNPJ informado não pertence à mesma empresa da conta contratante.',
-      }, { status: 422 })
-    }
-    cnpjFormatado = cnpj.replace(/\D/g, '').replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+  // Validar base CNPJ do membro vs owner (obrigatório quando owner tem CNPJ)
+  const cnpjBase = cnpj.replace(/\D/g, '').slice(0, 8)
+  const ownerBase = ownerProfile?.cnpj?.replace(/\D/g, '').slice(0, 8)
+  if (ownerBase && cnpjBase !== ownerBase) {
+    return NextResponse.json({
+      error: 'O CNPJ informado não pertence à mesma empresa da conta contratante.',
+    }, { status: 422 })
   }
+  const cnpjFormatado = cnpj.replace(/\D/g, '').replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 
   const cpfFormatado = cpf.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
 

@@ -10,8 +10,8 @@ export interface LimitesPlano {
 export const LIMITES_PLANO: Record<string, LimitesPlano> = {
   basic:        { maxKeywords: 20,    maxUsers: 1,  maxKeywordsPerSeat: 20,    nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
   profissional: { maxKeywords: 99999, maxUsers: 1,  maxKeywordsPerSeat: 99999, nome: 'Profissional', maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
-  gestao:       { maxKeywords: 99999, maxUsers: 5,  maxKeywordsPerSeat: 50,    nome: 'Gestão',       maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
-  empresarial:  { maxKeywords: 99999, maxUsers: 15, maxKeywordsPerSeat: 50,    nome: 'Empresarial',  maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
+  gestao:       { maxKeywords: 99999, maxUsers: 5,  maxKeywordsPerSeat: 99999, nome: 'Gestão',       maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
+  empresarial:  { maxKeywords: 99999, maxUsers: 15, maxKeywordsPerSeat: 99999, nome: 'Empresarial',  maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
 }
 
 /** trial = acesso completo por 7 dias (mesmo limite do basic) */

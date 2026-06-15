@@ -56,6 +56,7 @@ function CadastroConteudo() {
     if (senha.length < 8)         { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     if (conviteToken) {
       if (!cpf.trim())     { setErro('CPF obrigatório.'); return }
+      if (!cnpj.trim())    { setErro('CNPJ obrigatório para confirmar vínculo com a empresa.'); return }
       if (!cargo.trim())   { setErro('Informe seu cargo na empresa.'); return }
       if (!declaracao)     { setErro('Você precisa declarar vínculo com a empresa.'); return }
     }
@@ -346,22 +347,22 @@ function CadastroConteudo() {
                     />
                   </div>
 
-                  {convite?.cnpjOwnerBase && (
-                    <div>
-                      <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
-                        CNPJ próprio <span className="text-[#9AA0A6] font-normal normal-case">(opcional — se for sócio ou MEI)</span>
-                      </label>
-                      <input
-                        type="text" value={cnpj}
-                        onChange={e => setCnpj(mascaraCNPJ(e.target.value))}
-                        placeholder="00.000.000/0001-00" maxLength={18}
-                        className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
-                      />
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
+                      CNPJ da empresa <span className="text-[#6B0F1A]">*</span>
+                    </label>
+                    <input
+                      type="text" value={cnpj}
+                      onChange={e => setCnpj(mascaraCNPJ(e.target.value))}
+                      placeholder="00.000.000/0001-00" required={!!conviteToken} maxLength={18}
+                      className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                    />
+                    {convite?.cnpjOwnerBase && (
                       <p className="text-[11px] text-[#9AA0A6] mt-1">
                         Os 8 primeiros dígitos devem coincidir com o CNPJ da empresa contratante.
                       </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
