@@ -60,7 +60,8 @@ jobs:
     name: Enriquecer razão social e situação via Receita
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    needs: emails-rfb
+    needs: [emails-rfb, bulk-enrich-rfb]
+    if: always() && needs.emails-rfb.result == 'success'
 
     steps:
       - name: Checkout
