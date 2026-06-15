@@ -94,9 +94,10 @@ jobs:
     name: Enriquecer toda a base via arquivos RFB
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    # Roda no dia 3 de cada mês OU se dispatch manual com run_bulk=true
+    # Roda no dia 3 de cada mês, a cada 6 horas, OU dispatch manual com run_bulk=true
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 8 3 * *') ||
+      (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.run_bulk == 'true')
 
     steps:
