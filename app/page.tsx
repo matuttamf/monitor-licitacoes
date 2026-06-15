@@ -358,20 +358,23 @@ export default function LandingPage() {
           <div className="text-center mb-12">
             <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">A diferença na prática</div>
             <h2 className="text-3xl md:text-[38px] font-black tracking-tight leading-[1.1] text-[#1A1A1C]">
-              Sem o Monitor, é quase impossível<br className="hidden md:block" /> não perder oportunidades.
+              A cada edital que você não viu,<br className="hidden md:block" /> alguém já enviou a proposta.
             </h2>
+            <p className="text-base text-[#9AA0A6] mt-4 max-w-[520px] mx-auto leading-relaxed">
+              Não é falta de capacidade técnica. É falta de informação na hora certa. E isso tem solução.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="rounded-2xl p-8 border-2 border-[#F0EDE8] bg-[#FAFAFA]">
               <div className="text-[11px] font-black tracking-wider uppercase text-[#9AA0A6] mb-5">❌ Sem o Monitor</div>
               {[
-                'Verifica manualmente 10+ portais por dia',
-                'Perde editais que usam termos técnicos diferentes',
-                'Descobre licitações depois que o prazo fechou',
-                'Sem alertas — depende de lembrança e rotina',
-                'Concorrentes sabem antes e chegam primeiro',
-              ].map(item => (
-                <div key={item} className="flex items-start gap-3 mb-3">
+                ['Horas varrendo portais que publicam em sistemas diferentes', ''],
+                ['Perde editais porque o governo chamou "parafuso" de "elemento de fixação"', ''],
+                ['Descobre o edital perfeito — dois dias depois do prazo fechar', ''],
+                ['Depende de rotina manual. Um dia esquece. Perde o contrato.', ''],
+                ['Seu concorrente recebe o alerta. Você recebe a notícia depois.', ''],
+              ].map(([item]) => (
+                <div key={item} className="flex items-start gap-3 mb-3.5">
                   <span className="text-[#D5D2C8] text-lg leading-none mt-0.5 shrink-0">✕</span>
                   <span className="text-sm text-[#9AA0A6] leading-snug">{item}</span>
                 </div>
@@ -380,13 +383,13 @@ export default function LandingPage() {
             <div className="rounded-2xl p-8 border-2 border-[#6B0F1A] bg-white shadow-[0_4px_24px_rgba(107,15,26,0.06)]">
               <div className="text-[11px] font-black tracking-wider uppercase text-[#6B0F1A] mb-5">✓ Com o Monitor</div>
               {[
-                'Todos os portais monitorados automaticamente',
-                'Lê o contexto do edital — não só palavras exatas',
-                'Alerta chega antes do prazo começar a correr',
-                'E-mail, Telegram ou WhatsApp — você escolhe',
+                '5.500+ prefeituras e órgãos rastreados — zero esforço manual',
+                'IA lê o contexto do edital inteiro, não só a palavra exata',
+                'Alerta chega em média 18 dias antes da abertura — tempo de sobra para proposta',
+                'E-mail, Telegram ou WhatsApp — no canal que você já usa',
                 'Você chega primeiro. A proposta é sua.',
               ].map(item => (
-                <div key={item} className="flex items-start gap-3 mb-3">
+                <div key={item} className="flex items-start gap-3 mb-3.5">
                   <span className="text-[#6B0F1A] text-lg leading-none mt-0.5 shrink-0">✓</span>
                   <span className="text-sm text-[#1A1A1C] font-medium leading-snug">{item}</span>
                 </div>
@@ -415,16 +418,19 @@ export default function LandingPage() {
                 </div>
               </div>
               <h3 className="text-2xl md:text-[30px] font-black text-[#1A1A1C] mb-3 tracking-tight leading-snug">
-                Sua empresa visível para quem<br className="hidden md:block" /> está buscando parceiros agora.
+                O maior problema de quem compra<br className="hidden md:block" /> não é o preço. É achar um fornecedor de confiança.
               </h3>
-              <p className="text-sm md:text-[15px] text-[#9AA0A6] leading-relaxed mb-5 m-0">
-                O Diretório de Fornecedores coloca sua empresa em frente a todos os usuários da plataforma — gestores públicos, compradores privados e outros usuários que buscam fornecedores, prestadores de serviço ou parceiros comerciais para fecharem negócio. Você é encontrado. A negociação é com você.
+              <p className="text-sm md:text-[15px] text-[#9AA0A6] leading-relaxed mb-2 m-0">
+                Gestores públicos e compradores privados passam dias ligando, pesquisando e arriscando em fornecedores desconhecidos. Quando encontram um de confiança, voltam sempre.
+              </p>
+              <p className="text-sm md:text-[15px] text-[#4a4a4d] font-semibold leading-relaxed mb-5 m-0">
+                O Diretório coloca sua empresa na frente de quem já decidiu comprar — e ainda não achou o fornecedor certo.
               </p>
               <div className="flex flex-wrap gap-3">
                 {[
-                  '🎯 Visível para todos os usuários da plataforma',
+                  '🎯 Visível para gestores e compradores ativos',
                   '📍 Filtrado por região e segmento',
-                  '🔗 Contato direto com quem encontrou',
+                  '🔗 Contato direto — sem intermediários',
                 ].map(item => (
                   <div key={item} className="flex items-center gap-2 bg-white border border-[#D5D2C8] rounded-[8px] px-3 py-2">
                     <span className="text-xs font-semibold text-[#1A1A1C]">{item}</span>
