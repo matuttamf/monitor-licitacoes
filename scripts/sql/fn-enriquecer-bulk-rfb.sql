@@ -9,6 +9,7 @@ CREATE OR REPLACE FUNCTION enriquecer_bulk_rfb(batch JSONB)
 RETURNS INTEGER
 LANGUAGE SQL
 SECURITY DEFINER
+SET statement_timeout = '55s'
 AS $$
   WITH upd AS (
     UPDATE leads l
