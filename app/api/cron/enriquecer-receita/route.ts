@@ -15,7 +15,7 @@ import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 import { mapearSegmento } from '@/lib/leads/segmento'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
@@ -70,12 +70,12 @@ export async function GET(req: NextRequest) {
     supabase.from('leads').select('id, cnpj, email')
       .is('situacao', null)
       .in('status', ['invalido', 'pendente'])
-      .limit(100),
+      .limit(200),
     supabase.from('leads').select('id, cnpj, email')
       .eq('origem', 'cnae')
       .filter('razao_social', 'match', '^[0-9]{14}$')
       .in('status', ['invalido', 'pendente'])
-      .limit(20),
+      .limit(50),
   ])
 
   // Deduplica por id — um lead pode estar nos dois grupos
