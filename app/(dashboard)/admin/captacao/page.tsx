@@ -839,20 +839,21 @@ export default function CaptacaoPage() {
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cinza)' }}>CNAE / Setor</label>
-              <div className="flex gap-1 flex-wrap items-center">
+              <div className="flex gap-1 items-center">
                 <input value={filtroCNAE} onChange={e => setFiltroCNAE(e.target.value)}
                   placeholder="ex: construção"
                   className="px-3 py-1.5 rounded-lg text-xs"
                   style={{ border: '1px solid var(--cinza-light)', background: 'white', width: 130 }} />
-                <div className="flex gap-1 flex-wrap">
+                <select
+                  value=""
+                  onChange={e => { if (e.target.value) setFiltroCNAE(e.target.value) }}
+                  className="px-2 py-1.5 rounded-lg text-xs"
+                  style={{ border: '1px solid var(--cinza-light)', background: 'white', color: 'var(--cinza)', cursor: 'pointer' }}>
+                  <option value="">▾ sugestões</option>
                   {CNAES_SUGERIDOS.map(c => (
-                    <button key={c} onClick={() => setFiltroCNAE(c)}
-                      className="px-2 py-0.5 rounded text-[10px]"
-                      style={{ background: filtroCNAE === c ? 'var(--vinho)' : 'var(--cinza-light)', color: filtroCNAE === c ? 'white' : 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
-                      {c}
-                    </button>
+                    <option key={c} value={c}>{c}</option>
                   ))}
-                </div>
+                </select>
               </div>
             </div>
             <div>
