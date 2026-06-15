@@ -40,6 +40,26 @@ const HEADERS_PATCH: Record<string, string> = {
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
+async function fetchComRetry(url: string, opts: RequestInit, tentativas = 4): Promise<Response> {
+  for (let i = 0; i < tentativas; i++) {
+    try {
+      const res = await fetch(url, opts)
+      if (res.status === 500 || res.status === 503 || res.status === 504) {
+        const txt = await res.text()
+        console.warn(`  Retry ${i + 1}/${tentativas} (${res.status}): ${txt.slice(0, 150)}`)
+        await sleep(3000 * (i + 1))
+        continue
+      }
+      return res
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.warn(`  Retry ${i + 1}/${tentativas} (network): ${msg.slice(0, 150)}`)
+      if (i < tentativas - 1) await sleep(5000 * (i + 1))
+    }
+  }
+  throw new Error(`Falha após ${tentativas} tentativas: ${url}`)
+}
+
 // PostgREST não suporta regex (~) dentro de or() — usamos duas queries separadas.
 // Query A: leads sem e-mail (status=invalido por falta de email).
 // Query B: leads invalidos com e-mail e situação ATIVA (razão social não verificada).
@@ -56,7 +76,7 @@ async function buscarLeads(lastId: string, filtro: 'sem-email' | 'invalido-com-e
   }
   const qs = new URLSearchParams({ ...base, ...extra })
   const url = `${REST}/leads?${qs}`
-  const res = await fetch(url, { headers: HEADERS_GET })
+  const res = await fetchComRetry(url, { headers: HEADERS_GET })
   if (!res.ok) {
     const txt = await res.text()
     console.error(`Erro ao buscar leads (${res.status}):`, txt.slice(0, 300))
@@ -66,14 +86,19 @@ async function buscarLeads(lastId: string, filtro: 'sem-email' | 'invalido-com-e
 }
 
 async function atualizarLead(id: string, dados: Record<string, unknown>): Promise<void> {
-  const res = await fetch(`${REST}/leads?id=eq.${id}`, {
-    method:  'PATCH',
-    headers: HEADERS_PATCH,
-    body:    JSON.stringify(dados),
-  })
-  if (!res.ok) {
-    const txt = await res.text()
-    console.error(`Erro ao atualizar lead ${id} (${res.status}):`, txt.slice(0, 200))
+  try {
+    const res = await fetchComRetry(`${REST}/leads?id=eq.${id}`, {
+      method:  'PATCH',
+      headers: HEADERS_PATCH,
+      body:    JSON.stringify(dados),
+    })
+    if (!res.ok) {
+      const txt = await res.text()
+      console.error(`Erro ao atualizar lead ${id} (${res.status}):`, txt.slice(0, 200))
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`Falha ao atualizar lead ${id}:`, msg.slice(0, 200))
   }
 }
 
