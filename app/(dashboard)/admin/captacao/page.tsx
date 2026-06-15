@@ -292,11 +292,11 @@ export default function CaptacaoPage() {
     setToggling(false)
   }
 
-  async function dispararGitHub(workflow: string) {
+  async function dispararGitHub(workflow: string, inputs?: Record<string, string>) {
     setDisparando(workflow); setResultadoCron(null)
     const res = await fetch('/api/admin/trigger-github', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workflow }),
+      body: JSON.stringify({ workflow, inputs }),
     })
     setResultadoCron({ acao: workflow, ok: res.ok, data: await res.json() })
     setDisparando(null)
@@ -309,7 +309,7 @@ export default function CaptacaoPage() {
 
   async function acionar(acao: string) {
     const wf = GITHUB_WORKFLOWS[acao]
-    if (wf) return dispararGitHub(wf)
+    if (wf) return dispararGitHub(wf, acao === 'enriquecer-receita' ? { run_bulk: 'true' } : undefined)
     return acionarCron(acao)
   }
 

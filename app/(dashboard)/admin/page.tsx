@@ -209,7 +209,8 @@ export default function AdminPage() {
       'enriquecer-receita': 'enriquecer-leads.yml',
     }
     if (githubWorkflows[acao]) {
-      const res = await fetch('/api/admin/trigger-github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflow: githubWorkflows[acao] }) })
+      const inputs = acao === 'enriquecer-receita' ? { run_bulk: 'true' } : undefined
+      const res = await fetch('/api/admin/trigger-github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflow: githubWorkflows[acao], inputs }) })
       setResultadoTrigger({ ok: res.ok, status: res.status, data: await res.json() })
       setDisparando(null)
       return

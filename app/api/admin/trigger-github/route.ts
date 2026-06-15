@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
   }
 
-  const { workflow } = await request.json()
+  const { workflow, inputs } = await request.json()
   if (!workflow) return NextResponse.json({ error: 'workflow obrigatório' }, { status: 400 })
 
   const token = process.env.GITHUB_ACTIONS_TOKEN
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ ref: 'main' }),
+    body: JSON.stringify({ ref: 'main', ...(inputs ? { inputs } : {}) }),
   })
 
   if (res.status === 204) {
