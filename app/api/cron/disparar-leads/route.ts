@@ -155,6 +155,9 @@ export async function GET(req: NextRequest) {
     .eq('status', 'pendente')
     .not('email', 'is', null)
     .neq('email', '')
+    .not('segmento', 'is', null)   // sem setor → não consegue buscar licitações de isca relevantes
+    .not('municipio', 'is', null)  // sem cidade → e-mail genérico e sem personalização
+    .not('uf', 'is', null)         // sem UF → não filtra licitações do estado
     .order('created_at', { ascending: true })
     .limit(MAX_LOTE_NOVOS * 4)
 
