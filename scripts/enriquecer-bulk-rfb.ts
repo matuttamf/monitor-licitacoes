@@ -35,10 +35,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { persistSession: false },
-  global: { headers: { 'Prefer': 'statement_timeout=55000' } },
-})
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
 
 const cliArgs  = process.argv.slice(2)
 const IDX_START = Number(cliArgs[0] ?? 0)
@@ -202,17 +199,15 @@ function getUrls(tipo: 'Estabelecimentos' | 'Empresas', idx: number): string[] {
   return [`${STORAGE_BASE}/${tipo}${idx}.zip`, `${RF_BASE}/${tipo}${idx}.zip`]
 }
 
-// ── Fase 1: todos os CNPJs da base em memória ─────────────────────────────────
+// ── Fase 1: todos os CNPJs da base em memória (via RPC com timeout próprio) ───
 async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBase: Set<string> }> {
   console.log('\n── Fase 1: Carregando CNPJs da base ──')
-  const cnpjsBase  = new Set<string>()
+  const cnpjsBase   = new Set<string>()
   const basicosBase = new Set<string>()
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
   while (true) {
-    const { data, error } = await supabase
-      .from('leads').select('id,cnpj')
-      .gt('id', lastId).order('id', { ascending: true }).limit(1000)
+    const { data, error } = await supabase.rpc('get_cnpjs_page', { last_id: lastId, page_size: 1000 })
     if (error) {
       errosConsecutivos++
       console.error(`Erro (tentativa ${errosConsecutivos}): ${error.message}`)
@@ -226,11 +221,11 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
       cnpjsBase.add(r.cnpj as string)
       basicosBase.add((r.cnpj as string).slice(0, 8))
     }
-    lastId = data[data.length - 1].id as string
+    lastId = (data[data.length - 1].id as string)
     if (data.length < 1000) break
     if (cnpjsBase.size % 500_000 < 1000) console.log(`  ${cnpjsBase.size.toLocaleString('pt-BR')} carregados...`)
   }
-  console.log(`  CNPJs: ${cnpjsBase.size.toLocaleString('pt-BR')} | Basicós únicos: ${basicosBase.size.toLocaleString('pt-BR')}`)
+  console.log(`  CNPJs: ${cnpjsBase.size.toLocaleString('pt-BR')} | Básicos únicos: ${basicosBase.size.toLocaleString('pt-BR')}`)
   return { cnpjsBase, basicosBase }
 }
 

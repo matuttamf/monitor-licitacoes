@@ -93,23 +93,14 @@ function validarEmail(email: string | null): string | null {
   return e
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { persistSession: false },
-  global: { headers: { 'Prefer': 'statement_timeout=55000' } },
-})
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
 
 async function carregarCnpjsSemEmail(): Promise<Set<string>> {
   const cnpjs = new Set<string>()
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
   while (true) {
-    const { data, error } = await supabase
-      .from('leads')
-      .select('id,cnpj')
-      .or('email.is.null,email.eq.')
-      .gt('id', lastId)
-      .order('id', { ascending: true })
-      .limit(1000)
+    const { data, error } = await supabase.rpc('get_cnpjs_sem_email_page', { last_id: lastId, page_size: 1000 })
     if (error) {
       errosConsecutivos++
       console.error(`Erro ao carregar (tentativa ${errosConsecutivos}): ${error.message}`)
@@ -122,6 +113,7 @@ async function carregarCnpjsSemEmail(): Promise<Set<string>> {
     for (const r of data) cnpjs.add((r.cnpj as string).slice(0, 8))
     lastId = data[data.length - 1].id as string
     if (data.length < 1000) break
+    if (cnpjs.size % 100_000 < 1000) console.log(`  ${cnpjs.size.toLocaleString('pt-BR')} carregados...`)
   }
   return cnpjs
 }
