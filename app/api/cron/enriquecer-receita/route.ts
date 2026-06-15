@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
+import { mapearSegmento } from '@/lib/leads/segmento'
 
 export const maxDuration = 60
 
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest) {
   // Cleanup: leads marcados como pendente mas sem email — mover para invalido
   // (enriquecer-emails os pegará depois via situacao='ATIVA' + email=null)
   const { count: limpezaCount } = await supabase.from('leads')
-    .select('*', { count: 'exact', head: true })
+    .select('*', { count: 'estimated', head: true })
     .eq('status', 'pendente')
     .is('email', null)
   await supabase.from('leads')
@@ -130,6 +131,7 @@ export async function GET(req: NextRequest) {
       }
 
       ativos++
+      const cnaeDesc = dados.cnae_fiscal_descricao ?? null
       await supabase.from('leads').update({
         razao_social:  dados.razao_social,
         nome_fantasia: dados.nome_fantasia ?? null,
@@ -139,8 +141,9 @@ export async function GET(req: NextRequest) {
         uf:            dados.uf ?? null,
         situacao:      dados.descricao_situacao_cadastral ?? 'ATIVA',
         porte:         dados.porte ?? null,
-        cnae:          dados.cnae_fiscal_descricao ?? null,
+        cnae:          cnaeDesc,
         cnae_codigo:   cnaeCode,
+        segmento:      mapearSegmento(cnaeDesc),
         status:        emailFinal ? 'pendente' : 'invalido',
       }).eq('id', lead.id)
     }))

@@ -24,6 +24,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
+import { mapearSegmento } from '@/lib/leads/segmento'
 
 export const maxDuration = 300
 
@@ -42,23 +43,6 @@ const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
 const fmtBr = (d: Date) => {
   const [y, m, day] = d.toISOString().slice(0, 10).split('-')
   return `${day}/${m}/${y}`
-}
-
-// ─── Segmentação por CNAE ─────────────────────────────────────────────────────
-function mapearSegmento(cnae: string | null | undefined): string {
-  if (!cnae) return 'outros'
-  const c = cnae.toLowerCase()
-  if (/constru|engenharia|obra|reform|pavimentaç/.test(c))                 return 'construção'
-  if (/tecnolog|informátic|software|sistema|hardware|ti\b|dados/.test(c))  return 'tecnologia'
-  if (/saúde|hospital|médic|farmac|laborat|clínic|enfermag/.test(c))       return 'saúde'
-  if (/limpeza|conservaç|higienizaç|saneament|desinfeç/.test(c))           return 'limpeza'
-  if (/vigilânc|segurança|monitoram|portaria|armado/.test(c))              return 'segurança'
-  if (/transport|logístic|frete|mudança|veícul|frota/.test(c))             return 'transporte'
-  if (/aliment|nutriç|refeição|catering|merenda|buffet/.test(c))           return 'alimentação'
-  if (/consult|assessor|gestão|planejam|auditoria/.test(c))                return 'consultoria'
-  if (/educaç|treinament|capacitaç|ensino|curso|escola/.test(c))           return 'educação'
-  if (/manutençã|reparo|instalação|calibraç|assistência técn/.test(c))     return 'manutenção'
-  return 'outros'
 }
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
