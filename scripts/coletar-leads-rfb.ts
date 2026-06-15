@@ -525,9 +525,9 @@ async function coletarEstabelecimentos(
     passouMatfil++
     if (cols[COL.SITUACAO] !== '02') return
     passouSituacao++
-    // Filtro: apenas empresas abertas nos últimos 60 dias
+    // Filtro de data desativado temporariamente para coleta incremental completa
     const dataInicio = cols[COL.DATA_INICIO]?.trim() ?? ''
-    if (!dataInicio || dataInicio < dataLimite) { foraJanela++; return }
+    // if (!dataInicio || dataInicio < dataLimite) { foraJanela++; return }
     const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
     if (cnaesSample.length < 10) cnaesSample.push(`"${cnae}"(len=${cnae.length})`)
     if (!targetCnaes.has(cnae)) return
