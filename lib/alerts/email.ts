@@ -175,8 +175,8 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
 
     <!-- Footer -->
     <div style="background:#1E1E1E;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center">
-      <p style="margin:0 0 6px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:600">Matutta Máquinas e Ferramentas</p>
-      <p style="margin:0 0 6px;color:rgba(255,255,255,0.35);font-size:12px">Monitor de Licitações — alertas automáticos de editais públicos</p>
+      <p style="margin:0 0 6px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:600">Monitor de Licitações</p>
+      <p style="margin:0 0 6px;color:rgba(255,255,255,0.35);font-size:12px">alertas automáticos de editais públicos</p>
       <p style="margin:0;color:rgba(255,255,255,0.2);font-size:11px">Você recebe este e-mail porque cadastrou palavras-chave no sistema.</p>
     </div>
 
