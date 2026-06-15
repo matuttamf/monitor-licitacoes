@@ -41,8 +41,10 @@ const STATUS_COR: Record<string, { bg: string; color: string; label: string }> =
 }
 
 const CNAES_SUGERIDOS = [
-  'construção', 'engenharia', 'tecnologia', 'informática', 'limpeza',
-  'vigilância', 'transporte', 'saúde', 'consultoria', 'treinamento',
+  'limpeza', 'segurança', 'ti', 'construção', 'saúde', 'transporte',
+  'alimentação', 'resíduos', 'locação', 'engenharia', 'jardinagem',
+  'uniformes', 'gráfica', 'combustível', 'treinamento', 'hotel',
+  'publicidade', 'agropecuária', 'vigilância', 'monitoramento',
 ]
 
 // Formata DDD + número → (XX) XXXX-XXXX ou (XX) 9XXXX-XXXX
@@ -843,7 +845,7 @@ export default function CaptacaoPage() {
                   className="px-3 py-1.5 rounded-lg text-xs"
                   style={{ border: '1px solid var(--cinza-light)', background: 'white', width: 130 }} />
                 <div className="flex gap-1 flex-wrap">
-                  {CNAES_SUGERIDOS.slice(0, 4).map(c => (
+                  {CNAES_SUGERIDOS.map(c => (
                     <button key={c} onClick={() => setFiltroCNAE(c)}
                       className="px-2 py-0.5 rounded text-[10px]"
                       style={{ background: filtroCNAE === c ? 'var(--vinho)' : 'var(--cinza-light)', color: filtroCNAE === c ? 'white' : 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
