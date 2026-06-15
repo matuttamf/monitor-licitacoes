@@ -385,7 +385,7 @@ export default function LandingPage() {
               {[
                 '5.500+ prefeituras e órgãos rastreados — zero esforço manual',
                 'Lê o contexto do edital inteiro — encontra mesmo quando o nome é diferente',
-                'Alerta chega em média 18 dias antes da abertura — tempo de sobra para proposta',
+                'Alerta chega com antecedência — tempo para verificar, orçar e montar a proposta',
                 'E-mail, Telegram ou WhatsApp — no canal que você já usa',
                 'Você chega primeiro. A proposta é sua.',
               ].map(item => (
