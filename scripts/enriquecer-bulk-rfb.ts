@@ -35,7 +35,10 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+  auth: { persistSession: false },
+  global: { headers: { 'Prefer': 'statement_timeout=55000' } },
+})
 
 const cliArgs  = process.argv.slice(2)
 const IDX_START = Number(cliArgs[0] ?? 0)
