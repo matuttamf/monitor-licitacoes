@@ -1,16 +1,17 @@
 export interface LimitesPlano {
   maxKeywords: number
   maxUsers: number
+  maxKeywordsPerSeat: number  // limite por membro de equipe (anti-gaming)
   nome: string
   maxEmailsPorDia: number   // opções: 1,2,3,4,5,6,8,10 (sem 7 e 9)
   maxItensPorEmail: number  // opções: 10, 20, 30
 }
 
 export const LIMITES_PLANO: Record<string, LimitesPlano> = {
-  basic:        { maxKeywords: 20,    maxUsers: 1,  nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
-  profissional: { maxKeywords: 99999, maxUsers: 1,  nome: 'Profissional', maxEmailsPorDia: 5, maxItensPorEmail: 10 },
-  gestao:       { maxKeywords: 99999, maxUsers: 5,  nome: 'Gestão',       maxEmailsPorDia: 5, maxItensPorEmail: 10 },
-  empresarial:  { maxKeywords: 99999, maxUsers: 15, nome: 'Empresarial',  maxEmailsPorDia: 5, maxItensPorEmail: 10 },
+  basic:        { maxKeywords: 20,    maxUsers: 1,  maxKeywordsPerSeat: 20,    nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
+  profissional: { maxKeywords: 99999, maxUsers: 1,  maxKeywordsPerSeat: 99999, nome: 'Profissional', maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
+  gestao:       { maxKeywords: 99999, maxUsers: 5,  maxKeywordsPerSeat: 50,    nome: 'Gestão',       maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
+  empresarial:  { maxKeywords: 99999, maxUsers: 15, maxKeywordsPerSeat: 50,    nome: 'Empresarial',  maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
 }
 
 /** trial = acesso completo por 7 dias (mesmo limite do basic) */

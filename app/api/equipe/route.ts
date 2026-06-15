@@ -30,7 +30,7 @@ export async function GET() {
   // Buscar sub-usuários
   const { data: subProfiles } = await service
     .from('profiles')
-    .select('id, nome, empresa, criado_em, membro_ativo')
+    .select('id, nome, empresa, criado_em, membro_ativo, cpf_membro, cnpj_membro, cargo_membro, declaracao_vinculo')
     .eq('owner_id', user.id)
 
   // Buscar emails dos sub-usuários via admin
@@ -48,7 +48,11 @@ export async function GET() {
     nome: p.nome ?? '',
     empresa: p.empresa ?? '',
     criado_em: p.criado_em,
-    ativo: p.membro_ativo !== false, // default true se coluna ainda não existe
+    ativo: p.membro_ativo !== false,
+    cpf_membro: p.cpf_membro ?? null,
+    cnpj_membro: p.cnpj_membro ?? null,
+    cargo_membro: p.cargo_membro ?? null,
+    declaracao_vinculo: p.declaracao_vinculo ?? false,
   }))
 
   // Buscar convites pendentes

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-type Membro = { id: string; email: string; nome: string; empresa: string; criado_em: string; ativo: boolean }
+type Membro = { id: string; email: string; nome: string; empresa: string; criado_em: string; ativo: boolean; cpf_membro: string | null; cnpj_membro: string | null; cargo_membro: string | null; declaracao_vinculo: boolean }
 type Convite = { id: string; email: string; criado_em: string; expira_em: string }
 
 type Equipe = {
@@ -222,8 +222,28 @@ export default function EquipePage() {
                         }}>
                           {m.ativo ? 'Ativo' : 'Inativo'}
                         </span>
+                        {m.declaracao_vinculo ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(59,130,246,0.1)', color: '#2563eb' }}>
+                            ✓ Vínculo declarado
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626' }}>
+                            ⚠ Sem declaração
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs" style={{ color: 'var(--cinza)' }}>{m.email}</div>
+                      {m.cargo_membro && (
+                        <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>{m.cargo_membro}</div>
+                      )}
+                      <div className="flex gap-3 mt-1 flex-wrap">
+                        {m.cpf_membro && (
+                          <span className="text-[11px] font-mono" style={{ color: 'var(--cinza)' }}>CPF {m.cpf_membro}</span>
+                        )}
+                        {m.cnpj_membro && (
+                          <span className="text-[11px] font-mono" style={{ color: 'var(--cinza)' }}>CNPJ {m.cnpj_membro}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">

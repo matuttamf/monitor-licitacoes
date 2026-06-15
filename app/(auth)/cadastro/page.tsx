@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
-type ConviteInfo = { email: string; owner: string } | null
+type ConviteInfo = { email: string; owner: string; cnpjOwnerBase: string | null } | null
 
 function CadastroConteudo() {
   const searchParams  = useSearchParams()
@@ -21,6 +21,10 @@ function CadastroConteudo() {
   const [email, setEmail]                           = useState('')
   const [senha, setSenha]                           = useState('')
   const [confirmarSenha, setConfirmarSenha]         = useState('')
+  const [cpf, setCpf]                               = useState('')
+  const [cnpj, setCnpj]                             = useState('')
+  const [cargo, setCargo]                           = useState('')
+  const [declaracao, setDeclaracao]                 = useState(false)
   const [erro, setErro]                             = useState('')
   const [sucesso, setSucesso]                       = useState(false)
   const [carregando, setCarregando]                 = useState(false)
@@ -37,11 +41,24 @@ function CadastroConteudo() {
       .finally(() => setCarregandoConvite(false))
   }, [conviteToken])
 
+  function mascaraCPF(v: string) {
+    return v.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4').slice(0, 14)
+  }
+
+  function mascaraCNPJ(v: string) {
+    return v.replace(/\D/g, '').replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5').slice(0, 18)
+  }
+
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
     if (senha.length < 8)         { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
+    if (conviteToken) {
+      if (!cpf.trim())     { setErro('CPF obrigatório.'); return }
+      if (!cargo.trim())   { setErro('Informe seu cargo na empresa.'); return }
+      if (!declaracao)     { setErro('Você precisa declarar vínculo com a empresa.'); return }
+    }
     setCarregando(true)
 
     if (!conviteToken) {
@@ -105,7 +122,7 @@ function CadastroConteudo() {
       const res = await fetch(`/api/convite/${conviteToken}`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ userId: data.user.id }),
+        body:    JSON.stringify({ userId: data.user.id, cpf, cnpj, cargo, declaracao }),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -296,6 +313,67 @@ function CadastroConteudo() {
                   className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
                 />
               </div>
+
+              {/* Campos de vínculo — apenas no fluxo de convite */}
+              {conviteToken && (
+                <>
+                  <div style={{ borderTop: '1px solid #D5D2C8', margin: '4px 0 8px' }} />
+                  <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#9AA0A6] mb-1">
+                    Dados de vínculo com a empresa
+                  </p>
+
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
+                      CPF <span className="text-[#6B0F1A]">*</span>
+                    </label>
+                    <input
+                      type="text" value={cpf}
+                      onChange={e => setCpf(mascaraCPF(e.target.value))}
+                      placeholder="000.000.000-00" required={!!conviteToken} maxLength={14}
+                      className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
+                      Cargo na empresa <span className="text-[#6B0F1A]">*</span>
+                    </label>
+                    <input
+                      type="text" value={cargo}
+                      onChange={e => setCargo(e.target.value)}
+                      placeholder="ex: Gerente Comercial, Analista..." required={!!conviteToken} maxLength={80}
+                      className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                    />
+                  </div>
+
+                  {convite?.cnpjOwnerBase && (
+                    <div>
+                      <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
+                        CNPJ próprio <span className="text-[#9AA0A6] font-normal normal-case">(opcional — se for sócio ou MEI)</span>
+                      </label>
+                      <input
+                        type="text" value={cnpj}
+                        onChange={e => setCnpj(mascaraCNPJ(e.target.value))}
+                        placeholder="00.000.000/0001-00" maxLength={18}
+                        className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                      />
+                      <p className="text-[11px] text-[#9AA0A6] mt-1">
+                        Os 8 primeiros dígitos devem coincidir com o CNPJ da empresa contratante.
+                      </p>
+                    </div>
+                  )}
+
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox" checked={declaracao} onChange={e => setDeclaracao(e.target.checked)}
+                      className="mt-0.5 shrink-0 accent-[#6B0F1A]" required={!!conviteToken}
+                    />
+                    <span className="text-[13px] text-[#4a4a4d] leading-relaxed">
+                      Declaro que sou funcionário, sócio ou colaborador de <strong>{convite?.owner ?? 'sua empresa'}</strong> e estou autorizado a acessar esta conta em nome da empresa.
+                    </span>
+                  </label>
+                </>
+              )}
 
               {erro && (
                 <div className="bg-[rgba(185,28,28,0.06)] border border-[rgba(185,28,28,0.2)] rounded-xl px-4 py-3 text-sm text-[#b91c1c]">
