@@ -205,11 +205,19 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
   const cnpjsBase  = new Set<string>()
   const basicosBase = new Set<string>()
   let lastId = '00000000-0000-0000-0000-000000000000'
+  let errosConsecutivos = 0
   while (true) {
     const { data, error } = await supabase
       .from('leads').select('id,cnpj')
       .gt('id', lastId).order('id', { ascending: true }).limit(1000)
-    if (error) { console.error('Erro:', error.message); break }
+    if (error) {
+      errosConsecutivos++
+      console.error(`Erro (tentativa ${errosConsecutivos}): ${error.message}`)
+      if (errosConsecutivos >= 5) { console.error('Abortando carregamento após 5 erros consecutivos.'); break }
+      await new Promise(r => setTimeout(r, 5000 * errosConsecutivos))
+      continue
+    }
+    errosConsecutivos = 0
     if (!data?.length) break
     for (const r of data) {
       cnpjsBase.add(r.cnpj as string)
