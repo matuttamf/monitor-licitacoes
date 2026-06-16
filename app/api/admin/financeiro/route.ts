@@ -133,7 +133,7 @@ export async function GET() {
   // Churn: assinaturas pagas que encerraram nos últimos 30 dias
   const h30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   const churnMensal = expirados.filter(a =>
-    a.assinatura_inicio && a.trial_fim && new Date(a.trial_fim) >= h30
+    a.assinatura_inicio && a.acesso_ate && new Date(a.acesso_ate) >= h30
   ).length
 
   // Conversão: (pagantes atuais) / (pagantes + trials que nunca converteram)

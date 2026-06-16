@@ -22,7 +22,7 @@ export async function GET() {
     supabase.from('campanhas').select('*').order('criado_em', { ascending: false }),
     supabase
       .from('profiles')
-      .select('campanha_id, status, valor_mensalidade, utm_source, utm_medium, utm_campaign, utm_content, criado_em, assinatura_inicio')
+      .select('campanha_id, status, valor_mensalidade, periodo, utm_source, utm_medium, utm_campaign, utm_content, criado_em, assinatura_inicio')
       .is('owner_id', null),
   ])
 
@@ -50,6 +50,7 @@ type ProfileRow = {
   campanha_id: string | null
   status: string
   valor_mensalidade: number | null
+  periodo: string | null
   criado_em: string
   assinatura_inicio: string | null
 }
@@ -58,13 +59,18 @@ function buildMetrica(campanha: { comissao_tipo: string; comissao_valor: number 
   const registros   = profiles.length
   const ativos      = profiles.filter(p => p.status === 'active')
   const conversoes  = ativos.length
-  const mrr         = ativos.reduce((s, p) => s + (p.valor_mensalidade ?? 0), 0)
+  // Normaliza valor_mensalidade: anuais dividem por 12 para obter equivalente mensal
+  const mensalidade = (p: ProfileRow) => {
+    const v = p.valor_mensalidade ?? 0
+    return p.periodo === 'anual' ? Math.round(v / 12 * 100) / 100 : v
+  }
+  const mrr         = ativos.reduce((s, p) => s + mensalidade(p), 0)
   const conversoes30d = profiles.filter(p => p.assinatura_inicio && new Date(p.assinatura_inicio) >= h30 && p.status === 'active').length
   const churn30d    = profiles.filter(p => p.status === 'expired' && new Date(p.criado_em) >= h30).length
 
   let comissaoTotal = 0
   if (campanha && campanha.comissao_tipo === 'percentual') {
-    comissaoTotal = ativos.reduce((s, p) => s + ((p.valor_mensalidade ?? 0) * campanha.comissao_valor / 100), 0)
+    comissaoTotal = ativos.reduce((s, p) => s + (mensalidade(p) * campanha.comissao_valor / 100), 0)
   } else if (campanha && campanha.comissao_tipo === 'fixo') {
     comissaoTotal = conversoes * campanha.comissao_valor
   }
