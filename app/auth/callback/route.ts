@@ -102,8 +102,8 @@ export async function GET(request: NextRequest) {
           })()
         }
       }
-      // Após confirmação de e-mail → onboarding direto
-      return NextResponse.redirect(new URL('/onboarding', request.url))
+      // Após confirmação de e-mail → respeita ?next= ou vai para onboarding
+      return NextResponse.redirect(new URL(next === '/dashboard' ? '/onboarding' : next, request.url))
     }
     return NextResponse.redirect(new URL('/login?erro=link_expirado', request.url))
   }

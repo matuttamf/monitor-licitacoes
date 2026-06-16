@@ -46,14 +46,14 @@ type PlanId = 'trial' | 'basic' | 'profissional' | 'gestao' | 'empresarial'
 type FeatureRow = { label: string } & Record<PlanId, string | boolean>
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { label: 'Palavras-chave',             trial: 'Até 20',         basic: 'Até 20',         profissional: 'Ilimitadas',     gestao: 'Ilimitadas',     empresarial: 'Ilimitadas'     },
+  { label: 'Palavras-chave',             trial: 'Até 20 palavras-chave', basic: 'Até 20 palavras-chave', profissional: 'Ilimitadas palavras-chave', gestao: 'Ilimitadas palavras-chave', empresarial: 'Ilimitadas palavras-chave' },
   { label: 'Usuários',                   trial: '1 usuário',      basic: '1 usuário',      profissional: '1 usuário',      gestao: 'Até 5 usuários', empresarial: 'Até 15 usuários'},
   { label: 'Alertas por e-mail + Telegram', trial: true,          basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: 'Alertas por WhatsApp',       trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: 'Busca manual no painel',     trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Busca manual de editais no painel', trial: true,      basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: '💰 Análise de Preços Vencedores', trial: '20 buscas/mês', basic: '20 buscas/mês', profissional: 'Ilimitado',  gestao: 'Ilimitado',      empresarial: 'Ilimitado'      },
+  { label: '💰 Análise de Preços Vencedores', trial: '20 buscas de preços/mês', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
   { label: '📊 Relatório semanal',       trial: false,            basic: false,            profissional: false,            gestao: false,            empresarial: true             },
 ]
 
@@ -82,7 +82,7 @@ const PLANOS = [
     tag: null,
     href: '/checkout?plano=basic',
     btnText: 'Assinar agora →',
-    note: 'Ou teste 7 dias grátis antes',
+    note: '',
   },
   {
     id: 'profissional' as const,
@@ -96,7 +96,7 @@ const PLANOS = [
     tag: '🔥 MAIS POPULAR',
     href: '/checkout?plano=profissional',
     btnText: 'Assinar agora →',
-    note: 'Ou teste 7 dias grátis antes',
+    note: '',
   },
   {
     id: 'gestao' as const,
@@ -110,7 +110,7 @@ const PLANOS = [
     tag: '⭐ RECOMENDADO',
     href: '/checkout?plano=gestao',
     btnText: 'Assinar agora →',
-    note: 'Ou teste 7 dias grátis antes',
+    note: '',
   },
   {
     id: 'empresarial' as const,
@@ -124,7 +124,7 @@ const PLANOS = [
     tag: null,
     href: '/checkout?plano=empresarial',
     btnText: 'Assinar agora →',
-    note: 'Ou teste 7 dias grátis antes',
+    note: '',
   },
 ]
 

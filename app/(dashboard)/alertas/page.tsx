@@ -117,9 +117,10 @@ export default function AlertasPage() {
   const [keywords, setKeywords] = useState<string[]>([])
   useEffect(() => {
     fetch('/api/keywords')
-      .then(r => r.ok ? r.json() : [])
-      .then((kws: { termo: string }[]) => {
-        if (Array.isArray(kws)) setKeywords(kws.map(k => k.termo))
+      .then(r => r.ok ? r.json() : {})
+      .then((data: { keywords?: { termo: string }[] }) => {
+        const kws = data.keywords ?? []
+        setKeywords(kws.map(k => k.termo))
       })
   }, [])
 

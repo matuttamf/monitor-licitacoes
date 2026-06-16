@@ -214,7 +214,7 @@ export async function POST(request: Request) {
             nome:  profile.nome ?? undefined,
             email: profile.email,
             plano: planoId,
-            valor: PRECOS_PLANO[planoId] ?? 97,
+            valor: valorMensalidade ?? PRECOS_PLANO[planoId] ?? 97,
           })
           await resend.emails.send({
             from: 'Monitor de Licitações <noreply@monitordelicitacoes.com.br>',

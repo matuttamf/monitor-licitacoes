@@ -636,7 +636,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <p className="px-6 pb-4 text-[10px]" style={{ color: 'rgba(255,255,255,0.18)' }}>
+          <p className="px-6 pb-4 text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
             * Soma dos valores estimados dos editais — não representa receita garantida
           </p>
         </div>

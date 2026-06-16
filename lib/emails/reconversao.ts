@@ -97,8 +97,8 @@ export function emailReconversao(p: ParamsReconversao) {
     </p>
 
     <ul class="benefits">
-      <li><strong>Plano Basic a partir de R$ 97/mês</strong> — menos que uma hora de consultoria</li>
-      <li><strong>Monitoramento 24/7</strong> de mais de 7 fontes nacionais</li>
+      <li><strong>Plano Basic a partir de R$ 49,90/mês</strong> — menos que uma hora de consultoria</li>
+      <li><strong>Monitoramento 24/7</strong> de mais de 346 fontes nacionais</li>
       <li><strong>Alertas por e-mail + Telegram</strong> no instante que o edital sai</li>
       <li><strong>Filtragem inteligente</strong> — só os editais relevantes para você</li>
       <li><strong>Cancele quando quiser</strong> — sem multa, sem burocracia</li>
@@ -137,7 +137,7 @@ Você já fez a parte difícil: aprendeu o sistema e configurou suas palavras-ch
 
 ${checkoutUrl}
 
-Plano Basic a partir de R$ 97/mês · Cancele quando quiser
+Plano Basic a partir de R$ 49,90/mês · Cancele quando quiser
 
 --
 Monitor de Licitações · Matutta Soluções Digitais
