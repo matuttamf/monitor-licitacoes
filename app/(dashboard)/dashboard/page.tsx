@@ -575,7 +575,7 @@ export default function DashboardPage() {
             {
               label: 'Editais monitorados',
               valor: roi.totalLicitacoes.toLocaleString('pt-BR'),
-              sub: 'licitações únicas identificadas',
+              sub: 'licitações únicas — desde o início',
               cor: 'var(--vinho)',
             },
             {
@@ -585,13 +585,13 @@ export default function DashboardPage() {
                 : roi.volumeMonitorado >= 1_000
                   ? `R$ ${(roi.volumeMonitorado / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
                   : `R$ ${roi.volumeMonitorado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`,
-              sub: 'em contratos potenciais*',
+              sub: 'em contratos potenciais* — acumulado',
               cor: '#C9A65A',
             },
             {
               label: 'Alertas gerados',
               valor: roi.totalAlertas.toLocaleString('pt-BR'),
-              sub: 'notificações enviadas',
+              sub: 'notificações enviadas — desde o início',
               cor: 'var(--bordo)',
             },
           ].map(stat => (
