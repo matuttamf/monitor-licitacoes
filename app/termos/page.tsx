@@ -157,11 +157,11 @@ export default function TermosPage() {
                 <li>O cancelamento tem efeito ao <strong>final do período já pago</strong> — não há cobrança proporcional ou multa.</li>
                 <li>Após o cancelamento, os dados são mantidos por 90 dias e depois excluídos, conforme a <Link href="/privacidade" className="text-[#6B0F1A] no-underline">Política de Privacidade</Link>.</li>
               </ul>
-              <SubTitulo>7.2 Reembolso — plano mensal</SubTitulo>
-              <Aviso tipo="destaque">
-                Garantia de satisfação: reembolso integral disponível em até <strong>7 dias corridos</strong> após a primeira cobrança de um novo plano mensal, mediante solicitação para {CONTATO_EMAIL}. Após esse prazo, não são realizados reembolsos parciais.
-              </Aviso>
+              <SubTitulo>7.2 Cancelamento e reembolso — plano mensal</SubTitulo>
               <ul>
+                <li>O usuário pode cancelar a qualquer momento pelo painel ou por e-mail para {CONTATO_EMAIL}.</li>
+                <li><strong>Dentro de 7 dias corridos</strong> após a primeira cobrança de um novo plano: reembolso integral disponível mediante solicitação.</li>
+                <li><strong>Após 7 dias:</strong> o acesso permanece ativo até o fim do ciclo mensal já pago. Não são realizados reembolsos parciais.</li>
                 <li>O período de teste gratuito não gera direito a reembolso (não há cobrança).</li>
                 <li>Reembolsos em casos de falha técnica grave do serviço são analisados individualmente.</li>
               </ul>
