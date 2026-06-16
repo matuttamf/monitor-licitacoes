@@ -344,11 +344,6 @@ export default function PerfilPage() {
               style={{ background: 'var(--surface-2)', color: 'var(--vinho)', border: '1.5px solid var(--cinza-light)' }}>
               Fazer upgrade
             </a>
-            <a href="/assinatura/cancelar"
-              className="px-4 py-2 rounded-xl text-xs no-underline"
-              style={{ background: 'transparent', color: 'var(--cinza)', border: '1px solid var(--cinza-light)' }}>
-              Cancelar
-            </a>
           </div>
         </div>
       )}

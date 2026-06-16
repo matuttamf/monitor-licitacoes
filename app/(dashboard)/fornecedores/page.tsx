@@ -185,14 +185,7 @@ export default function FornecedoresPage() {
             Empresas abertas a parcerias, consórcios e negociações. <strong style={{ color: 'var(--preto)' }}>Quem tem os parceiros certos ganha licitações que sozinho não ganharia.</strong>
           </p>
         </div>
-        {!showForm ? (
-          <button
-            onClick={abrirForm}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
-            style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            {jaCadastrado ? '✏️ Editar cadastro' : '+ Cadastrar minha empresa'}
-          </button>
-        ) : (
+        {showForm && (
           <button
             onClick={() => { setShowForm(false); setMsg(null); setForm(FORM_VAZIO) }}
             className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"

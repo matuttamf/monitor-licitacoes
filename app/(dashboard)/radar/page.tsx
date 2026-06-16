@@ -381,7 +381,7 @@ export default function RadarPage() {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--preto)', marginBottom: 8 }}>
               💡 Como usar o Radar para ganhar contratos
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
               {[
                 { tempo: '≤ 30 dias', cor: '#ef4444', dica: 'Monte a proposta agora. O edital pode abrir esta semana.' },
                 { tempo: '31–60 dias', cor: '#f59e0b', dica: 'Organize certidões e documentação. Tempo curto.' },
