@@ -1,9 +1,6 @@
 name: Coleta Leads RFB
 
 on:
-  # Primeiro dia de cada mês às 6h UTC
-  schedule:
-    - cron: '0 6 1 * *'
   workflow_dispatch:
     inputs:
       idx_start:
