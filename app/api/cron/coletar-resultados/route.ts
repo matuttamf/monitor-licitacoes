@@ -25,7 +25,7 @@ const PNCP_BASE     = 'https://pncp.gov.br/api/pncp/v1'
 
 const MAX_PROCESSOS    = 50
 const TAMANHO_PAGINA   = 50    // API suporta até 500; 50 equilibra volume e latência
-const JANELA_BACKFILL  = 7     // dias por execução durante backfill
+const JANELA_BACKFILL  = 14    // dias por execução — completa backfill em ~15h com cron cada 10min
 const JANELA_CONTINUA  = 30    // dias para reprocessar em modo contínuo (cobre tardios)
 const BACKFILL_INICIO  = '2023-01-01'
 
