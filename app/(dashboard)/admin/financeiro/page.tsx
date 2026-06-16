@@ -13,7 +13,9 @@ type Assinante = {
   whatsapp: string | null
   status: 'active' | 'trial' | 'expired' | 'bloqueado'
   plano: string
+  periodo: 'mensal' | 'anual'
   valor_mensalidade: number | null
+  valor_cobrado: number | null
   assinatura_inicio: string | null
   acesso_ate: string | null
   trial_fim: string | null
@@ -714,12 +716,24 @@ ${blocoDespesas}
                         {a.empresa && <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>{a.empresa}</div>}
                       </td>
                       <td className="px-4 py-3">
-                        <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 9px', borderRadius: '8px', background: pc.bg, color: pc.cor, textTransform: 'capitalize' }}>
-                          {a.plano}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 9px', borderRadius: '8px', background: pc.bg, color: pc.cor, textTransform: 'capitalize' }}>
+                            {a.plano}
+                          </span>
+                          {a.periodo === 'anual' && (
+                            <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '6px', background: 'rgba(201,166,90,0.12)', color: '#92400e' }}>
+                              ANUAL
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', marginTop: '4px' }}>
                           {a.valor_mensalidade ? moeda(a.valor_mensalidade) + '/mês' : '—'}
                         </div>
+                        {a.periodo === 'anual' && a.valor_cobrado && (
+                          <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>
+                            {moeda(a.valor_cobrado)}/ano cobrado
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {a.comissao_mensal > 0 ? (

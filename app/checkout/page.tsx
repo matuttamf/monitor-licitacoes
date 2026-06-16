@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const NOMES: Record<string, string> = {
+const NOMES_MENSAL: Record<string, string> = {
   basic:        'Basic — R$49,90/mês',
   profissional: 'Profissional — R$97,90/mês',
   gestao:       'Gestão — R$197,90/mês',
@@ -12,16 +12,25 @@ const NOMES: Record<string, string> = {
   empresarial:  'Empresarial — R$497/mês',
 }
 
+const NOMES_ANUAL: Record<string, string> = {
+  basic:        'Basic — R$499/ano',
+  profissional: 'Profissional — R$979/ano',
+  gestao:       'Gestão — R$1.979/ano',
+  empresarial:  'Empresarial — R$4.970/ano',
+}
+
 function CheckoutConteudo() {
   const searchParams = useSearchParams()
   const router       = useRouter()
   const plano        = searchParams.get('plano') ?? ''
+  const periodo      = searchParams.get('periodo') === 'anual' ? 'anual' : 'mensal'
 
   const [status, setStatus] = useState<'carregando' | 'erro' | 'nao-autenticado'>('carregando')
   const [erro, setErro]     = useState('')
 
   useEffect(() => {
-    if (!plano || !NOMES[plano]) {
+    const NOMES = periodo === 'anual' ? NOMES_ANUAL : NOMES_MENSAL
+    if (!plano || !NOMES_MENSAL[plano]) {
       router.replace('/assinar')
       return
     }
@@ -32,7 +41,7 @@ function CheckoutConteudo() {
           method:      'POST',
           credentials: 'same-origin',
           headers:     { 'Content-Type': 'application/json' },
-          body:        JSON.stringify({ plano }),
+          body:        JSON.stringify({ plano, periodo }),
         })
 
         if (res.status === 401) {
@@ -45,7 +54,7 @@ function CheckoutConteudo() {
         if (!res.ok) throw new Error(data.error || 'Erro ao iniciar checkout')
 
         if (data.cadastroIncompleto) {
-          router.replace(`/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${plano}`)}`)
+          router.replace(`/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${plano}&periodo=${periodo}`)}`)
           return
         }
 
@@ -60,7 +69,8 @@ function CheckoutConteudo() {
     iniciarCheckout()
   }, [plano, router])
 
-  const nomePlano = NOMES[plano] ?? plano
+  const NOMES_DISPLAY = periodo === 'anual' ? NOMES_ANUAL : NOMES_MENSAL
+  const nomePlano = NOMES_DISPLAY[plano] ?? NOMES_MENSAL[plano] ?? plano
 
   if (status === 'nao-autenticado') {
     return (

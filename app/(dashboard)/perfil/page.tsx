@@ -33,6 +33,7 @@ type Perfil = {
   emails_por_dia: number
   itens_por_email: number
   plano: string
+  periodo: 'mensal' | 'anual'
   status: string
   trial_fim: string | null
   email_pausado_ate: string | null
@@ -41,7 +42,7 @@ type Perfil = {
 }
 
 export default function PerfilPage() {
-  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', cnpj: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', status: 'trial', trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
+  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', cnpj: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', periodo: 'mensal', status: 'trial', trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
   const [salvandoAlerta, setSalvandoAlerta] = useState(false)
   const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [pausandoCanal, setPausandoCanal] = useState<string | null>(null)
@@ -91,6 +92,7 @@ export default function PerfilPage() {
         emails_por_dia:      prof.emails_por_dia  ?? 5,
         itens_por_email:     prof.itens_por_email ?? ((['basic','trial'].includes(prof.plano ?? 'trial')) ? 10 : 20),
         plano:               prof.plano ?? 'basic',
+        periodo:             prof.periodo === 'anual' ? 'anual' : 'mensal',
         status:              prof.status ?? 'trial',
         trial_fim:           prof.trial_fim ?? null,
         email_pausado_ate:   prof.email_pausado_ate ?? null,
@@ -327,8 +329,11 @@ export default function PerfilPage() {
               ★
             </div>
             <div>
-              <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>
+              <div className="font-semibold text-sm flex items-center gap-2" style={{ color: 'var(--preto)' }}>
                 Plano {getLimites(perfil.plano).nome}
+                {perfil.periodo === 'anual' && (
+                  <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '6px', background: 'rgba(201,166,90,0.12)', color: '#92400e' }}>ANUAL</span>
+                )}
               </div>
               <div className="text-xs" style={{ color: 'var(--cinza)' }}>Assinatura ativa</div>
             </div>

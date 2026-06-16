@@ -1,8 +1,8 @@
 export const PLANOS = {
-  basic:        { nome: 'Basic',        preco: 49.90,  max_keywords: 20,     max_usuarios: 1 },
-  profissional: { nome: 'Profissional', preco: 97.90,  max_keywords: 999999, max_usuarios: 1 },
-  gestao:       { nome: 'Gestão',       preco: 197.90, max_keywords: 999999, max_usuarios: 5 },
-  empresarial:  { nome: 'Empresarial',  preco: 497.00, max_keywords: 999999, max_usuarios: 999999 },
+  basic:        { nome: 'Basic',        preco: 49.90,  preco_anual: 499.00,  max_keywords: 20,     max_usuarios: 1       },
+  profissional: { nome: 'Profissional', preco: 97.90,  preco_anual: 979.00,  max_keywords: 999999, max_usuarios: 1       },
+  gestao:       { nome: 'Gestão',       preco: 197.90, preco_anual: 1979.00, max_keywords: 999999, max_usuarios: 5       },
+  empresarial:  { nome: 'Empresarial',  preco: 497.00, preco_anual: 4970.00, max_keywords: 999999, max_usuarios: 999999  },
 }
 
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
@@ -42,18 +42,24 @@ export async function criarCheckoutAssinatura(
   precoFinal?: number,
   descontoPercentual?: number,
   descontoMeses?: number,
+  periodo: 'mensal' | 'anual' = 'mensal',
 ): Promise<string> {
   const plano = PLANOS[planoId as keyof typeof PLANOS]
-  const valor = precoFinal ?? plano.preco
+  const precoBase = periodo === 'anual' ? plano.preco_anual : plano.preco
+  const valor = precoFinal ?? precoBase
 
-  // external_reference: userId|planoId[|descN|mesesN] — o webhook usa para saber se há desconto
-  const extRef = (descontoPercentual && descontoPercentual > 0 && descontoMeses && descontoMeses > 0)
-    ? `${userId}|${planoId}|desc${descontoPercentual}|meses${descontoMeses}`
-    : `${userId}|${planoId}`
+  // external_reference: userId|planoId[|descN|mesesN][|periodo:anual]
+  const parts = [userId, planoId]
+  if (descontoPercentual && descontoPercentual > 0 && descontoMeses && descontoMeses > 0) {
+    parts.push(`desc${descontoPercentual}`, `meses${descontoMeses}`)
+  }
+  if (periodo === 'anual') parts.push('periodo:anual')
+  const extRef = parts.join('|')
 
   const razaoDesc = (descontoPercentual && descontoPercentual > 0)
     ? ` (${descontoPercentual}% off por ${descontoMeses} meses)`
     : ''
+  const razaoPeriodo = periodo === 'anual' ? ' — Anual' : ''
 
   const res = await fetch('https://api.mercadopago.com/preapproval', {
     method: 'POST',
@@ -62,14 +68,14 @@ export async function criarCheckoutAssinatura(
       'Authorization': `Bearer ${ACCESS_TOKEN}`,
     },
     body: JSON.stringify({
-      reason: `Monitor de Licitações - ${plano.nome}${razaoDesc}`,
+      reason: `Monitor de Licitações - ${plano.nome}${razaoDesc}${razaoPeriodo}`,
       external_reference: extRef,
       payer_email: email,
       auto_recurring: {
-        frequency: 1,
-        frequency_type: 'months',
+        frequency:          periodo === 'anual' ? 12 : 1,
+        frequency_type:     'months',
         transaction_amount: valor,
-        currency_id: 'BRL',
+        currency_id:        'BRL',
       },
       back_url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso`,
       status: 'pending',

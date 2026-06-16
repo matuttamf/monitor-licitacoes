@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { plano } = await request.json()
+  const { plano, periodo = 'mensal' } = await request.json()
 
   if (!plano || !(plano in PLANOS)) {
     return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
@@ -27,7 +27,9 @@ export async function POST(request: Request) {
   // Verificar desconto de campanha/parceria
   let descontoPercentual = 0
   let descontoMeses      = 0
-  let precoFinal         = PLANOS[plano as keyof typeof PLANOS].preco
+  const periodoValido = periodo === 'anual' ? 'anual' : 'mensal'
+  const planoData = PLANOS[plano as keyof typeof PLANOS]
+  let precoFinal = periodoValido === 'anual' ? planoData.preco_anual : planoData.preco
 
   if (profile?.campanha_id) {
     const { data: campanha } = await supabase
@@ -46,7 +48,7 @@ export async function POST(request: Request) {
 
   const checkoutUrl = await criarCheckoutAssinatura(
     plano, user.id, user.email!,
-    precoFinal, descontoPercentual, descontoMeses,
+    precoFinal, descontoPercentual, descontoMeses, periodoValido,
   )
 
   return NextResponse.json({ url: checkoutUrl })

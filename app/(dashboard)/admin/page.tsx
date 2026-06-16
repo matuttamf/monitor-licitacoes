@@ -10,6 +10,8 @@ type Usuario = {
   is_admin?: boolean
   status: 'trial' | 'active' | 'expired' | 'bloqueado'
   plano: string
+  periodo: 'mensal' | 'anual'
+  fonte: string | null
   trial_inicio: string
   trial_fim: string
   criado_em: string
@@ -192,7 +194,7 @@ export default function AdminPage() {
     setSalvando(true)
     await fetch('/api/admin/usuarios', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editando.id, nome: editando.nome, telefone: editando.telefone, whatsapp: editando.whatsapp, empresa: editando.empresa, plano: editando.plano, status: editando.status }),
+      body: JSON.stringify({ id: editando.id, nome: editando.nome, telefone: editando.telefone, whatsapp: editando.whatsapp, empresa: editando.empresa, plano: editando.plano, status: editando.status, fonte: editando.fonte }),
     })
     setSalvando(false)
     setEditando(null)
@@ -700,7 +702,7 @@ export default function AdminPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--cinza-light)' }}>
-                    {['Usuário', 'Status / Plano', 'Keywords', 'Alertas', 'Último alerta', 'Cadastro', 'Ações'].map(h => (
+                    {['Usuário', 'Status / Plano', 'Fonte', 'Keywords', 'Alertas', 'Último alerta', 'Cadastro', 'Ações'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -757,8 +759,22 @@ export default function AdminPage() {
                                   🔒 Bloq. Admin
                                 </span>
                               )}
-                              <div className="text-xs" style={{ color: 'var(--cinza)' }}>{(['basic','profissional','gestao','pro','empresarial'].includes(u.plano) ? (u.plano === 'pro' ? 'gestao' : u.plano) : 'basic')}</div>
+                              <div className="text-xs flex items-center gap-1.5" style={{ color: 'var(--cinza)' }}>
+                                {(['basic','profissional','gestao','pro','empresarial'].includes(u.plano) ? (u.plano === 'pro' ? 'gestao' : u.plano) : 'basic')}
+                                {u.periodo === 'anual' && (
+                                  <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '5px', background: 'rgba(201,166,90,0.15)', color: '#92400e' }}>ANUAL</span>
+                                )}
+                              </div>
                             </>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {u.fonte ? (
+                            <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '7px', background: 'rgba(59,130,246,0.08)', color: '#3b82f6', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                              {u.fonte}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: 'var(--cinza)', opacity: 0.5 }}>orgânico</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -941,6 +957,20 @@ export default function AdminPage() {
                 </div>
               ))}
               <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Fonte de captação</label>
+                <select value={editando.fonte ?? ''} onChange={e => setEditando({ ...editando, fonte: e.target.value || null })}
+                  className="w-full px-4 py-2.5 rounded-xl text-sm"
+                  style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}>
+                  <option value="">— Orgânico / não rastreado</option>
+                  <option value="google">🔍 Google Ads</option>
+                  <option value="email">📧 E-mail</option>
+                  <option value="meta">📱 Meta (Instagram/Facebook)</option>
+                  <option value="whatsapp">💬 WhatsApp</option>
+                  <option value="indicacao">🤝 Indicação</option>
+                  <option value="youtube">▶️ YouTube</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Plano</label>
                 <select value={editando.plano ?? 'basic'} onChange={e => setEditando({ ...editando, plano: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl text-sm"
@@ -984,10 +1014,18 @@ export default function AdminPage() {
                   <p style={{ fontSize: '13px', color: 'var(--cinza)', margin: '2px 0 0' }}>{contaAberta.email}</p>
                   {contaAberta.empresa && <p style={{ fontSize: '12px', color: 'var(--cinza)', margin: '2px 0 0' }}>{contaAberta.empresa}</p>}
                   <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '8px', background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>{contaAberta.plano || 'basic'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '8px', background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)' }}>
+                      {contaAberta.plano || 'basic'}
+                      {contaAberta.periodo === 'anual' && ' · anual'}
+                    </span>
                     <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '8px', background: statusConfig[contaAberta.trial_expirado ? 'expired' : contaAberta.status].bg, color: statusConfig[contaAberta.trial_expirado ? 'expired' : contaAberta.status].cor }}>
                       {contaAberta.trial_expirado ? 'Trial expirado' : statusConfig[contaAberta.status].label}
                     </span>
+                    {contaAberta.fonte && (
+                      <span style={{ fontSize: '11px', fontWeight: 500, padding: '3px 10px', borderRadius: '8px', background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}>
+                        {contaAberta.fonte}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button onClick={() => setContaAberta(null)} style={{ padding: '6px 10px', borderRadius: '8px', background: 'var(--surface-2)', color: 'var(--cinza)', fontSize: '16px', fontWeight: 700, lineHeight: 1, border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>

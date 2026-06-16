@@ -97,9 +97,10 @@ export async function POST(request: Request) {
     const parts   = (subscription.external_reference || '').split('|')
     const userId  = parts[0]
     const planoId = parts[1]
-    // ex: 'desc30' → 30, 'meses3' → 3
-    const descontoPercentual = parts.find((p: string) => p.startsWith('desc'))  ? parseInt(parts.find((p: string) => p.startsWith('desc'))!.replace('desc',''))  : 0
-    const descontoMeses      = parts.find((p: string) => p.startsWith('meses')) ? parseInt(parts.find((p: string) => p.startsWith('meses'))!.replace('meses','')) : 0
+    // ex: 'desc30' → 30, 'meses3' → 3, 'periodo:anual' → 'anual'
+    const descontoPercentual = parts.find((p: string) => p.startsWith('desc'))       ? parseInt(parts.find((p: string) => p.startsWith('desc'))!.replace('desc',''))   : 0
+    const descontoMeses      = parts.find((p: string) => p.startsWith('meses'))      ? parseInt(parts.find((p: string) => p.startsWith('meses'))!.replace('meses','')) : 0
+    const periodo: 'mensal' | 'anual' = parts.includes('periodo:anual') ? 'anual' : 'mensal'
 
     if (!userId || !planoId) {
       console.warn('[webhook/mp] external_reference inválido:', subscription.external_reference)
@@ -133,6 +134,7 @@ export async function POST(request: Request) {
       const updateData: Record<string, unknown> = {
         status:             'active',
         plano:              planoId,
+        periodo,
         mp_subscription_id: subscriptionId,
         max_keywords:       limites.maxKeywords,
         max_usuarios:       limites.maxUsers,

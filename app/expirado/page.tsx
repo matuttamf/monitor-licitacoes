@@ -8,6 +8,7 @@ const PLANOS = [
     id: 'basic',
     nome: 'Basic',
     preco: '49,90',
+    preco_anual: '499',
     destaque: false,
     descricao: 'Ideal para começar',
     itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Busca manual no painel', 'Suporte via WhatsApp'],
@@ -19,11 +20,13 @@ const PLANOS = [
     destaque: false,
     descricao: 'Para quem fornece ativamente ao governo',
     itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Suporte via WhatsApp'],
+    preco_anual: '979',
   },
   {
     id: 'gestao',
     nome: 'Gestão',
     preco: '197,90',
+    preco_anual: '1.979',
     destaque: true,
     descricao: 'Para equipes comerciais',
     itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Suporte prioritário via WhatsApp'],
@@ -32,6 +35,7 @@ const PLANOS = [
     id: 'empresarial',
     nome: 'Empresarial',
     preco: '497',
+    preco_anual: '4.970',
     destaque: false,
     descricao: 'Para grandes operações',
     itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Relatório semanal detalhado', 'Suporte dedicado'],
@@ -41,6 +45,7 @@ const PLANOS = [
 export default function ExpiradoPage() {
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null)
   const [erro, setErro] = useState('')
+  const [periodo, setPeriodo] = useState<'mensal' | 'anual'>('mensal')
 
   async function handleAssinar(planoId: string) {
     setLoadingPlano(planoId)
@@ -49,12 +54,12 @@ export default function ExpiradoPage() {
       const res = await fetch('/api/assinatura/criar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plano: planoId }),
+        body: JSON.stringify({ plano: planoId, periodo }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erro ao criar assinatura')
       if (data.cadastroIncompleto) {
-        window.location.href = `/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${planoId}`)}`
+        window.location.href = `/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${planoId}&periodo=${periodo}`)}`
         return
       }
       window.location.href = data.url
@@ -97,8 +102,27 @@ export default function ExpiradoPage() {
         </div>
       </div>
 
+      {/* Toggle mensal/anual */}
+      <div className="flex justify-center py-6">
+        <div className="inline-flex items-center gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <button
+            onClick={() => setPeriodo('mensal')}
+            className="px-5 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: periodo === 'mensal' ? 'white' : 'transparent', color: periodo === 'mensal' ? '#1A1A1C' : 'rgba(255,255,255,0.55)', border: 'none', cursor: 'pointer' }}>
+            Mensal
+          </button>
+          <button
+            onClick={() => setPeriodo('anual')}
+            className="px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+            style={{ background: periodo === 'anual' ? 'white' : 'transparent', color: periodo === 'anual' ? '#1A1A1C' : 'rgba(255,255,255,0.55)', border: 'none', cursor: 'pointer' }}>
+            Anual
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: '#C9A65A', color: '#1A1A1C' }}>2 meses grátis</span>
+          </button>
+        </div>
+      </div>
+
       {/* Cards */}
-      <div className="max-w-[1100px] mx-auto px-4 md:px-6 pt-8 pb-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="max-w-[1100px] mx-auto px-4 md:px-6 pb-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {PLANOS.map(p => (
           <div
             key={p.id}
@@ -117,16 +141,28 @@ export default function ExpiradoPage() {
             <div className={`text-[11px] font-bold tracking-widest uppercase mb-1.5 text-center ${p.destaque ? 'text-[#C9A65A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
             <div className={`text-sm mb-5 text-center ${p.destaque ? 'text-[rgba(255,255,255,0.6)]' : 'text-[#9AA0A6]'}`}>{p.descricao}</div>
 
-            <div className="flex items-end justify-center gap-1 mb-7">
+            <div className="flex items-end justify-center gap-1 mb-1">
               <span className={`text-sm font-medium mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
               <span className={`text-[44px] font-black leading-none ${p.destaque ? 'text-white' : 'text-[#1A1A1C]'}`}>
-                {p.preco.split(',')[0]}
-                {p.preco.includes(',') && (
-                  <span className="text-2xl font-black">,{p.preco.split(',')[1]}</span>
-                )}
+                {periodo === 'anual'
+                  ? p.preco_anual
+                  : (<>{p.preco.split(',')[0]}{p.preco.includes(',') && <span className="text-2xl font-black">,{p.preco.split(',')[1]}</span>}</>)
+                }
               </span>
-              <span className={`text-sm mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.4)]' : 'text-[#9AA0A6]'}`}>/mês</span>
+              <span className={`text-sm mb-1.5 ${p.destaque ? 'text-[rgba(255,255,255,0.4)]' : 'text-[#9AA0A6]'}`}>
+                {periodo === 'anual' ? '/ano' : '/mês'}
+              </span>
             </div>
+            {periodo === 'anual' && (
+              <div className="text-center text-xs mb-6" style={{ color: p.destaque ? 'rgba(201,166,90,0.8)' : '#6B0F1A' }}>
+                equivale a R${
+                  p.id === 'basic' ? '41,58' :
+                  p.id === 'profissional' ? '81,58' :
+                  p.id === 'gestao' ? '164,92' : '414,17'
+                }/mês
+              </div>
+            )}
+            {periodo === 'mensal' && <div className="mb-6" />}
 
             <div className={`h-px mb-6 ${p.destaque ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#F0EDE8]'}`} />
 

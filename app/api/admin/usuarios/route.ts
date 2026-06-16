@@ -4,11 +4,25 @@ import { NextResponse } from 'next/server'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'matuttamaquinaseferramentas@gmail.com'
 
 async function verificarAdmin() {
-  // Usa o client com cookies para verificar quem está logado
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.email !== ADMIN_EMAIL) return null
   return user
+}
+
+function computarFonte(
+  p: { utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; campanha_id?: string | null },
+  campanhaMap: Record<string, string>
+): string | null {
+  if (p.campanha_id && campanhaMap[p.campanha_id]) return `📣 ${campanhaMap[p.campanha_id]}`
+  const src = (p.utm_source ?? '').toLowerCase()
+  const med = (p.utm_medium ?? '').toLowerCase()
+  if (src === 'google' || med === 'cpc' || med === 'ppc') return '🔍 Google Ads'
+  if (src === 'email' || med === 'email') return '📧 E-mail'
+  if (src === 'instagram' || src === 'facebook' || src === 'meta') return '📱 Meta'
+  if (src === 'whatsapp') return '💬 WhatsApp'
+  if (p.utm_source) return `🔗 ${p.utm_source}`
+  return null
 }
 
 export async function GET() {
@@ -17,41 +31,51 @@ export async function GET() {
 
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, owner_id, bloqueado_admin')
-    .order('criado_em', { ascending: false })
+  const [
+    { data, error },
+    { data: authData },
+    { data: kwList },
+    { data: alertaRows },
+    { data: campanhas },
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, periodo, owner_id, bloqueado_admin, utm_source, utm_medium, utm_campaign, campanha_id')
+      .order('criado_em', { ascending: false }),
+    supabase.auth.admin.listUsers(),
+    // Uma única query para keywords — id + user_id + ativo
+    supabase.from('keywords').select('id, user_id, ativo'),
+    // Alertas sem join, sem o limite padrão de 1000 rows
+    supabase.from('alertas').select('keyword_id, enviado_em').order('enviado_em', { ascending: false }).range(0, 49999),
+    supabase.from('campanhas').select('id, nome'),
+  ])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Emails via auth
-  const { data: authData } = await supabase.auth.admin.listUsers()
-  const emailMap = Object.fromEntries(
-    (authData?.users ?? []).map(u => [u.id, u.email])
-  )
-
-  // Contagem de keywords por usuário
-  const { data: kwCounts } = await supabase
-    .from('keywords')
-    .select('user_id')
-    .eq('ativo', true)
+  // Mapa keyword_id → user_id  +  contagem de keywords ativas por user
+  const kwToUser: Record<string, string> = {}
   const kwPorUser: Record<string, number> = {}
-  for (const kw of kwCounts ?? []) {
-    kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
+  for (const kw of kwList ?? []) {
+    kwToUser[kw.id] = kw.user_id
+    if (kw.ativo) kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
   }
 
-  // Contagem + último alerta por usuário — join via keywords (alertas não tem user_id direto)
-  const { data: alertaCounts } = await supabase
-    .from('alertas')
-    .select('enviado_em, keywords!inner(user_id)')
-    .order('enviado_em', { ascending: false })
+  // Contagem + último alerta por usuário (via keyword_id, sem join)
   const alertaPorUser: Record<string, { count: number; ultimo: string | null }> = {}
-  for (const a of alertaCounts ?? []) {
-    const uid = (a.keywords as unknown as { user_id: string } | null)?.user_id
+  for (const a of alertaRows ?? []) {
+    const uid = kwToUser[a.keyword_id]
     if (!uid) continue
     if (!alertaPorUser[uid]) alertaPorUser[uid] = { count: 0, ultimo: a.enviado_em }
     alertaPorUser[uid].count++
   }
+
+  const emailMap = Object.fromEntries(
+    (authData?.users ?? []).map(u => [u.id, u.email])
+  )
+
+  const campanhaMap = Object.fromEntries(
+    (campanhas ?? []).map(c => [c.id, c.nome as string])
+  )
 
   const usuarios = data?.map(p => {
     const email = emailMap[p.id] ?? 'desconhecido'
@@ -64,6 +88,8 @@ export async function GET() {
       keyword_count:  kwPorUser[p.id] ?? 0,
       alerta_count:   alertaPorUser[p.id]?.count ?? 0,
       ultimo_alerta:  alertaPorUser[p.id]?.ultimo ?? null,
+      periodo:        p.periodo ?? 'mensal',
+      fonte:          computarFonte(p, campanhaMap),
     }
   })
 
@@ -76,7 +102,7 @@ export async function PATCH(request: Request) {
 
   const supabase = createAdminClient()
 
-  const { id, status, nome, telefone, whatsapp, empresa, plano, bloqueado_admin } = await request.json()
+  const { id, status, nome, telefone, whatsapp, empresa, plano, bloqueado_admin, fonte } = await request.json()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const atualizacao: Record<string, any> = {}
@@ -85,13 +111,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
     atualizacao.status = status
   }
-  // Bloqueio administrativo: independente de pagamento, não é sobrescrito pelo webhook MP
   if (bloqueado_admin !== undefined) atualizacao.bloqueado_admin = Boolean(bloqueado_admin)
   if (nome      !== undefined) atualizacao.nome      = nome
   if (telefone  !== undefined) atualizacao.telefone  = telefone
   if (whatsapp  !== undefined) atualizacao.whatsapp  = whatsapp
   if (empresa   !== undefined) atualizacao.empresa   = empresa
   if (plano     !== undefined) atualizacao.plano     = plano
+  // fonte manual substitui o utm_source (campo livre)
+  if (fonte     !== undefined) atualizacao.utm_source = fonte || null
 
   const { error } = await supabase
     .from('profiles')

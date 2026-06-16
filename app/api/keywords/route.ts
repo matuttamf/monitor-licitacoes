@@ -9,7 +9,7 @@ export async function GET() {
 
   const [{ data, error }, { data: profile }] = await Promise.all([
     supabase.from('keywords').select('*').eq('user_id', user.id).order('termo', { ascending: true }),
-    supabase.from('profiles').select('plano, owner_id').eq('id', user.id).single(),
+    supabase.from('profiles').select('plano, status, owner_id').eq('id', user.id).single(),
   ])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   const { maxKeywords } = getLimites(plano)
-  return NextResponse.json({ keywords: data, maxKeywords, plano })
+  return NextResponse.json({ keywords: data, maxKeywords, plano, status: profile?.status ?? 'trial' })
 }
 
 export async function POST(request: Request) {

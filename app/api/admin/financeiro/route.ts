@@ -31,7 +31,7 @@ export async function GET() {
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select(`
-      id, status, plano, trial_inicio, trial_fim, criado_em,
+      id, status, plano, periodo, trial_inicio, trial_fim, criado_em,
       nome, empresa, telefone, whatsapp,
       mp_subscription_id, assinatura_inicio, valor_mensalidade, acesso_ate,
       campanha_id,
@@ -60,20 +60,26 @@ export async function GET() {
   const campanhaMap = Object.fromEntries((campanhas ?? []).map(c => [c.id, c]))
 
   const assinantes = profilesSemAdmin.map(p => {
-    const preco = p.valor_mensalidade ?? PRECOS[p.plano ?? ''] ?? null
+    const periodoAssinante: 'mensal' | 'anual' = p.periodo === 'anual' ? 'anual' : 'mensal'
+    // valor_mensalidade armazena o valor cobrado por ciclo (mensal ou anual)
+    // Para MRR, sempre usar equivalente mensal
+    const valorCobrado = p.valor_mensalidade ?? PRECOS[p.plano ?? ''] ?? null
+    const valorMensalEquiv = valorCobrado
+      ? periodoAssinante === 'anual' ? Math.round(valorCobrado / 12 * 100) / 100 : valorCobrado
+      : null
     const email = emailMap[p.id] ?? ''
     const trialExpirado = p.status === 'trial' && p.trial_fim && new Date(p.trial_fim) < hoje
     const statusFinal = trialExpirado ? 'expired' : p.status
 
-    // Calcular comissão mensal deste assinante
+    // Calcular comissão mensal deste assinante (baseada no equivalente mensal)
     let comissaoMensal = 0
     let campanhaNome: string | null = null
-    if (p.campanha_id && statusFinal === 'active' && preco) {
+    if (p.campanha_id && statusFinal === 'active' && valorMensalEquiv) {
       const camp = campanhaMap[p.campanha_id]
       if (camp) {
         campanhaNome = camp.nome
         if (camp.comissao_tipo === 'percentual') {
-          comissaoMensal = Math.round(preco * camp.comissao_valor / 100 * 100) / 100
+          comissaoMensal = Math.round(valorMensalEquiv * camp.comissao_valor / 100 * 100) / 100
         } else if (camp.comissao_tipo === 'fixo') {
           comissaoMensal = camp.comissao_valor
         }
@@ -89,7 +95,9 @@ export async function GET() {
       whatsapp:            p.whatsapp,
       status:              statusFinal,
       plano:               p.plano ?? 'basic',
-      valor_mensalidade:   preco,
+      periodo:             periodoAssinante,
+      valor_mensalidade:   valorMensalEquiv,   // sempre equivalente mensal (para MRR)
+      valor_cobrado:       valorCobrado,        // valor real do ciclo (mensal ou anual)
       assinatura_inicio:   p.assinatura_inicio,
       trial_fim:           p.trial_fim,
       criado_em:           p.criado_em,

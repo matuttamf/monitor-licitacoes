@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import ContadorAoVivo from '@/app/components/ContadorAoVivo'
+import TogglePeriodo from '@/app/components/TogglePeriodo'
 
 // ─── SEO ─────────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,9 @@ const PLANOS = [
     id: 'basic' as const,
     nome: 'Basic',
     preco: '49,90',
+    preco_anual: '499',
     porDia: 'R$1,66/dia',
+    porDia_anual: 'R$1,37/dia',
     desc: 'Para quem está começando no setor público',
     destaque: false,
     tag: null,
@@ -84,7 +87,9 @@ const PLANOS = [
     id: 'profissional' as const,
     nome: 'Profissional',
     preco: '97,90',
+    preco_anual: '979',
     porDia: 'R$3,26/dia',
+    porDia_anual: 'R$2,68/dia',
     desc: 'Para quem fornece ativamente para o governo',
     destaque: false,
     tag: '🔥 MAIS POPULAR',
@@ -96,7 +101,9 @@ const PLANOS = [
     id: 'gestao' as const,
     nome: 'Gestão',
     preco: '197,90',
+    preco_anual: '1.979',
     porDia: 'R$6,60/dia',
+    porDia_anual: 'R$5,42/dia',
     desc: 'Para equipes comerciais que querem crescer',
     destaque: true,
     tag: '⭐ RECOMENDADO',
@@ -108,7 +115,9 @@ const PLANOS = [
     id: 'empresarial' as const,
     nome: 'Empresarial',
     preco: '497,00',
+    preco_anual: '4.970',
     porDia: 'R$16,57/dia',
+    porDia_anual: 'R$13,62/dia',
     desc: 'Para operações que dependem do setor público',
     destaque: false,
     tag: null,
@@ -489,79 +498,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
-            {PLANOS.map(p => {
-              const isDark = p.destaque
-              return (
-                <div key={p.id} className={`rounded-2xl p-6 relative flex flex-col ${
-                  isDark
-                    ? 'bg-[#6B0F1A] border-2 border-[#C9A65A] shadow-[0_20px_60px_rgba(107,15,26,0.3)]'
-                    : p.id === 'trial'
-                    ? 'bg-white border-2 border-[#C9A65A]'
-                    : p.id === 'profissional'
-                    ? 'bg-white border-2 border-[#6B0F1A] shadow-[0_4px_24px_rgba(107,15,26,0.08)]'
-                    : 'bg-white border border-[#D5D2C8]'
-                }`}>
-                  {/* Badge topo */}
-                  {p.tag && (
-                    <div className={`absolute -top-[13px] left-1/2 -translate-x-1/2 text-[10px] font-black px-3.5 py-1 rounded-full whitespace-nowrap tracking-wide ${
-                      isDark ? 'bg-[#C9A65A] text-[#1A1A1C]' : p.id === 'profissional' ? 'bg-[#6B0F1A] text-white' : 'bg-[#C9A65A] text-[#1A1A1C]'
-                    }`}>{p.tag}</div>
-                  )}
-
-                  {/* Nome + descrição */}
-                  <div className={`text-[11px] font-bold tracking-[0.08em] uppercase mb-1 text-center ${isDark ? 'text-[#C9A65A]' : p.id === 'profissional' ? 'text-[#6B0F1A]' : 'text-[#9AA0A6]'}`}>{p.nome}</div>
-                  <div className={`text-xs mb-4 leading-snug text-center ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-[#9AA0A6]'}`}>{p.desc}</div>
-
-                  {/* Preço */}
-                  {p.preco ? (
-                    <div className="flex items-end gap-1 mb-1 justify-center">
-                      <span className={`text-xs font-medium mb-1 ${isDark ? 'text-[rgba(255,255,255,0.5)]' : 'text-[#9AA0A6]'}`}>R$</span>
-                      <span className={`text-[32px] font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-[#1A1A1C]'}`}>
-                        {p.preco.split(',')[0]}<span className="text-[18px]">,{p.preco.split(',')[1]}</span>
-                      </span>
-                      <span className={`text-[11px] mb-1 ${isDark ? 'text-[rgba(255,255,255,0.35)]' : 'text-[#9AA0A6]'}`}>/mês</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-end gap-1 mb-1 justify-center">
-                      <span className="text-[32px] font-black tracking-tight leading-none text-[#1A1A1C]">7 dias</span>
-                    </div>
-                  )}
-
-                  <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded text-center ${
-                    isDark ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
-                  }`}>{p.porDia}</div>
-
-                  {/* Feature matrix — apenas o que o plano inclui */}
-                  <div className="flex-1 mb-5 space-y-2">
-                    {FEATURE_ROWS.filter(row => row[p.id] !== false).map(row => {
-                      const val = row[p.id]
-                      const label = typeof val === 'string' && val !== 'true' ? val : row.label
-                      return (
-                        <div key={row.label} className="flex items-start gap-2">
-                          <span className={`font-bold text-sm shrink-0 mt-0.5 ${isDark ? 'text-[#C9A65A]' : 'text-[#6B0F1A]'}`}>✓</span>
-                          <span className={`text-xs leading-snug ${isDark ? 'text-[rgba(255,255,255,0.85)]' : 'text-[#4a4a4d]'}`}>
-                            {label}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className={`h-px mb-4 ${isDark ? 'bg-[rgba(201,166,90,0.2)]' : 'bg-[#E8E4DC]'}`} />
-
-                  <Link href={p.href} className={`block text-center py-3 rounded-[10px] text-sm font-bold no-underline transition-opacity hover:opacity-90 ${
-                    isDark ? 'bg-[#C9A65A] text-[#1A1A1C]'
-                    : p.id === 'trial' ? 'bg-[#C9A65A] text-[#1A1A1C]'
-                    : 'bg-[#6B0F1A] text-white'
-                  }`}>
-                    {p.btnText}
-                  </Link>
-                  <p className={`text-center text-[11px] mt-2.5 mb-0 ${isDark ? 'text-[rgba(255,255,255,0.3)]' : 'text-[#9AA0A6]'}`}>{p.note}</p>
-                </div>
-              )
-            })}
-          </div>
+          <TogglePeriodo planos={PLANOS} featureRows={FEATURE_ROWS} />
 
           {/* Garantia + urgência */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
