@@ -3,12 +3,6 @@ name: Pipeline Leads RFB (Completo)
 on:
   workflow_dispatch:
     inputs:
-      idx_start:
-        description: 'Índice inicial arquivos RFB (0-9)'
-        default: '0'
-      idx_end:
-        description: 'Índice final arquivos RFB (0-9)'
-        default: '9'
       ano:
         description: 'Ano dos dados (ex: 2026). Vazio = mês anterior'
         default: ''
@@ -17,78 +11,261 @@ on:
         default: ''
 
 jobs:
-  coleta:
-    name: 'Fase 1 — Coletar leads e e-mails via RFB'
+  arquivo-0:
+    name: 'Fase 1/10 — Coleta arquivo 0'
     runs-on: ubuntu-latest
-    timeout-minutes: 360
-
+    timeout-minutes: 120
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Instalar dependências
-        run: npm ci
-
-      - name: Coletar leads e enriquecer e-mails via arquivos RFB
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 0
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
-          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
-          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
           if [ -n "$ANO" ] && [ -n "$MES" ]; then
-            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END" "$ANO" "$MES"
+            npx tsx scripts/coletar-leads-rfb.ts 0 0 "$ANO" "$MES"
           else
-            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END"
+            npx tsx scripts/coletar-leads-rfb.ts 0 0
           fi
 
-      - name: Notificar conclusão
-        if: always()
+  arquivo-1:
+    name: 'Fase 2/10 — Coleta arquivo 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 1
         env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "pipeline-coleta" "${{ job.status }}"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 1 1 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 1 1
+          fi
+
+  arquivo-2:
+    name: 'Fase 3/10 — Coleta arquivo 2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 2
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 2 2 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 2 2
+          fi
+
+  arquivo-3:
+    name: 'Fase 4/10 — Coleta arquivo 3'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 3
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 3 3 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 3 3
+          fi
+
+  arquivo-4:
+    name: 'Fase 5/10 — Coleta arquivo 4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 4
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 4 4 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 4 4
+          fi
+
+  arquivo-5:
+    name: 'Fase 6/10 — Coleta arquivo 5'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 5
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 5 5 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 5 5
+          fi
+
+  arquivo-6:
+    name: 'Fase 7/10 — Coleta arquivo 6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 6
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 6 6 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 6 6
+          fi
+
+  arquivo-7:
+    name: 'Fase 8/10 — Coleta arquivo 7'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 7
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 7 7 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 7 7
+          fi
+
+  arquivo-8:
+    name: 'Fase 9/10 — Coleta arquivo 8'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 8
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 8 8 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 8 8
+          fi
+
+  arquivo-9:
+    name: 'Fase 10/10 — Coleta arquivo 9'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: arquivo-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Coletar arquivo 9
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts 9 9 "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts 9 9
+          fi
 
   enriquecer-emails:
-    name: 'Fase 2 — Enriquecer e-mails faltantes via RFB'
+    name: 'Fase 11 — Enriquecer e-mails faltantes via RFB'
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    needs: coleta
-
+    needs: arquivo-9
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Instalar dependências
-        run: npm ci
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
       - name: Enriquecer e-mails via arquivos RFB
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-        run: |
-          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
-          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
-          npx tsx scripts/enriquecer-emails-rfb.ts "$IDX_START" "$IDX_END"
-
+        run: npx tsx scripts/enriquecer-emails-rfb.ts 0 9
       - name: Notificar conclusão
         if: always()
         env:
@@ -99,30 +276,20 @@ jobs:
         run: npx tsx scripts/notificar-cron.ts "pipeline-emails-rfb" "${{ job.status }}"
 
   enriquecer-receita:
-    name: 'Fase 3 — Enriquecer razão social e situação via Receita'
+    name: 'Fase 12 — Enriquecer via Receita Federal'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: enriquecer-emails
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Instalar dependências
-        run: npm ci
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
       - name: Enriquecer CNPJs via Receita Federal
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npx tsx scripts/enriquecer-receita.ts
-
       - name: Notificar conclusão
         if: always()
         env:
