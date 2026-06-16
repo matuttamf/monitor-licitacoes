@@ -264,8 +264,8 @@ export default function PrivacidadePage() {
               <p>Utilizamos diferentes categorias de cookies e tecnologias similares descritas abaixo. Você pode gerenciar ou desativar cookies nas configurações do seu navegador, mas isso poderá afetar o funcionamento de partes do serviço.</p>
               <SubTitulo>Cookies necessários (não desativáveis)</SubTitulo>
               <Tabela colunas={['Cookie', 'Finalidade', 'Duração']}>
-                <tr><Td>Cookie de sessão (Supabase)</Td><Td>Autenticação — mantém o usuário conectado ao painel</Td><Td>Duração da sessão</Td></tr>
-                <tr><Td>Cookie de renovação (Supabase)</Td><Td>Renovação automática da sessão de autenticação</Td><Td>Até 60 dias</Td></tr>
+                <tr><Td>Cookie de sessão</Td><Td>Autenticação — mantém o usuário conectado ao painel</Td><Td>Duração da sessão</Td></tr>
+                <tr><Td>Cookie de renovação</Td><Td>Renovação automática da sessão de autenticação</Td><Td>Até 60 dias</Td></tr>
               </Tabela>
               <SubTitulo>Cookies de análise de desempenho</SubTitulo>
               <Tabela colunas={['Tecnologia', 'Operado por', 'Finalidade', 'Duração']}>
