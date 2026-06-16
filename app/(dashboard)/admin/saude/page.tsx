@@ -22,12 +22,15 @@ interface SaudeData {
   }
   ultimosJobs: Record<string, { status: string; mensagem: string; criado_em: string }>
   backfill: {
-    pncp:          { proximo: string; inicio: string; fim: string; pct: number }
-    transparencia: { proximo: string; inicio: string; fim: string; pct: number }
+    pncp:                { proximo: string; inicio: string; fim: string; pct: number }
+    transparencia:       { proximo: string; inicio: string; fim: string; pct: number }
+    precosPncp:          { proximo: string; inicio: string; fim: string; pct: number }
+    precosTransparencia: { proximo: string; inicio: string; fim: string; pct: number }
   }
   captacaoAtiva: boolean
   hoje: string
   mes: string
+  totalPrecos: number
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -266,9 +269,33 @@ export default function SaudePage() {
         <h2 style={{ fontSize: 14, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>
           Progresso do Backfill
         </h2>
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <BarraBackfill label="🏆 PNCP"               pct={data.backfill.pncp.pct}          proximo={data.backfill.pncp.proximo}          fim={data.backfill.pncp.fim} />
-          <BarraBackfill label="🏛 Portal Transparência" pct={data.backfill.transparencia.pct} proximo={data.backfill.transparencia.proximo} fim={data.backfill.transparencia.fim} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Coleta de licitações */}
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '16px 20px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+              Licitações
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <BarraBackfill label="🏆 PNCP"                pct={data.backfill.pncp.pct}          proximo={data.backfill.pncp.proximo}          fim={data.backfill.pncp.fim} />
+              <BarraBackfill label="🏛 Portal Transparência" pct={data.backfill.transparencia.pct} proximo={data.backfill.transparencia.proximo} fim={data.backfill.transparencia.fim} />
+            </div>
+          </div>
+
+          {/* Análise de Preços */}
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '16px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Análise de Preços
+              </span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>
+                {data.totalPrecos.toLocaleString('pt-BR')} itens coletados
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <BarraBackfill label="💰 PNCP (resultados)"        pct={data.backfill.precosPncp.pct}          proximo={data.backfill.precosPncp.proximo}          fim={data.backfill.precosPncp.fim} />
+              <BarraBackfill label="💰 Transparência (resultados)" pct={data.backfill.precosTransparencia.pct} proximo={data.backfill.precosTransparencia.proximo} fim={data.backfill.precosTransparencia.fim} />
+            </div>
+          </div>
         </div>
       </section>
 

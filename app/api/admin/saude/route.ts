@@ -108,10 +108,16 @@ export async function GET() {
   }
 
   // ── 4. Ponteiros de backfill ──────────────────────────────────────────────
-  const { data: cfgRows } = await admin
-    .from('configuracoes')
-    .select('chave, valor')
-    .in('chave', ['captacao_backfill_data', 'captacao_transparencia_backfill_data', 'captacao_ativa'])
+  const [{ data: cfgRows }, { count: totalPrecos }] = await Promise.all([
+    admin
+      .from('configuracoes')
+      .select('chave, valor')
+      .in('chave', [
+        'captacao_backfill_data', 'captacao_transparencia_backfill_data', 'captacao_ativa',
+        'resultados_backfill_data', 'transparencia_backfill_data',
+      ]),
+    admin.from('resultados_itens').select('*', { count: 'estimated', head: true }),
+  ])
 
   const cfg: Record<string, string> = {}
   for (const row of cfgRows ?? []) {
@@ -132,11 +138,23 @@ export async function GET() {
       fim:      hoje_.toISOString().slice(0, 10),
       pct: calcPct(cfg['captacao_transparencia_backfill_data'] ?? '2014-01-01', '2014-01-01', hoje_),
     },
+    precosPncp: {
+      proximo:  cfg['resultados_backfill_data'] ?? '2023-01-15',
+      inicio:   '2023-01-15',
+      fim:      hoje_.toISOString().slice(0, 10),
+      pct: calcPct(cfg['resultados_backfill_data'] ?? '2023-01-15', '2023-01-15', hoje_),
+    },
+    precosTransparencia: {
+      proximo:  cfg['transparencia_backfill_data'] ?? '2021-01-01',
+      inicio:   '2021-01-01',
+      fim:      hoje_.toISOString().slice(0, 10),
+      pct: calcPct(cfg['transparencia_backfill_data'] ?? '2021-01-01', '2021-01-01', hoje_),
+    },
   }
 
   const captacaoAtiva = cfg['captacao_ativa'] !== 'false'
 
-  return NextResponse.json({ ok: true, uso, limites: LIMITES, tabelas, ultimosJobs, backfill, captacaoAtiva, hoje, mes })
+  return NextResponse.json({ ok: true, uso, limites: LIMITES, tabelas, ultimosJobs, backfill, captacaoAtiva, hoje, mes, totalPrecos: totalPrecos ?? 0 })
 }
 
 function calcPct(ponteiro: string, inicio: string, hoje: Date): number {
