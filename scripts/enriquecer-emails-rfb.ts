@@ -26,8 +26,14 @@ const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const BUCKET       = 'rf-cnpj'
 
 const args     = process.argv.slice(2)
-const idxStart = Number(args[0] ?? 0)
-const idxEnd   = Number(args[1] ?? 9)
+// Modos: --prepare (só exporta cache), --from-cache (usa cache do Storage)
+const MODE       = args.includes('--prepare') ? 'prepare' : 'normal'
+const FROM_CACHE = args.includes('--from-cache')
+const numArgs    = args.filter(a => !a.startsWith('--'))
+const idxStart   = Number(numArgs[0] ?? 0)
+const idxEnd     = Number(numArgs[1] ?? 9)
+
+const CACHE_FILE = 'cnpjs-sem-email.json'
 
 // Índices fixos usados como fallback se o cabeçalho não for encontrado
 const COL_EST_FALLBACK = { BASICO: 0, ORDEM: 1, DV: 2, EMAIL: 27 }
@@ -95,7 +101,8 @@ function validarEmail(email: string | null): string | null {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
 
-async function carregarCnpjsSemEmail(): Promise<Set<string>> {
+// Carrega do banco (lento — só usado no modo --prepare)
+async function carregarCnpjsSemEmailDoBanco(): Promise<Set<string>> {
   const cnpjs = new Set<string>()
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
@@ -116,6 +123,26 @@ async function carregarCnpjsSemEmail(): Promise<Set<string>> {
     if (cnpjs.size % 100_000 < 1000) console.log(`  ${cnpjs.size.toLocaleString('pt-BR')} carregados...`)
   }
   return cnpjs
+}
+
+// Salva lista de CNPJs básicos no Storage como JSON (etapa de preparação)
+async function salvarCacheNoStorage(cnpjs: Set<string>): Promise<void> {
+  const json = JSON.stringify([...cnpjs])
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(CACHE_FILE, new Blob([json], { type: 'application/json' }), { upsert: true })
+  if (error) throw new Error(`Erro ao salvar cache: ${error.message}`)
+  console.log(`Cache salvo: ${CACHE_FILE} (${(json.length / 1024 / 1024).toFixed(1)} MB, ${cnpjs.size.toLocaleString('pt-BR')} CNPJs)`)
+}
+
+// Baixa cache do Storage (rápido — usado nas fases de e-mail)
+async function carregarCnpjsDoCache(): Promise<Set<string>> {
+  console.log(`Baixando cache ${CACHE_FILE} do Storage...`)
+  const { data, error } = await supabase.storage.from(BUCKET).download(CACHE_FILE)
+  if (error || !data) throw new Error(`Cache não encontrado. Execute --prepare primeiro. ${error?.message ?? ''}`)
+  const arr: string[] = JSON.parse(await data.text())
+  console.log(`Cache carregado: ${arr.length.toLocaleString('pt-BR')} CNPJs básicos`)
+  return new Set(arr)
 }
 
 async function downloadStorage(fileIdx: number, tmpPath: string): Promise<boolean> {
@@ -223,9 +250,26 @@ async function main() {
     process.exit(1)
   }
 
-  console.log('Carregando CNPJs sem e-mail no banco...')
-  const semEmail = await carregarCnpjsSemEmail()
-  console.log(`Total de leads sem e-mail: ${semEmail.size}`)
+  // ── Modo preparação: carrega do banco e salva cache no Storage ──────────────
+  if (MODE === 'prepare') {
+    console.log('Carregando CNPJs sem e-mail no banco...')
+    const semEmail = await carregarCnpjsSemEmailDoBanco()
+    console.log(`Total: ${semEmail.size.toLocaleString('pt-BR')} CNPJs sem e-mail`)
+    if (!semEmail.size) { console.log('Nenhum lead sem e-mail. Nada a fazer.'); return }
+    await salvarCacheNoStorage(semEmail)
+    console.log('✓ Cache pronto. Execute as fases de e-mail com --from-cache.')
+    return
+  }
+
+  // ── Modo normal: carrega lista do cache (rápido) ou do banco (fallback) ─────
+  const semEmail = FROM_CACHE
+    ? await carregarCnpjsDoCache()
+    : await (async () => {
+        console.log('Carregando CNPJs sem e-mail no banco...')
+        return carregarCnpjsSemEmailDoBanco()
+      })()
+
+  console.log(`Total de leads sem e-mail: ${semEmail.size.toLocaleString('pt-BR')}`)
   if (!semEmail.size) { console.log('Nenhum lead sem e-mail. Nada a fazer.'); return }
 
   let totalAtualizados = 0
@@ -237,7 +281,7 @@ async function main() {
     const ok = await downloadStorage(i, tmpPath)
     if (!ok) continue
 
-    console.log(`  Extraindo e-mails para ${semEmail.size} CNPJs-alvo...`)
+    console.log(`  Extraindo e-mails para ${semEmail.size.toLocaleString('pt-BR')} CNPJs-alvo...`)
     const t0 = Date.now()
     const emailMap = await extrairEmailsDoArquivo(tmpPath, semEmail)
     console.log(`  Encontrados: ${emailMap.size} e-mails válidos em ${((Date.now()-t0)/1000).toFixed(1)}s`)
@@ -247,7 +291,6 @@ async function main() {
       const atualizados = await atualizarEmails(emailMap)
       console.log(`  ✓ ${atualizados} leads atualizados com e-mail`)
       totalAtualizados += atualizados
-      // Remove do set os CNPJs já enriquecidos (CNPJ básico)
       for (const cnpj of emailMap.keys()) semEmail.delete(cnpj.slice(0, 8))
     }
 
