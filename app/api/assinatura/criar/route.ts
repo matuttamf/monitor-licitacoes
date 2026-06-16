@@ -66,23 +66,27 @@ export async function POST(request: Request) {
       ? (PLANOS[planoAtualKey]?.preco_anual ?? 0)
       : (PLANOS[planoAtualKey]?.preco ?? 0)
 
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+
     if (plano === profile.plano) {
-      // Mesmo plano — redireciona ao painel sem nada
-      return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` })
+      return NextResponse.json({ url: `${APP_URL}/dashboard` })
     }
 
     const limites = getLimites(plano)
 
     if (precoFinal <= precoAtual) {
-      // ── Downgrade: aplica na próxima cobrança, perfil atualizado agora ──
-      await atualizarValorAssinatura(profile.mp_subscription_id, precoFinal)
+      // ── Downgrade: atualiza preço no MP para próximo ciclo; mantém limites atuais até vencimento ──
+      // external_reference atualizado para que o webhook do próximo pagamento aplique os limites certos
+      const novoExtRef = periodoValido === 'anual'
+        ? `${user.id}|${plano}|periodo:anual`
+        : `${user.id}|${plano}`
+      await atualizarValorAssinatura(profile.mp_subscription_id, precoFinal, novoExtRef)
       await supabase.from('profiles').update({
         plano,
-        max_keywords:      limites.maxKeywords,
-        max_usuarios:      limites.maxUsers,
         valor_mensalidade: precoFinal,
+        // max_keywords e max_usuarios permanecem do plano atual até o próximo ciclo
       }).eq('id', user.id)
-      return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso` })
+      return NextResponse.json({ url: `${APP_URL}/assinatura/sucesso?tipo=downgrade&plano=${plano}` })
     }
 
     // ── Upgrade: calcular proporcional ───────────────────────────────────────
@@ -107,13 +111,13 @@ export async function POST(request: Request) {
         max_usuarios:      limites.maxUsers,
         valor_mensalidade: precoFinal,
       }).eq('id', user.id)
-      return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso` })
+      return NextResponse.json({ url: `${APP_URL}/assinatura/sucesso?tipo=upgrade&plano=${plano}` })
     }
 
     // Cria cobrança avulsa pelo proporcional
     // external_reference: userId|upgrade|novoPlano|periodo|subscriptionId
     const extRef = `${user.id}|upgrade|${plano}|${periodoValido}|${profile.mp_subscription_id}`
-    const url = await criarPreferenciaUpgrade(extRef, limites.nome, proracao)
+    const url = await criarPreferenciaUpgrade(extRef, limites.nome, proracao, plano)
     if (!url) return NextResponse.json({ error: 'Erro ao criar cobrança proporcional' }, { status: 500 })
 
     return NextResponse.json({ url })

@@ -1,6 +1,43 @@
-import Link from 'next/link'
+'use client'
 
-export default function AssinaturaSucessoPage() {
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
+
+function SucessoContent() {
+  const params = useSearchParams()
+  const tipo = params.get('tipo') // 'upgrade' | 'downgrade' | null
+  const plano = params.get('plano')
+
+  const nomePlano: Record<string, string> = {
+    basic: 'Basic',
+    profissional: 'Profissional',
+    gestao: 'Gestão',
+    empresarial: 'Empresarial',
+  }
+
+  let titulo: string
+  let subtitulo: string
+  let detalhe: string | null = null
+
+  if (tipo === 'upgrade') {
+    titulo = 'Plano atualizado com sucesso!'
+    subtitulo = plano
+      ? `Você agora está no plano ${nomePlano[plano] ?? plano}.`
+      : 'Seu novo plano já está ativo.'
+    detalhe = 'As funcionalidades adicionais já estão disponíveis no seu painel.'
+  } else if (tipo === 'downgrade') {
+    titulo = 'Plano alterado com sucesso!'
+    subtitulo = plano
+      ? `Seu plano foi alterado para ${nomePlano[plano] ?? plano}.`
+      : 'Seu plano foi alterado.'
+    detalhe = 'A mudança será aplicada no próximo ciclo de cobrança.'
+  } else {
+    titulo = 'Bem-vindo ao Monitor de Licitações!'
+    subtitulo = 'Sua assinatura está sendo processada. Em alguns minutos você terá acesso completo.'
+    detalhe = 'Você receberá um e-mail de confirmação.'
+  }
+
   return (
     <div
       style={{ backgroundColor: '#FAF6F0', minHeight: '100vh' }}
@@ -21,14 +58,17 @@ export default function AssinaturaSucessoPage() {
           style={{ color: '#6B0F1A' }}
           className="text-2xl font-bold mb-3"
         >
-          Bem-vindo ao Monitor de Licitações!
+          {titulo}
         </h1>
         <p style={{ color: '#1A1A1C' }} className="mb-2">
-          Sua assinatura está sendo processada. Em alguns minutos você terá acesso completo.
+          {subtitulo}
         </p>
-        <p style={{ color: '#1A1A1C' }} className="mb-8 text-sm opacity-70">
-          Você receberá um e-mail de confirmação.
-        </p>
+        {detalhe && (
+          <p style={{ color: '#1A1A1C' }} className="mb-8 text-sm opacity-70">
+            {detalhe}
+          </p>
+        )}
+        {!detalhe && <div className="mb-8" />}
         <Link
           href="/dashboard"
           style={{
@@ -42,5 +82,13 @@ export default function AssinaturaSucessoPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function AssinaturaSucessoPage() {
+  return (
+    <Suspense fallback={null}>
+      <SucessoContent />
+    </Suspense>
   )
 }

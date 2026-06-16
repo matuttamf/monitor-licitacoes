@@ -86,17 +86,24 @@ export async function criarCheckoutAssinatura(
   return data.init_point
 }
 
-/** Atualiza o valor de cobrança de uma assinatura existente no MercadoPago */
-export async function atualizarValorAssinatura(subscriptionId: string, novoValor: number): Promise<boolean> {
+/** Atualiza o valor de cobrança (e opcionalmente o external_reference) de uma assinatura no MercadoPago */
+export async function atualizarValorAssinatura(
+  subscriptionId: string,
+  novoValor: number,
+  externalReference?: string,
+): Promise<boolean> {
+  const body: Record<string, unknown> = {
+    auto_recurring: { transaction_amount: novoValor },
+  }
+  if (externalReference) body.external_reference = externalReference
+
   const res = await fetch(`https://api.mercadopago.com/preapproval/${subscriptionId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${ACCESS_TOKEN}`,
     },
-    body: JSON.stringify({
-      auto_recurring: { transaction_amount: novoValor },
-    }),
+    body: JSON.stringify(body),
   })
   return res.ok
 }
@@ -115,6 +122,7 @@ export async function criarPreferenciaUpgrade(
   externalRef: string,
   nomePlano: string,
   valor: number,
+  planoId: string,
 ): Promise<string | null> {
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
   const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -133,7 +141,7 @@ export async function criarPreferenciaUpgrade(
       }],
       external_reference: externalRef,
       back_urls: {
-        success: `${APP_URL}/assinatura/sucesso`,
+        success: `${APP_URL}/assinatura/sucesso?tipo=upgrade&plano=${planoId}`,
         failure: `${APP_URL}/assinar?from=painel&erro=upgrade`,
         pending: `${APP_URL}/assinar?from=painel`,
       },
