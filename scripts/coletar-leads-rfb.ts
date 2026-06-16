@@ -668,7 +668,7 @@ async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, {
     }
   })
 
-  // Insere novos leads sem sobrescrever existentes
+  // Insere novos leads (ignora se CNPJ já existe)
   let inseridos = 0
   for (let i = 0; i < rows.length; i += 200) {
     const batch = rows.slice(i, i + 200)
@@ -677,19 +677,31 @@ async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, {
     else console.error(`  Erro batch inserção ${i}: ${error.message}`)
   }
 
-  // Enriquece e-mail de leads existentes que estão sem e-mail
-  const comEmail = rows.filter(r => r.email)
-  let emailsEnriquecidos = 0
-  for (const r of comEmail) {
+  // Atualiza campos nulos de leads já existentes com dados frescos da RFB
+  let atualizados = 0
+  for (const r of rows) {
+    const campos: Record<string, unknown> = {}
+    if (r.email)         campos.email         = r.email
+    if (r.telefone)      campos.telefone      = r.telefone
+    if (r.nome_fantasia) campos.nome_fantasia = r.nome_fantasia
+    if (r.municipio)     campos.municipio     = r.municipio
+    if (r.uf)            campos.uf            = r.uf
+    if (r.porte)         campos.porte         = r.porte
+    if (r.data_abertura) campos.data_abertura = r.data_abertura
+    if (!Object.keys(campos).length) continue
+
+    // Monta filtro: só atualiza campos que ainda estão nulos no banco
+    const orFiltros = Object.keys(campos).map(c => `${c}.is.null`).join(',')
     const { error } = await supabase
       .from('leads')
-      .update({ email: r.email })
+      .update(campos)
       .eq('cnpj', r.cnpj)
-      .or('email.is.null,email.eq.')
-    if (!error) emailsEnriquecidos++
+      .not('status', 'in', '("descadastrado","usuario")')
+      .or(orFiltros)
+    if (!error) atualizados++
   }
 
-  return { inseridos, emailsEnriquecidos }
+  return { inseridos, emailsEnriquecidos: atualizados }
 }
 
 // ── Pipeline por arquivo ──────────────────────────────────────────────────────
