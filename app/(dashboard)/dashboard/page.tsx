@@ -624,14 +624,14 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="text-base leading-none">{stat.icon}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: stat.destaque ? '#C9A65A' : 'rgba(255,255,255,0.35)' }}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: stat.destaque ? '#C9A65A' : 'rgba(255,255,255,0.65)' }}>
                     {stat.label}
                   </span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-black leading-none tabular-nums" style={{ color: stat.destaque ? '#C9A65A' : '#e8d5b7' }}>
+                <p className="text-2xl sm:text-3xl font-black leading-none tabular-nums" style={{ color: stat.destaque ? '#C9A65A' : '#f0e6d3' }}>
                   {stat.valor}
                 </p>
-                <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>{stat.sub}</p>
+                <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{stat.sub}</p>
               </div>
             ))}
           </div>
