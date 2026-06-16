@@ -7,14 +7,22 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { data, error } = await supabase
-    .from('keywords')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('termo', { ascending: true })
+  const [{ data, error }, { data: profile }] = await Promise.all([
+    supabase.from('keywords').select('*').eq('user_id', user.id).order('termo', { ascending: true }),
+    supabase.from('profiles').select('plano, owner_id').eq('id', user.id).single(),
+  ])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  let plano = profile?.plano ?? 'basic'
+  if (profile?.owner_id) {
+    const service = await createServiceClient()
+    const { data: ownerProfile } = await service.from('profiles').select('plano').eq('id', profile.owner_id).single()
+    plano = ownerProfile?.plano ?? 'basic'
+  }
+
+  const { maxKeywords } = getLimites(plano)
+  return NextResponse.json({ keywords: data, maxKeywords, plano })
 }
 
 export async function POST(request: Request) {

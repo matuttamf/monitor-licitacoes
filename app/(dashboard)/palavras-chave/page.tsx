@@ -14,6 +14,7 @@ type Keyword = {
 
 export default function PalavrasChavePage() {
   const [keywords, setKeywords]         = useState<Keyword[]>([])
+  const [maxKeywords, setMaxKeywords]   = useState<number>(99999)
   const [novoTermo, setNovoTermo]       = useState('')
   const [novasRegioes, setNovasRegioes] = useState<string[]>([])   // [] = brasil implícito
   const [carregando, setCarregando]     = useState(true)
@@ -29,7 +30,8 @@ export default function PalavrasChavePage() {
     const res = await fetch('/api/keywords')
     if (res.ok) {
       const data = await res.json()
-      setKeywords(data.map((k: Keyword & { regiao: string | string[] | null }) => {
+      setMaxKeywords(data.maxKeywords ?? 99999)
+      setKeywords((data.keywords ?? []).map((k: Keyword & { regiao: string | string[] | null }) => {
         let regioes: string[]
         if (Array.isArray(k.regiao)) {
           regioes = (k.regiao as (string | null)[]).filter((r): r is string => typeof r === 'string' && r.length > 0)
@@ -173,6 +175,26 @@ export default function PalavrasChavePage() {
         )}
       </form>
 
+      {/* Banner upsell — aparece ao atingir o limite */}
+      {maxKeywords < 99999 && keywords.length >= maxKeywords && (
+        <div className="rounded-2xl px-5 py-4 mb-5 flex items-center justify-between gap-4 flex-wrap"
+          style={{ background: '#fdf9f0', border: '1.5px solid #C9A65A' }}>
+          <div>
+            <p className="text-sm font-semibold mb-0.5" style={{ color: '#1a1a1a' }}>
+              Você atingiu o limite de {maxKeywords} palavras-chave do plano Basic
+            </p>
+            <p className="text-xs" style={{ color: '#78350f' }}>
+              Faça upgrade para o plano Profissional e monitore sem limites.
+            </p>
+          </div>
+          <a href="/planos"
+            className="text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap"
+            style={{ background: '#6B0F1A', color: 'white', textDecoration: 'none' }}>
+            Ver planos →
+          </a>
+        </div>
+      )}
+
       {/* Lista */}
       {carregando ? (
         <div className="space-y-2">
@@ -191,7 +213,10 @@ export default function PalavrasChavePage() {
           <div className="px-5 py-3 flex items-center justify-between"
             style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
             <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>
-              {keywords.length} palavra{keywords.length !== 1 ? 's' : ''}-chave
+              {maxKeywords < 99999
+                ? <>{keywords.length}<span style={{ color: keywords.length >= maxKeywords ? '#b91c1c' : 'var(--cinza)' }}>/{maxKeywords}</span> palavras-chave</>
+                : <>{keywords.length} palavra{keywords.length !== 1 ? 's' : ''}-chave</>
+              }
             </span>
             <span className="text-xs" style={{ color: 'var(--cinza)' }}>
               {keywords.filter(k => k.ativo).length} ativa{keywords.filter(k => k.ativo).length !== 1 ? 's' : ''}
@@ -280,9 +305,11 @@ export default function PalavrasChavePage() {
         </div>
       )}
 
-      <p className="text-xs text-center mt-4" style={{ color: 'var(--cinza)' }}>
-        Plano Basic: até 20 palavras-chave &nbsp;·&nbsp; Profissional / Pro / Empresarial: ilimitado
-      </p>
+      {maxKeywords < 99999 && keywords.length < maxKeywords && (
+        <p className="text-xs text-center mt-4" style={{ color: 'var(--cinza)' }}>
+          Plano Basic: {keywords.length}/{maxKeywords} palavras-chave utilizadas
+        </p>
+      )}
     </div>
   )
 }
