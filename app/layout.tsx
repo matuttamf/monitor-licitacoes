@@ -36,7 +36,6 @@ export const metadata: Metadata = {
   creator: 'Monitor de Licitações',
   publisher: 'Monitor de Licitações',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
-  alternates: { canonical: '/' },
   verification: {
     google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
   },

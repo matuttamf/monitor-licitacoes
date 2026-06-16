@@ -4,6 +4,7 @@ const BASE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://mon
 
 const pages: Array<{ path: string; freq: MetadataRoute.Sitemap[0]['changeFrequency']; priority: number }> = [
   { path: '',           freq: 'weekly',  priority: 1.0 },
+  { path: '/assinar',   freq: 'weekly',  priority: 0.95 },
   { path: '/planos',    freq: 'weekly',  priority: 0.9 },
   { path: '/cadastro',  freq: 'monthly', priority: 0.8 },
   { path: '/contato',   freq: 'monthly', priority: 0.7 },

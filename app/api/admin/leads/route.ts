@@ -80,30 +80,51 @@ async function buscarContratosPNCP(
   dataFinal:   string,
   uf:          string,
   paginas:     number,
-): Promise<PncpContrato[]> {
+): Promise<{ contratos: PncpContrato[]; debug: Record<string, unknown> }> {
   const contratos: PncpContrato[] = []
+  const debug: Record<string, unknown> = {}
+
   for (let p = 1; p <= paginas; p++) {
     try {
       let url = `${PNCP_BASE}/contratos?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
       if (uf && uf !== 'todos') url += `&uf=${uf}`
 
       const res = await fetch(url, {
-        headers:{ Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
       })
-      if (!res.ok) break
+
+      if (p === 1) debug.pncp_status = res.status
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        if (p === 1) debug.pncp_error = txt.slice(0, 300)
+        break
+      }
 
       const json = await res.json()
-      const itens: PncpContrato[] = json.data ?? []
-      if (!itens.length) break
+      if (p === 1) debug.pncp_keys = Object.keys(json ?? {}).join(',')
 
+      // PNCP pode retornar array direto ou { data: [...] }
+      const itens: PncpContrato[] = Array.isArray(json)
+        ? json
+        : Array.isArray(json?.data)
+          ? json.data
+          : Array.isArray(json?.items)
+            ? json.items
+            : []
+
+      if (p === 1) debug.pncp_itens_p1 = itens.length
+
+      if (!itens.length) break
       contratos.push(...itens.filter(c => c.numeroCpfCnpjFornecedor))
       if (itens.length < 50) break
-    } catch {
+    } catch (err) {
+      if (p === 1) debug.pncp_exception = String(err).slice(0, 200)
       break
     }
   }
-  return contratos
+  return { contratos, debug }
 }
 
 // ─── Route ───────────────────────────────────────────────────────────────────
@@ -137,7 +158,8 @@ export async function POST(req: NextRequest) {
   const dataFinal   = hoje.toISOString().slice(0, 10).replace(/-/g, '')
 
   // 1. Buscar contratos PNCP
-  const contratos = await buscarContratosPNCP(dataInicial, dataFinal, uf, maxPaginas)
+  const { contratos, debug: pncpDebug } = await buscarContratosPNCP(dataInicial, dataFinal, uf, maxPaginas)
+  console.log('[leads] PNCP debug:', pncpDebug)
 
   // 2. Desduplicar CNPJs (um e-mail único por empresa)
   const cnpjMap = new Map<string, PncpContrato>()
@@ -194,5 +216,6 @@ export async function POST(req: NextRequest) {
     total_cnpjs:     cnpjMap.size,
     total_leads:     leads.length,
     leads,
+    debug:           pncpDebug,
   })
 }

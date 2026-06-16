@@ -12,7 +12,7 @@ const PLANOS = [
     preco_anual: '499',
     destaque: false,
     descricao: 'Ideal para começar',
-    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram', 'Busca manual no painel', '💰 Busca de Preços Homologados (20 buscas/mês)', '📊 Relatório semanal', 'Suporte via WhatsApp'],
+    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram', 'Busca manual no painel', '💰 Busca de Preços Homologados (20 buscas/mês)', 'Suporte via WhatsApp', '📊 Relatório semanal'],
   },
   {
     id: 'profissional',
@@ -22,7 +22,7 @@ const PLANOS = [
     destaque: false,
     popular: true,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '📊 Relatório semanal', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte via WhatsApp', '📊 Relatório semanal'],
   },
   {
     id: 'gestao',
@@ -32,7 +32,7 @@ const PLANOS = [
     destaque: true,
     popular: false,
     descricao: 'Para equipes comerciais que querem crescer',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '📊 Relatório semanal', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte prioritário via WhatsApp', '📊 Relatório semanal'],
   },
   {
     id: 'empresarial',
@@ -41,7 +41,7 @@ const PLANOS = [
     preco_anual: '4.970',
     destaque: false,
     descricao: 'Para operações que dependem do setor público',
-    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '📊 Relatório semanal detalhado', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte dedicado'],
+    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte dedicado', '📊 Relatório semanal detalhado'],
   },
 ]
 
@@ -274,7 +274,10 @@ function AssinarConteudo() {
         <h2 className="text-2xl md:text-[28px] font-normal text-center mb-10 text-[#1A1A1C]" style={{ fontFamily: 'Georgia, serif' }}>Dúvidas frequentes</h2>
         {[
           ['Preciso de cartão de crédito para testar?', 'Não. Os 7 dias de teste são 100% gratuitos. Você só é cobrado se decidir continuar.'],
-          ['Como funciona o cancelamento?', 'Você pode cancelar a qualquer momento diretamente pelo painel, sem multas ou burocracia.'],
+          ['Como funciona o cancelamento?', periodo === 'anual'
+            ? 'No plano anual, o cancelamento encerra a renovação automática — o acesso permanece ativo até o fim do período anual já pago, sem multas.'
+            : 'Você pode cancelar a qualquer momento diretamente pelo painel, sem multas. A renovação é encerrada imediatamente e o acesso segue ativo até o fim do ciclo já pago.'
+          ],
           ['Posso mudar de plano depois?', 'Sim. No upgrade, o novo plano entra em vigor imediatamente. No downgrade, o plano atual e todos os seus benefícios permanecem ativos até o fim do período já pago — depois disso, o novo valor passa a ser cobrado.'],
         ].map(([q, a]) => (
           <details key={q as string} className="border-b border-[#D5D2C8]">

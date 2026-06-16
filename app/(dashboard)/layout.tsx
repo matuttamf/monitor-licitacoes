@@ -2,8 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
-import { MobileNavItem } from './components/MobileNavItem'
-import { MobileLogoutButton } from './components/MobileLogoutButton'
+import { MobileMenuDrawer } from './components/MobileMenuDrawer'
 import { temMultiUsuario, temRadar, temFornecedores, temPrecosFiltros } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
@@ -154,36 +153,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
 
       {/* Conteúdo */}
-      <main className="flex-1 min-w-0 p-4 md:p-8 overflow-auto pb-20 md:pb-8">
+      <main className="flex-1 min-w-0 p-4 md:p-8 overflow-auto pt-[60px] md:pt-8 pb-4 md:pb-8">
         {children}
       </main>
 
-      {/* Bottom nav — mobile only */}
-      <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2"
-        style={{
-          background: 'var(--preto)',
-          borderTop: '1px solid rgba(201,166,90,0.15)',
-        }}
-      >
-        {(() => {
-          // Itens fixos do nav mobile (sem Admin)
-          const base = [
-            { href: '/dashboard',      label: 'Dashboard',      icon: '◈' },
-            { href: '/busca',          label: 'Busca',          icon: '⊕' },
-            { href: '/palavras-chave', label: 'Palavras-chave', icon: '◎' },
-            { href: '/alertas',        label: 'Alertas',        icon: '◉' },
-          ]
-          // Se tiver equipe, mostra Equipe; senão, mostra Perfil
-          const ultimo = exibirEquipe
-            ? { href: '/equipe', label: 'Equipe', icon: '◫' }
-            : { href: '/perfil', label: 'Perfil',  icon: '◑' }
-          return [...base, ultimo].map(item => (
-            <MobileNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
-          ))
-        })()}
-        <MobileLogoutButton />
-      </nav>
+      {/* Mobile menu drawer (hamburger top-right) */}
+      <MobileMenuDrawer
+        items={allNavItems}
+        nomeExibido={nomeExibido}
+        inicialExibida={inicialExibida}
+        empresaExibida={empresaExibida}
+      />
 
       {/* Botão flutuante WhatsApp — Suporte */}
       <a
@@ -192,7 +172,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         rel="noopener noreferrer"
         style={{
           position: 'fixed',
-          bottom: '80px',
+          bottom: '24px',
           right: '16px',
           zIndex: 50,
           padding: '10px 16px',
