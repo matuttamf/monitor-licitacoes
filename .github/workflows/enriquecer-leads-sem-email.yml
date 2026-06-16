@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: dados-receita
-    if: always() && github.event.inputs.run_bulk == 'true'
+    if: needs.dados-receita.result == 'success' && github.event.inputs.run_bulk == 'true'
 
     steps:
       - name: Checkout
