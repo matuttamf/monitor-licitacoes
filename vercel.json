@@ -34,8 +34,8 @@
     { "path": "/api/cron/sync-assinaturas",      "schedule": "*/5 * * * *" },
     { "path": "/api/cron/backup-db",             "schedule": "0 5 * * 0"          },
     { "path": "/api/cron/limpar-alertas",        "schedule": "0 3 1 * *"           },
-    { "path": "/api/cron/coletar-resultados",                "schedule": "*/10 * * * *" },
-    { "path": "/api/cron/coletar-resultados-transparencia", "schedule": "*/10 * * * *" },
+    { "path": "/api/cron/coletar-resultados",                "schedule": "* * * * *" },
+    { "path": "/api/cron/coletar-resultados-transparencia", "schedule": "* * * * *" },
     { "path": "/api/cron/alertar-precos",                   "schedule": "0 9 * * 1-6"  }
   ]
 }
