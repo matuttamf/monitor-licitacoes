@@ -12,7 +12,7 @@ const PLANOS = [
     preco_anual: '499',
     destaque: false,
     descricao: 'Ideal para começar',
-    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', 'Suporte via WhatsApp'],
+    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Busca manual no painel', '💰 Análise de Preços (20 buscas/mês)', 'Suporte via WhatsApp'],
   },
   {
     id: 'profissional',
@@ -22,7 +22,7 @@ const PLANOS = [
     destaque: false,
     popular: true,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '💰 Análise de Preços ilimitada', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte via WhatsApp'],
   },
   {
     id: 'gestao',
@@ -32,7 +32,7 @@ const PLANOS = [
     destaque: true,
     popular: false,
     descricao: 'Para equipes comerciais',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '💰 Análise de Preços ilimitada', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte prioritário via WhatsApp'],
   },
   {
     id: 'empresarial',
@@ -41,7 +41,7 @@ const PLANOS = [
     preco_anual: '4.970',
     destaque: false,
     descricao: 'Para grandes operações',
-    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', 'Relatório semanal detalhado', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte dedicado'],
+    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '💰 Análise de Preços ilimitada', 'Relatório semanal detalhado', '🎯 Radar de Inteligência', '🏭 Diretório de Fornecedores', 'Suporte dedicado'],
   },
 ]
 

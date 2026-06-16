@@ -1,0 +1,201 @@
+/**
+ * Cron: coletar-resultados
+ * Horário: 0 6 * * * (todo dia às 6h)
+ *
+ * Coleta resultados homologados (vencedores) de licitações via PNCP:
+ *   1. /contratacoes/publicacao → lista processos do período
+ *   2. /orgaos/{cnpj}/compras/{ano}/{seq}/itens → itens do processo
+ *   3. /orgaos/{cnpj}/compras/{ano}/{seq}/itens/{num}/resultados → vencedor
+ *
+ * Ponteiro de backfill: 'resultados_backfill_data' em configuracoes
+ * Janela por execução: 7 dias (completa em ~1 semana de backfill desde 2023-01-01)
+ * Após backfill: modo contínuo com janela de 2 dias
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient as createSupabase } from '@supabase/supabase-js'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
+import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
+
+export const maxDuration = 300
+
+const PNCP_CONSULTA = 'https://pncp.gov.br/api/consulta/v1'
+const PNCP_BASE     = 'https://pncp.gov.br/api/pncp/v1'
+
+const MAX_PROCESSOS    = 30
+const TAMANHO_PAGINA   = 10
+const JANELA_BACKFILL  = 7
+const JANELA_CONTINUA  = 30   // reprocessa últimos 30 dias para capturar publicações tardias
+const BACKFILL_INICIO  = '2023-01-01'
+
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
+const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
+const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
+
+interface Contratacao {
+  orgaoEntidade?: { cnpj?: string; razaoSocial?: string }
+  cnpjOrgao:      string
+  anoCompra:      number
+  sequencialCompra: number
+  unidadeOrgao?: { ufNome?: string; municipioNome?: string }
+}
+
+interface ItemCompra {
+  numeroItem:       number
+  descricao?:       string
+  unidadeMedida?:   string
+  quantidade?:      number
+}
+
+interface Resultado {
+  niFornecedor?:   string
+  nomeFornecedor?: string
+  valorUnitario?:  number
+  quantidade?:     number
+  dataResultado?:  string
+}
+
+async function pncpGet(url: string, retries = 3): Promise<unknown> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const r = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000) })
+      if (r.status === 404 || r.status === 204) return null
+      if (r.status === 429) { await sleep(2000 * (i + 1)); continue }
+      if (!r.ok) return null
+      return r.json()
+    } catch {
+      if (i < retries - 1) await sleep(1000 * (i + 1))
+    }
+  }
+  return null
+}
+
+async function buscarProcessos(dataInicio: string, dataFim: string): Promise<Contratacao[]> {
+  const ini = dataInicio.replace(/-/g, '')
+  const fim = dataFim.replace(/-/g, '')
+  const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${ini}&dataFinal=${fim}&tamanhoPagina=${TAMANHO_PAGINA}&pagina=1`
+  const data = await pncpGet(url) as { data?: Contratacao[] } | null
+  if (!data?.data) return []
+  return data.data.map(c => ({
+    ...c,
+    cnpjOrgao: c.orgaoEntidade?.cnpj ?? c.cnpjOrgao ?? '',
+    orgaoEntidade: c.orgaoEntidade,
+  })).filter(c => c.cnpjOrgao)
+}
+
+async function buscarItens(cnpj: string, ano: number, seq: number): Promise<ItemCompra[]> {
+  const url = `${PNCP_BASE}/orgaos/${cnpj}/compras/${ano}/${seq}/itens?tamanhoPagina=20&pagina=1`
+  const data = await pncpGet(url) as { data?: ItemCompra[] } | null
+  return data?.data ?? []
+}
+
+async function buscarResultados(cnpj: string, ano: number, seq: number, item: number): Promise<Resultado[]> {
+  const url = `${PNCP_BASE}/orgaos/${cnpj}/compras/${ano}/${seq}/itens/${item}/resultados`
+  const data = await pncpGet(url) as Resultado[] | { data?: Resultado[] } | null
+  if (!data) return []
+  return Array.isArray(data) ? data : (data as { data?: Resultado[] }).data ?? []
+}
+
+export async function GET(req: NextRequest) {
+  if (!verificarCronAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 })
+
+  const pausado = await sistemaPausado()
+  if (pausado) return NextResponse.json({ ok: true, msg: 'sistema pausado' })
+
+  const supabase = createSupabase(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  // Ler ponteiro de backfill
+  const { data: cfgRow } = await supabase
+    .from('configuracoes')
+    .select('valor')
+    .eq('chave', 'resultados_backfill_data')
+    .single()
+
+  const hoje      = new Date()
+  const inicioStr = cfgRow?.valor ?? BACKFILL_INICIO
+
+  const inicio = new Date(inicioStr)
+  const fimBackfill = new Date(inicio)
+  fimBackfill.setDate(fimBackfill.getDate() + JANELA_BACKFILL - 1)
+
+  // Se já alcançou hoje → modo contínuo
+  const modoBackfill = inicio < hoje
+  const dataInicio = fmtIso(inicio)
+  const dataFim    = modoBackfill
+    ? fmtIso(new Date(Math.min(fimBackfill.getTime(), hoje.getTime())))
+    : fmtIso(new Date(hoje.getTime() - JANELA_CONTINUA * 86400000))
+
+  const processos = await buscarProcessos(dataInicio, dataFim)
+  const selecionados = processos.slice(0, MAX_PROCESSOS)
+
+  let inseridos  = 0
+  let ignorados  = 0
+  let erros      = 0
+
+  for (const proc of selecionados) {
+    const cnpj = proc.cnpjOrgao.replace(/\D/g, '')
+    const orgao = proc.orgaoEntidade?.razaoSocial ?? null
+    const estado = proc.unidadeOrgao?.ufNome ?? null
+    const municipio = proc.unidadeOrgao?.municipioNome ?? null
+
+    const itens = await buscarItens(cnpj, proc.anoCompra, proc.sequencialCompra)
+    await sleep(100)
+
+    for (const item of itens) {
+      const resultados = await buscarResultados(cnpj, proc.anoCompra, proc.sequencialCompra, item.numeroItem)
+      await sleep(80)
+
+      for (const res of resultados) {
+        if (!res.valorUnitario || res.valorUnitario <= 0) continue
+        const desc = item.descricao?.trim().toUpperCase()
+        if (!desc) continue
+
+        const row = {
+          cnpj_orgao:     cnpj,
+          orgao,
+          ano_compra:     proc.anoCompra,
+          seq_compra:     proc.sequencialCompra,
+          num_item:       item.numeroItem,
+          descricao_item: desc,
+          unidade_medida: item.unidadeMedida ?? null,
+          cnpj_vencedor:  res.niFornecedor?.replace(/\D/g, '') ?? null,
+          nome_vencedor:  res.nomeFornecedor ?? null,
+          valor_unitario: res.valorUnitario,
+          quantidade:     res.quantidade ?? item.quantidade ?? null,
+          valor_total:    res.valorUnitario * (res.quantidade ?? item.quantidade ?? 1),
+          data_resultado: res.dataResultado?.slice(0, 10) ?? null,
+          estado,
+          municipio,
+        }
+
+        const { error } = await supabase
+          .from('resultados_itens')
+          .upsert(row, { onConflict: 'cnpj_orgao,ano_compra,seq_compra,num_item', ignoreDuplicates: true })
+
+        if (error) erros++
+        else inseridos++
+      }
+    }
+  }
+
+  // Avançar ponteiro de backfill
+  if (modoBackfill) {
+    const proximaData = new Date(fimBackfill)
+    proximaData.setDate(proximaData.getDate() + 1)
+    const proximaStr = fmtIso(proximaData)
+    await supabase.from('configuracoes').upsert({ chave: 'resultados_backfill_data', valor: proximaStr })
+  }
+
+  await salvarResultadoCron(supabase, 'coletar-resultados', {
+    processos: selecionados.length,
+    inseridos,
+    erros,
+    janela: `${dataInicio} → ${dataFim}`,
+    modo: modoBackfill ? 'backfill' : 'continuo',
+  })
+
+  return NextResponse.json({ ok: true, processos: selecionados.length, inseridos, erros, janela: `${dataInicio}→${dataFim}` })
+}

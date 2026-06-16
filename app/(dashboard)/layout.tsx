@@ -4,7 +4,7 @@ import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
 import { MobileNavItem } from './components/MobileNavItem'
 import { MobileLogoutButton } from './components/MobileLogoutButton'
-import { temMultiUsuario, temRadar, temFornecedores } from '@/lib/planos'
+import { temMultiUsuario, temRadar, temFornecedores, temPrecosFiltros } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,10 +56,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Equipe visível apenas para owners de planos Pro/Empresarial
   const exibirEquipe       = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
-  // Radar e Fornecedores visíveis para Profissional+; admin vê sempre
+  // Radar, Fornecedores e Preços visíveis para Profissional+; admin vê sempre
   const planoEfetivo       = profile?.plano ?? 'basic'
   const exibirRadar        = isAdmin || temRadar(planoEfetivo)
   const exibirFornecedores = isAdmin || temFornecedores(planoEfetivo)
+  const exibirPrecosFiltros = isAdmin || temPrecosFiltros(planoEfetivo)
 
   const allNavItems: { href: string; label: string; icon: string; sub?: boolean; badge?: string; locked?: boolean; planoNecessario?: string }[] = [
     ...navItems,
@@ -69,6 +70,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     exibirFornecedores
       ? { href: '/fornecedores', label: 'Fornecedores', icon: '🏭', badge: 'Novo' }
       : { href: '/fornecedores', label: 'Fornecedores', icon: '🏭', locked: true, planoNecessario: 'Profissional' },
+    { href: '/precos', label: 'Análise de Preços', icon: '💰', badge: 'Novo' },
     exibirEquipe
       ? { href: '/equipe',       label: 'Minha Equipe', icon: '◫' }
       : { href: '/equipe',       label: 'Minha Equipe', icon: '◫', locked: true, planoNecessario: 'Pro' },

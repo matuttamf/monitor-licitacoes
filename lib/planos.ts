@@ -1,17 +1,18 @@
 export interface LimitesPlano {
   maxKeywords: number
   maxUsers: number
-  maxKeywordsPerSeat: number  // limite por membro de equipe (anti-gaming)
+  maxKeywordsPerSeat: number
   nome: string
-  maxEmailsPorDia: number   // opções: 1,2,3,4,5,6,8,10 (sem 7 e 9)
-  maxItensPorEmail: number  // opções: 10, 20, 30
+  maxEmailsPorDia: number
+  maxItensPorEmail: number
+  maxPriceBuscas: number    // buscas de preços vencedores por mês (Basic=20, Pro+=ilimitado)
 }
 
 export const LIMITES_PLANO: Record<string, LimitesPlano> = {
-  basic:        { maxKeywords: 20,    maxUsers: 1,  maxKeywordsPerSeat: 20,    nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
-  profissional: { maxKeywords: 99999, maxUsers: 1,  maxKeywordsPerSeat: 99999, nome: 'Profissional', maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
-  gestao:       { maxKeywords: 99999, maxUsers: 5,  maxKeywordsPerSeat: 99999, nome: 'Gestão',       maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
-  empresarial:  { maxKeywords: 99999, maxUsers: 15, maxKeywordsPerSeat: 99999, nome: 'Empresarial',  maxEmailsPorDia: 5,  maxItensPorEmail: 10 },
+  basic:        { maxKeywords: 20,    maxUsers: 1,  maxKeywordsPerSeat: 20,    nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 20    },
+  profissional: { maxKeywords: 99999, maxUsers: 1,  maxKeywordsPerSeat: 99999, nome: 'Profissional', maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 99999 },
+  gestao:       { maxKeywords: 99999, maxUsers: 5,  maxKeywordsPerSeat: 99999, nome: 'Gestão',       maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 99999 },
+  empresarial:  { maxKeywords: 99999, maxUsers: 15, maxKeywordsPerSeat: 99999, nome: 'Empresarial',  maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 99999 },
 }
 
 /** trial = acesso completo por 7 dias (mesmo limite do basic) */
@@ -37,6 +38,11 @@ export function temRadar(plano: string): boolean {
 
 /** Diretório de Fornecedores visível para Profissional, Gestão e Empresarial */
 export function temFornecedores(plano: string): boolean {
+  return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
+}
+
+/** Análise de Preços sem filtros avançados no Basic */
+export function temPrecosFiltros(plano: string): boolean {
   return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
 }
 

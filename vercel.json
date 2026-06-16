@@ -1,8 +1,10 @@
 {
   "functions": {
-    "app/api/cron/radar-alertas/route.ts": { "maxDuration": 300 },
-    "app/api/cron/coletar/route.ts":        { "maxDuration": 300 },
-    "app/api/cron/matching/route.ts":       { "maxDuration": 300 }
+    "app/api/cron/radar-alertas/route.ts":      { "maxDuration": 300 },
+    "app/api/cron/coletar/route.ts":            { "maxDuration": 300 },
+    "app/api/cron/matching/route.ts":           { "maxDuration": 300 },
+    "app/api/cron/coletar-resultados/route.ts": { "maxDuration": 300 },
+    "app/api/cron/alertar-precos/route.ts":     { "maxDuration": 300 }
   },
   "crons": [
     { "path": "/api/cron/expirar-trials",        "schedule": "0 3 * * *"         },
@@ -30,6 +32,8 @@
     { "path": "/api/cron/reconverter-trials",    "schedule": "0 8-18 * * 1-5"    },
     { "path": "/api/cron/sync-assinaturas",      "schedule": "*/5 * * * *" },
     { "path": "/api/cron/backup-db",             "schedule": "0 5 * * 0"          },
-    { "path": "/api/cron/limpar-alertas",        "schedule": "0 3 1 * *"           }
+    { "path": "/api/cron/limpar-alertas",        "schedule": "0 3 1 * *"           },
+    { "path": "/api/cron/coletar-resultados",   "schedule": "0 6 * * *"            },
+    { "path": "/api/cron/alertar-precos",       "schedule": "0 9 * * 1-6"          }
   ]
 }

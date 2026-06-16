@@ -53,6 +53,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   { label: 'Busca manual no painel',     trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: '🎯 Radar de Inteligência',   trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '🏭 Diretório de Fornecedores', trial: false,          basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: '💰 Análise de Preços Vencedores', trial: '20 buscas/mês', basic: '20 buscas/mês', profissional: 'Ilimitado',  gestao: 'Ilimitado',      empresarial: 'Ilimitado'      },
   { label: '📊 Relatório semanal',       trial: false,            basic: false,            profissional: false,            gestao: false,            empresarial: true             },
 ]
 
