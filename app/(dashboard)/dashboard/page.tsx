@@ -446,6 +446,8 @@ const nomeEstado: Record<string, string> = {
 }
 
 export default function DashboardPage() {
+  const [roi, setRoi] = useState<{ totalAlertas: number; totalLicitacoes: number; volumeMonitorado: number } | null>(null)
+
   const [resposta, setResposta]       = useState<Resposta | null>(null)
   const [carregando, setCarregando]   = useState(true)
   const [primeiraVez, setPrimeiraVez] = useState(true)
@@ -455,6 +457,12 @@ export default function DashboardPage() {
   const [filtroValorMax, setFiltroValorMax] = useState('')
   const [statsEstados, setStatsEstados]     = useState<EstadoStat[]>([])
   const [pcaItems, setPcaItems]             = useState<Licitacao[]>([])
+
+  useEffect(() => {
+    fetch('/api/stats/roi')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setRoi(d) })
+  }, [])
 
   useEffect(() => {
     fetch('/api/stats/por-estado')
@@ -559,6 +567,49 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Painel ROI — só aparece se já tem alertas */}
+      {roi && roi.totalAlertas > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[
+            {
+              label: 'Editais monitorados',
+              valor: roi.totalLicitacoes.toLocaleString('pt-BR'),
+              sub: 'licitações únicas identificadas',
+              cor: 'var(--vinho)',
+            },
+            {
+              label: 'Volume monitorado',
+              valor: roi.volumeMonitorado >= 1_000_000
+                ? `R$ ${(roi.volumeMonitorado / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+                : roi.volumeMonitorado >= 1_000
+                  ? `R$ ${(roi.volumeMonitorado / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+                  : `R$ ${roi.volumeMonitorado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`,
+              sub: 'em contratos potenciais*',
+              cor: '#C9A65A',
+            },
+            {
+              label: 'Alertas gerados',
+              valor: roi.totalAlertas.toLocaleString('pt-BR'),
+              sub: 'notificações enviadas',
+              cor: 'var(--bordo)',
+            },
+          ].map(stat => (
+            <div key={stat.label} className="rounded-2xl p-3 sm:p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>
+                {stat.label}
+              </p>
+              <p className="text-lg sm:text-2xl font-semibold leading-tight mb-1" style={{ color: stat.cor }}>
+                {stat.valor}
+              </p>
+              <p className="text-[10px] sm:text-xs" style={{ color: 'var(--text-3)' }}>{stat.sub}</p>
+            </div>
+          ))}
+          <p className="col-span-3 text-[10px] text-right" style={{ color: 'var(--text-3)', marginTop: '-8px' }}>
+            * Soma dos valores estimados dos editais — não representa receita garantida
+          </p>
+        </div>
+      )}
 
       {/* Banner de onboarding — só aparece se não há licitações e não há filtros */}
       {semResultados && (
