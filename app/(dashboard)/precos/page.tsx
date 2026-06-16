@@ -103,10 +103,10 @@ export default function PrecosPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'white', margin: 0 }}>
-              Análise de Preços Vencedores
+              💰 Análise de Preços Vencedores
             </h1>
-            <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.45)', fontSize: 14 }}>
-              Consulte valores homologados em licitações reais do PNCP
+            <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.55 }}>
+              Saiba quanto o governo pagou de verdade pelo que você vende — e monte propostas que ganham.
             </p>
           </div>
           {resultado && resultado.maxBuscas < 99999 && (
@@ -401,12 +401,31 @@ export default function PrecosPage() {
 
       {/* Empty state inicial */}
       {!buscou && !loading && (
-        <div style={{
-          textAlign: 'center', padding: '48px 24px',
-          color: 'rgba(255,255,255,0.25)', fontSize: 14,
-        }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>💰</div>
-          Digite uma descrição de item acima para consultar preços praticados em licitações reais.
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 14, padding: '36px 28px' }}>
+          <div style={{ fontSize: 36, marginBottom: 16, textAlign: 'center' }}>🎯</div>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginBottom: 8 }}>
+            Pare de chutar preço — consulte o que o governo pagou de verdade
+          </p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textAlign: 'center', lineHeight: 1.65, marginBottom: 28 }}>
+            Proposta muito alta: você perde. Proposta muito baixa: você perde dinheiro ou é desclassificado por inexequibilidade. A mediana dos preços homologados é a referência que separa quem ganha de quem fica de fora.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+            {[
+              { icone: '📋', titulo: 'Historico real', texto: 'Preços homologados no PNCP desde 2021 — não estimativas.' },
+              { icone: '📊', titulo: 'Mediana por item', texto: 'Saiba o valor médio praticado e o menor preço que passou.' },
+              { icone: '🏆', titulo: 'Quem venceu', texto: 'Veja qual fornecedor ganhou e por qual valor.' },
+              { icone: '🔍', titulo: 'Filtro por estado', texto: 'Compare preços por região — variam bastante no Brasil.' },
+            ].map(c => (
+              <div key={c.titulo} style={{
+                background: 'rgba(255,255,255,0.03)', borderRadius: 10,
+                padding: '14px 16px', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <div style={{ fontSize: 20, marginBottom: 6 }}>{c.icone}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>{c.titulo}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55 }}>{c.texto}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

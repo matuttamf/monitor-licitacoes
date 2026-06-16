@@ -141,16 +141,29 @@ export default function FornecedoresPage() {
 
   if (bloqueado) {
     return (
-      <div className="max-w-lg mx-auto mt-16 text-center">
-        <div className="text-5xl mb-4">🔒</div>
-        <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--preto)' }}>Recurso exclusivo</h2>
-        <p className="text-sm mb-6" style={{ color: 'var(--cinza)' }}>
-          O Diretório de Fornecedores está disponível nos planos Profissional, Gestão e Empresarial.
+      <div style={{ maxWidth: 520, margin: '60px auto', textAlign: 'center', padding: '0 24px' }}>
+        <div style={{
+          width: 72, height: 72, borderRadius: 20, background: 'var(--vinho)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 32, margin: '0 auto 24px',
+        }}>🤝</div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--preto)', marginBottom: 12 }}>
+          Encontre parceiros antes que o edital abra
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--cinza)', lineHeight: 1.75, marginBottom: 8 }}>
+          O Diretório reúne empresas que participam de licitações e estão abertas a parcerias — fornecedores, distribuidores, prestadores de serviço e consórcios.
         </p>
-        <a href="/assinar" className="inline-block px-6 py-3 rounded-xl text-sm font-bold text-white no-underline"
-          style={{ background: 'var(--vinho)' }}>
-          Ver planos →
+        <p style={{ fontSize: 14, color: 'var(--cinza)', lineHeight: 1.75, marginBottom: 28 }}>
+          Quem tem parceiros certos ganha licitações que sozinho não ganharia. Apareça para quem está procurando exatamente o que você oferece.
+        </p>
+        <a href="/assinar?from=painel" style={{
+          display: 'inline-block', background: 'var(--vinho)', color: 'white',
+          textDecoration: 'none', fontWeight: 700, fontSize: 14,
+          padding: '13px 32px', borderRadius: 12,
+        }}>
+          Ativar Diretório de Parceiros →
         </a>
+        <p style={{ marginTop: 12, fontSize: 12, color: 'var(--cinza)' }}>Disponível nos planos Profissional, Gestão e Empresarial.</p>
       </div>
     )
   }
@@ -162,14 +175,14 @@ export default function FornecedoresPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>Diretório de Fornecedores</h1>
+            <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>🤝 Diretório de Parceiros</h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase"
               style={{ background: 'rgba(201,166,90,0.12)', color: '#92610a', border: '1px solid rgba(201,166,90,0.35)' }}>
               Novidade
             </span>
           </div>
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>
-            Empresas cadastradas abertas a negociações e parcerias com outros usuários da plataforma.
+            Empresas abertas a parcerias, consórcios e negociações. <strong style={{ color: 'var(--preto)' }}>Quem tem os parceiros certos ganha licitações que sozinho não ganharia.</strong>
           </p>
         </div>
         {!showForm ? (
@@ -191,16 +204,22 @@ export default function FornecedoresPage() {
 
       {/* Banner CTA */}
       {!showForm && !jaCadastrado && (
-        <div className="rounded-2xl p-5 flex items-center gap-4 flex-wrap"
+        <div className="rounded-2xl p-5 flex items-start gap-5 flex-wrap"
           style={{ background: 'rgba(107,15,26,0.04)', border: '1.5px dashed rgba(107,15,26,0.2)' }}>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--vinho)' }}>
-              🏭 Apareça para quem está buscando parceiros
+            <p className="text-sm font-bold mb-1" style={{ color: 'var(--vinho)' }}>
+              🏭 Sua empresa aparece para quem está montando proposta agora
             </p>
-            <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-              Cadastre sua empresa no diretório e fique visível para outros usuários que procuram fornecedores, prestadores de serviço ou parceiros comerciais.
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--cinza)' }}>
+              Outros usuários da plataforma buscam parceiros, fornecedores e prestadores de serviço para fechar consórcios e complementar propostas. Cadastrar é grátis e o contato vem direto.
             </p>
           </div>
+          <button
+            onClick={abrirForm}
+            className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
+            style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
+            + Cadastrar minha empresa
+          </button>
         </div>
       )}
 

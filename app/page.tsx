@@ -51,8 +51,8 @@ const FEATURE_ROWS: FeatureRow[] = [
   { label: 'Alertas por e-mail + Telegram', trial: true,          basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: 'Alertas por WhatsApp',       trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: 'Busca manual no painel',     trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
-  { label: '🎯 Radar de Inteligência',   trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: '🏭 Diretório de Fornecedores', trial: false,          basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '💰 Análise de Preços Vencedores', trial: '20 buscas/mês', basic: '20 buscas/mês', profissional: 'Ilimitado',  gestao: 'Ilimitado',      empresarial: 'Ilimitado'      },
   { label: '📊 Relatório semanal',       trial: false,            basic: false,            profissional: false,            gestao: false,            empresarial: true             },
 ]
@@ -467,6 +467,84 @@ export default function LandingPage() {
               ))}
               <p className="text-[10px] text-[#9AA0A6] text-center pt-1">Exemplo ilustrativo do diretório</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FERRAMENTAS DE INTELIGÊNCIA: RADAR + PREÇOS ── */}
+      <section className="px-6 md:px-[60px] py-[60px] md:py-[80px] bg-white border-t border-[#F0EDE8]">
+        <div className="max-w-[960px] mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Vantagem competitiva real</div>
+            <h2 className="text-3xl md:text-[38px] font-black tracking-tight leading-[1.1] text-[#1A1A1C] mb-4">
+              Você que chega preparado<br className="hidden md:block" /> sempre vence quem chega surpreso.
+            </h2>
+            <p className="text-base text-[#9AA0A6] max-w-[520px] mx-auto leading-relaxed">
+              Alertar quando o edital abre é o mínimo. O que separa quem ganha é saber antes — e saber por quanto vender.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* RADAR */}
+            <div className="bg-[#1A1A1C] rounded-[20px] p-8 flex flex-col justify-between gap-6 relative overflow-hidden">
+              <div className="absolute -bottom-12 -right-12 w-[200px] h-[200px] rounded-full bg-[radial-gradient(circle,rgba(107,15,26,0.5)_0%,transparent_70%)] pointer-events-none" />
+              <div className="relative">
+                <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#C9A65A] mb-3">Radar de Inteligência</div>
+                <h3 className="text-xl md:text-[24px] font-black text-white mb-3 tracking-tight leading-snug">
+                  Saiba que o edital vai abrir <em>antes</em> de o edital abrir.
+                </h3>
+                <p className="text-sm text-[rgba(255,255,255,0.5)] leading-relaxed m-0 mb-5">
+                  Todo contrato público tem validade. Quando vence, vai a licitação. O Radar monitora os contratos ativos e identifica os que vencem em 30, 60, 90 e 180 dias — <strong className="text-[rgba(255,255,255,0.75)]">você prepara a proposta enquanto o concorrente ainda não sabe que o edital vai existir.</strong>
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { prazo: '≤ 30 dias', cor: '#ef4444', texto: 'O edital pode sair esta semana' },
+                    { prazo: '31–60 dias', cor: '#f59e0b', texto: 'Monte documentação e orçamento agora' },
+                    { prazo: '61–90 dias', cor: '#10b981', texto: 'Contate o órgão com antecedência' },
+                  ].map(d => (
+                    <div key={d.prazo} className="flex items-center gap-3">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: d.cor + '20', color: d.cor }}>{d.prazo}</span>
+                      <span className="text-xs text-[rgba(255,255,255,0.4)]">{d.texto}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="relative text-[11px] text-[rgba(255,255,255,0.3)] border-t border-[rgba(255,255,255,0.08)] pt-4">
+                Disponível nos planos Profissional, Gestão e Empresarial.
+              </div>
+            </div>
+
+            {/* PREÇOS */}
+            <div className="bg-[#FAF6F0] rounded-[20px] p-8 flex flex-col justify-between gap-6 border border-[#D5D2C8]">
+              <div>
+                <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-3">Análise de Preços Vencedores</div>
+                <h3 className="text-xl md:text-[24px] font-black text-[#1A1A1C] mb-3 tracking-tight leading-snug">
+                  Pare de chutar preço. Saiba o que o governo pagou de verdade.
+                </h3>
+                <p className="text-sm text-[#9AA0A6] leading-relaxed m-0 mb-5">
+                  Proposta alta demais: você perde. Baixa demais: é desclassificado por inexequibilidade. Nossa base reúne preços homologados em licitações reais desde 2021 — <strong className="text-[#4a4a4d]">a mediana que separa quem ganha de quem fica de fora.</strong>
+                </p>
+                <div className="bg-white border border-[#D5D2C8] rounded-[12px] p-5 space-y-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#9AA0A6] mb-2">Exemplo: "Notebook i5"</div>
+                  {[
+                    { label: 'Menor preço',     valor: 'R$ 2.890', cor: '#6B0F1A', peso: false },
+                    { label: 'Mediana',          valor: 'R$ 3.450', cor: '#6B0F1A', peso: true  },
+                    { label: 'Maior preço',      valor: 'R$ 5.200', cor: '#9AA0A6', peso: false },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center justify-between">
+                      <span className="text-xs text-[#9AA0A6]">{r.label}</span>
+                      <span className={`text-sm font-${r.peso ? 'black' : 'semibold'}`} style={{ color: r.cor }}>{r.valor}</span>
+                    </div>
+                  ))}
+                  <div className="text-[10px] text-[#9AA0A6] pt-2 border-t border-[#F0EDE8]">127 resultados encontrados · PNCP + Portal da Transparência</div>
+                </div>
+              </div>
+              <div className="text-[11px] text-[#9AA0A6] border-t border-[#D5D2C8] pt-4">
+                Basic e Trial: 20 buscas/mês · Profissional e acima: ilimitado.
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
