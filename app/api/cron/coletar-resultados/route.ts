@@ -1,7 +1,7 @@
 /**
  * Cron: coletar-resultados
- * Horário backfill: */10 * * * * (a cada 10 min até completar)
- * Horário contínuo: 0 */4 * * * (a cada 4h após backfill)
+ * Horário backfill: a cada 10 min (schedule: every 10 min até completar)
+ * Horário contínuo: a cada 4h (schedule: 0 a cada 4h após backfill)
  *
  * Coleta resultados homologados (vencedores) de licitações via PNCP:
  *   1. /contratacoes/homologacao → lista contratos já com vencedor no período
