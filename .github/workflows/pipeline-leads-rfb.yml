@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-0
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -63,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-1
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -87,6 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-2
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -111,6 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-3
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -135,6 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-4
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -159,6 +164,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-5
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -183,6 +189,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-6
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -207,6 +214,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-7
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -231,6 +239,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: arquivo-8
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -255,6 +264,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-9
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -280,6 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: enriquecer-emails
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
