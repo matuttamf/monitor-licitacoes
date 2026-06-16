@@ -1,0 +1,133 @@
+name: Pipeline Leads RFB (Completo)
+
+on:
+  workflow_dispatch:
+    inputs:
+      idx_start:
+        description: 'Índice inicial arquivos RFB (0-9)'
+        default: '0'
+      idx_end:
+        description: 'Índice final arquivos RFB (0-9)'
+        default: '9'
+      ano:
+        description: 'Ano dos dados (ex: 2026). Vazio = mês anterior'
+        default: ''
+      mes:
+        description: 'Mês dos dados (ex: 5). Vazio = mês anterior'
+        default: ''
+
+jobs:
+  coleta:
+    name: 'Fase 1 — Coletar leads e e-mails via RFB'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Coletar leads e enriquecer e-mails via arquivos RFB
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
+          ANO="${{ github.event.inputs.ano }}"
+          MES="${{ github.event.inputs.mes }}"
+          if [ -n "$ANO" ] && [ -n "$MES" ]; then
+            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END" "$ANO" "$MES"
+          else
+            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END"
+          fi
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "pipeline-coleta" "${{ job.status }}"
+
+  enriquecer-emails:
+    name: 'Fase 2 — Enriquecer e-mails faltantes via RFB'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: coleta
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Enriquecer e-mails via arquivos RFB
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
+          npx tsx scripts/enriquecer-emails-rfb.ts "$IDX_START" "$IDX_END"
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "pipeline-emails-rfb" "${{ job.status }}"
+
+  enriquecer-receita:
+    name: 'Fase 3 — Enriquecer razão social e situação via Receita'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: enriquecer-emails
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Enriquecer CNPJs via Receita Federal
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/enriquecer-receita.ts
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "pipeline-receita" "${{ job.status }}"
