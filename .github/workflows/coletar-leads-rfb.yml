@@ -18,15 +18,9 @@ on:
 
 jobs:
   coletar:
-    name: Arquivo ${{ matrix.idx }}
+    name: Coletar leads arquivos ${{ github.event.inputs.idx_start }}-${{ github.event.inputs.idx_end }}
     runs-on: ubuntu-latest
-    timeout-minutes: 120
-    if: ${{ matrix.idx >= fromJSON(github.event.inputs.idx_start) && matrix.idx <= fromJSON(github.event.inputs.idx_end) }}
-    strategy:
-      max-parallel: 5
-      fail-fast: false
-      matrix:
-        idx: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    timeout-minutes: 360
 
     steps:
       - name: Checkout
@@ -41,20 +35,27 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Coletar e enriquecer leads (arquivo ${{ matrix.idx }})
+      - name: Coletar leads via arquivos RFB
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
+          IDX_START="${{ github.event.inputs.idx_start || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
-          IDX="${{ matrix.idx }}"
           if [ -n "$ANO" ] && [ -n "$MES" ]; then
-            npx tsx scripts/coletar-leads-rfb.ts "$IDX" "$IDX" "$ANO" "$MES"
+            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END" "$ANO" "$MES"
           else
-            npx tsx scripts/coletar-leads-rfb.ts "$IDX" "$IDX"
+            npx tsx scripts/coletar-leads-rfb.ts "$IDX_START" "$IDX_END"
           fi
+
+      - name: Enriquecer via Receita Federal
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/enriquecer-receita.ts
 
       - name: Notificar conclusão
         if: always()
@@ -63,4 +64,4 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "coleta-leads-rfb-${{ matrix.idx }}" "${{ job.status }}"
+        run: npx tsx scripts/notificar-cron.ts "coleta-leads-rfb" "${{ job.status }}"
