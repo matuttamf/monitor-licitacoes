@@ -707,6 +707,14 @@ async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, {
         .is(campo, null)
         .not('status', 'in', '("descadastrado","usuario")')
     }
+
+    // Corrige razão social que ficou como fallback (= próprio CNPJ numérico)
+    if (r.razao_social && /[a-zA-ZÀ-ÿ]/.test(r.razao_social)) {
+      await supabase.from('leads').update({ razao_social: r.razao_social })
+        .eq('cnpj', r.cnpj)
+        .or('razao_social.is.null,razao_social.match.^\\d+$')
+        .not('status', 'in', '("descadastrado","usuario")')
+    }
     atualizados++
   }
 
