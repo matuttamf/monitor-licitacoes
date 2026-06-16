@@ -575,42 +575,56 @@ export default function DashboardPage() {
 
       {/* Painel ROI — só aparece se já tem alertas */}
       {roi && roi.totalAlertas > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            {
-              label: 'Editais monitorados',
-              valor: roi.totalLicitacoes.toLocaleString('pt-BR'),
-              sub: 'licitações únicas — desde o início',
-              cor: 'var(--vinho)',
-            },
-            {
-              label: 'Volume monitorado',
-              valor: roi.volumeMonitorado >= 1_000_000
-                ? `R$ ${(roi.volumeMonitorado / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
-                : roi.volumeMonitorado >= 1_000
-                  ? `R$ ${(roi.volumeMonitorado / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
-                  : `R$ ${roi.volumeMonitorado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`,
-              sub: 'em contratos potenciais* — acumulado',
-              cor: '#C9A65A',
-            },
-            {
-              label: 'Alertas gerados',
-              valor: roi.totalAlertas.toLocaleString('pt-BR'),
-              sub: 'notificações enviadas — desde o início',
-              cor: 'var(--bordo)',
-            },
-          ].map(stat => (
-            <div key={stat.label} className="rounded-2xl p-3 sm:p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>
-                {stat.label}
-              </p>
-              <p className="text-lg sm:text-2xl font-semibold leading-tight mb-1" style={{ color: stat.cor }}>
-                {stat.valor}
-              </p>
-              <p className="text-[10px] sm:text-xs" style={{ color: 'var(--text-3)' }}>{stat.sub}</p>
-            </div>
-          ))}
-          <p className="col-span-3 text-[10px] text-right" style={{ color: 'var(--text-3)', marginTop: '-8px' }}>
+        <div className="rounded-2xl mb-6 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1A1A1C 0%, #2d1018 100%)', border: '1px solid rgba(201,166,90,0.25)' }}>
+          {/* Cabeçalho */}
+          <div className="px-5 pt-4 pb-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <span className="text-xs font-bold tracking-widest uppercase" style={{ color: '#C9A65A' }}>Seu impacto</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(201,166,90,0.15)', color: '#C9A65A' }}>acumulado desde o início</span>
+          </div>
+
+          {/* Métricas */}
+          <div className="grid grid-cols-3 divide-x" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+            {[
+              {
+                label: 'Editais monitorados',
+                valor: roi.totalLicitacoes.toLocaleString('pt-BR'),
+                sub: 'licitações únicas',
+                cor: '#e8d5b7',
+                icon: '📋',
+              },
+              {
+                label: 'Volume monitorado',
+                valor: roi.volumeMonitorado >= 1_000_000
+                  ? `R$ ${(roi.volumeMonitorado / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+                  : roi.volumeMonitorado >= 1_000
+                    ? `R$ ${(roi.volumeMonitorado / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+                    : `R$ ${roi.volumeMonitorado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`,
+                sub: 'em contratos potenciais*',
+                cor: '#C9A65A',
+                icon: '💰',
+              },
+              {
+                label: 'Alertas gerados',
+                valor: roi.totalAlertas.toLocaleString('pt-BR'),
+                sub: 'notificações enviadas',
+                cor: '#e8d5b7',
+                icon: '🔔',
+              },
+            ].map((stat, i) => (
+              <div key={stat.label} className="px-4 sm:px-6 py-4 sm:py-5" style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : undefined }}>
+                <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <span>{stat.icon}</span>
+                  <span className="hidden sm:inline">{stat.label}</span>
+                </p>
+                <p className="text-xl sm:text-3xl font-bold leading-none mb-1.5 tabular-nums" style={{ color: stat.cor }}>
+                  {stat.valor}
+                </p>
+                <p className="text-[10px] sm:text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{stat.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="px-5 pb-3 text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
             * Soma dos valores estimados dos editais — não representa receita garantida
           </p>
         </div>
