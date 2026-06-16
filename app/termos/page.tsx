@@ -11,7 +11,7 @@ const EMPRESA_SEDE_CIDADE = 'Belo Horizonte/MG'
 const CONTATO_EMAIL       = 'contato@monitordelicitacoes.com.br'
 
 export default function TermosPage() {
-  const ultimaAtualizacao = '05 de junho de 2026'
+  const ultimaAtualizacao = '16 de junho de 2026'
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] font-sans">
@@ -131,6 +131,7 @@ export default function TermosPage() {
 
             <Section titulo="6. Planos e pagamento">
               <p>Os planos disponíveis, com suas funcionalidades e preços, estão descritos na <Link href="/assinar" className="text-[#6B0F1A] font-semibold no-underline">página de planos</Link>.</p>
+              <SubTitulo>6.1 Plano mensal</SubTitulo>
               <Tabela colunas={['Tema', 'Condição']}>
                 <tr><Td>Periodicidade</Td><Td>Cobrança mensal recorrente, processada automaticamente pela plataforma de pagamentos parceira</Td></tr>
                 <tr><Td>Renovação</Td><Td>Automática na mesma data do mês. Renova até cancelamento expresso</Td></tr>
@@ -138,6 +139,14 @@ export default function TermosPage() {
                 <tr><Td>Reajuste de preços</Td><Td>Com aviso prévio de 30 dias por e-mail. Não se aplica ao ciclo em curso</Td></tr>
                 <tr><Td>Inadimplência</Td><Td>Após 3 tentativas de cobrança sem sucesso, o acesso é suspenso</Td></tr>
                 <tr><Td>Dados de pagamento</Td><Td>Processados exclusivamente pela plataforma de pagamentos parceira. Não armazenamos dados de cartão</Td></tr>
+              </Tabela>
+              <SubTitulo>6.2 Plano anual</SubTitulo>
+              <Tabela colunas={['Tema', 'Condição']}>
+                <tr><Td>Periodicidade</Td><Td>Cobrança única correspondente a 12 meses de acesso, processada no ato da contratação</Td></tr>
+                <tr><Td>Preço</Td><Td>O valor exibido por mês é referencial — a cobrança é o equivalente anual em parcela única. O preço anual contratado é fixo durante todo o ciclo de 12 meses</Td></tr>
+                <tr><Td>Renovação</Td><Td>Automática após 12 meses, com cobrança do valor anual vigente na data da renovação. O usuário será notificado por e-mail com 30 dias de antecedência</Td></tr>
+                <tr><Td>Acesso</Td><Td>Permanece ativo durante todo o período de 12 meses, inclusive após eventual pedido de cancelamento antecipado</Td></tr>
+                <tr><Td>Reajuste de preços</Td><Td>Aplicável somente na renovação anual. O valor não é alterado durante o ciclo em vigor</Td></tr>
               </Tabela>
             </Section>
 
@@ -148,13 +157,20 @@ export default function TermosPage() {
                 <li>O cancelamento tem efeito ao <strong>final do período já pago</strong> — não há cobrança proporcional ou multa.</li>
                 <li>Após o cancelamento, os dados são mantidos por 90 dias e depois excluídos, conforme a <Link href="/privacidade" className="text-[#6B0F1A] no-underline">Política de Privacidade</Link>.</li>
               </ul>
-              <SubTitulo>7.2 Reembolso</SubTitulo>
+              <SubTitulo>7.2 Reembolso — plano mensal</SubTitulo>
               <Aviso tipo="destaque">
-                Garantia de satisfação: reembolso integral disponível em até <strong>7 dias corridos</strong> após a primeira cobrança de um novo plano, mediante solicitação para {CONTATO_EMAIL}. Após esse prazo, não são realizados reembolsos parciais.
+                Garantia de satisfação: reembolso integral disponível em até <strong>7 dias corridos</strong> após a primeira cobrança de um novo plano mensal, mediante solicitação para {CONTATO_EMAIL}. Após esse prazo, não são realizados reembolsos parciais.
               </Aviso>
               <ul>
                 <li>O período de teste gratuito não gera direito a reembolso (não há cobrança).</li>
                 <li>Reembolsos em casos de falha técnica grave do serviço são analisados individualmente.</li>
+              </ul>
+              <SubTitulo>7.3 Cancelamento e reembolso — plano anual</SubTitulo>
+              <ul>
+                <li>O usuário pode solicitar o cancelamento a qualquer momento pelo painel ou por e-mail para {CONTATO_EMAIL}.</li>
+                <li><strong>Dentro de 7 dias corridos</strong> após a cobrança anual: reembolso integral disponível mediante solicitação.</li>
+                <li><strong>Após 7 dias:</strong> o acesso permanece ativo até o fim do ciclo de 12 meses já pago. Não são realizados reembolsos proporcionais ao período não utilizado.</li>
+                <li>Não há multa ou penalidade pelo cancelamento antecipado — apenas o encerramento do acesso ao término do ciclo vigente.</li>
               </ul>
             </Section>
 
