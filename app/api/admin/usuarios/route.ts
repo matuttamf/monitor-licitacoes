@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { getLimites } from '@/lib/planos'
 import { NextResponse } from 'next/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'matuttamaquinaseferramentas@gmail.com'
@@ -119,7 +120,13 @@ export async function PATCH(request: Request) {
   if (telefone  !== undefined) atualizacao.telefone  = telefone
   if (whatsapp  !== undefined) atualizacao.whatsapp  = whatsapp
   if (empresa   !== undefined) atualizacao.empresa   = empresa
-  if (plano     !== undefined) atualizacao.plano     = plano
+  if (plano !== undefined) {
+    atualizacao.plano = plano
+    // Atualiza limites junto com o plano para manter consistência
+    const limites = getLimites(plano)
+    atualizacao.max_keywords = limites.maxKeywords
+    atualizacao.max_usuarios = limites.maxUsers
+  }
   // fonte manual substitui o utm_source (campo livre)
   if (fonte     !== undefined) atualizacao.utm_source = fonte || null
 

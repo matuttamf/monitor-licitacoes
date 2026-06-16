@@ -135,7 +135,8 @@ export default function TermosPage() {
               <Tabela colunas={['Tema', 'Condição']}>
                 <tr><Td>Periodicidade</Td><Td>Cobrança mensal recorrente, processada automaticamente pela plataforma de pagamentos parceira</Td></tr>
                 <tr><Td>Renovação</Td><Td>Automática na mesma data do mês. Renova até cancelamento expresso</Td></tr>
-                <tr><Td>Alteração de plano</Td><Td>Possível a qualquer momento; o novo valor é aplicado no próximo ciclo</Td></tr>
+                <tr><Td>Upgrade de plano</Td><Td>Possível a qualquer momento. É cobrado imediatamente o valor proporcional aos dias restantes do ciclo atual (diferença entre os planos). A partir do próximo ciclo, a cobrança passa a ser o valor integral do novo plano</Td></tr>
+                <tr><Td>Downgrade de plano</Td><Td>Possível a qualquer momento. O usuário mantém os benefícios (funcionalidades e limites) do plano atual até o fim do ciclo já pago. O novo valor e os novos limites são aplicados no ciclo seguinte</Td></tr>
                 <tr><Td>Reajuste de preços</Td><Td>Com aviso prévio de 30 dias por e-mail. Não se aplica ao ciclo em curso</Td></tr>
                 <tr><Td>Inadimplência</Td><Td>Após 3 tentativas de cobrança sem sucesso, o acesso é suspenso</Td></tr>
                 <tr><Td>Dados de pagamento</Td><Td>Processados exclusivamente pela plataforma de pagamentos parceira. Não armazenamos dados de cartão</Td></tr>
@@ -146,6 +147,8 @@ export default function TermosPage() {
                 <tr><Td>Preço</Td><Td>O valor exibido por mês é referencial — a cobrança é o equivalente anual em parcela única. O preço anual contratado é fixo durante todo o ciclo de 12 meses</Td></tr>
                 <tr><Td>Renovação</Td><Td>Automática após 12 meses, com cobrança do valor anual vigente na data da renovação. O usuário será notificado por e-mail com 30 dias de antecedência</Td></tr>
                 <tr><Td>Acesso</Td><Td>Permanece ativo durante todo o período de 12 meses, inclusive após eventual pedido de cancelamento antecipado</Td></tr>
+                <tr><Td>Upgrade de plano</Td><Td>Possível a qualquer momento. É cobrado imediatamente o valor proporcional aos dias restantes do ciclo anual em curso (diferença entre os planos). A partir do próximo ciclo anual, a cobrança passa a ser o valor integral do novo plano</Td></tr>
+                <tr><Td>Downgrade de plano</Td><Td>Possível a qualquer momento. O usuário mantém os benefícios do plano atual até o fim do ciclo anual já pago. O novo valor e os novos limites são aplicados no ciclo seguinte</Td></tr>
                 <tr><Td>Reajuste de preços</Td><Td>Aplicável somente na renovação anual. O valor não é alterado durante o ciclo em vigor</Td></tr>
               </Tabela>
             </Section>

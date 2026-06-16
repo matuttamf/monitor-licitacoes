@@ -58,6 +58,7 @@ const statusConfig: Record<string, { label: string; cor: string; bg: string }> =
   trial:     { label: 'Trial',      cor: '#C9A65A', bg: 'rgba(201,166,90,0.1)'  },
   expired:   { label: 'Expirado',   cor: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
   bloqueado: { label: 'Bloqueado',  cor: '#6B0F1A', bg: 'rgba(107,15,26,0.1)'   },
+  paused:    { label: 'Pausado',    cor: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
 }
 
 const JOB_LABELS: Record<string, string> = {
