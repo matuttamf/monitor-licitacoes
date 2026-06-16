@@ -31,7 +31,8 @@ function LoginForm() {
       setCarregando(false)
       return
     }
-    window.location.href = redirect || '/dashboard'
+    const dest = redirect && redirect.startsWith('/') ? redirect : '/dashboard'
+    window.location.href = dest
   }
 
   return (

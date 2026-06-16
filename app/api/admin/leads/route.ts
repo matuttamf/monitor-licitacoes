@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 export const maxDuration = 300
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
-const PNCP_BASE   = 'https://pncp.gov.br/api/pncp/v1'
+const PNCP_BASE   = 'https://pncp.gov.br/api/consulta/v1'
 const BRASIL_API  = 'https://brasilapi.com.br/api/cnpj/v1'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ async function buscarContratosPNCP(
   const contratos: PncpContrato[] = []
   for (let p = 1; p <= paginas; p++) {
     try {
-      let url = `${PNCP_BASE}/contratos/publicacao?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
+      let url = `${PNCP_BASE}/contratos?dataInicial=${dataInicial}&dataFinal=${dataFinal}&pagina=${p}&tamanhoPagina=50`
       if (uf && uf !== 'todos') url += `&uf=${uf}`
 
       const res = await fetch(url, {
