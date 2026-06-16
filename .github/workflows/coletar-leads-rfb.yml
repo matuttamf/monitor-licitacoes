@@ -8,7 +8,7 @@ on:
         default: '0'
       idx_end:
         description: 'Índice final (0-9)'
-        default: '0'
+        default: '9'
       ano:
         description: 'Ano dos dados (ex: 2026). Vazio = mês anterior'
         default: ''
@@ -17,8 +17,8 @@ on:
         default: ''
 
 jobs:
-  arquivo-0:
-    name: Coleta arquivo 0
+  coletar:
+    name: Coletar leads arquivos ${{ github.event.inputs.idx_start }}-${{ github.event.inputs.idx_end }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -35,14 +35,14 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Coletar leads — arquivo 0
+      - name: Coletar leads via arquivos RFB
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
           IDX_START="${{ github.event.inputs.idx_start || '0' }}"
-          IDX_END="${{ github.event.inputs.idx_end || '0' }}"
+          IDX_END="${{ github.event.inputs.idx_end || '9' }}"
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
           if [ -n "$ANO" ] && [ -n "$MES" ]; then
@@ -58,46 +58,4 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "coleta-leads-rfb-0" "${{ job.status }}"
-
-  arquivos-1-9:
-    name: Coleta arquivos 1-9
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    needs: arquivo-0
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Instalar dependências
-        run: npm ci
-
-      - name: Coletar leads — arquivos 1-9
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NODE_OPTIONS: --max-old-space-size=6144
-        run: |
-          ANO="${{ github.event.inputs.ano }}"
-          MES="${{ github.event.inputs.mes }}"
-          if [ -n "$ANO" ] && [ -n "$MES" ]; then
-            npx tsx scripts/coletar-leads-rfb.ts 1 9 "$ANO" "$MES"
-          else
-            npx tsx scripts/coletar-leads-rfb.ts 1 9
-          fi
-
-      - name: Notificar conclusão
-        if: always()
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "coleta-leads-rfb-1-9" "${{ job.status }}"
+        run: npx tsx scripts/notificar-cron.ts "coleta-leads-rfb" "${{ job.status }}"
