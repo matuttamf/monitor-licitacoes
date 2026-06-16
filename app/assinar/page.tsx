@@ -12,7 +12,7 @@ const PLANOS = [
     preco_anual: '499',
     destaque: false,
     descricao: 'Ideal para começar',
-    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram', 'Busca manual no painel', '💰 Preços homologados (20 buscas/mês)', 'Suporte via WhatsApp'],
+    itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram', 'Busca manual no painel', '💰 Preços homologados (20 buscas/mês)', '📊 Relatório semanal', 'Suporte via WhatsApp'],
   },
   {
     id: 'profissional',
@@ -22,7 +22,7 @@ const PLANOS = [
     destaque: false,
     popular: true,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Preços homologados ilimitados', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Preços homologados ilimitados', '📊 Relatório semanal', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte via WhatsApp'],
   },
   {
     id: 'gestao',
@@ -32,7 +32,7 @@ const PLANOS = [
     destaque: true,
     popular: false,
     descricao: 'Para equipes comerciais que querem crescer',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Preços homologados ilimitados', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Preços homologados ilimitados', '📊 Relatório semanal', '🎯 Radar de Inteligência (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte prioritário via WhatsApp'],
   },
   {
     id: 'empresarial',

@@ -54,7 +54,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '💰 Análise de Preços Vencedores', trial: '20 buscas de preços/mês', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
-  { label: '📊 Relatório semanal',       trial: false,            basic: false,            profissional: false,            gestao: false,            empresarial: true             },
+  { label: '📊 Relatório semanal',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
 ]
 
 const PLANOS = [
