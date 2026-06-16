@@ -1,36 +1,37 @@
 /**
  * Cron: coletar-resultados
- * Horário: 0 6 * * * (todo dia às 6h)
+ * Horário backfill: */10 * * * * (a cada 10 min até completar)
+ * Horário contínuo: 0 */4 * * * (a cada 4h após backfill)
  *
  * Coleta resultados homologados (vencedores) de licitações via PNCP:
- *   1. /contratacoes/publicacao → lista processos do período
- *   2. /orgaos/{cnpj}/compras/{ano}/{seq}/itens → itens do processo
- *   3. /orgaos/{cnpj}/compras/{ano}/{seq}/itens/{num}/resultados → vencedor
+ *   1. /contratacoes/homologacao → lista contratos já com vencedor no período
+ *   2. /orgaos/{cnpj}/compras/{ano}/{seq}/itens → itens do contrato
+ *   3. /orgaos/{cnpj}/compras/{ano}/{seq}/itens/{num}/resultados → valor vencedor
  *
  * Ponteiro de backfill: 'resultados_backfill_data' em configuracoes
- * Janela por execução: 7 dias (completa em ~1 semana de backfill desde 2023-01-01)
- * Após backfill: modo contínuo com janela de 2 dias
+ * Janela por execução: 7 dias
+ * Após backfill: busca últimos 30 dias (cobre publicações tardias)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabase } from '@supabase/supabase-js'
 import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
-import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
+import { salvarResultadoCron } from '@/lib/cron-log'
 
 export const maxDuration = 300
 
 const PNCP_CONSULTA = 'https://pncp.gov.br/api/consulta/v1'
 const PNCP_BASE     = 'https://pncp.gov.br/api/pncp/v1'
 
-const MAX_PROCESSOS    = 30
-const TAMANHO_PAGINA   = 10
-const JANELA_BACKFILL  = 7
-const JANELA_CONTINUA  = 30   // reprocessa últimos 30 dias para capturar publicações tardias
+const MAX_PROCESSOS    = 50
+const TAMANHO_PAGINA   = 50    // API suporta até 500; 50 equilibra volume e latência
+const JANELA_BACKFILL  = 7     // dias por execução durante backfill
+const JANELA_CONTINUA  = 30    // dias para reprocessar em modo contínuo (cobre tardios)
 const BACKFILL_INICIO  = '2023-01-01'
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
-const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
 const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
+const fmtPncp = (s: string) => s.replace(/-/g, '')
 
 interface Contratacao {
   orgaoEntidade?: { cnpj?: string; razaoSocial?: string }
@@ -41,10 +42,10 @@ interface Contratacao {
 }
 
 interface ItemCompra {
-  numeroItem:       number
-  descricao?:       string
-  unidadeMedida?:   string
-  quantidade?:      number
+  numeroItem:     number
+  descricao?:     string
+  unidadeMedida?: string
+  quantidade?:    number
 }
 
 interface Resultado {
@@ -60,36 +61,36 @@ async function pncpGet(url: string, retries = 3): Promise<unknown> {
     try {
       const r = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000) })
       if (r.status === 404 || r.status === 204) return null
-      if (r.status === 429) { await sleep(2000 * (i + 1)); continue }
+      if (r.status === 429) { await sleep(3000 * (i + 1)); continue }
       if (!r.ok) return null
       return r.json()
     } catch {
-      if (i < retries - 1) await sleep(1000 * (i + 1))
+      if (i < retries - 1) await sleep(1500 * (i + 1))
     }
   }
   return null
 }
 
+// Usa endpoint de homologação — só retorna contratos que já têm vencedor definido
 async function buscarProcessos(dataInicio: string, dataFim: string): Promise<Contratacao[]> {
-  const ini = dataInicio.replace(/-/g, '')
-  const fim = dataFim.replace(/-/g, '')
-  const url = `${PNCP_CONSULTA}/contratacoes/publicacao?dataInicial=${ini}&dataFinal=${fim}&tamanhoPagina=${TAMANHO_PAGINA}&pagina=1`
+  const ini = fmtPncp(dataInicio)
+  const fim = fmtPncp(dataFim)
+  const url = `${PNCP_CONSULTA}/contratacoes/homologacao?dataInicial=${ini}&dataFinal=${fim}&tamanhoPagina=${TAMANHO_PAGINA}&pagina=1`
   const data = await pncpGet(url) as { data?: Contratacao[] } | null
   if (!data?.data) return []
   return data.data.map(c => ({
     ...c,
     cnpjOrgao: c.orgaoEntidade?.cnpj ?? c.cnpjOrgao ?? '',
-    orgaoEntidade: c.orgaoEntidade,
   })).filter(c => c.cnpjOrgao)
 }
 
 async function buscarItens(cnpj: string, ano: number, seq: number): Promise<ItemCompra[]> {
-  const url = `${PNCP_BASE}/orgaos/${cnpj}/compras/${ano}/${seq}/itens?tamanhoPagina=20&pagina=1`
+  const url = `${PNCP_BASE}/orgaos/${cnpj}/compras/${ano}/${seq}/itens?tamanhoPagina=50&pagina=1`
   const data = await pncpGet(url) as { data?: ItemCompra[] } | null
   return data?.data ?? []
 }
 
-async function buscarResultados(cnpj: string, ano: number, seq: number, item: number): Promise<Resultado[]> {
+async function buscarResultadosItem(cnpj: string, ano: number, seq: number, item: number): Promise<Resultado[]> {
   const url = `${PNCP_BASE}/orgaos/${cnpj}/compras/${ano}/${seq}/itens/${item}/resultados`
   const data = await pncpGet(url) as Resultado[] | { data?: Resultado[] } | null
   if (!data) return []
@@ -114,39 +115,48 @@ export async function GET(req: NextRequest) {
     .eq('chave', 'resultados_backfill_data')
     .single()
 
-  const hoje      = new Date()
-  const inicioStr = cfgRow?.valor ?? BACKFILL_INICIO
+  const hoje       = new Date()
+  const pointerStr = cfgRow?.valor ?? BACKFILL_INICIO
+  const pointer    = new Date(pointerStr)
 
-  const inicio = new Date(inicioStr)
-  const fimBackfill = new Date(inicio)
-  fimBackfill.setDate(fimBackfill.getDate() + JANELA_BACKFILL - 1)
+  // Backfill: pointer ainda não alcançou hoje
+  const emBackfill = pointer < hoje
 
-  // Se já alcançou hoje → modo contínuo
-  const modoBackfill = inicio < hoje
-  const dataInicio = fmtIso(inicio)
-  const dataFim    = modoBackfill
-    ? fmtIso(new Date(Math.min(fimBackfill.getTime(), hoje.getTime())))
-    : fmtIso(new Date(hoje.getTime() - JANELA_CONTINUA * 86400000))
+  let dataInicio: string
+  let dataFim: string
+
+  if (emBackfill) {
+    // Avança 7 dias a partir do ponteiro
+    dataInicio = fmtIso(pointer)
+    const fimJanela = new Date(pointer)
+    fimJanela.setDate(fimJanela.getDate() + JANELA_BACKFILL - 1)
+    dataFim = fmtIso(new Date(Math.min(fimJanela.getTime(), hoje.getTime())))
+  } else {
+    // Modo contínuo: reprocessa os últimos JANELA_CONTINUA dias
+    const inicio = new Date(hoje)
+    inicio.setDate(inicio.getDate() - JANELA_CONTINUA)
+    dataInicio = fmtIso(inicio)
+    dataFim    = fmtIso(hoje)
+  }
 
   const processos = await buscarProcessos(dataInicio, dataFim)
   const selecionados = processos.slice(0, MAX_PROCESSOS)
 
-  let inseridos  = 0
-  let ignorados  = 0
-  let erros      = 0
+  let inseridos = 0
+  let erros     = 0
 
   for (const proc of selecionados) {
-    const cnpj = proc.cnpjOrgao.replace(/\D/g, '')
-    const orgao = proc.orgaoEntidade?.razaoSocial ?? null
-    const estado = proc.unidadeOrgao?.ufNome ?? null
+    const cnpj     = proc.cnpjOrgao.replace(/\D/g, '')
+    const orgao    = proc.orgaoEntidade?.razaoSocial ?? null
+    const estado   = proc.unidadeOrgao?.ufNome ?? null
     const municipio = proc.unidadeOrgao?.municipioNome ?? null
 
     const itens = await buscarItens(cnpj, proc.anoCompra, proc.sequencialCompra)
-    await sleep(100)
+    await sleep(60)   // pausa leve entre contratos
 
     for (const item of itens) {
-      const resultados = await buscarResultados(cnpj, proc.anoCompra, proc.sequencialCompra, item.numeroItem)
-      await sleep(80)
+      const resultados = await buscarResultadosItem(cnpj, proc.anoCompra, proc.sequencialCompra, item.numeroItem)
+      await sleep(40)  // pausa leve entre itens
 
       for (const res of resultados) {
         if (!res.valorUnitario || res.valorUnitario <= 0) continue
@@ -181,21 +191,29 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Avançar ponteiro de backfill
-  if (modoBackfill) {
-    const proximaData = new Date(fimBackfill)
+  // Avançar ponteiro apenas no backfill
+  if (emBackfill) {
+    const proximaData = new Date(dataFim)
     proximaData.setDate(proximaData.getDate() + 1)
-    const proximaStr = fmtIso(proximaData)
-    await supabase.from('configuracoes').upsert({ chave: 'resultados_backfill_data', valor: proximaStr })
+    await supabase
+      .from('configuracoes')
+      .upsert({ chave: 'resultados_backfill_data', valor: fmtIso(proximaData) })
   }
 
   await salvarResultadoCron(supabase, 'coletar-resultados', {
     processos: selecionados.length,
     inseridos,
     erros,
-    janela: `${dataInicio} → ${dataFim}`,
-    modo: modoBackfill ? 'backfill' : 'continuo',
+    janela:  `${dataInicio} → ${dataFim}`,
+    modo:    emBackfill ? 'backfill' : 'continuo',
   })
 
-  return NextResponse.json({ ok: true, processos: selecionados.length, inseridos, erros, janela: `${dataInicio}→${dataFim}` })
+  return NextResponse.json({
+    ok:        true,
+    processos: selecionados.length,
+    inseridos,
+    erros,
+    janela:    `${dataInicio}→${dataFim}`,
+    modo:      emBackfill ? 'backfill' : 'continuo',
+  })
 }
