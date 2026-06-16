@@ -123,6 +123,33 @@ async function uploadArquivo(tipo: 'Estabelecimentos' | 'Empresas', fileIdx: num
   return true
 }
 
+async function uploadMunicipios() {
+  const urls = [
+    `https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/Municipios.zip`,
+    `https://arquivos.receitafederal.gov.br/public.php/dav/files/YggdBLfdninEJX9/${anoFinal}-${mesPad}/Municipios.zip`,
+  ]
+  const tmpPath = join(tmpdir(), 'rf-municipios.zip')
+
+  console.log(`\n[Municipios] Tentando baixar tabela IBGE…`)
+  let baixado = false
+  for (const url of urls) {
+    console.log(`  Tentando: ${url}`)
+    if (await downloadComRetry(url, tmpPath, 3)) { baixado = true; break }
+    if (existsSync(tmpPath)) unlinkSync(tmpPath)
+  }
+  if (!baixado) { console.warn('  ✗ Municipios.zip indisponível — pulando'); return false }
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload('Municipios.zip', createReadStream(tmpPath), { contentType: 'application/zip', upsert: true })
+
+  if (existsSync(tmpPath)) unlinkSync(tmpPath)
+  if (error) { console.error(`  ✗ Erro no upload: ${error.message}`); return false }
+  console.log(`  ✓ Upload concluído → ${BUCKET}/Municipios.zip`)
+  return true
+}
+
 async function main() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
     console.error('Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env.local')
@@ -137,18 +164,19 @@ async function main() {
     process.exit(1)
   }
 
-  const total = (idxEnd - idxStart + 1) * 2
   console.log(`Período: ${anoFinal}-${mesPad} | Arquivos: ${idxStart}–${idxEnd} (Estabelecimentos + Empresas)`)
 
+  // Municipios.zip primeiro (pequeno, necessário para resolução de nomes)
+  await uploadMunicipios()
+
+  const total = (idxEnd - idxStart + 1) * 2
   let ok = 0
   for (let i = idxStart; i <= idxEnd; i++) {
-    // Estabelecimentos primeiro (maiores), depois Empresas (para lookup de razão social)
     if (await uploadArquivo('Estabelecimentos', i)) ok++
     if (await uploadArquivo('Empresas', i)) ok++
   }
 
   console.log(`\nConcluído: ${ok}/${total} arquivo(s) enviados.`)
-  console.log(`O cron coletar-leads-cnae vai cruzar Estabelecimentos + Empresas automaticamente.`)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })
