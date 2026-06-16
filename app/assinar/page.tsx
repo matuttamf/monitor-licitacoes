@@ -124,18 +124,18 @@ function AssinarConteudo() {
       </div>
 
       {/* Toggle mensal/anual */}
-      <div className="flex justify-center py-6">
-        <div className="inline-flex items-center gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <div className="flex justify-center py-6 bg-[#FAF6F0]">
+        <div className="inline-flex items-center gap-1 p-1 rounded-xl" style={{ background: 'white', border: '1px solid #D5D2C8', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <button
             onClick={() => setPeriodo('mensal')}
             className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-            style={{ background: periodo === 'mensal' ? 'white' : 'transparent', color: periodo === 'mensal' ? '#1A1A1C' : 'rgba(255,255,255,0.55)', border: 'none', cursor: 'pointer' }}>
+            style={{ background: periodo === 'mensal' ? '#1A1A1C' : 'transparent', color: periodo === 'mensal' ? 'white' : '#9AA0A6', border: 'none', cursor: 'pointer' }}>
             Mensal
           </button>
           <button
             onClick={() => setPeriodo('anual')}
             className="px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
-            style={{ background: periodo === 'anual' ? 'white' : 'transparent', color: periodo === 'anual' ? '#1A1A1C' : 'rgba(255,255,255,0.55)', border: 'none', cursor: 'pointer' }}>
+            style={{ background: periodo === 'anual' ? '#1A1A1C' : 'transparent', color: periodo === 'anual' ? 'white' : '#9AA0A6', border: 'none', cursor: 'pointer' }}>
             Anual
             <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: '#C9A65A', color: '#1A1A1C' }}>2 meses grátis</span>
           </button>
