@@ -103,7 +103,11 @@ export async function POST(request: Request) {
 
           if (novoPreco && subscriptionId) {
             const supabase = await createServiceClient()
-            await atualizarValorAssinatura(subscriptionId, novoPreco)
+            // Atualiza preço E external_reference no MP para que o cron leia o plano correto
+            const novoExtRef = novoPeriodo === 'anual'
+              ? `${userId}|${novoPlano}|periodo:anual`
+              : `${userId}|${novoPlano}`
+            await atualizarValorAssinatura(subscriptionId, novoPreco, novoExtRef)
             const limites = getLimites(novoPlano)
             await supabase.from('profiles').update({
               plano:             novoPlano,

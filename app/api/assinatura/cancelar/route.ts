@@ -33,10 +33,38 @@ export async function POST() {
     return NextResponse.json({ error: 'Erro ao cancelar no MercadoPago' }, { status: 500 })
   }
 
+  // Busca a assinatura para obter a data de fim do ciclo pago
+  const subRes = await fetch(`https://api.mercadopago.com/preapproval/${profile.mp_subscription_id}`, {
+    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` },
+  })
+
   const serviceClient = await createServiceClient()
-  await serviceClient.from('profiles').update({
-    status: 'expired',
-  }).eq('id', user.id)
+
+  if (subRes.ok) {
+    const sub = await subRes.json()
+    const proximaCobranca: string | null = sub.next_payment_date ?? sub.date_of_next_payment ?? null
+
+    if (proximaCobranca && new Date(proximaCobranca) > new Date()) {
+      // Mantém acesso até o fim do período já pago; cron expirar-trials encerra depois
+      await serviceClient.from('profiles').update({
+        mp_subscription_id: null,
+        acesso_ate:         new Date(proximaCobranca).toISOString(),
+      }).eq('id', user.id)
+    } else {
+      // Sem ciclo futuro: encerra imediatamente
+      await serviceClient.from('profiles').update({
+        status:             'expired',
+        mp_subscription_id: null,
+        acesso_ate:         null,
+      }).eq('id', user.id)
+    }
+  } else {
+    // Fallback: não sabe a data de fim, encerra imediatamente
+    await serviceClient.from('profiles').update({
+      status:             'expired',
+      mp_subscription_id: null,
+    }).eq('id', user.id)
+  }
 
   return NextResponse.json({ ok: true })
 }
