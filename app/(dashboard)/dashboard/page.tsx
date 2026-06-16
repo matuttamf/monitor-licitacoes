@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { removerRegiao } from '@/lib/regioes'
 import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
+import BannerPausa from '@/app/(dashboard)/components/BannerPausa'
 
 type Licitacao = {
   id: string
@@ -567,6 +568,10 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <BannerPausa />
+      </Suspense>
 
       {/* Painel ROI — só aparece se já tem alertas */}
       {roi && roi.totalAlertas > 0 && (
