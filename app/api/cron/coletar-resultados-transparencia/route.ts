@@ -28,7 +28,7 @@ const MAX_CONTRATOS    = 200
 const TAMANHO_PAGINA   = 200
 const JANELA_BACKFILL  = 14    // dias por execução — mais largo pois API é mais rápida
 const JANELA_CONTINUA  = 30
-const BACKFILL_INICIO  = '2020-01-01'   // Transparência tem histórico mais longo
+const BACKFILL_INICIO  = '2021-01-01'
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 const fmtIso   = (d: Date) => d.toISOString().slice(0, 10)

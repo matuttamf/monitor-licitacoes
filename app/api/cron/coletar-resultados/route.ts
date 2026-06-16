@@ -27,7 +27,7 @@ const MAX_PROCESSOS    = 50
 const TAMANHO_PAGINA   = 50    // API suporta até 500; 50 equilibra volume e latência
 const JANELA_BACKFILL  = 14    // dias por execução — completa backfill em ~15h com cron cada 10min
 const JANELA_CONTINUA  = 30    // dias para reprocessar em modo contínuo (cobre tardios)
-const BACKFILL_INICIO  = '2023-01-01'
+const BACKFILL_INICIO  = '2021-01-01'
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 const fmtIso = (d: Date) => d.toISOString().slice(0, 10)
