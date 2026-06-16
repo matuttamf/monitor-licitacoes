@@ -444,23 +444,23 @@ function buildLicitacoesHtml(lics: LicitacaoResumida[], ctaHref: string): string
       <td style="padding:12px 14px;background:${bg};border-bottom:1px solid #eee;vertical-align:top;">
         <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">${obj}</div>
         <div style="font-size:12px;color:#666;margin-bottom:4px;">${org}${est}</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          ${valor ? `<span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:700;">${valor}</span>` : ''}
-          ${data  ? `<span style="font-size:11px;color:#888;">📅 Abertura: ${data}</span>` : ''}
-        </div>
+        ${valor ? `<span style="display:inline-block;font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:700;margin-right:8px;">${valor}</span>` : ''}
+        ${data  ? `<span style="font-size:11px;color:#888;">📅 Abertura: ${data}</span>` : ''}
       </td>
     </tr>`
   }).join('')
   return `
-    <div style="margin:24px 0;">
-      <div style="font-size:12px;font-weight:800;color:#6B0F1A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">📋 Exemplos de licitações abertas no seu setor</div>
-      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;border-collapse:collapse;">
-        ${items}
-        <tr><td style="padding:10px 14px;background:#6B0F1A;text-align:center;">
-          <a href="${ctaHref}" style="font-size:12px;color:#C9A65A;font-weight:700;text-decoration:none;">Ver todas as licitações do seu setor →</a>
-        </td></tr>
-      </table>
-    </div>`
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr><td>
+        <div style="font-size:12px;font-weight:800;color:#6B0F1A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">📋 Exemplos de licitações abertas no seu setor</div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;border-collapse:collapse;">
+          ${items}
+          <tr><td style="padding:10px 14px;background:#6B0F1A;text-align:center;">
+            <a href="${ctaHref}" style="font-size:12px;color:#C9A65A;font-weight:700;text-decoration:none;">Ver todas as licitações do seu setor →</a>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>`
 }
 
 function buildLicitacoesTxt(lics: LicitacaoResumida[]): string {
@@ -477,14 +477,33 @@ function buildLicitacoesTxt(lics: LicitacaoResumida[]): string {
 function buildObjetoHtml(objeto: string, nome: string): string {
   const obj = objeto.length > 120 ? objeto.slice(0, 120) + '…' : objeto
   return `
-    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;">
-      <div style="font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">📋 Por que estamos entrando em contato com você</div>
-      <p style="margin:0;font-size:14px;color:#0c4a6e;line-height:1.6;">
-        Identificamos que <strong>${nome}</strong> participou de um processo licitatório com o objeto:<br>
-        <em style="color:#075985;">"${obj}"</em><br><br>
-        Isso confirma que sua empresa já fornece para o setor público — e que provavelmente há contratos similares abertos agora que você ainda não viu.
-      </p>
-    </div>`
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:0 8px 8px 0;margin:20px 0;">
+      <tr><td style="padding:16px 20px;">
+        <div style="font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">📋 Por que estamos entrando em contato com você</div>
+        <p style="margin:0;font-size:14px;color:#0c4a6e;line-height:1.6;">
+          Identificamos que <strong>${nome}</strong> participou de um processo licitatório com o objeto:<br>
+          <em style="color:#075985;">"${obj}"</em><br><br>
+          Isso confirma que sua empresa já fornece para o setor público — e que provavelmente há contratos similares abertos agora que você ainda não viu.
+        </p>
+      </td></tr>
+    </table>`
+}
+
+// Estilos inline para boxes usados no conteúdo das variantes
+export const BOX = {
+  pain:      'background:#fff8f8;border:1px solid #fcd5d5;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;',
+  painP:     'margin:0;font-size:14px;color:#7f1d1d;line-height:1.65;',
+  insight:   'background:#fafaf7;border:1px solid #e5e2d8;border-radius:8px;padding:18px 22px;margin:20px 0;',
+  insightP:  'margin:0;font-size:14px;color:#3a3730;line-height:1.7;',
+  story:     'background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:20px 24px;margin:20px 0;',
+  storyLabel:'font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;',
+  storyP:    'margin:0;font-size:14px;color:#0c4a6e;line-height:1.7;',
+  transform: 'background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin:20px 0;',
+  transformL:'font-size:11px;font-weight:800;color:#166534;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;',
+  transformP:'margin:0;font-size:14px;color:#14532d;line-height:1.7;',
+  objection: 'border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin:14px 0;',
+  objQ:      'font-size:14px;font-style:italic;color:#374151;font-weight:600;margin-bottom:8px;',
+  objA:      'font-size:14px;color:#4b5563;line-height:1.6;margin:0;',
 }
 
 function wrapEmail(opts: {
@@ -492,78 +511,75 @@ function wrapEmail(opts: {
   conteudo: string; ctaHref: string; ctaTexto: string
   ps: string; pixelTag: string; url: string; unsub: string
 }): string {
-  const cidadeSpan = opts.cidade
-    ? ` — <span style="font-size:15px;color:#6B0F1A;font-weight:600;">${opts.cidade}</span>`
-    : ''
+  const cidadeStr = opts.cidade ? ` — <span style="color:#6B0F1A;font-weight:600;">${opts.cidade}</span>` : ''
   return `<!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${opts.subject}</title>
-<style>
-  *{box-sizing:border-box}
-  body{margin:0;padding:0;background:#f0ede8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}
-  .wrap{max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10)}
-  .hdr{background:linear-gradient(135deg,#6B0F1A 0%,#8B1525 100%);padding:28px 40px 22px}
-  .logo-row{display:flex;align-items:center;gap:12px}
-  .logo-badge{background:#C9A65A;color:#6B0F1A;font-size:13px;font-weight:900;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .logo-text{color:#fff;font-size:15px;font-weight:700}
-  .logo-sub{color:rgba(255,255,255,.55);font-size:11px;margin-top:1px}
-  .body{padding:36px 40px 28px}
-  .greeting{font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px;line-height:1.3}
-  p{margin:0 0 16px;font-size:15px;line-height:1.75;color:#3a3a3a}
-  strong{color:#1a1a1a}
-  em{font-style:italic}
-  .pain-box{background:#fff8f8;border:1px solid #fcd5d5;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0}
-  .pain-box p{margin:0;font-size:14px;color:#7f1d1d;line-height:1.65}
-  .insight-box{background:#fafaf7;border:1px solid #e5e2d8;border-radius:8px;padding:18px 22px;margin:20px 0}
-  .insight-box p{margin:0;font-size:14px;color:#3a3730;line-height:1.7}
-  .story-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:20px 24px;margin:20px 0}
-  .story-label{font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
-  .story-box p{margin:0;font-size:14px;color:#0c4a6e;line-height:1.7}
-  .transform-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin:20px 0}
-  .transform-label{font-size:11px;font-weight:800;color:#166534;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
-  .transform-box p{margin:0;font-size:14px;color:#14532d;line-height:1.7}
-  .objection{border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin:14px 0}
-  .obj-q{font-size:14px;font-style:italic;color:#374151;font-weight:600;margin-bottom:8px}
-  .obj-a{font-size:14px;color:#4b5563;line-height:1.6;margin:0}
-  .cta-section{background:linear-gradient(135deg,#6B0F1A 0%,#8B1525 100%);border-radius:12px;padding:28px 32px;margin:28px 0;text-align:center}
-  .cta-pre{color:rgba(255,255,255,.8);font-size:13px;margin:0 0 16px}
-  .cta-btn{display:inline-block;background:#C9A65A;color:#6B0F1A!important;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:16px;font-weight:900;letter-spacing:.02em}
-  .cta-sub{color:rgba(255,255,255,.65);font-size:12px;margin:12px 0 0}
-  .ps-box{background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0}
-  .ps-box p{margin:0;font-size:13px;color:#78350f;line-height:1.6}
-  .footer{padding:20px 40px;border-top:1px solid #eee;text-align:center;background:#fafafa}
-  .footer p{font-size:11px;color:#bbb;margin:0;line-height:1.8}
-  .footer a{color:#bbb;text-decoration:underline}
-  @media(max-width:600px){.body,.hdr,.footer{padding-left:22px!important;padding-right:22px!important}.cta-section{padding:22px 18px}.cta-btn{padding:14px 28px!important;font-size:15px!important}}
-</style>
-</head>
-<body><div class="wrap">
-  <div class="hdr">
-    <div class="logo-row">
-      <div class="logo-badge">ML</div>
-      <div><div class="logo-text">Monitor de Licitações</div><div class="logo-sub">Inteligência em licitações públicas</div></div>
-    </div>
-  </div>
-  <div class="body">
-    <p class="greeting">Olá, <strong>${opts.nome}</strong>${cidadeSpan} —</p>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:32px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="background:white;border-radius:14px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+  <!-- Header -->
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="width:36px;height:36px;background:#C9A65A;border-radius:8px;text-align:center;vertical-align:middle;" valign="middle">
+          <span style="color:#6B0F1A;font-weight:900;font-size:13px;">ML</span>
+        </td>
+        <td style="padding-left:12px;">
+          <div style="color:white;font-size:15px;font-weight:700;">Monitor de Licitações</div>
+          <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:1px;">Inteligência em licitações públicas</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Linha dourada -->
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+
+  <!-- Corpo -->
+  <tr><td style="padding:36px 40px 28px;">
+    <p style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px;line-height:1.3;">Olá, <strong>${opts.nome}</strong>${cidadeStr} —</p>
     ${opts.conteudo}
-    <div class="cta-section">
-      <p class="cta-pre">Trial gratuito de 7 dias · Sem cartão · Sem compromisso</p>
-      <a href="${opts.ctaHref}" class="cta-btn">${opts.ctaTexto}</a>
-      <p class="cta-sub">✓ Alertas no mesmo dia &nbsp;·&nbsp; ✓ E-mail + Telegram &nbsp;·&nbsp; ✓ Suporte incluso</p>
-    </div>
-    <div class="ps-box"><p>${opts.ps}</p></div>
-    <p style="font-size:13px;color:#888;margin-top:8px;">Responda este e-mail para falar com nossa equipe — retornamos em até 1 dia útil.</p>
-  </div>
-  <div class="footer">
-    <p><strong>Monitor de Licitações</strong> · Matutta Soluções Digitais<br>
-    Você recebeu este e-mail porque <strong>${opts.nome}</strong> consta como fornecedora em contratos públicos no PNCP.<br>
-    Não quer mais receber? <a href="${opts.url}/descadastrar?token=${opts.unsub}">Clique aqui para se descadastrar</a></p>
-  </div>
-  ${opts.pixelTag}
-</div></body></html>`
+
+    <!-- CTA block -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:12px;margin:28px 0;">
+      <tr><td style="padding:28px 32px;" align="center">
+        <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0 0 16px;">Trial gratuito de 7 dias · Sem cartão · Sem compromisso</p>
+        <a href="${opts.ctaHref}" style="display:inline-block;background:#C9A65A;color:#6B0F1A;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:16px;font-weight:900;letter-spacing:0.02em;">${opts.ctaTexto}</a>
+        <p style="color:rgba(255,255,255,0.65);font-size:12px;margin:12px 0 0;">✓ Alertas no mesmo dia &nbsp;·&nbsp; ✓ E-mail + Telegram &nbsp;·&nbsp; ✓ Suporte incluso</p>
+      </td></tr>
+    </table>
+
+    <!-- PS -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;margin:20px 0;">
+      <tr><td style="padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#78350f;line-height:1.6;">${opts.ps}</p>
+      </td></tr>
+    </table>
+
+    <p style="font-size:13px;color:#888;margin:8px 0 0;">Responda este e-mail para falar com nossa equipe — retornamos em até 1 dia útil.</p>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:20px 40px;border-top:1px solid #eee;text-align:center;background:#fafafa;">
+    <p style="font-size:11px;color:#bbb;margin:0;line-height:1.8;">
+      <strong style="color:#bbb;">Monitor de Licitações</strong> · Matutta Soluções Digitais<br>
+      Você recebeu este e-mail porque <strong style="color:#bbb;">${opts.nome}</strong> consta como fornecedora em contratos públicos no PNCP.<br>
+      Não quer mais receber? <a href="${opts.url}/descadastrar?token=${opts.unsub}" style="color:#bbb;text-decoration:underline;">Clique aqui para se descadastrar</a>
+    </p>
+  </td></tr>
+
+  <!-- Barra final -->
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+
+</table>
+</td></tr>
+</table>
+${opts.pixelTag}
+</body>
+</html>`
 }
 
 // ─── Exportação principal ─────────────────────────────────────────────────────
@@ -599,13 +615,13 @@ export function emailCaptacao(p: ParamsCaptacao) {
 
     const conteudo = `
       ${objetoHtml}
-      <div class="pain-box">
-        <p>${copy.perda}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.pain}"><tr><td>
+        <p style="${BOX.painP}">${copy.perda}</p>
+      </td></tr></table>
       <p>${copy.agitacao}</p>
-      <div class="insight-box">
-        <p><strong>O tamanho do mercado que está sendo licitado:</strong><br><br>${copy.dadoMercado}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.insight}"><tr><td>
+        <p style="${BOX.insightP}"><strong>O tamanho do mercado que está sendo licitado:</strong><br><br>${copy.dadoMercado}</p>
+      </td></tr></table>
       <p>${copy.razaoContato}</p>
       <p>O Monitor de Licitações monitora 7+ portais simultaneamente — PNCP, ComprasNet, BLL, Licitações-e, Diários Oficiais estaduais e mais — e envia alertas no momento em que um edital compatível com o seu perfil é publicado.</p>
       <p style="font-size:14px;color:#555;text-align:center;margin:4px 0 20px;">Empresas que monitoram participam de 5 a 10x mais licitações. Sem aumentar equipe. Sem mudar produto.</p>
@@ -621,14 +637,14 @@ export function emailCaptacao(p: ParamsCaptacao) {
   if (num === 2) {
     const subject  = copy.subject2.replace('{{NOME}}', nome)
     const conteudo = `
-      <div class="story-box">
-        <div class="story-label">🔍 O que está acontecendo agora no seu setor</div>
-        <p>${copy.competidor}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.story}"><tr><td>
+        <div style="${BOX.storyLabel}">🔍 O que está acontecendo agora no seu setor</div>
+        <p style="${BOX.storyP}">${copy.competidor}</p>
+      </td></tr></table>
       <p>${copy.dadoConcreto}</p>
-      <div class="pain-box">
-        <p>${copy.fomo}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.pain}"><tr><td>
+        <p style="${BOX.painP}">${copy.fomo}</p>
+      </td></tr></table>
       <p>O trial gratuito de 7 dias mostra exatamente o que está sendo licitado no seu setor — em tempo real. <a href="${ctaHref}" style="color:#6B0F1A;font-weight:700;">Acesse e veja os alertas dos últimos dias →</a></p>
       ${buildLicitacoesHtml(lics, ctaHref)}`
 
@@ -643,17 +659,17 @@ export function emailCaptacao(p: ParamsCaptacao) {
     const conteudo = `
       <p>Até agora falei sobre o que está sendo licitado no seu setor — e sobre o que acontece com quem monitora versus quem não monitora.</p>
       <p>Hoje quero te mostrar um caso concreto.</p>
-      <div class="story-box">
-        <div class="story-label">📋 A situação antes</div>
-        <p>${copy.antes}</p>
-      </div>
-      <div class="insight-box">
-        <p><strong>O que mudou:</strong><br><br>${copy.virada}</p>
-      </div>
-      <div class="transform-box">
-        <div class="transform-label">✅ O resultado</div>
-        <p>${copy.depois}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.story}"><tr><td>
+        <div style="${BOX.storyLabel}">📋 A situação antes</div>
+        <p style="${BOX.storyP}">${copy.antes}</p>
+      </td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.insight}"><tr><td>
+        <p style="${BOX.insightP}"><strong>O que mudou:</strong><br><br>${copy.virada}</p>
+      </td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.transform}"><tr><td>
+        <div style="${BOX.transformL}">✅ O resultado</div>
+        <p style="${BOX.transformP}">${copy.depois}</p>
+      </td></tr></table>
       <p>O que mudou não foi o produto, a equipe ou o preço. Foi o número de oportunidades que chegaram a tempo de participar.</p>
       <p style="text-align:center;margin:8px 0 24px;"><a href="${ctaHref}" style="color:#6B0F1A;font-weight:700;font-size:15px;">→ Quero ver o que está sendo licitado no meu setor (7 dias grátis)</a></p>
       ${buildLicitacoesHtml(lics, ctaHref)}`
@@ -669,18 +685,18 @@ export function emailCaptacao(p: ParamsCaptacao) {
     const conteudo = `
       <p>Enviei alguns e-mails nos últimos dias sobre o mercado público no seu setor. Ainda não ativou o trial.</p>
       <p>Isso costuma acontecer por uma das três razões abaixo. Vou responder cada uma:</p>
-      <div class="objection">
-        <div class="obj-q">❶ ${copy.objecao1}</div>
-        <div class="obj-a">${copy.resp1}</div>
-      </div>
-      <div class="objection">
-        <div class="obj-q">❷ ${copy.objecao2}</div>
-        <div class="obj-a">${copy.resp2}</div>
-      </div>
-      <div class="objection">
-        <div class="obj-q">❸ ${copy.objecao3}</div>
-        <div class="obj-a">${copy.resp3}</div>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.objection}"><tr><td>
+        <div style="${BOX.objQ}">❶ ${copy.objecao1}</div>
+        <div style="${BOX.objA}">${copy.resp1}</div>
+      </td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.objection}"><tr><td>
+        <div style="${BOX.objQ}">❷ ${copy.objecao2}</div>
+        <div style="${BOX.objA}">${copy.resp2}</div>
+      </td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.objection}"><tr><td>
+        <div style="${BOX.objQ}">❸ ${copy.objecao3}</div>
+        <div style="${BOX.objA}">${copy.resp3}</div>
+      </td></tr></table>
       <p>Se não foi nenhuma dessas três, responda este e-mail e me diz o que está segurando — vejo o que consigo resolver.</p>
       <p>O trial de 7 dias é gratuito, sem cartão, sem compromisso. Se não funcionar para o seu caso, você cancela e não custa nada. <a href="${ctaHref}" style="color:#6B0F1A;font-weight:700;">Ativar agora →</a></p>`
 
@@ -694,10 +710,10 @@ export function emailCaptacao(p: ParamsCaptacao) {
     const subject  = copy.subject5.replace('{{NOME}}', nome)
     const conteudo = `
       <p>Tem um caso novo que quero compartilhar.</p>
-      <div class="transform-box">
-        <div class="transform-label">📈 Resultado real</div>
-        <p>${copy.novoCaso}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.transform}"><tr><td>
+        <div style="${BOX.transformL}">📈 Resultado real</div>
+        <p style="${BOX.transformP}">${copy.novoCaso}</p>
+      </td></tr></table>
       <p>O ponto não é que todo mundo vai ter o mesmo resultado. O ponto é que, sem monitoramento, você nem chega a participar dos processos que fazem sentido.</p>
       <p>O trial de 7 dias ainda está disponível — sem cartão, sem compromisso. <a href="${ctaHref}" style="color:#6B0F1A;font-weight:700;">Acessar gratuitamente →</a></p>
       ${buildLicitacoesHtml(lics, ctaHref)}`
@@ -711,9 +727,9 @@ export function emailCaptacao(p: ParamsCaptacao) {
   if (num === 6) {
     const subject  = copy.subject6.replace('{{NOME}}', nome)
     const conteudo = `
-      <div class="pain-box">
-        <p>${copy.urgenciaReal}</p>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="${BOX.pain}"><tr><td>
+        <p style="${BOX.painP}">${copy.urgenciaReal}</p>
+      </td></tr></table>
       <p>Faz dois meses que enviei o primeiro e-mail sobre o mercado público no seu setor.</p>
       <p>Nesse período, centenas de editais compatíveis com o seu perfil abriram e fecharam. Alguns valeriam proposta. Outros não. Mas você não teve como escolher — porque não recebeu os alertas.</p>
       <p>O trial de 7 dias não custa nada e não pede cartão. Em uma semana, você vê em tempo real o que está sendo licitado no seu setor — e decide se vale continuar. <a href="${ctaHref}" style="color:#6B0F1A;font-weight:700;">Ativar agora →</a></p>`

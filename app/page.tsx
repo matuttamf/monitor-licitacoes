@@ -557,7 +557,7 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-[44px] font-black tracking-tight mb-3 text-[#1A1A1C]">
               A partir de R$1,66 por dia para nunca mais perder um contrato.
             </h2>
-            <p className="text-base md:text-[17px] text-[#9AA0A6] max-w-[560px] mx-auto">
+            <p className="text-base md:text-[17px] text-[#9AA0A6] max-w-[700px] mx-auto md:whitespace-nowrap">
               Escolha o plano ideal. Comece com 7 dias grátis — sem cartão de crédito.
             </p>
           </div>

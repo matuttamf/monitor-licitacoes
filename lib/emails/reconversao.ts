@@ -1,29 +1,16 @@
-/**
- * E-mail de reconversão — usuários que testaram e não assinaram
- * Gatilhos usados:
- *  - Perda (loss aversion): "você estava a um passo de nunca mais perder um edital"
- *  - Escassez: "seus concorrentes já estão monitorando"
- *  - Identidade: "empresas que participam ativamente de licitações…"
- *  - Reciprocidade: "você já conhece o sistema — não precisa aprender nada novo"
- *  - Urgência real: editais publicados desde que o trial expirou
- *  - Facilidade: "um clique para reativar"
- *  - Social proof: volume de alertas enviados no sistema
- */
-
 interface ParamsReconversao {
   nome?: string
   email: string
-  diasExpirado: number    // há quantos dias o trial expirou
+  diasExpirado: number
   appUrl?: string
 }
 
 export function emailReconversao(p: ParamsReconversao) {
   const nome = p.nome ? p.nome.split(' ')[0] : 'olá'
   const dias = p.diasExpirado
-  const url = (p.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
+  const url  = (p.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
   const checkoutUrl = `${url}/assinar?utm_source=reconversao&utm_medium=email&utm_campaign=trial_expirado&utm_content=${dias}d`
 
-  // Headline muda conforme urgência
   const headline = dias <= 3
     ? `${nome}, seu acesso expirou — mas os editais não param`
     : dias <= 7
@@ -36,94 +23,119 @@ export function emailReconversao(p: ParamsReconversao) {
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${subject}</title>
-<style>
-  body { margin:0; padding:0; background:#f5f3ef; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
-  .wrap { max-width:560px; margin:40px auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 2px 16px rgba(0,0,0,0.07); }
-  .header { background:#1a1a1c; padding:36px 40px 28px; text-align:center; position:relative; }
-  .logo { color:#C9A65A; font-size:22px; font-weight:900; letter-spacing:0.1em; }
-  .badge { display:inline-block; background:rgba(239,68,68,0.15); color:#ef4444; font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px; margin-top:10px; letter-spacing:0.05em; border:1px solid rgba(239,68,68,0.3); }
-  .body { padding:36px 40px; }
-  h1 { margin:0 0 20px; font-size:21px; font-weight:800; color:#1a1a1a; line-height:1.3; }
-  p { margin:0 0 16px; font-size:15px; line-height:1.65; color:#444; }
-  strong { color:#1a1a1a; }
-  .highlight { color:#6B0F1A; font-weight:700; }
-  .loss-box { background:#fff8f0; border:1px solid rgba(239,68,68,0.2); border-left:4px solid #ef4444; border-radius:0 10px 10px 0; padding:16px 20px; margin:24px 0; }
-  .loss-box p { margin:0; font-size:14px; color:#333; }
-  .benefits { margin:20px 0; padding:0; list-style:none; }
-  .benefits li { font-size:14px; color:#333; margin-bottom:10px; padding-left:28px; position:relative; line-height:1.5; }
-  .benefits li::before { content:'✓'; position:absolute; left:0; color:#10b981; font-weight:700; }
-  .cta-wrap { text-align:center; margin:32px 0 8px; }
-  .cta { display:inline-block; background:#6B0F1A; color:#fff !important; text-decoration:none; padding:18px 40px; border-radius:50px; font-size:16px; font-weight:800; letter-spacing:0.02em; }
-  .sub { font-size:12px; color:#999; text-align:center; margin-top:10px; }
-  .ps { font-size:13px; color:#666; font-style:italic; margin-top:24px; padding-top:20px; border-top:1px solid #f0f0f0; }
-  .footer { background:#f9f9f9; padding:20px 40px; border-top:1px solid #eee; text-align:center; }
-  .footer p { font-size:12px; color:#aaa; margin:0; line-height:1.6; }
-  .footer a { color:#aaa; }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">
-    <div class="logo">ML</div>
-    <div class="badge">⚠ TRIAL EXPIRADO HÁ ${dias} DIA${dias === 1 ? '' : 'S'}</div>
-  </div>
-  <div class="body">
-    <h1>${headline}</h1>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
 
-    <p>
-      Durante seus 7 dias de trial, você viu como funciona: palavras-chave definidas,
-      alertas chegando em tempo real, editais encontrados antes que qualquer concorrente.
+  <!-- Header -->
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+          <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+        </td>
+        <td style="padding-left:12px;">
+          <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br>
+          <span style="color:rgba(255,255,255,0.45);font-size:12px;">Matutta</span>
+        </td>
+        <td align="right">
+          <span style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:99px;padding:4px 12px;color:#fca5a5;font-size:11px;font-weight:700;">⚠ TRIAL EXPIRADO HÁ ${dias} DIA${dias === 1 ? '' : 'S'}</span>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Linha dourada -->
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+
+  <!-- Corpo -->
+  <tr><td style="padding:40px 40px 0;">
+    <h1 style="color:#1A1A1C;font-size:22px;font-weight:700;margin:0 0 20px;line-height:1.3;">${headline}</h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Durante seus 7 dias de trial, você viu como funciona: palavras-chave definidas, alertas chegando em tempo real, editais encontrados antes que qualquer concorrente.
     </p>
+  </td></tr>
 
-    <div class="loss-box">
-      <p>
-        📊 <strong>Desde que seu acesso expirou, centenas de novos editais foram publicados no Brasil.</strong>
-        Alguns deles eram exatamente o perfil da sua empresa — e foram para outro fornecedor.
-      </p>
-    </div>
+  <!-- Caixa de perda -->
+  <tr><td style="padding:0 40px 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f8;border:1px solid rgba(239,68,68,0.2);border-left:4px solid #ef4444;border-radius:0 10px 10px 0;">
+      <tr><td style="padding:16px 20px;">
+        <p style="color:#7f1d1d;font-size:14px;margin:0;line-height:1.65;">
+          📊 <strong style="color:#7f1d1d;">Desde que seu acesso expirou, centenas de novos editais foram publicados no Brasil.</strong>
+          Alguns deles eram exatamente o perfil da sua empresa — e foram para outro fornecedor.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
 
-    <p>
-      A pergunta não é se haverá licitações para você.
-      A pergunta é: <strong>quem vai chegar primeiro?</strong>
+  <tr><td style="padding:0 40px 20px;">
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      A pergunta não é se haverá licitações para você. A pergunta é: <strong style="color:#1A1A1C;">quem vai chegar primeiro?</strong>
     </p>
-
-    <p>
-      Você já fez a parte difícil — aprendeu o sistema, configurou suas palavras-chave.
-      Agora é só <span class="highlight">reativar com um clique</span> e voltar a receber alertas.
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0;">
+      Você já fez a parte difícil — aprendeu o sistema, configurou suas palavras-chave. Agora é só <strong style="color:#6B0F1A;">reativar com um clique</strong> e voltar a receber alertas.
     </p>
+  </td></tr>
 
-    <ul class="benefits">
-      <li><strong>Plano Basic a partir de R$ 49,90/mês</strong> — menos que uma hora de consultoria</li>
-      <li><strong>Monitoramento 24/7</strong> de mais de 346 fontes nacionais</li>
-      <li><strong>Alertas por e-mail + Telegram</strong> no instante que o edital sai</li>
-      <li><strong>Filtragem inteligente</strong> — só os editais relevantes para você</li>
-      <li><strong>Cancele quando quiser</strong> — sem multa, sem burocracia</li>
-    </ul>
+  <!-- Benefícios -->
+  <tr><td style="padding:0 40px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:16px 20px 8px;">
+        ${[
+          ['Plano Basic a partir de R$ 49,90/mês', 'menos que uma hora de consultoria'],
+          ['Monitoramento 24/7', 'de mais de 346 fontes nacionais'],
+          ['Alertas por e-mail + Telegram', 'no instante que o edital sai'],
+          ['Cancele quando quiser', 'sem multa, sem burocracia'],
+        ].map(([titulo, desc]) => `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+          <tr>
+            <td style="width:20px;color:#10b981;font-weight:700;font-size:14px;vertical-align:top;padding-top:2px;">✓</td>
+            <td style="font-size:14px;color:#1A1A1C;padding-left:8px;"><strong>${titulo}</strong> — ${desc}</td>
+          </tr>
+        </table>`).join('')}
+      </td></tr>
+    </table>
+  </td></tr>
 
-    <div class="cta-wrap">
-      <a href="${checkoutUrl}" class="cta">Reativar meu acesso agora →</a>
-      <p class="sub">Ativação imediata · Cancele quando quiser · Sem contrato</p>
-    </div>
+  <!-- CTA -->
+  <tr><td style="padding:0 40px 32px;" align="center">
+    <a href="${checkoutUrl}"
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:18px 44px;border-radius:50px;font-size:16px;font-weight:800;letter-spacing:0.02em;">
+      Reativar meu acesso agora →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:10px 0 0;">Ativação imediata · Cancele quando quiser · Sem contrato</p>
+  </td></tr>
 
-    <p class="ps">
-      P.S.: Empresas que monitoram licitações ativamente ganham em média
-      <strong>3× mais contratos</strong> do que as que buscam manualmente.
-      Cada dia sem monitoramento é um edital que pode ir para o concorrente.
+  <!-- PS -->
+  <tr><td style="padding:0 40px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-left:3px solid #C9A65A;">
+      <tr><td style="padding:12px 16px;">
+        <p style="color:#78350f;font-size:13px;line-height:1.6;margin:0;font-style:italic;">
+          P.S.: Empresas que monitoram licitações ativamente ganham em média <strong style="color:#78350f;">3× mais contratos</strong> do que as que buscam manualmente. Cada dia sem monitoramento é um edital que pode ir para o concorrente.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações · Matutta<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
+      <a href="${url}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
+      &nbsp;·&nbsp;
+      <a href="${url}/descadastrar?email=${encodeURIComponent(p.email)}" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Descadastrar</a>
     </p>
-  </div>
-  <div class="footer">
-    <p>
-      Monitor de Licitações · Matutta Soluções Digitais<br>
-      Este e-mail foi enviado para ${p.email} porque você criou uma conta no Monitor de Licitações.<br>
-      <a href="${url}/auth/update-password">Acessar minha conta</a> ·
-      <a href="${url}/descadastrar?email=${encodeURIComponent(p.email)}">Descadastrar</a>
-    </p>
-  </div>
-</div>
+  </td></tr>
+
+  <!-- Barra final -->
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+
+</table>
+</td></tr>
+</table>
 </body>
 </html>`
 
@@ -140,7 +152,7 @@ ${checkoutUrl}
 Plano Basic a partir de R$ 49,90/mês · Cancele quando quiser
 
 --
-Monitor de Licitações · Matutta Soluções Digitais
+Monitor de Licitações · Matutta
 Descadastrar: ${url}/descadastrar?email=${encodeURIComponent(p.email)}`
 
   return { subject, html, text }

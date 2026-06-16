@@ -1,3 +1,13 @@
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://monitordelicitacoes.com.br'
+
+const NOMES_PLANO: Record<string, string> = {
+  basic:        'Basic',
+  profissional: 'Profissional',
+  gestao:       'Gestão',
+  pro:          'Gestão',
+  empresarial:  'Empresarial',
+}
+
 interface ParamsConfirmacao {
   nome?: string
   email: string
@@ -6,106 +16,130 @@ interface ParamsConfirmacao {
   appUrl?: string
 }
 
-const NOMES_PLANO: Record<string, string> = {
-  basic:        'Basic',
-  profissional: 'Profissional',
-  gestao:       'Gestão',
-  pro:          'Gestão',  // retrocompatibilidade
-  empresarial:  'Empresarial',
-}
-
 export function emailConfirmacaoAssinatura(p: ParamsConfirmacao) {
   const nome  = p.nome ? p.nome.split(' ')[0] : 'olá'
   const plano = NOMES_PLANO[p.plano] ?? p.plano
-  const url   = (p.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
+  const url   = (p.appUrl ?? APP_URL).replace(/\/$/, '')
   const valor = p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-  const subject = `✅ Assinatura ativa — Bem-vindo ao Monitor de Licitações!`
+  const subject = `✅ Assinatura ativa — Bem-vindo ao plano ${plano}!`
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body { margin:0; padding:0; background:#f5f3ef; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
-  .wrap { max-width:560px; margin:40px auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 2px 16px rgba(0,0,0,0.07); }
-  .header { background:#6B0F1A; padding:36px 40px 28px; text-align:center; }
-  .logo { color:#C9A65A; font-size:22px; font-weight:900; letter-spacing:0.1em; }
-  .check { width:56px; height:56px; background:rgba(201,166,90,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:16px auto 0; }
-  .body { padding:36px 40px; }
-  h1 { margin:0 0 8px; font-size:22px; font-weight:800; color:#1a1a1a; }
-  p  { margin:0 0 16px; font-size:15px; line-height:1.65; color:#444; }
-  .box { background:#fdf9f0; border:1px solid rgba(201,166,90,0.3); border-radius:12px; padding:20px 24px; margin:24px 0; }
-  .box-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(201,166,90,0.15); }
-  .box-row:last-child { border-bottom:none; }
-  .box-label { font-size:13px; color:#666; }
-  .box-value { font-size:13px; font-weight:700; color:#1a1a1a; }
-  .cta-wrap { text-align:center; margin:28px 0 16px; }
-  .cta { display:inline-block; background:#6B0F1A; color:#fff !important; text-decoration:none; padding:16px 36px; border-radius:50px; font-size:15px; font-weight:700; }
-  .tips { background:#f9f9f9; border-radius:12px; padding:20px 24px; margin:16px 0; }
-  .tips h3 { margin:0 0 12px; font-size:13px; font-weight:700; color:#6B0F1A; text-transform:uppercase; letter-spacing:0.05em; }
-  .tips li { font-size:13px; color:#444; margin-bottom:8px; line-height:1.5; }
-  .footer { background:#f9f9f9; padding:20px 40px; border-top:1px solid #eee; text-align:center; }
-  .footer p { font-size:12px; color:#aaa; margin:0; line-height:1.6; }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">
-    <div class="logo">ML</div>
-    <div class="check">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9A65A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    </div>
-  </div>
-  <div class="body">
-    <h1>${nome}, sua assinatura está ativa! 🎉</h1>
-    <p>
-      Obrigado por assinar o Monitor de Licitações. Seu acesso ao plano <strong>${plano}</strong> foi ativado com sucesso e você já pode monitorar licitações em todo o Brasil.
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+
+  <!-- Header -->
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+          <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+        </td>
+        <td style="padding-left:12px;">
+          <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br>
+          <span style="color:rgba(255,255,255,0.45);font-size:12px;">Confirmação de Assinatura</span>
+        </td>
+        <td align="right">
+          <span style="background:rgba(201,166,90,0.15);border:1px solid rgba(201,166,90,0.3);border-radius:99px;padding:4px 12px;color:#C9A65A;font-size:11px;font-weight:700;">✓ ATIVA</span>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Linha dourada -->
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+
+  <!-- Hero -->
+  <tr><td style="padding:40px 40px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Assinatura confirmada</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      ${nome}, seu plano <span style="color:#6B0F1A;font-style:italic;">${plano}</span><br>está ativo agora!
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Obrigado por assinar o Monitor de Licitações. Seu acesso está liberado e você já pode monitorar licitações em todo o Brasil.
     </p>
+  </td></tr>
 
-    <div class="box">
-      <div class="box-row">
-        <span class="box-label">Plano</span>
-        <span class="box-value">${plano}</span>
-      </div>
-      <div class="box-row">
-        <span class="box-label">Cobrança mensal</span>
-        <span class="box-value">${valor}/mês</span>
-      </div>
-      <div class="box-row">
-        <span class="box-label">Status</span>
-        <span class="box-value" style="color:#10b981">✓ Ativo</span>
-      </div>
-    </div>
+  <!-- Detalhes da assinatura -->
+  <tr><td style="padding:0 40px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:16px 24px 0;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Resumo da assinatura</div>
+      </td></tr>
+      ${[
+        ['Plano', plano],
+        ['Cobrança mensal', `${valor}/mês`],
+        ['Status', '✓ Ativo'],
+      ].map(([label, valor]) => `
+      <tr><td style="padding:10px 24px;border-bottom:1px solid #E8E4DC;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="color:#9AA0A6;font-size:13px;">${label}</td>
+            <td align="right" style="color:#1A1A1C;font-size:13px;font-weight:600;">${valor}</td>
+          </tr>
+        </table>
+      </td></tr>`).join('')}
+      <tr><td style="height:8px;"></td></tr>
+    </table>
+  </td></tr>
 
-    <div class="tips">
-      <h3>Primeiros passos</h3>
-      <ul style="margin:0; padding-left:16px;">
-        <li><strong>Configure suas palavras-chave</strong> — quanto mais específicas, melhores os alertas</li>
-        <li><strong>Ative o Telegram</strong> — receba notificações instantâneas no seu celular</li>
-        <li><strong>Defina sua região</strong> — filtre por estado para focar onde sua empresa atua</li>
-      </ul>
-    </div>
+  <!-- Primeiros passos -->
+  <tr><td style="padding:0 40px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:20px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">Primeiros passos</div>
+      </td></tr>
+      ${[
+        ['Configure suas palavras-chave', 'Quanto mais específicas, melhores os alertas para o seu negócio.'],
+        ['Ative o Telegram', 'Receba notificações instantâneas no celular, além do e-mail.'],
+        ['Explore o painel', 'Busque editais, veja o histórico e personalize seus filtros.'],
+      ].map(([titulo, desc], i) => `
+      <tr><td style="padding:0 24px 16px;">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">${i + 1}</td>
+            <td style="padding-left:14px;vertical-align:top;">
+              <div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">${titulo}</div>
+              <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">${desc}</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>`).join('')}
+    </table>
+  </td></tr>
 
-    <div class="cta-wrap">
-      <a href="${url}/dashboard" class="cta">Acessar meu painel →</a>
-    </div>
-
-    <p style="font-size:13px; color:#666;">
-      Dúvidas? Responda este e-mail ou acesse seu painel. Nossa equipe retorna em até 1 dia útil.
+  <!-- CTA -->
+  <tr><td style="padding:0 40px 40px;" align="center">
+    <a href="${url}/dashboard"
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
+      Acessar meu painel →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">Fale pelo WhatsApp</a>
     </p>
-  </div>
-  <div class="footer">
-    <p>Monitor de Licitações · Matutta Soluções Digitais<br>
-    E-mail enviado para ${p.email}<br>
-    <a href="${url}/perfil" style="color:#aaa;">Gerenciar preferências de e-mail</a>
-    &nbsp;·&nbsp;
-    <a href="${url}/descadastrar?email=${encodeURIComponent(p.email)}" style="color:#aaa;">Descadastrar</a></p>
-  </div>
-</div>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações · Matutta<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
+      <a href="${url}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
+      &nbsp;·&nbsp;
+      <a href="${url}/descadastrar?email=${encodeURIComponent(p.email)}" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Descadastrar</a>
+    </p>
+  </td></tr>
+
+  <!-- Barra final -->
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+
+</table>
+</td></tr>
+</table>
 </body>
 </html>`
 
@@ -120,9 +154,9 @@ Acesse seu painel: ${url}/dashboard
 Primeiros passos:
 - Configure suas palavras-chave
 - Ative o Telegram para notificações instantâneas
-- Defina sua região de atuação
+- Explore o painel e personalize seus filtros
 
-Dúvidas? Responda este e-mail.
+Dúvidas? WhatsApp +55 31 99831-7066
 
 --
 Monitor de Licitações · Matutta Soluções Digitais`
