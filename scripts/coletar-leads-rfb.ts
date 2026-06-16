@@ -677,46 +677,27 @@ async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, {
     else console.error(`  Erro batch inserção ${i}: ${error.message}`)
   }
 
-  // Atualiza leads existentes com dados frescos da RFB, campo a campo
-  // municipio e uf: sempre atualiza (leads antigos podem ter código IBGE guardado)
-  // demais: só preenche se ainda nulo no banco
+  // Atualiza leads existentes via RPC com arrays — 7 queries totais em vez de 7×N
+  // Lotes de 5000 para não estourar o limite de payload do Supabase
+  const LOTE = 5000
   let atualizados = 0
-  for (const r of rows) {
-    const sempreAtualizar: Record<string, unknown> = {}
-    if (r.municipio) sempreAtualizar.municipio = r.municipio
-    if (r.uf)        sempreAtualizar.uf        = r.uf
-
-    if (Object.keys(sempreAtualizar).length) {
-      await supabase.from('leads').update(sempreAtualizar)
-        .eq('cnpj', r.cnpj)
-        .not('status', 'in', '("descadastrado","usuario")')
-    }
-
-    // Campos que só preenchem se nulos — um update por campo para não sobrescrever
-    const seNulo: Array<[string, unknown]> = [
-      ['email',         r.email],
-      ['telefone',      r.telefone],
-      ['nome_fantasia', r.nome_fantasia],
-      ['porte',         r.porte],
-      ['data_abertura', r.data_abertura],
-    ]
-    for (const [campo, valor] of seNulo) {
-      if (!valor) continue
-      await supabase.from('leads').update({ [campo]: valor })
-        .eq('cnpj', r.cnpj)
-        .is(campo, null)
-        .not('status', 'in', '("descadastrado","usuario")')
-    }
-
-    // Corrige razão social que ficou como fallback (= próprio CNPJ numérico)
-    if (r.razao_social && /[a-zA-ZÀ-ÿ]/.test(r.razao_social)) {
-      await supabase.from('leads').update({ razao_social: r.razao_social })
-        .eq('cnpj', r.cnpj)
-        .or('razao_social.is.null,razao_social.match.^\\d+$')
-        .not('status', 'in', '("descadastrado","usuario")')
-    }
-    atualizados++
+  for (let i = 0; i < rows.length; i += LOTE) {
+    const lote = rows.slice(i, i + LOTE)
+    const { error } = await supabase.rpc('rfb_atualizar_leads', {
+      p_cnpjs:          lote.map(r => r.cnpj),
+      p_municipios:     lote.map(r => r.municipio ?? null),
+      p_ufs:            lote.map(r => r.uf ?? null),
+      p_emails:         lote.map(r => r.email ?? null),
+      p_telefones:      lote.map(r => r.telefone ?? null),
+      p_nomes_fantasia: lote.map(r => r.nome_fantasia ?? null),
+      p_portes:         lote.map(r => r.porte ?? null),
+      p_datas_abertura: lote.map(r => r.data_abertura ?? null),
+      p_razoes_sociais: lote.map(r => r.razao_social ?? null),
+    })
+    if (error) console.error(`  Erro RPC atualizar lote ${i}: ${error.message}`)
+    else atualizados += lote.length
   }
+  console.log(`  [RPC] ${Math.ceil(rows.length / LOTE)} chamadas para ${rows.length} leads`)
 
   return { inseridos, emailsEnriquecidos: atualizados }
 }

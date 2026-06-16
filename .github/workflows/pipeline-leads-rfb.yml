@@ -14,7 +14,7 @@ jobs:
   arquivo-0:
     name: 'Fase 1/10 — Coleta arquivo 0'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,7 +37,7 @@ jobs:
   arquivo-1:
     name: 'Fase 2/10 — Coleta arquivo 1'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-0
     if: always()
     steps:
@@ -62,7 +62,7 @@ jobs:
   arquivo-2:
     name: 'Fase 3/10 — Coleta arquivo 2'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-1
     if: always()
     steps:
@@ -87,7 +87,7 @@ jobs:
   arquivo-3:
     name: 'Fase 4/10 — Coleta arquivo 3'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-2
     if: always()
     steps:
@@ -112,7 +112,7 @@ jobs:
   arquivo-4:
     name: 'Fase 5/10 — Coleta arquivo 4'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-3
     if: always()
     steps:
@@ -137,7 +137,7 @@ jobs:
   arquivo-5:
     name: 'Fase 6/10 — Coleta arquivo 5'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-4
     if: always()
     steps:
@@ -162,7 +162,7 @@ jobs:
   arquivo-6:
     name: 'Fase 7/10 — Coleta arquivo 6'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-5
     if: always()
     steps:
@@ -187,7 +187,7 @@ jobs:
   arquivo-7:
     name: 'Fase 8/10 — Coleta arquivo 7'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-6
     if: always()
     steps:
@@ -212,7 +212,7 @@ jobs:
   arquivo-8:
     name: 'Fase 9/10 — Coleta arquivo 8'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-7
     if: always()
     steps:
@@ -237,7 +237,7 @@ jobs:
   arquivo-9:
     name: 'Fase 10/10 — Coleta arquivo 9'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: arquivo-8
     if: always()
     steps:
