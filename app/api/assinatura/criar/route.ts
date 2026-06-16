@@ -1,5 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { criarCheckoutAssinatura, PLANOS } from '@/lib/mercadopago'
+import {
+  criarCheckoutAssinatura,
+  PLANOS,
+  atualizarValorAssinatura,
+  buscarAssinatura,
+  criarPreferenciaUpgrade,
+} from '@/lib/mercadopago'
+import { getLimites } from '@/lib/planos'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -13,10 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
   }
 
-  // Verificar dados fiscais e campanha do usuário
   const { data: profile } = await supabase
     .from('profiles')
-    .select('cnpj, cpf, campanha_id')
+    .select('cnpj, cpf, campanha_id, status, plano, mp_subscription_id, periodo')
     .eq('id', user.id)
     .single()
 
@@ -24,11 +30,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ cadastroIncompleto: true }, { status: 200 })
   }
 
-  // Verificar desconto de campanha/parceria
+  const periodoValido: 'mensal' | 'anual' = periodo === 'anual' ? 'anual' : 'mensal'
+  const planoData = PLANOS[plano as keyof typeof PLANOS]
+
+  // ── Desconto de campanha ──────────────────────────────────────────────────────
   let descontoPercentual = 0
   let descontoMeses      = 0
-  const periodoValido = periodo === 'anual' ? 'anual' : 'mensal'
-  const planoData = PLANOS[plano as keyof typeof PLANOS]
   let precoFinal = periodoValido === 'anual' ? planoData.preco_anual : planoData.preco
 
   if (profile?.campanha_id) {
@@ -46,6 +53,73 @@ export async function POST(request: Request) {
     }
   }
 
+  // ── Upgrade / downgrade in-place (assinante ativo, mesmo período) ─────────────
+  const periodoAtual = (profile?.periodo ?? 'mensal') as 'mensal' | 'anual'
+  if (
+    profile?.status === 'active' &&
+    profile?.mp_subscription_id &&
+    periodoValido === periodoAtual &&
+    descontoPercentual === 0  // com desconto ativo, recria normalmente
+  ) {
+    const planoAtualKey = (profile.plano ?? 'basic') as keyof typeof PLANOS
+    const precoAtual = periodoAtual === 'anual'
+      ? (PLANOS[planoAtualKey]?.preco_anual ?? 0)
+      : (PLANOS[planoAtualKey]?.preco ?? 0)
+
+    if (plano === profile.plano) {
+      // Mesmo plano — redireciona ao painel sem nada
+      return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` })
+    }
+
+    const limites = getLimites(plano)
+
+    if (precoFinal <= precoAtual) {
+      // ── Downgrade: aplica na próxima cobrança, perfil atualizado agora ──
+      await atualizarValorAssinatura(profile.mp_subscription_id, precoFinal)
+      await supabase.from('profiles').update({
+        plano,
+        max_keywords:      limites.maxKeywords,
+        max_usuarios:      limites.maxUsers,
+        valor_mensalidade: precoFinal,
+      }).eq('id', user.id)
+      return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso` })
+    }
+
+    // ── Upgrade: calcular proporcional ───────────────────────────────────────
+    const mpSub = await buscarAssinatura(profile.mp_subscription_id)
+    const nextPaymentStr = (mpSub?.next_payment_date ?? mpSub?.date_of_next_payment) as string | undefined
+    let proracao = 0
+
+    if (nextPaymentStr) {
+      const nextPayment   = new Date(nextPaymentStr)
+      const hoje          = new Date()
+      const diasRestantes = Math.max(0, Math.ceil((nextPayment.getTime() - hoje.getTime()) / 86400000))
+      const diasCiclo     = periodoValido === 'anual' ? 365 : 30
+      proracao = Math.round((diasRestantes / diasCiclo) * (precoFinal - precoAtual) * 100) / 100
+    }
+
+    if (proracao <= 1.00) {
+      // Proporcional irrisório — aplica direto sem cobrança extra
+      await atualizarValorAssinatura(profile.mp_subscription_id, precoFinal)
+      await supabase.from('profiles').update({
+        plano,
+        max_keywords:      limites.maxKeywords,
+        max_usuarios:      limites.maxUsers,
+        valor_mensalidade: precoFinal,
+      }).eq('id', user.id)
+      return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso` })
+    }
+
+    // Cria cobrança avulsa pelo proporcional
+    // external_reference: userId|upgrade|novoPlano|periodo|subscriptionId
+    const extRef = `${user.id}|upgrade|${plano}|${periodoValido}|${profile.mp_subscription_id}`
+    const url = await criarPreferenciaUpgrade(extRef, limites.nome, proracao)
+    if (!url) return NextResponse.json({ error: 'Erro ao criar cobrança proporcional' }, { status: 500 })
+
+    return NextResponse.json({ url })
+  }
+
+  // ── Nova assinatura (trial, expirado, troca de período) ───────────────────────
   const checkoutUrl = await criarCheckoutAssinatura(
     plano, user.id, user.email!,
     precoFinal, descontoPercentual, descontoMeses, periodoValido,

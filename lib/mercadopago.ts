@@ -100,3 +100,47 @@ export async function atualizarValorAssinatura(subscriptionId: string, novoValor
   })
   return res.ok
 }
+
+/** Busca dados de uma assinatura no MercadoPago (next_payment_date etc.) */
+export async function buscarAssinatura(subscriptionId: string): Promise<Record<string, unknown> | null> {
+  const res = await fetch(`https://api.mercadopago.com/preapproval/${subscriptionId}`, {
+    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` },
+  })
+  if (!res.ok) return null
+  return res.json()
+}
+
+/** Cria uma preferência de pagamento avulso (usado para cobrança proporcional no upgrade) */
+export async function criarPreferenciaUpgrade(
+  externalRef: string,
+  nomePlano: string,
+  valor: number,
+): Promise<string | null> {
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ACCESS_TOKEN}`,
+    },
+    body: JSON.stringify({
+      items: [{
+        id:         'upgrade-proporcional',
+        title:      `Upgrade para plano ${nomePlano} (proporcional)`,
+        quantity:   1,
+        unit_price: valor,
+        currency_id: 'BRL',
+      }],
+      external_reference: externalRef,
+      back_urls: {
+        success: `${APP_URL}/assinatura/sucesso`,
+        failure: `${APP_URL}/assinar?from=painel&erro=upgrade`,
+        pending: `${APP_URL}/assinar?from=painel`,
+      },
+      auto_return: 'approved',
+    }),
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.init_point ?? null
+}

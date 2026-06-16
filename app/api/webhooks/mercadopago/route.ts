@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { getLimites } from '@/lib/planos'
+import { PLANOS, atualizarValorAssinatura } from '@/lib/mercadopago'
 import { Resend } from 'resend'
 import { emailConfirmacaoAssinatura } from '@/lib/emails/confirmacao-assinatura'
 import { emailFornecedor } from '@/lib/emails/fornecedor'
@@ -79,6 +80,45 @@ export async function POST(request: Request) {
   if (!verificarAssinatura(request, dataId, rawSignature, requestId)) {
     console.error('[webhook/mp] Assinatura inválida — requisição rejeitada', { dataId, requestId })
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
+  }
+
+  // ── Pagamento avulso (proporcional de upgrade) ──────────────────────────────
+  if (type === 'payment') {
+    const payRes = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
+      headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` },
+    })
+    if (payRes.ok) {
+      const payment = await payRes.json()
+      if (payment.status === 'approved') {
+        const parts = (payment.external_reference ?? '').split('|')
+        // format: userId|upgrade|novoPlano|periodo|subscriptionId
+        if (parts[1] === 'upgrade') {
+          const userId         = parts[0]
+          const novoPlano      = parts[2]
+          const novoPeriodo: 'mensal' | 'anual' = parts[3] === 'anual' ? 'anual' : 'mensal'
+          const subscriptionId = parts[4]
+          const novoPreco = novoPeriodo === 'anual'
+            ? PLANOS[novoPlano as keyof typeof PLANOS]?.preco_anual
+            : PLANOS[novoPlano as keyof typeof PLANOS]?.preco
+
+          if (novoPreco && subscriptionId) {
+            const supabase = await createServiceClient()
+            await atualizarValorAssinatura(subscriptionId, novoPreco)
+            const limites = getLimites(novoPlano)
+            await supabase.from('profiles').update({
+              plano:             novoPlano,
+              periodo:           novoPeriodo,
+              mp_subscription_id: subscriptionId,
+              max_keywords:      limites.maxKeywords,
+              max_usuarios:      limites.maxUsers,
+              valor_mensalidade: novoPreco,
+            }).eq('id', userId)
+            console.log(`[webhook/mp] Upgrade pago: user=${userId} plano=${novoPlano} periodo=${novoPeriodo}`)
+          }
+        }
+      }
+    }
+    return NextResponse.json({ ok: true })
   }
 
   if (type === 'subscription_preapproval') {
