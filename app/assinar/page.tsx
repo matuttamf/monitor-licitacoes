@@ -275,7 +275,7 @@ function AssinarConteudo() {
         {[
           ['Preciso de cartão de crédito para testar?', 'Não. Os 7 dias de teste são 100% gratuitos. Você só é cobrado se decidir continuar.'],
           ['Como funciona o cancelamento?', 'Você pode cancelar a qualquer momento diretamente pelo painel, sem multas ou burocracia.'],
-          ['Posso mudar de plano depois?', 'Sim. Você pode fazer upgrade ou downgrade do seu plano quando quiser.'],
+          ['Posso mudar de plano depois?', 'Sim. No upgrade, o novo plano entra em vigor imediatamente. No downgrade, o plano atual e todos os seus benefícios permanecem ativos até o fim do período já pago — depois disso, o novo valor passa a ser cobrado.'],
         ].map(([q, a]) => (
           <details key={q as string} className="border-b border-[#D5D2C8]">
             <summary className="py-5 cursor-pointer font-semibold text-[15px] text-[#1A1A1C] list-none flex justify-between items-center">
