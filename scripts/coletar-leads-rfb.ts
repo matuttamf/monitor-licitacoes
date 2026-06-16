@@ -402,7 +402,7 @@ async function downloadComRetry(urls: string | string[], tmpPath: string, tentat
         const res = await fetch(url, { headers, signal: AbortSignal.timeout(120_000) })
         if (!res.ok || !res.body) {
           console.error(`  HTTP ${res.status}`)
-          if (res.status === 404 || res.status === 403) break  // tenta próxima URL
+          if (res.status === 404 || res.status === 403 || res.status === 400) break  // tenta próxima URL
           // 416 = arquivo local maior/igual ao remoto — recomeça do zero
           if (res.status === 416) {
             if (existsSync(tmpPath)) { unlinkSync(tmpPath); console.log('  Arquivo local removido, reiniciando') }

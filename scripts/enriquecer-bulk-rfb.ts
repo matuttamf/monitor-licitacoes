@@ -169,7 +169,7 @@ async function downloadComRetry(urls: string[], tmpPath: string, tentativas = 5)
 
         const res = await fetch(url, { headers, signal: AbortSignal.timeout(120_000) })
         if (!res.ok || !res.body) {
-          if (res.status === 404 || res.status === 403) break
+          if (res.status === 404 || res.status === 403 || res.status === 400) break
           if (res.status === 416) {
             unlinkSync(tmpPath)
             const res2 = await fetch(url, { headers: { 'User-Agent': 'MonitorLicitacoes/1.0' } })
