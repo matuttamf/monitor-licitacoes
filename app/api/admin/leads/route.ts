@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
       telefone:      dados.ddd_telefone_1 ?? '',
       municipio:     dados.municipio ?? contrato.unidadeOrgao?.municipioNome ?? '',
       uf:            dados.uf ?? contrato.unidadeOrgao?.ufSigla ?? '',
-      situacao:      dados.situacao_cadastral ?? '',
+      situacao:      String(dados.situacao_cadastral ?? ''),
       porte:         dados.porte ?? '',
       cnae:          dados.cnae_fiscal_descricao ?? '',
       objeto:        (contrato.objetoContrato ?? '').slice(0, 150),
