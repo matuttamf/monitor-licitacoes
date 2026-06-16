@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -36,6 +37,9 @@ export const metadata: Metadata = {
   publisher: 'Monitor de Licitações',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   alternates: { canonical: '/' },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
@@ -60,9 +64,40 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID
+
   return (
     <html lang="pt-BR" className={`${jakarta.variable} ${instrument.variable} h-full`}>
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+      <body className="min-h-full flex flex-col antialiased">
+        {children}
+
+        {/* Google Analytics 4 */}
+        {gaId && (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
+            <Script id="ga4-init" strategy="afterInteractive">{`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaId}');
+            `}</Script>
+          </>
+        )}
+
+        {/* Meta Pixel */}
+        {pixelId && (
+          <Script id="meta-pixel" strategy="afterInteractive">{`
+            !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+            document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${pixelId}');
+            fbq('track', 'PageView');
+          `}</Script>
+        )}
+      </body>
     </html>
   );
 }
