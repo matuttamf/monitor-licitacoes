@@ -56,8 +56,56 @@ function getUrlsArquivo(tipo: 'Estabelecimentos' | 'Empresas', idx: number): str
   return [`${STORAGE_BASE}/${tipo}${idx}.zip`, rfUrl]
 }
 
-const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, DATA_INICIO: 10, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
-const COL_EMP = { BASICO: 0, RAZAO: 1 }
+// Índices padrão (fallback quando o arquivo não tem cabeçalho legível)
+const EST_DEF = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, NOME_FANTASIA: 4, SITUACAO: 5, DATA_INICIO: 10, CNAE: 11, UF: 19, MUNICIPIO: 20, DDD1: 21, TEL1: 22, EMAIL: 27 }
+const EMP_DEF = { BASICO: 0, RAZAO: 1, PORTE: 5 }
+
+type ColEst = typeof EST_DEF
+type ColEmp = typeof EMP_DEF
+
+function detectarColEst(headerCols: string[]): ColEst {
+  const find = (...keys: string[]) => {
+    for (const k of keys) {
+      const i = headerCols.findIndex(h => h.replace(/\W/g, '').toUpperCase().includes(k))
+      if (i >= 0) return i
+    }
+    return null
+  }
+  const cols = {
+    BASICO:        find('CNPJBASICO', 'NUBASICO', 'BASICO')            ?? EST_DEF.BASICO,
+    ORDEM:         find('CNPJORDEM',  'NUORDEM',  'ORDEM')             ?? EST_DEF.ORDEM,
+    DV:            find('CNPJDV',     'NUDV',     'DV')                ?? EST_DEF.DV,
+    MATFIL:        find('IDENTIFICADORMATRIZFILIAL', 'MATFIL')         ?? EST_DEF.MATFIL,
+    NOME_FANTASIA: find('NOMEFANTASIA', 'FANTASIA')                    ?? EST_DEF.NOME_FANTASIA,
+    SITUACAO:      find('SITUACAOCADASTRAL', 'SITUACAO')               ?? EST_DEF.SITUACAO,
+    DATA_INICIO:   find('DATAINICIOATIVIDADE', 'DATAINICIO')           ?? EST_DEF.DATA_INICIO,
+    CNAE:          find('CNAEFISCALPRINCIPAL', 'CNAEPRINCIPAL', 'CNAE') ?? EST_DEF.CNAE,
+    UF:            find('UF')                                          ?? EST_DEF.UF,
+    MUNICIPIO:     find('MUNICIPIO', 'CODIGOMUNICIPIO')                ?? EST_DEF.MUNICIPIO,
+    DDD1:          find('DDD1', 'DDDTELEFONE1')                        ?? EST_DEF.DDD1,
+    TEL1:          find('TELEFONE1', 'TEL1')                           ?? EST_DEF.TEL1,
+    EMAIL:         find('CORREIOELETRONICO', 'EMAIL')                  ?? EST_DEF.EMAIL,
+  }
+  console.log(`  [colunas EST] BASICO=${cols.BASICO} SITUACAO=${cols.SITUACAO} CNAE=${cols.CNAE} UF=${cols.UF} MUN=${cols.MUNICIPIO} DDD=${cols.DDD1} TEL=${cols.TEL1} EMAIL=${cols.EMAIL}`)
+  return cols
+}
+
+function detectarColEmp(headerCols: string[]): ColEmp {
+  const find = (...keys: string[]) => {
+    for (const k of keys) {
+      const i = headerCols.findIndex(h => h.replace(/\W/g, '').toUpperCase().includes(k))
+      if (i >= 0) return i
+    }
+    return null
+  }
+  const cols = {
+    BASICO: find('CNPJBASICO', 'NUBASICO', 'BASICO') ?? EMP_DEF.BASICO,
+    RAZAO:  find('RAZAOSOCIAL', 'RAZAO')             ?? EMP_DEF.RAZAO,
+    PORTE:  find('PORTEEMPRESA', 'PORTE')            ?? EMP_DEF.PORTE,
+  }
+  console.log(`  [colunas EMP] BASICO=${cols.BASICO} RAZAO=${cols.RAZAO} PORTE=${cols.PORTE}`)
+  return cols
+}
 
 // Domínios/palavras típicas de escritórios contábeis — e-mails desses domínios
 // costumam ser da contabilidade, não da empresa. Marcamos como inválido.
@@ -292,7 +340,7 @@ async function getCnpjsContatados(): Promise<Set<string>> {
   return cnpjs
 }
 
-// Basicós (8 dígitos) de leads ativos na base sem e-mail — para enriquecimento via RFB
+// Basicós (8 dígitos) de TODOS os leads sem e-mail — qualquer origem
 async function getBasicosSemEmail(): Promise<Set<string>> {
   const set = new Set<string>()
   let offset = 0
@@ -301,7 +349,7 @@ async function getBasicosSemEmail(): Promise<Set<string>> {
       .from('leads')
       .select('cnpj')
       .is('email', null)
-      .eq('situacao', 'ATIVA')
+      .not('status', 'in', '("descadastrado","usuario")')
       .range(offset, offset + 4999)
     if (!data?.length) break
     for (const r of data) set.add((r.cnpj as string).slice(0, 8))
@@ -309,6 +357,29 @@ async function getBasicosSemEmail(): Promise<Set<string>> {
     offset += 5000
   }
   return set
+}
+
+// Carrega tabela IBGE código → nome do município
+async function carregarMunicipios(): Promise<Map<string, string>> {
+  const mapa = new Map<string, string>()
+  const urls = [
+    STORAGE_BASE ? `${STORAGE_BASE}/Municipios.zip` : null,
+    `${RF_BASE.replace(/\/\d{4}-\d{2}$/, '')}/Municipios.zip`,
+    `https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/Municipios.zip`,
+  ].filter(Boolean) as string[]
+  const tmpPath = join(tmpdir(), 'rf-municipios.zip')
+  if (!await downloadComRetry(urls, tmpPath, 3)) {
+    console.warn('  Municipios.zip indisponível — municípios ficarão como código IBGE')
+    return mapa
+  }
+  await processarZip(tmpPath, (cols) => {
+    const codigo = cols[0]?.trim()
+    const nome = cols[1]?.trim()
+    if (codigo && nome && /^\d+$/.test(codigo)) mapa.set(codigo, nome)
+  })
+  if (existsSync(tmpPath)) unlinkSync(tmpPath)
+  console.log(`  ${mapa.size} municípios carregados`)
+  return mapa
 }
 
 // ── Download com retry e Range ────────────────────────────────────────────────
@@ -419,16 +490,10 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
       rl.on('line', (line) => {
         if (primeiraLinha) {
           primeiraLinha = false
-          // Conta ocorrências de cada separador candidato
           const contPipe  = (line.match(/\|/g) ?? []).length
           const contPonto = (line.match(/;/g)  ?? []).length
           sep = contPonto > contPipe ? ';' : '|'
-          console.log(`  Separador detectado: "${sep}" (|=${contPipe} ;=${contPonto})`)
-          const colsDebug = parseCSVLine(line, sep)
-          console.log(`  [DEBUG] Primeira linha (${colsDebug.length} cols):`)
-          console.log(`    cols 0-11 :`, colsDebug.slice(0, 12).map((c, i) => `[${i}]=${JSON.stringify(c)}`).join(' '))
-          console.log(`    cols 12-19:`, colsDebug.slice(12, 20).map((c, i) => `[${i+12}]=${JSON.stringify(c)}`).join(' '))
-          console.log(`    cols 20-29:`, colsDebug.slice(20, 30).map((c, i) => `[${i+20}]=${JSON.stringify(c)}`).join(' '))
+          console.log(`  Separador: "${sep}"`)
         }
         const cols = parseCSVLine(line, sep)
         if (cols.length >= 2) onLine(cols)
@@ -461,7 +526,7 @@ async function processarZip(tmpPath: string, onLine: OnLine): Promise<void> {
 }
 
 // ── Processamento por índice ──────────────────────────────────────────────────
-type LeadRFB = { cnpj: string; email: string|null; uf: string|null; municipio: string|null; cnae: string; data_abertura: string|null }
+type LeadRFB = { cnpj: string; email: string|null; uf: string|null; municipio: string|null; cnae: string; data_abertura: string|null; nome_fantasia: string|null; telefone: string|null }
 
 // Varre arquivo de estabelecimentos coletando e-mails de leads JÁ existentes na base
 // (independente de CNAE) — uma passagem única, sem carregar tudo em memória
@@ -469,13 +534,14 @@ async function coletarEmailsExistentes(
   tmpPath: string,
   basicosSemEmail: Set<string>,
 ): Promise<Map<string, string>> {
-  const emailMap = new Map<string, string>() // basico → email
+  const emailMap = new Map<string, string>()
+  let COL = EST_DEF
+  let primeira = true
   await processarZip(tmpPath, (cols) => {
-    if (cols.length < 28) return
-    if (cols[COL.SITUACAO] !== '02') return  // só ativas
-    const basico = cols[COL.BASICO].trim()
-    if (!basicosSemEmail.has(basico)) return
-    if (emailMap.has(basico)) return          // já temos email para este basico
+    if (primeira) { primeira = false; COL = detectarColEst(cols); return }
+    if (cols[COL.SITUACAO] !== '02') return
+    const basico = cols[COL.BASICO]?.trim()
+    if (!basico || !basicosSemEmail.has(basico) || emailMap.has(basico)) return
     const email = validarEmail(cols[COL.EMAIL] ?? null)
     if (email) emailMap.set(basico, email)
   })
@@ -489,17 +555,12 @@ async function aplicarEmailsExistentes(emailMap: Map<string, string>): Promise<n
   for (let i = 0; i < entries.length; i += 200) {
     const lote = entries.slice(i, i + 200)
     for (const [basico, email] of lote) {
-      // Só promove para 'pendente' se a razão social já foi verificada (tem letras).
-      // Leads com razão social = CNPJ numérico (fallback) ficam 'invalido' até enriquecer-receita confirmar.
       const { error } = await supabase
         .from('leads')
-        .update({ email, status: 'pendente' })
+        .update({ email })
         .like('cnpj', `${basico}%`)
         .is('email', null)
-        .not('razao_social', 'is', null)
-        .not('razao_social', 'match', '^\\d+$')
-        .not('municipio', 'is', null)
-        .or('cnae.not.is.null,cnae_codigo.not.is.null')
+        .not('status', 'in', '("descadastrado","usuario")')
       if (!error) atualizados++
     }
   }
@@ -510,48 +571,51 @@ async function coletarEstabelecimentos(
   tmpPath: string,
   targetCnaes: Set<string>,
   contatados: Set<string>,
+  municipios: Map<string, string>,
 ): Promise<Map<string, LeadRFB>> {
   const leads = new Map<string, LeadRFB>()
   const emailContagem = new Map<string, number>()
-  const dataLimite = getDataLimite60Dias()
-  let pulados = 0, foraJanela = 0
-  let totalLinhas = 0, passouLen = 0, passouMatfil = 0, passouSituacao = 0
-  const cnaesSample: string[] = []
+  let COL = EST_DEF
+  let primeira = true
+  let pulados = 0
+  let totalLinhas = 0, passouMatfil = 0, passouSituacao = 0
   await processarZip(tmpPath, (cols) => {
+    if (primeira) { primeira = false; COL = detectarColEst(cols); return }
     totalLinhas++
-    if (cols.length < 28) return
-    passouLen++
     if (cols[COL.MATFIL] !== '1') return
     passouMatfil++
     if (cols[COL.SITUACAO] !== '02') return
     passouSituacao++
-    // Filtro de data desativado temporariamente para coleta incremental completa
-    const dataInicio = cols[COL.DATA_INICIO]?.trim() ?? ''
-    // if (!dataInicio || dataInicio < dataLimite) { foraJanela++; return }
-    const cnae = cols[COL.CNAE].trim().replace(/\D/g,'')
-    if (cnaesSample.length < 10) cnaesSample.push(`"${cnae}"(len=${cnae.length})`)
+    const cnae = cols[COL.CNAE]?.trim().replace(/\D/g, '') ?? ''
     if (!targetCnaes.has(cnae)) return
-    const basico = cols[COL.BASICO].trim()
+    const basico = cols[COL.BASICO]?.trim()
+    if (!basico) return
     if (contatados.has(basico)) { pulados++; return }
-    const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g,'')
+    const cnpj = (cols[COL.BASICO] + cols[COL.ORDEM] + cols[COL.DV]).replace(/\D/g, '')
     if (cnpj.length !== 14) return
-    const mun = cols[COL.MUNICIPIO]?.trim() || null
     const emailRaw = validarEmail(cols[COL.EMAIL] ?? null)
     if (emailRaw) emailContagem.set(emailRaw, (emailContagem.get(emailRaw) ?? 0) + 1)
-    // Converte YYYYMMDD → YYYY-MM-DD para salvar como date
+    const dataInicio = cols[COL.DATA_INICIO]?.trim() ?? ''
     const dataAberturaStr = dataInicio.length === 8
-      ? `${dataInicio.slice(0,4)}-${dataInicio.slice(4,6)}-${dataInicio.slice(6,8)}`
+      ? `${dataInicio.slice(0, 4)}-${dataInicio.slice(4, 6)}-${dataInicio.slice(6, 8)}`
       : null
+    const ddd = cols[COL.DDD1]?.trim() || ''
+    const tel = cols[COL.TEL1]?.trim() || ''
+    const telefone = ddd && tel && /\d{6,}/.test(ddd + tel) ? ddd + tel : null
+    const nomeFantasiaRaw = cols[COL.NOME_FANTASIA]?.trim() || null
+    const munCodigo = cols[COL.MUNICIPIO]?.trim() || null
+    const municipioNome = munCodigo ? (municipios.get(munCodigo) ?? null) : null
     leads.set(basico, {
       cnpj,
       email: emailRaw,
       uf: cols[COL.UF]?.trim() || null,
-      municipio: mun && /[a-zA-ZÀ-ÿ]/.test(mun) ? mun : null,
+      municipio: municipioNome,
       cnae,
       data_abertura: dataAberturaStr,
+      nome_fantasia: nomeFantasiaRaw && /[a-zA-ZÀ-ÿ]/.test(nomeFantasiaRaw) ? nomeFantasiaRaw : null,
+      telefone,
     })
   })
-  // Marca e-mails de contabilidade como null (serão inseridos como inválidos)
   let emailsContabil = 0
   for (const [basico, lead] of leads) {
     if (lead.email && isEmailContabilidade(lead.email, emailContagem)) {
@@ -559,35 +623,43 @@ async function coletarEstabelecimentos(
       emailsContabil++
     }
   }
-  console.log(`  [DEBUG] linhas=${totalLinhas} passouLen=${passouLen} passouMatfil=${passouMatfil} passouSituacao=${passouSituacao} foraJanela60d=${foraJanela}`)
-  console.log(`  [DEBUG] CNAEs sample: ${cnaesSample.join(', ')}`)
-  if (emailsContabil > 0) console.log(`  E-mails de contabilidade descartados: ${emailsContabil}`)
-  if (pulados > 0) console.log(`  Pulados (já contatados): ${pulados}`)
+  console.log(`  [EST] linhas=${totalLinhas} matrizes=${passouMatfil} ativas=${passouSituacao} leads=${leads.size} pulados=${pulados} emailsContabil=${emailsContabil}`)
   return leads
 }
 
-async function enriquecerRazaoSocial(tmpPath: string, leads: Map<string, LeadRFB>): Promise<Map<string, string>> {
-  const razoes = new Map<string, string>()
+const PORTE_MAP: Record<string, string | null> = { '00': null, '01': 'MICRO EMPRESA', '03': 'EMPRESA DE PEQUENO PORTE', '05': 'DEMAIS' }
+
+async function enriquecerEmpresa(tmpPath: string, leads: Map<string, LeadRFB>): Promise<Map<string, { razao: string; porte: string|null }>> {
+  const empresas = new Map<string, { razao: string; porte: string|null }>()
+  let COL = EMP_DEF
+  let primeira = true
   await processarZip(tmpPath, (cols) => {
-    const basico = cols[COL_EMP.BASICO]?.trim()
+    if (primeira) { primeira = false; COL = detectarColEmp(cols); return }
+    const basico = cols[COL.BASICO]?.trim()
     if (!basico || !leads.has(basico)) return
-    const razao = cols[COL_EMP.RAZAO]?.trim()
-    if (razao) razoes.set(basico, razao)
+    const razao = cols[COL.RAZAO]?.trim()
+    if (!razao) return
+    const porteCode = cols[COL.PORTE]?.trim() || '00'
+    empresas.set(basico, { razao, porte: PORTE_MAP[porteCode] ?? null })
   })
-  return razoes
+  return empresas
 }
 
-async function inserirLeads(leads: Map<string, LeadRFB>, razoes: Map<string, string>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
+async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, { razao: string; porte: string|null }>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
   const rows = Array.from(leads.values()).map(l => {
-    const razaoSocial = razoes.get(l.cnpj.slice(0, 8)) ?? l.cnpj
+    const emp = empresas.get(l.cnpj.slice(0, 8))
+    const razaoSocial = emp?.razao ?? l.cnpj
     const razaoVerificada = /[a-zA-ZÀ-ÿ]/.test(razaoSocial)
     return {
       cnpj: l.cnpj,
       razao_social: razaoSocial,
+      nome_fantasia: l.nome_fantasia,
       email: l.email,
+      telefone: l.telefone,
       uf: l.uf,
       municipio: l.municipio,
       cnae_codigo: l.cnae,
+      porte: emp?.porte ?? null,
       data_abertura: l.data_abertura,
       status: (l.email && razaoVerificada && l.municipio && l.cnae ? 'pendente' : 'invalido') as 'pendente' | 'invalido',
       situacao: 'ATIVA' as const,
@@ -626,6 +698,7 @@ async function processarArquivo(
   targetCnaes: Set<string>,
   contatados: Set<string>,
   basicosSemEmail: Set<string>,
+  municipios: Map<string, string>,
 ) {
   const tmpEst = join(tmpdir(), `rf-est-${idx}.zip`)
   const tmpEmp = join(tmpdir(), `rf-emp-${idx}.zip`)
@@ -654,28 +727,28 @@ async function processarArquivo(
   // 2b. Filtra novos leads por CNAE
   console.log(`  ⚙ Filtrando por CNAE (${targetCnaes.size} códigos-alvo, ${contatados.size} já contatados ignorados)...`)
   const t1 = Date.now()
-  const leads = await coletarEstabelecimentos(tmpEst, targetCnaes, contatados)
+  const leads = await coletarEstabelecimentos(tmpEst, targetCnaes, contatados, municipios)
   const emailsValidos = Array.from(leads.values()).filter(l => l.email).length
   console.log(`  → ${leads.size} leads novos | ${emailsValidos} com e-mail | ${((Date.now()-t1)/1000).toFixed(1)}s`)
   if (existsSync(tmpEst)) unlinkSync(tmpEst)
 
   if (!leads.size) { console.log('  Nenhum lead novo por CNAE.'); return }
 
-  // 3. Download Empresas → razão social
+  // 3. Download Empresas → razão social, porte
   const urlsEmp = getUrlsArquivo('Empresas', idx)
   console.log(`  ↓ Empresas${idx}.zip`)
-  let razoes = new Map<string, string>()
+  let empresas = new Map<string, { razao: string; porte: string|null }>()
   if (await downloadComRetry(urlsEmp, tmpEmp)) {
-    console.log(`  ⚙ Enriquecendo razão social...`)
+    console.log(`  ⚙ Enriquecendo razão social e porte...`)
     const t2 = Date.now()
-    razoes = await enriquecerRazaoSocial(tmpEmp, leads)
-    console.log(`  → ${razoes.size}/${leads.size} razões encontradas | ${((Date.now()-t2)/1000).toFixed(1)}s`)
+    empresas = await enriquecerEmpresa(tmpEmp, leads)
+    console.log(`  → ${empresas.size}/${leads.size} empresas encontradas | ${((Date.now()-t2)/1000).toFixed(1)}s`)
     if (existsSync(tmpEmp)) unlinkSync(tmpEmp)
   }
 
   // 4. Inserção
   console.log(`  ⚙ Inserindo no Supabase...`)
-  const { inseridos, emailsEnriquecidos } = await inserirLeads(leads, razoes)
+  const { inseridos, emailsEnriquecidos } = await inserirLeads(leads, empresas)
   console.log(`  ✓ ${inseridos} inseridos | ${emailsEnriquecidos} e-mails enriquecidos em leads existentes`)
 }
 
@@ -700,16 +773,17 @@ async function main() {
     .is('email', null).gte('email_tentativas', 3)
   console.log(`  ${bloqueados ?? 0} leads desbloqueados para nova tentativa`)
 
-  const [targetCnaes, contatados, basicosSemEmail] = await Promise.all([
+  const [targetCnaes, contatados, basicosSemEmail, municipios] = await Promise.all([
     getTargetCnaes(),
     getCnpjsContatados(),
     getBasicosSemEmail(),
+    carregarMunicipios(),
   ])
   console.log(`Contatados a ignorar: ${contatados.size}`)
   console.log(`Leads sem e-mail para enriquecer: ${basicosSemEmail.size}`)
 
   for (let i = IDX_START; i <= IDX_END; i++) {
-    await processarArquivo(i, targetCnaes, contatados, basicosSemEmail)
+    await processarArquivo(i, targetCnaes, contatados, basicosSemEmail, municipios)
   }
 
   console.log('\n✓ Coleta concluída.')
