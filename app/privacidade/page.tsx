@@ -12,7 +12,7 @@ const CONTATO_EMAIL = 'privacidade@monitordelicitacoes.com.br'
 const CONTATO_SITE  = 'https://monitordelicitacoes.com.br'
 
 export default function PrivacidadePage() {
-  const ultimaAtualizacao = '05 de junho de 2026'
+  const ultimaAtualizacao = '16 de junho de 2026'
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] font-sans">
@@ -90,21 +90,22 @@ export default function PrivacidadePage() {
                 <tr><Td>Preferências</Td><Td>Palavras-chave de monitoramento</Td><Td>Uso do painel</Td></tr>
               </Tabela>
               <SubTitulo>2.2 Dados coletados automaticamente</SubTitulo>
-              <Tabela colunas={['O que é', 'Para que serve', 'O que não fazemos']}>
+              <Tabela colunas={['O que é', 'Para que serve']}>
                 <tr>
                   <Td><strong>Endereço IP e dados do navegador</strong><br/><span className="text-xs text-[#9AA0A6]">Informação técnica gerada automaticamente ao acessar qualquer site</span></Td>
                   <Td>Identificar tentativas de acesso não autorizado e resolver problemas técnicos</Td>
-                  <Td>Não usamos para rastrear sua localização nem para fins comerciais</Td>
                 </tr>
                 <tr>
-                  <Td><strong>Páginas acessadas na plataforma</strong><br/><span className="text-xs text-[#9AA0A6]">Ex.: qual seção do painel foi acessada</span></Td>
-                  <Td>Entender como o serviço é usado para melhorá-lo — de forma agregada</Td>
-                  <Td>Não monitoramos o que você faz fora da plataforma</Td>
+                  <Td><strong>Páginas e eventos de navegação</strong><br/><span className="text-xs text-[#9AA0A6]">Quais páginas foram visitadas, cliques e tempo de permanência</span></Td>
+                  <Td>Análise de desempenho e melhoria do serviço (Google Analytics 4, de forma agregada)</Td>
                 </tr>
                 <tr>
                   <Td><strong>Cookie de sessão</strong><br/><span className="text-xs text-[#9AA0A6]">Arquivo pequeno salvo no seu navegador</span></Td>
                   <Td>Manter você conectado enquanto usa o painel</Td>
-                  <Td>Não usamos cookies de publicidade nem de rastreamento entre sites</Td>
+                </tr>
+                <tr>
+                  <Td><strong>Eventos de conversão e comportamento de marketing</strong><br/><span className="text-xs text-[#9AA0A6]">Visitas ao site e ações em páginas públicas (landing, planos, cadastro)</span></Td>
+                  <Td>Mensurar a eficácia de campanhas publicitárias — via Meta Pixel (Facebook/Instagram). Aplicável apenas nas páginas públicas, não nas páginas internas do painel</Td>
                 </tr>
               </Tabela>
               <SubTitulo>2.3 Dados do Diretório de Fornecedores (voluntários e públicos)</SubTitulo>
@@ -133,7 +134,8 @@ export default function PrivacidadePage() {
                 <tr><Td>Comunicações</Td><Td>Alertas de licitações, avisos sobre trial, atualizações do serviço</Td></tr>
                 <tr><Td>Segurança</Td><Td>Prevenção de fraudes, acessos não autorizados e abuso do sistema</Td></tr>
                 <tr><Td>Diretório de Fornecedores</Td><Td>Exibição do perfil público da empresa do usuário para outros usuários da plataforma, conforme configurado e autorizado pelo próprio usuário</Td></tr>
-                <tr><Td>Melhoria contínua</Td><Td>Análise agregada e anonimizada de padrões de uso</Td></tr>
+                <tr><Td>Análise de desempenho</Td><Td>Mensuração agregada de uso do serviço via Google Analytics 4 para identificar melhorias</Td></tr>
+                <tr><Td>Marketing e publicidade</Td><Td>Mensuração da eficácia de campanhas publicitárias via Meta Pixel (Facebook/Instagram) — somente em páginas públicas</Td></tr>
                 <tr><Td>Obrigações legais</Td><Td>Cumprimento de requisitos fiscais, contábeis e regulatórios aplicáveis</Td></tr>
               </Tabela>
             </Section>
@@ -145,6 +147,8 @@ export default function PrivacidadePage() {
                 <tr><Td>E-mails sobre trial e planos</Td><Td>Legítimo interesse (art. 7º, IX)</Td></tr>
                 <tr><Td>Segurança e antifraude</Td><Td>Legítimo interesse (art. 7º, IX)</Td></tr>
                 <tr><Td>Perfil no Diretório de Fornecedores</Td><Td>Consentimento do titular (art. 7º, I) — ativação voluntária pelo usuário</Td></tr>
+                <tr><Td>Análise de desempenho (Google Analytics 4)</Td><Td>Legítimo interesse (art. 7º, IX) — dados agregados e anonimizados, sem identificação individual</Td></tr>
+                <tr><Td>Marketing / Meta Pixel</Td><Td>Legítimo interesse (art. 7º, IX) — mensuração de conversão em páginas públicas; usuário pode desativar via configurações do navegador ou opt-out da Meta</Td></tr>
                 <tr><Td>Logs de acesso (6 meses)</Td><Td>Cumprimento de obrigação legal — Marco Civil (art. 7º, II)</Td></tr>
                 <tr><Td>Registros fiscais e financeiros</Td><Td>Cumprimento de obrigação legal (art. 7º, II)</Td></tr>
               </Tabela>
@@ -159,6 +163,8 @@ export default function PrivacidadePage() {
                 <tr><Td>Envio de comunicações</Td><Td>Entrega de alertas e notificações</Td><Td>Nome, e-mail, conteúdo dos alertas</Td></tr>
                 <tr><Td>Processamento de pagamentos</Td><Td>Cobrança e gestão de assinaturas</Td><Td>E-mail, identificador da assinatura</Td></tr>
                 <tr><Td>Processamento de conteúdo</Td><Td>Análise de textos públicos de editais</Td><Td>Apenas texto público — nenhum dado pessoal</Td></tr>
+                <tr><Td>Análise de desempenho do site</Td><Td>Estatísticas de uso e otimização do serviço</Td><Td>Endereço IP anonimizado, eventos de navegação</Td></tr>
+                <tr><Td>Plataforma de publicidade (Meta)</Td><Td>Mensuração de eficácia de campanhas publicitárias em páginas públicas</Td><Td>Eventos de navegação em páginas públicas; não acessa dados do painel</Td></tr>
               </Tabela>
               <SubTitulo>5.2 Outros usuários da plataforma (Diretório de Fornecedores)</SubTitulo>
               <p>Quando o usuário <strong>ativa voluntariamente</strong> seu perfil no Diretório de Fornecedores, os dados que ele inseriu no perfil (razão social, CNPJ, descrição, regiões, e-mail de contato, telefone e website) ficam visíveis para outros usuários da plataforma com plano que inclua acesso ao diretório.</p>
@@ -255,11 +261,23 @@ export default function PrivacidadePage() {
             </Section>
 
             <Section titulo="10. Cookies e tecnologias de rastreamento">
-              <p>Utilizamos apenas cookies <strong>estritamente necessários</strong>. Não utilizamos cookies de publicidade ou rastreamento comportamental.</p>
-              <Tabela colunas={['Tipo', 'Finalidade', 'Duração']}>
-                <tr><Td>Cookie de sessão</Td><Td>Autenticação — mantém o usuário conectado</Td><Td>Duração da sessão</Td></tr>
-                <tr><Td>Cookie de renovação</Td><Td>Renovação automática da autenticação</Td><Td>Até 60 dias</Td></tr>
+              <p>Utilizamos diferentes categorias de cookies e tecnologias similares descritas abaixo. Você pode gerenciar ou desativar cookies nas configurações do seu navegador, mas isso poderá afetar o funcionamento de partes do serviço.</p>
+              <SubTitulo>Cookies necessários (não desativáveis)</SubTitulo>
+              <Tabela colunas={['Cookie', 'Finalidade', 'Duração']}>
+                <tr><Td>Cookie de sessão (Supabase)</Td><Td>Autenticação — mantém o usuário conectado ao painel</Td><Td>Duração da sessão</Td></tr>
+                <tr><Td>Cookie de renovação (Supabase)</Td><Td>Renovação automática da sessão de autenticação</Td><Td>Até 60 dias</Td></tr>
               </Tabela>
+              <SubTitulo>Cookies de análise de desempenho</SubTitulo>
+              <Tabela colunas={['Tecnologia', 'Operado por', 'Finalidade', 'Duração']}>
+                <tr><Td>Google Analytics 4 (_ga, _gid)</Td><Td>Google LLC</Td><Td>Métricas agregadas de uso: páginas visitadas, tempo de sessão, taxa de conversão — dados anonimizados. Nenhuma identificação individual</Td><Td>_ga: 2 anos · _gid: 24h</Td></tr>
+              </Tabela>
+              <SubTitulo>Cookies de marketing e publicidade</SubTitulo>
+              <Tabela colunas={['Tecnologia', 'Operado por', 'Finalidade', 'Duração']}>
+                <tr><Td>Meta Pixel (_fbp, _fbc)</Td><Td>Meta Platforms, Inc.</Td><Td>Mensuração de conversão de campanhas publicitárias no Facebook/Instagram. Aplicável apenas nas páginas públicas do site (landing, planos, cadastro, login). <strong>Não é carregado no painel interno.</strong></Td><Td>Até 90 dias</Td></tr>
+              </Tabela>
+              <Aviso tipo="info">
+                <strong>Como desativar:</strong> você pode recusar cookies de análise e marketing nas configurações do seu navegador (<em>Configurações → Privacidade → Cookies</em>). Para o Meta Pixel especificamente, pode usar o <strong>opt-out da Meta</strong> em <a href="https://www.facebook.com/ads/preferences" target="_blank" rel="noopener noreferrer" className="underline">facebook.com/ads/preferences</a>. Para o Google Analytics, use o <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="underline">complemento de desativação</a> disponível pelo Google.
+              </Aviso>
             </Section>
 
             <Section titulo="11. Menores de idade">
