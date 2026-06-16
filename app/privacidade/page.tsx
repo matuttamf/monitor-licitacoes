@@ -30,10 +30,10 @@ export default function PrivacidadePage() {
       </header>
 
       {/* Conteúdo */}
-      <main className="max-w-[800px] mx-auto px-5 md:px-6 py-14 md:py-20 pb-24">
+      <main className="max-w-[800px] mx-auto px-5 md:px-6 py-10 md:py-14 pb-16">
 
         {/* Título */}
-        <div className="mb-14">
+        <div className="mb-8">
           <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-[#C9A65A] mb-3.5">Conformidade LGPD · Lei nº 13.709/2018</div>
           <h1 className="text-3xl md:text-[40px] font-extrabold text-[#1A1A1C] mb-3.5 tracking-tight leading-tight">Política de Privacidade</h1>
           <p className="text-[15px] text-[#9AA0A6] mb-5 leading-relaxed max-w-[560px]">
@@ -66,7 +66,7 @@ export default function PrivacidadePage() {
           </div>
 
           {/* Seções */}
-          <div className="px-6 md:px-10 py-10">
+          <div className="px-6 md:px-10 py-7">
 
             <Section titulo="1. Identificação do controlador de dados">
               <InfoBox>
@@ -324,8 +324,8 @@ export default function PrivacidadePage() {
 
 function Section({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <div className="mb-10 pb-10 border-b border-[#F0EDE8] last:border-0 last:mb-0 last:pb-0">
-      <h2 className="text-base font-bold text-[#1A1A1C] mb-4 flex items-center gap-2.5">
+    <div className="mb-6 pb-6 border-b border-[#F0EDE8] last:border-0 last:mb-0 last:pb-0">
+      <h2 className="text-base font-bold text-[#1A1A1C] mb-3 flex items-center gap-2.5">
         <span className="w-1 h-[18px] bg-[#6B0F1A] rounded-sm shrink-0 inline-block" />
         {titulo}
       </h2>
@@ -335,7 +335,7 @@ function Section({ titulo, children }: { titulo: string; children: React.ReactNo
 }
 
 function SubTitulo({ children }: { children: React.ReactNode }) {
-  return <p className="font-bold text-[#1A1A1C] text-[13px] mt-5 mb-2 uppercase tracking-[0.05em]">{children}</p>
+  return <p className="font-bold text-[#1A1A1C] text-[13px] mt-4 mb-1.5 uppercase tracking-[0.05em]">{children}</p>
 }
 
 function InfoBox({ children }: { children: React.ReactNode }) {
