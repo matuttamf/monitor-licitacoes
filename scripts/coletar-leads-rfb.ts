@@ -677,28 +677,37 @@ async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, {
     else console.error(`  Erro batch inserção ${i}: ${error.message}`)
   }
 
-  // Atualiza campos nulos de leads já existentes com dados frescos da RFB
+  // Atualiza leads existentes com dados frescos da RFB, campo a campo
+  // municipio e uf: sempre atualiza (leads antigos podem ter código IBGE guardado)
+  // demais: só preenche se ainda nulo no banco
   let atualizados = 0
   for (const r of rows) {
-    const campos: Record<string, unknown> = {}
-    if (r.email)         campos.email         = r.email
-    if (r.telefone)      campos.telefone      = r.telefone
-    if (r.nome_fantasia) campos.nome_fantasia = r.nome_fantasia
-    if (r.municipio)     campos.municipio     = r.municipio
-    if (r.uf)            campos.uf            = r.uf
-    if (r.porte)         campos.porte         = r.porte
-    if (r.data_abertura) campos.data_abertura = r.data_abertura
-    if (!Object.keys(campos).length) continue
+    const sempreAtualizar: Record<string, unknown> = {}
+    if (r.municipio) sempreAtualizar.municipio = r.municipio
+    if (r.uf)        sempreAtualizar.uf        = r.uf
 
-    // Monta filtro: só atualiza campos que ainda estão nulos no banco
-    const orFiltros = Object.keys(campos).map(c => `${c}.is.null`).join(',')
-    const { error } = await supabase
-      .from('leads')
-      .update(campos)
-      .eq('cnpj', r.cnpj)
-      .not('status', 'in', '("descadastrado","usuario")')
-      .or(orFiltros)
-    if (!error) atualizados++
+    if (Object.keys(sempreAtualizar).length) {
+      await supabase.from('leads').update(sempreAtualizar)
+        .eq('cnpj', r.cnpj)
+        .not('status', 'in', '("descadastrado","usuario")')
+    }
+
+    // Campos que só preenchem se nulos — um update por campo para não sobrescrever
+    const seNulo: Array<[string, unknown]> = [
+      ['email',         r.email],
+      ['telefone',      r.telefone],
+      ['nome_fantasia', r.nome_fantasia],
+      ['porte',         r.porte],
+      ['data_abertura', r.data_abertura],
+    ]
+    for (const [campo, valor] of seNulo) {
+      if (!valor) continue
+      await supabase.from('leads').update({ [campo]: valor })
+        .eq('cnpj', r.cnpj)
+        .is(campo, null)
+        .not('status', 'in', '("descadastrado","usuario")')
+    }
+    atualizados++
   }
 
   return { inseridos, emailsEnriquecidos: atualizados }
