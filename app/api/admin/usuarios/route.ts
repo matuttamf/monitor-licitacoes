@@ -61,12 +61,15 @@ export async function GET() {
   }
 
   // Contagem + último alerta por usuário (via keyword_id, sem join)
+  // Rows vêm ORDER BY enviado_em DESC — NULLs ficam no topo no Postgres,
+  // então inicializamos ultimo=null e atualizamos só ao encontrar um valor não-nulo.
   const alertaPorUser: Record<string, { count: number; ultimo: string | null }> = {}
   for (const a of alertaRows ?? []) {
     const uid = kwToUser[a.keyword_id]
     if (!uid) continue
-    if (!alertaPorUser[uid]) alertaPorUser[uid] = { count: 0, ultimo: a.enviado_em }
+    if (!alertaPorUser[uid]) alertaPorUser[uid] = { count: 0, ultimo: null }
     alertaPorUser[uid].count++
+    if (a.enviado_em && !alertaPorUser[uid].ultimo) alertaPorUser[uid].ultimo = a.enviado_em
   }
 
   const emailMap = Object.fromEntries(

@@ -761,9 +761,9 @@ export default function AdminPage() {
                               )}
                               <div className="text-xs flex items-center gap-1.5" style={{ color: 'var(--cinza)' }}>
                                 {(['basic','profissional','gestao','pro','empresarial'].includes(u.plano) ? (u.plano === 'pro' ? 'gestao' : u.plano) : 'basic')}
-                                {u.periodo === 'anual' && (
-                                  <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '5px', background: 'rgba(201,166,90,0.15)', color: '#92400e' }}>ANUAL</span>
-                                )}
+                                <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '5px', background: u.periodo === 'anual' ? 'rgba(201,166,90,0.15)' : 'rgba(100,100,100,0.08)', color: u.periodo === 'anual' ? '#92400e' : 'var(--cinza)' }}>
+                                  {u.periodo === 'anual' ? 'ANUAL' : 'MENSAL'}
+                                </span>
                               </div>
                             </>
                           )}
