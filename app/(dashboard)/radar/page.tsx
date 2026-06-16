@@ -286,30 +286,19 @@ export default function RadarPage() {
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--preto)', margin: 0 }}>
-              🎯 Radar de Inteligência
-            </h1>
-            <p style={{ margin: '5px 0 0', fontSize: 13, color: 'var(--cinza)', lineHeight: 1.5 }}>
-              Contratos públicos vencendo em breve — todo contrato que vence vai a licitação.{' '}
-              <strong style={{ color: 'var(--preto)' }}>Chegue preparado antes que o edital abra.</strong>
-            </p>
-          </div>
-          <button onClick={carregar}
-            style={{
-              padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              background: 'white', border: '1px solid var(--cinza-light)', color: 'var(--cinza)',
-            }}>
-            ↺ Atualizar
-          </button>
-        </div>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--preto)', margin: '0 0 4px' }}>
+          🎯 Radar de Inteligência
+        </h1>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--cinza)', lineHeight: 1.5 }}>
+          Contratos públicos vencendo em breve — todo contrato que vence vai a licitação.{' '}
+          <strong style={{ color: 'var(--preto)' }}>Chegue preparado antes que o edital abra.</strong>
+        </p>
       </div>
 
       {/* Cards de resumo */}
       {!loading && data && totalContratos > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 16 }}>
           {[
             { label: 'Contratos monitorados', valor: String(totalContratos), cor: 'var(--preto)' },
             { label: 'Críticos (≤30 dias)', valor: String(filtrar(data.em30dias).length), cor: '#ef4444' },
@@ -327,27 +316,35 @@ export default function RadarPage() {
         </div>
       )}
 
-      {/* Filtro */}
+      {/* Filtro + Atualizar na mesma linha */}
       {!loading && data && (
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
           <input
             type="text"
             placeholder="Filtrar por objeto ou órgão…"
             value={filtro}
             onChange={e => setFiltro(e.target.value)}
             style={{
-              width: '100%', maxWidth: 440, padding: '9px 14px', borderRadius: 10,
+              flex: 1, padding: '9px 14px', borderRadius: 10,
               border: '1px solid var(--cinza-light)', fontSize: 13, color: 'var(--preto)',
               background: 'white', outline: 'none', boxSizing: 'border-box',
             }}
           />
-          {data.termos.length > 0 && (
-            <p style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 5 }}>
-              Filtrado pelas suas {data.termos.length} palavras-chave.
-              {totalContratos === 0 ? ' Nenhum contrato relevante neste momento — o Radar atualiza diariamente.' : ''}
-            </p>
-          )}
+          <button onClick={carregar}
+            style={{
+              padding: '9px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              background: 'white', border: '1px solid var(--cinza-light)', color: 'var(--cinza)',
+              whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+            ↺ Atualizar
+          </button>
         </div>
+      )}
+      {!loading && data && data.termos.length > 0 && (
+        <p style={{ fontSize: 11, color: 'var(--cinza)', marginTop: -12, marginBottom: 16 }}>
+          Filtrado pelas suas {data.termos.length} palavras-chave.
+          {totalContratos === 0 ? ' Nenhum contrato relevante neste momento — o Radar atualiza diariamente.' : ''}
+        </p>
       )}
 
       {loading && (

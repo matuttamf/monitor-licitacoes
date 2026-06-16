@@ -185,85 +185,93 @@ export default function AlertasPage() {
       </div>
 
       {/* Filtros */}
-      <div className="rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-end" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-        {/* Busca livre */}
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Buscar</label>
-          <input
-            type="text"
-            value={busca}
-            onChange={e => aplicarFiltro(() => setBusca(e.target.value))}
-            placeholder="Órgão, objeto…"
-            className="w-full px-3 py-2 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
-          />
-        </div>
-
-        {/* Keyword */}
-        <div className="min-w-[180px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Palavra-chave</label>
-          <select
-            value={keyword}
-            onChange={e => aplicarFiltro(() => setKeyword(e.target.value))}
-            className="w-full px-3 py-2 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
-          >
-            <option value="">Todas</option>
-            {keywords.map(k => <option key={k} value={k}>{k}</option>)}
-          </select>
-        </div>
-
-        {/* Região */}
-        <div className="min-w-[200px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Região / Estado</label>
-          <RegiaoSelector
-            value={regioes}
-            onChange={novas => aplicarFiltro(() => setRegioes(novas))}
-            placeholder="Todas as regiões"
-          />
-          {regioes.length > 0 && !regioes.includes('brasil') && (
-            <RegiaoChips
-              regioes={regioes}
-              onRemove={r => aplicarFiltro(() => setRegioes(removerRegiao(r, regioes)))}
+      <div className="rounded-2xl p-4 mb-5" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="grid gap-3" style={{ gridTemplateColumns: '2fr 1.4fr 1.6fr 1fr 1fr' }}>
+          {/* Busca livre */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Buscar</label>
+            <input
+              type="text"
+              value={busca}
+              onChange={e => aplicarFiltro(() => setBusca(e.target.value))}
+              placeholder="Órgão, objeto…"
+              className="w-full px-3 py-2 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
             />
-          )}
+          </div>
+
+          {/* Keyword */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Palavra-chave</label>
+            <select
+              value={keyword}
+              onChange={e => aplicarFiltro(() => setKeyword(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white' }}
+            >
+              <option value="">Todas</option>
+              {keywords.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+          </div>
+
+          {/* Região */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Região / Estado</label>
+            <RegiaoSelector
+              value={regioes}
+              onChange={novas => aplicarFiltro(() => setRegioes(novas))}
+              placeholder="Todas as regiões"
+            />
+          </div>
+
+          {/* Valor mínimo */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Valor mín.</label>
+            <input
+              type="number"
+              value={valorMin}
+              onChange={e => aplicarFiltro(() => setValorMin(e.target.value))}
+              placeholder="R$ 0"
+              className="w-full px-3 py-2 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
+            />
+          </div>
+
+          {/* Valor máximo */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Valor máx.</label>
+            <input
+              type="number"
+              value={valorMax}
+              onChange={e => aplicarFiltro(() => setValorMax(e.target.value))}
+              placeholder="Sem limite"
+              className="w-full px-3 py-2 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
+            />
+          </div>
         </div>
 
-        {/* Valor mínimo */}
-        <div className="min-w-[130px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Valor mín. (R$)</label>
-          <input
-            type="number"
-            value={valorMin}
-            onChange={e => aplicarFiltro(() => setValorMin(e.target.value))}
-            placeholder="0"
-            className="w-full px-3 py-2 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
-          />
-        </div>
-
-        {/* Valor máximo */}
-        <div className="min-w-[130px]">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Valor máx. (R$)</label>
-          <input
-            type="number"
-            value={valorMax}
-            onChange={e => aplicarFiltro(() => setValorMax(e.target.value))}
-            placeholder="Sem limite"
-            className="w-full px-3 py-2 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)' }}
-          />
-        </div>
-
-        {/* Limpar */}
-        {temFiltro && (
-          <button
-            onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setRegioes([]); setValorMin(''); setValorMax('') })}
-            className="px-4 py-2 rounded-xl text-sm font-medium"
-            style={{ background: 'var(--surface-2)', color: 'var(--cinza)', border: '1px solid var(--cinza-light)', cursor: 'pointer', alignSelf: 'flex-end' }}
-          >
-            Limpar filtros
-          </button>
+        {/* Chips de região + limpar na mesma linha */}
+        {(regioes.length > 0 && !regioes.includes('brasil') || temFiltro) && (
+          <div className="flex items-center justify-between mt-2.5 flex-wrap gap-2">
+            <div>
+              {regioes.length > 0 && !regioes.includes('brasil') && (
+                <RegiaoChips
+                  regioes={regioes}
+                  onRemove={r => aplicarFiltro(() => setRegioes(removerRegiao(r, regioes)))}
+                />
+              )}
+            </div>
+            {temFiltro && (
+              <button
+                onClick={() => aplicarFiltro(() => { setBusca(''); setKeyword(''); setRegioes([]); setValorMin(''); setValorMax('') })}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ background: 'var(--fundo)', color: 'var(--cinza)', border: '1px solid var(--cinza-light)', cursor: 'pointer' }}
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
         )}
       </div>
 
