@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { removerRegiao } from '@/lib/regioes'
+import { getLimites } from '@/lib/planos'
 import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
 
 type Keyword = {
@@ -15,6 +16,7 @@ type Keyword = {
 export default function PalavrasChavePage() {
   const [keywords, setKeywords]         = useState<Keyword[]>([])
   const [maxKeywords, setMaxKeywords]   = useState<number>(99999)
+  const [plano, setPlano]               = useState<string>('basic')
   const [novoTermo, setNovoTermo]       = useState('')
   const [novasRegioes, setNovasRegioes] = useState<string[]>([])   // [] = brasil implícito
   const [carregando, setCarregando]     = useState(true)
@@ -31,6 +33,7 @@ export default function PalavrasChavePage() {
     if (res.ok) {
       const data = await res.json()
       setMaxKeywords(data.maxKeywords ?? 99999)
+      setPlano(data.plano ?? 'basic')
       setKeywords((data.keywords ?? []).map((k: Keyword & { regiao: string | string[] | null }) => {
         let regioes: string[]
         if (Array.isArray(k.regiao)) {
@@ -181,7 +184,7 @@ export default function PalavrasChavePage() {
           style={{ background: '#fdf9f0', border: '1.5px solid #C9A65A' }}>
           <div>
             <p className="text-sm font-semibold mb-0.5" style={{ color: '#1a1a1a' }}>
-              Você atingiu o limite de {maxKeywords} palavras-chave do plano Basic
+              Você atingiu o limite de {maxKeywords} palavras-chave do plano {getLimites(plano).nome}
             </p>
             <p className="text-xs" style={{ color: '#78350f' }}>
               Faça upgrade para o plano Profissional e monitore sem limites.
@@ -307,7 +310,7 @@ export default function PalavrasChavePage() {
 
       {maxKeywords < 99999 && keywords.length < maxKeywords && (
         <p className="text-xs text-center mt-4" style={{ color: 'var(--cinza)' }}>
-          Plano Basic: {keywords.length}/{maxKeywords} palavras-chave utilizadas
+          Plano {getLimites(plano).nome}: {keywords.length}/{maxKeywords} palavras-chave utilizadas
         </p>
       )}
     </div>
