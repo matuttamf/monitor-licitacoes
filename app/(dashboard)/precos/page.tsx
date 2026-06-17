@@ -324,22 +324,6 @@ export default function PrecosPage() {
               </div>
             ))}
 
-            {/* Card de mercado (Mercado Livre) */}
-            {precoMercado?.media && (
-              <div style={{
-                background: 'rgba(59,130,246,0.04)',
-                border: '1.5px solid rgba(59,130,246,0.2)',
-                borderRadius: 10, padding: '12px 14px',
-              }}>
-                <div style={{ fontSize: 10, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5, fontWeight: 600 }}>
-                  Mercado Livre
-                </div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{fmtBRL(precoMercado.media)}</div>
-                <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>
-                  mín. {fmtBRL(precoMercado.minimo!)} · {precoMercado.total} produtos
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Nota metodológica */}
@@ -347,27 +331,31 @@ export default function PrecosPage() {
             Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor é dividido pela quantidade detectada. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P25</strong> e <strong>P75</strong> mostram o piso e o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
           </div>
 
-          {/* Comparativo governo vs mercado */}
-          {precoMercado?.media && (() => {
-            const diff = ((stats.mediana - precoMercado.media!) / precoMercado.media!) * 100
-            const acima = diff > 0
-            return (
-              <div style={{
-                marginTop: 12, padding: '10px 14px',
-                background: acima ? 'rgba(185,28,28,0.04)' : 'rgba(21,128,61,0.04)',
-                border: `1px solid ${acima ? 'rgba(185,28,28,0.15)' : 'rgba(21,128,61,0.15)'}`,
-                borderRadius: 8, fontSize: 12,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
-              }}>
-                <span style={{ color: acima ? '#b91c1c' : '#15803d', fontWeight: 700 }}>
-                  {acima ? '▲' : '▼'} Mediana governo {Math.abs(diff).toFixed(1)}% {acima ? 'acima' : 'abaixo'} da média do Mercado Livre
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--cinza)' }}>
-                  Fonte: Mercado Livre (produtos novos) · referência, não base legal
-                </span>
-              </div>
-            )
-          })()}
+          {/* Links verificar preço atual */}
+          <div style={{
+            marginTop: 12, padding: '10px 14px',
+            background: 'rgba(59,130,246,0.03)',
+            border: '1px solid rgba(59,130,246,0.15)',
+            borderRadius: 8, fontSize: 12,
+            display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+          }}>
+            <span style={{ color: 'var(--cinza)', fontWeight: 600 }}>Verificar preço atual:</span>
+            <a
+              href={`https://lista.mercadolivre.com.br/${encodeURIComponent(termo)}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ color: '#1d4ed8', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              🛒 Mercado Livre
+            </a>
+            <span style={{ color: 'var(--cinza-light)' }}>·</span>
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(termo + ' preço')}&tbm=shop`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ color: '#15803d', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              🔍 Google Shopping
+            </a>
+          </div>
         </div>
       )}
 
