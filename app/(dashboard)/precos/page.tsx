@@ -272,6 +272,13 @@ export default function PrecosPage() {
         </div>
       )}
 
+      {/* Aviso de dados insuficientes */}
+      {stats && Number(stats.total) > 0 && Number(stats.total) < 3 && (
+        <div style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.3)', borderRadius: 12, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#92400e' }}>
+          ⚠️ Apenas {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} encontrado{Number(stats.total) !== 1 ? 's' : ''} — estatísticas com poucos dados podem não ser representativas. Tente um termo mais genérico.
+        </div>
+      )}
+
       {/* ── PAINEL DE COMPARATIVOS ─────────────────────────────────────────── */}
       {stats && Number(stats.total) > 0 && (
         <div style={{
@@ -337,7 +344,7 @@ export default function PrecosPage() {
 
           {/* Nota metodológica */}
           <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
-            Estatísticas calculadas sobre {stats.total} contratos após remover outliers extremos. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor é dividido pela quantidade detectada. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> e os percentis <strong>P10/P90</strong> excluem os 10% mais baratos e 10% mais caros. A <strong>mediana</strong> é a referência principal.
+            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor é dividido pela quantidade detectada. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P10</strong> e <strong>P90</strong> mostram o piso e o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
           </div>
 
           {/* Comparativo governo vs mercado */}
