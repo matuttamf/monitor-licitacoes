@@ -666,7 +666,7 @@ export default function FornecedoresPage() {
       {totalPaginas > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
           <button
-            onClick={() => { const p = page - 1; setPage(p); carregar(p, busca, regiao) }}
+            onClick={() => { const p = page - 1; setPage(p); carregar(p, busca, regiao, anoInicio, anoFim) }}
             disabled={page === 1}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'white', border: '1px solid var(--cinza-light)', color: page === 1 ? 'var(--cinza)' : 'var(--preto)', cursor: page === 1 ? 'default' : 'pointer' }}>
@@ -674,7 +674,7 @@ export default function FornecedoresPage() {
           </button>
           <span className="text-sm px-3" style={{ color: 'var(--cinza)' }}>{page} / {totalPaginas}</span>
           <button
-            onClick={() => { const p = page + 1; setPage(p); carregar(p, busca, regiao) }}
+            onClick={() => { const p = page + 1; setPage(p); carregar(p, busca, regiao, anoInicio, anoFim) }}
             disabled={page === totalPaginas}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'white', border: '1px solid var(--cinza-light)', color: page === totalPaginas ? 'var(--cinza)' : 'var(--preto)', cursor: page === totalPaginas ? 'default' : 'pointer' }}>
