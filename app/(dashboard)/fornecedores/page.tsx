@@ -51,6 +51,7 @@ export default function FornecedoresPage() {
   const [mostrarVencedores, setMostrarVencedores] = useState(true)
   const [vencedores, setVencedores]               = useState<Vencedor[]>([])
   const [carregandoVenc, setCarregandoVenc]       = useState(false)
+  const [erroVencedores, setErroVencedores]       = useState<string | null>(null)
 
   // cadastro
   const [showForm, setShowForm]   = useState(false)
@@ -90,9 +91,12 @@ export default function FornecedoresPage() {
     if (ai) params.set('ano_inicio', ai)
     if (af) params.set('ano_fim', af)
     const res = await fetch(`/api/fornecedores/vencedores?${params}`)
+    const d = await res.json()
     if (res.ok) {
-      const d = await res.json()
       setVencedores(d.vencedores ?? [])
+      setErroVencedores(null)
+    } else {
+      setErroVencedores(d.error ?? 'Erro ao buscar vencedores.')
     }
     setCarregandoVenc(false)
   }
@@ -587,6 +591,10 @@ export default function FornecedoresPage() {
               {[1,2,3].map(i => (
                 <div key={i} style={{ height: 72, borderRadius: 12, background: 'var(--cinza-light)', animation: 'pulse 1.5s ease-in-out infinite' }} />
               ))}
+            </div>
+          ) : erroVencedores ? (
+            <div style={{ background: 'white', border: '1px solid #fca5a5', borderRadius: 12, padding: '32px 20px', textAlign: 'center' }}>
+              <p style={{ fontSize: 13, color: '#dc2626' }}>Erro ao buscar vencedores: {erroVencedores}</p>
             </div>
           ) : vencedores.length === 0 ? (
             <div style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: 12, padding: '32px 20px', textAlign: 'center' }}>

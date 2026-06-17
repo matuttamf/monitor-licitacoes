@@ -56,10 +56,18 @@ export async function POST(request: Request) {
 
   const { maxKeywords } = getLimites(plano)
   if (maxKeywords < 99999) {
-    const { count } = await supabase
+    // Conta keywords de toda a conta (owner + sub-usuários) para evitar burlar o limite
+    const ownerId = profile?.owner_id ?? user.id
+    const service = await createServiceClient()
+    const { data: membros } = await service
+      .from('profiles')
+      .select('id')
+      .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`)
+    const membroIds = (membros ?? []).map(m => m.id)
+    const { count } = await service
       .from('keywords')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .in('user_id', membroIds)
 
     if ((count ?? 0) >= maxKeywords) {
       return NextResponse.json({

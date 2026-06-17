@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   }
 
   const { acao } = await request.json()
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://monitor-licitacoes-two.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://monitordelicitacoes.com.br'
   const secret = process.env.CRON_SECRET
 
   // Ação especial: remover região Norte das keywords do admin

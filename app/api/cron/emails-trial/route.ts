@@ -26,6 +26,7 @@ export async function GET(request: Request) {
   if (!usuarios?.length) return NextResponse.json({ ok: true, enviados: 0 })
 
   let enviados = 0
+  let erros = 0
   const agora = new Date()
 
   for (const usuario of usuarios) {
@@ -76,10 +77,16 @@ export async function GET(request: Request) {
       }
     } catch (error) {
       console.error(`Erro ao enviar e-mail para ${email}:`, error)
+      erros++
     }
   }
 
-  const resultado = { ok: true, enviados }
-  await registrarCronLog({ job: 'emails-trial', status: 'ok', mensagem: `${enviados} e-mail(s) enviados`, detalhes: resultado })
+  const resultado = { ok: true, enviados, erros }
+  await registrarCronLog({
+    job: 'emails-trial',
+    status: erros > 0 && enviados === 0 ? 'erro' : 'ok',
+    mensagem: `${enviados} e-mail(s) enviados${erros > 0 ? `, ${erros} erro(s)` : ''}`,
+    detalhes: resultado,
+  })
   return NextResponse.json(resultado)
 }

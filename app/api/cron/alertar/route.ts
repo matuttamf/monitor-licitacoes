@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     // Só envia alertas genuinamente novos (nunca enviados via e-mail).
     // Reenvios com >7 dias são incluídos apenas se houver novos também —
     // nunca reciclagem pura para evitar repetição de licitações.
-    const reenviosFiltrados = reenviosUid.filter(a => a.enviado_em && a.enviado_em <= umaSemanAAtras)
+    const reenviosFiltrados = reenviosUid.filter(a => a.enviado_em && new Date(a.enviado_em) <= new Date(umaSemanAAtras))
     const combinados = novosUid.length
       ? [...novosUid, ...reenviosFiltrados.map(a => ({ ...a, _reenvio: true }))]
       : []

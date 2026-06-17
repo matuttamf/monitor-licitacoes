@@ -36,10 +36,9 @@ function verificarAssinatura(
   requestId: string | null,
 ): boolean {
   const secret = process.env.MP_WEBHOOK_SECRET
-  // Se o secret não estiver configurado, aceita (modo desenvolvimento / migração)
   if (!secret) {
-    console.warn('[webhook/mp] MP_WEBHOOK_SECRET não configurado — verificação HMAC ignorada')
-    return true
+    console.error('[webhook/mp] MP_WEBHOOK_SECRET não configurado — rejeitando requisição')
+    return false
   }
   if (!rawSignature) return false
 

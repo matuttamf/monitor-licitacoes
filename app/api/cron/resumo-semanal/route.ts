@@ -209,10 +209,18 @@ export async function GET(request: Request) {
 
   const userIds = [...dadosPorUsuario.keys()]
 
-  // Buscar e-mails
-  const { data: authUsers } = await supabase.auth.admin.listUsers()
+  // Buscar e-mails com paginação (listUsers retorna max 1000 por chamada)
+  const allAuthUsers: { id: string; email?: string }[] = []
+  let authPage = 1
+  while (true) {
+    const { data: chunk } = await supabase.auth.admin.listUsers({ page: authPage, perPage: 1000 })
+    const users = chunk?.users ?? []
+    allAuthUsers.push(...users)
+    if (users.length < 1000) break
+    authPage++
+  }
   const emailMap = Object.fromEntries(
-    (authUsers?.users ?? [])
+    allAuthUsers
       .filter(u => userIds.includes(u.id))
       .map(u => [u.id, u.email!])
   )

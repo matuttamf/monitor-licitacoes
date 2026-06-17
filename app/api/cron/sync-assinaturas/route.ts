@@ -2,6 +2,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { getLimites } from '@/lib/planos'
 import { atualizarValorAssinatura } from '@/lib/mercadopago'
+import { verificarCronAuth } from '@/lib/cron-auth'
+import { registrarCronLog } from '@/lib/cron-log'
 
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
@@ -14,8 +16,7 @@ const PRECOS: Record<string, number> = {
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
@@ -127,6 +128,12 @@ export async function GET(request: Request) {
     }
   }
 
-  console.log(`[cron/sync-assinaturas] Concluído: ${sincronizados} sincronizados, ${erros} erros`)
-  return NextResponse.json({ ok: true, sincronizados, erros, detalhes })
+  const resultado = { ok: true, sincronizados, erros, detalhes }
+  await registrarCronLog({
+    job: 'sync-assinaturas',
+    status: erros > 0 && sincronizados === 0 ? 'erro' : 'ok',
+    mensagem: `${sincronizados} sincronizado(s), ${erros} erro(s)`,
+    detalhes: resultado,
+  })
+  return NextResponse.json(resultado)
 }
