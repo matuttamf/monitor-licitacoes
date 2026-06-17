@@ -501,7 +501,7 @@ export default function FornecedoresPage() {
         <div className="rounded-2xl p-12 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
           <div className="text-3xl mb-3">🔍</div>
           <p className="text-sm mb-4" style={{ color: 'var(--cinza)' }}>Nenhum fornecedor encontrado com esses filtros.</p>
-          <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '') }}
+          <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '', '', '') }}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
             Limpar filtros
