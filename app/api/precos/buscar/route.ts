@@ -50,7 +50,11 @@ async function buscarPrecoMercado(termo: string): Promise<{ media: number | null
         signal: AbortSignal.timeout(5000),
       }
     )
-    if (!res.ok) return { media: null, minimo: null, total: 0 }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      console.error('[ML search] HTTP', res.status, body.slice(0, 200))
+      return { media: null, minimo: null, total: 0 }
+    }
     const json: MLResponse = await res.json()
     const precos = (json.results ?? [])
       .filter(r => r.currency_id === 'BRL' && r.price > 0)
