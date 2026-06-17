@@ -6,65 +6,6 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 
-async function getMLToken(): Promise<string | null> {
-  const appId     = process.env.ML_APP_ID
-  const appSecret = process.env.ML_APP_SECRET
-  if (!appId || !appSecret) return null
-  try {
-    const res = await fetch('https://api.mercadolibre.com/oauth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-      body: new URLSearchParams({
-        grant_type:    'client_credentials',
-        client_id:     appId,
-        client_secret: appSecret,
-      }),
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      console.error('[ML token] HTTP', res.status, body.slice(0, 200))
-      return null
-    }
-    const json = await res.json() as { access_token?: string }
-    if (!json.access_token) console.error('[ML token] sem access_token na resposta:', JSON.stringify(json).slice(0, 200))
-    return json.access_token ?? null
-  } catch (e) {
-    console.error('[ML token] exception:', e)
-    return null
-  }
-}
-
-async function buscarPrecoMercado(termo: string): Promise<{ media: number | null; minimo: number | null; total: number }> {
-  try {
-    const appId = process.env.ML_APP_ID
-    if (!appId) return { media: null, minimo: null, total: 0 }
-
-    const q = encodeURIComponent(termo.slice(0, 80))
-    const res = await fetch(
-      `https://api.mercadolibre.com/sites/MLB/search?q=${q}&limit=20&condition=new&APP_ID=${appId}`,
-      {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(5000),
-      }
-    )
-    if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      console.error('[ML search] HTTP', res.status, body.slice(0, 200))
-      return { media: null, minimo: null, total: 0 }
-    }
-    const json = await res.json() as { results?: { price: number; currency_id: string }[] }
-    const precos = (json.results ?? [])
-      .filter(r => r.currency_id === 'BRL' && r.price > 0)
-      .map(r => r.price)
-    if (!precos.length) return { media: null, minimo: null, total: 0 }
-    const media = Math.round(precos.reduce((a, b) => a + b, 0) / precos.length * 100) / 100
-    const minimo = Math.min(...precos)
-    return { media, minimo, total: precos.length }
-  } catch {
-    return { media: null, minimo: null, total: 0 }
-  }
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -126,7 +67,6 @@ export async function POST(req: NextRequest) {
     { data: resultados, error: rErr },
     { data: statsGeral, error: sErr },
     { data: stats12m },
-    precoMercado,
   ] = await Promise.all([
     supabase.rpc('buscar_precos', {
       p_termo:  termo.trim(),
@@ -142,7 +82,6 @@ export async function POST(req: NextRequest) {
       p_inicio: inicio || null,
       p_fim:    fim || null,
     }),
-    // Stats filtrados aos últimos 12 meses (só quando o usuário não filtrou datas)
     (!inicio && !fim)
       ? supabase.rpc('stats_precos', {
           p_termo:  termo.trim(),
@@ -151,7 +90,6 @@ export async function POST(req: NextRequest) {
           p_fim:    null,
         })
       : Promise.resolve({ data: null }),
-    buscarPrecoMercado(termo.trim()),
   ])
 
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
@@ -186,7 +124,6 @@ export async function POST(req: NextRequest) {
     resultados:   resultados ?? [],
     stats,
     statsLabel,
-    precoMercado,
     buscasUsadas: buscasUsadas + 1,
     maxBuscas,
     plano: profile.plano,
