@@ -33,7 +33,9 @@ const numArgs    = args.filter(a => !a.startsWith('--'))
 const idxStart   = Number(numArgs[0] ?? 0)
 const idxEnd     = Number(numArgs[1] ?? 9)
 
-const CACHE_FILE = 'cnpjs-sem-email.json'
+const CACHE_FILE   = 'cnpjs-sem-email.json'
+const MAX_POR_RUN  = 200_000   // limite de CNPJs processados por execução
+const UPDATE_CONC  = 20        // updates paralelos simultâneos
 
 // Índices fixos usados como fallback se o cabeçalho não for encontrado
 const COL_EST_FALLBACK = { BASICO: 0, ORDEM: 1, DV: 2, EMAIL: 27 }
@@ -102,11 +104,11 @@ function validarEmail(email: string | null): string | null {
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
 
 // Carrega do banco (lento — só usado no modo --prepare)
-async function carregarCnpjsSemEmailDoBanco(): Promise<Set<string>> {
+async function carregarCnpjsSemEmailDoBanco(limite = MAX_POR_RUN): Promise<Set<string>> {
   const cnpjs = new Set<string>()
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
-  while (true) {
+  while (cnpjs.size < limite) {
     const { data, error } = await supabase.rpc('get_cnpjs_sem_email_page', { last_id: lastId, page_size: 1000 })
     if (error) {
       errosConsecutivos++
@@ -120,8 +122,9 @@ async function carregarCnpjsSemEmailDoBanco(): Promise<Set<string>> {
     for (const r of data) cnpjs.add((r.cnpj as string).slice(0, 8))
     lastId = data[data.length - 1].id as string
     if (data.length < 1000) break
-    if (cnpjs.size % 100_000 < 1000) console.log(`  ${cnpjs.size.toLocaleString('pt-BR')} carregados...`)
+    if (cnpjs.size % 50_000 < 1000) console.log(`  ${cnpjs.size.toLocaleString('pt-BR')} carregados...`)
   }
+  if (cnpjs.size >= limite) console.log(`  Limite de ${limite.toLocaleString('pt-BR')} CNPJs atingido — próximo run continuará de onde parou.`)
   return cnpjs
 }
 
@@ -226,21 +229,32 @@ async function extrairEmailsDoArquivo(
 async function atualizarEmails(emailMap: Map<string, string>): Promise<number> {
   let atualizados = 0
   const entries = Array.from(emailMap.entries())
-  for (let i = 0; i < entries.length; i += 100) {
-    const batch = entries.slice(i, i + 100)
-    for (const [cnpj, email] of batch) {
-      const { error } = await supabase
-        .from('leads')
-        .update({ email, status: 'pendente', email_tentativas: 0 })
-        .eq('cnpj', cnpj)
-        .or('email.is.null,email.eq.')
-        .not('razao_social', 'is', null)
-        .not('razao_social', 'match', '^\\d+$')
-        .not('municipio', 'is', null)
-        .or('cnae.not.is.null,cnae_codigo.not.is.null')
-      if (!error) atualizados++
+
+  // Semáforo simples para limitar concorrência
+  async function comConcorrencia<T>(itens: T[], conc: number, fn: (item: T) => Promise<void>) {
+    let idx = 0
+    async function worker() {
+      while (idx < itens.length) {
+        const i = idx++
+        await fn(itens[i])
+      }
     }
+    await Promise.all(Array.from({ length: Math.min(conc, itens.length) }, worker))
   }
+
+  await comConcorrencia(entries, UPDATE_CONC, async ([cnpj, email]) => {
+    const { error } = await supabase
+      .from('leads')
+      .update({ email, status: 'pendente', email_tentativas: 0 })
+      .eq('cnpj', cnpj)
+      .or('email.is.null,email.eq.')
+      .not('razao_social', 'is', null)
+      .not('razao_social', 'match', '^\\d+$')
+      .not('municipio', 'is', null)
+      .or('cnae.not.is.null,cnae_codigo.not.is.null')
+    if (!error) atualizados++
+  })
+
   return atualizados
 }
 
