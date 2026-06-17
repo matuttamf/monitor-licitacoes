@@ -5,8 +5,6 @@ import { getLimites } from '@/lib/planos'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-interface MLItem { price: number; currency_id: string }
-interface MLResponse { results: MLItem[] }
 
 async function getMLToken(): Promise<string | null> {
   const appId     = process.env.ML_APP_ID
@@ -44,7 +42,7 @@ async function buscarPrecoMercado(termo: string): Promise<{ media: number | null
 
     const q = encodeURIComponent(termo.slice(0, 80))
     const res = await fetch(
-      `https://api.mercadolibre.com/sites/MLB/search?q=${q}&limit=20&condition=new`,
+      `https://api.mercadolibre.com/catalog_products/search?q=${q}&site_id=MLB&limit=20`,
       {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
         signal: AbortSignal.timeout(5000),
@@ -55,10 +53,10 @@ async function buscarPrecoMercado(termo: string): Promise<{ media: number | null
       console.error('[ML search] HTTP', res.status, body.slice(0, 200))
       return { media: null, minimo: null, total: 0 }
     }
-    const json: MLResponse = await res.json()
+    const json = await res.json() as { results?: { price_info?: { median?: number; min_price?: number } }[] }
     const precos = (json.results ?? [])
-      .filter(r => r.currency_id === 'BRL' && r.price > 0)
-      .map(r => r.price)
+      .map(r => r.price_info?.median ?? r.price_info?.min_price ?? 0)
+      .filter(p => p > 0)
     if (!precos.length) return { media: null, minimo: null, total: 0 }
     const media = Math.round(precos.reduce((a, b) => a + b, 0) / precos.length * 100) / 100
     const minimo = Math.min(...precos)
