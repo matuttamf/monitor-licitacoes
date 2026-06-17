@@ -34,16 +34,29 @@ export async function GET(request: Request) {
   const anoInicio = url.searchParams.get('ano_inicio')?.trim() ?? ''
   const anoFim    = url.searchParams.get('ano_fim')?.trim()    ?? ''
 
-  // Só passa UF (2 chars); macros como "Sudeste" não filtram no resultados_itens
-  const uf = regiao.length === 2 ? regiao : null
+  const REGIAO_UFS: Record<string, string[]> = {
+    'Norte':        ['AC','AM','AP','PA','RO','RR','TO'],
+    'Nordeste':     ['AL','BA','CE','MA','PB','PE','PI','RN','SE'],
+    'Centro-Oeste': ['DF','GO','MS','MT'],
+    'Sudeste':      ['ES','MG','RJ','SP'],
+    'Sul':          ['PR','RS','SC'],
+  }
 
-  // Fallback: se não informou ano, usa últimos 24 meses
+  // UF única (2 chars) ou expansão de macro-região para array
+  let ufs: string[] | null = null
+  if (regiao.length === 2) {
+    ufs = [regiao.toUpperCase()]
+  } else if (REGIAO_UFS[regiao]) {
+    ufs = REGIAO_UFS[regiao]
+  }
+
   const anoInicioNum = anoInicio ? parseInt(anoInicio, 10) : null
   const anoFimNum    = anoFim    ? parseInt(anoFim,    10) : null
 
   const { data, error } = await supabase.rpc('buscar_vencedores_licitacoes', {
-    p_termo:      busca      || null,
-    p_uf:         uf         || null,
+    p_termo:      busca || null,
+    p_uf:         null,
+    p_ufs:        ufs,
     p_ano_inicio: anoInicioNum,
     p_ano_fim:    anoFimNum,
     p_limite:     50,
