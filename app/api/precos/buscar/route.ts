@@ -8,12 +8,41 @@ export const maxDuration = 60
 interface MLItem { price: number; currency_id: string }
 interface MLResponse { results: MLItem[] }
 
+async function getMLToken(): Promise<string | null> {
+  const appId     = process.env.ML_APP_ID
+  const appSecret = process.env.ML_APP_SECRET
+  if (!appId || !appSecret) return null
+  try {
+    const res = await fetch('https://api.mercadolibre.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+      body: new URLSearchParams({
+        grant_type:    'client_credentials',
+        client_id:     appId,
+        client_secret: appSecret,
+      }),
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!res.ok) return null
+    const json = await res.json() as { access_token?: string }
+    return json.access_token ?? null
+  } catch {
+    return null
+  }
+}
+
 async function buscarPrecoMercado(termo: string): Promise<{ media: number | null; minimo: number | null; total: number }> {
   try {
+    const token = await getMLToken()
+    if (!token) return { media: null, minimo: null, total: 0 }
+
     const q = encodeURIComponent(termo.slice(0, 80))
     const res = await fetch(
       `https://api.mercadolibre.com/sites/MLB/search?q=${q}&limit=20&condition=new`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) }
+      {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(5000),
+      }
     )
     if (!res.ok) return { media: null, minimo: null, total: 0 }
     const json: MLResponse = await res.json()
