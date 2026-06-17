@@ -23,10 +23,16 @@ async function getMLToken(): Promise<string | null> {
       }),
       signal: AbortSignal.timeout(5000),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      console.error('[ML token] HTTP', res.status, body.slice(0, 200))
+      return null
+    }
     const json = await res.json() as { access_token?: string }
+    if (!json.access_token) console.error('[ML token] sem access_token na resposta:', JSON.stringify(json).slice(0, 200))
     return json.access_token ?? null
-  } catch {
+  } catch (e) {
+    console.error('[ML token] exception:', e)
     return null
   }
 }
