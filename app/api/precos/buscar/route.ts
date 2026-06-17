@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
   const [
     { data: resultados, error: rErr },
-    { data: statsGeral },
+    { data: statsGeral, error: sErr },
     { data: stats12m },
     precoMercado,
   ] = await Promise.all([
@@ -117,6 +117,7 @@ export async function POST(req: NextRequest) {
   ])
 
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
+  if (sErr) console.error('[stats_precos]', sErr.message)
 
   const geralRow  = statsGeral?.[0]  ?? null
   const dozeRow   = stats12m?.[0]    ?? null
