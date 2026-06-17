@@ -65,7 +65,12 @@ export async function GET(request: NextRequest) {
     .in('id', licitacaoIds)
 
   if (ordenar === 'recente')      query = query.order('coletado_em', { ascending: false }) as typeof query
-  else if (ordenar === 'abertura') query = query.order('data_abertura', { ascending: true, nullsFirst: false }) as typeof query
+  else if (ordenar === 'abertura') {
+    const hoje = new Date().toISOString().slice(0, 10)
+    query = query
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+      .order('data_abertura', { ascending: true, nullsFirst: false }) as typeof query
+  }
   else if (ordenar === 'menor')    query = query.order('valor_estimado', { ascending: true, nullsFirst: false }) as typeof query
   else /* valor (padrão) */        query = query.order('valor_estimado', { ascending: false, nullsFirst: false }).order('coletado_em', { ascending: false }) as typeof query
 
