@@ -121,9 +121,9 @@ BEGIN
   SELECT
     COUNT(*)::BIGINT,
     -- P10 como "menor preço" evita distorção por contratos de múltiplas unidades
-    PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY sub.valor_unitario),
+    PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC,
     -- P90 como "maior preço" pelo mesmo motivo
-    PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY sub.valor_unitario),
+    PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC,
     ROUND(AVG(sub.valor_unitario), 2),
     PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY sub.valor_unitario)
   FROM (
