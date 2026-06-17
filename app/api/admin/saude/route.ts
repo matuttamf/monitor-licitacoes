@@ -116,7 +116,7 @@ export async function GET() {
         'captacao_backfill_data', 'captacao_transparencia_backfill_data', 'captacao_ativa',
         'resultados_backfill_data', 'transparencia_backfill_data',
       ]),
-    admin.from('resultados_itens').select('*', { count: 'exact', head: true }),
+    admin.from('resultados_itens').select('*', { count: 'estimated', head: true }),
   ])
 
   const cfg: Record<string, string> = {}

@@ -790,13 +790,11 @@ export default function CaptacaoPage() {
 
       {/* ── Abas ── */}
       <div className="flex gap-1 mb-4">
-        {(['base', 'busca'] as const).map(aba => (
-          <button key={aba} onClick={() => setAbaAtiva(aba)}
-            className="px-5 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: abaAtiva === aba ? 'var(--vinho)' : 'white', color: abaAtiva === aba ? 'white' : 'var(--cinza)', border: '1px solid var(--cinza-light)', cursor: 'pointer' }}>
-            {aba === 'base' ? `📋 Base de leads (${totalDB.toLocaleString('pt-BR')})` : '🔍 Busca manual PNCP'}
-          </button>
-        ))}
+        <button onClick={() => setAbaAtiva('base')}
+          className="px-5 py-2 rounded-xl text-sm font-semibold"
+          style={{ background: 'var(--vinho)', color: 'white', border: '1px solid var(--cinza-light)', cursor: 'pointer' }}>
+          📋 Base de leads ({totalDB.toLocaleString('pt-BR')})
+        </button>
       </div>
 
       {/* ── ABA: BASE DE LEADS ── */}
