@@ -59,7 +59,26 @@ export async function GET(request: Request) {
     }
   }
   if (regiao) {
-    query = query.contains('regioes', [regiao])
+    const REGIAO_UFS: Record<string, string[]> = {
+      'Norte':        ['AC','AM','AP','PA','RO','RR','TO'],
+      'Nordeste':     ['AL','BA','CE','MA','PB','PE','PI','RN','SE'],
+      'Centro-Oeste': ['DF','GO','MS','MT'],
+      'Sudeste':      ['ES','MG','RJ','SP'],
+      'Sul':          ['PR','RS','SC'],
+    }
+    // Macro-região: aceita empresa que listou a macro OU qualquer UF dela
+    // UF individual: aceita empresa que listou a UF OU a macro-região pai
+    let filtroRegioes: string[]
+    if (REGIAO_UFS[regiao]) {
+      filtroRegioes = [regiao, ...REGIAO_UFS[regiao]]
+    } else if (regiao.length === 2) {
+      const uf = regiao.toUpperCase()
+      const macro = Object.entries(REGIAO_UFS).find(([, ufs]) => ufs.includes(uf))?.[0]
+      filtroRegioes = macro ? [uf, macro] : [uf]
+    } else {
+      filtroRegioes = [regiao]
+    }
+    query = query.overlaps('regioes', filtroRegioes)
   }
   // Ano de cadastro no diretório (criado_em)
   if (anoInicio) {

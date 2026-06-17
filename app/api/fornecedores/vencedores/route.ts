@@ -42,27 +42,34 @@ export async function GET(request: Request) {
     'Sul':          ['PR','RS','SC'],
   }
 
-  // UF única (2 chars) ou expansão de macro-região para array
+  // Expande macro-região em lista de UFs; UF única vira array de 1 elemento
   let ufs: string[] | null = null
-  if (regiao.length === 2) {
-    ufs = [regiao.toUpperCase()]
-  } else if (REGIAO_UFS[regiao]) {
+  if (REGIAO_UFS[regiao]) {
     ufs = REGIAO_UFS[regiao]
+  } else if (regiao.length === 2) {
+    ufs = [regiao.toUpperCase()]
   }
 
   const anoInicioNum = anoInicio ? parseInt(anoInicio, 10) : null
   const anoFimNum    = anoFim    ? parseInt(anoFim,    10) : null
 
+  // Busca sem filtro de UF na SQL (LIMIT alto para não cortar antes de filtrar)
   const { data, error } = await supabase.rpc('buscar_vencedores_licitacoes', {
     p_termo:      busca || null,
     p_uf:         null,
-    p_ufs:        ufs,
     p_ano_inicio: anoInicioNum,
     p_ano_fim:    anoFimNum,
-    p_limite:     50,
+    p_limite:     ufs ? 500 : 50,   // busca mais resultados quando vai filtrar depois
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ vencedores: data ?? [] })
+  // Filtra por região no JS usando o campo `estados` (array de UFs do vencedor)
+  type Vencedor = { estados: string[] | null; [k: string]: unknown }
+  const todos = (data ?? []) as Vencedor[]
+  const filtrados = ufs
+    ? todos.filter(v => v.estados?.some(e => ufs!.includes(e)))
+    : todos
+
+  return NextResponse.json({ vencedores: filtrados.slice(0, 50) })
 }
