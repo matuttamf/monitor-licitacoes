@@ -298,10 +298,10 @@ export default function PrecosPage() {
           {/* Cards de preço */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             {[
-              { label: 'P10 (base)',   value: fmtBRL(stats.minimo),  sub: 'ref. baixo',          destaque: false, cor: '#15803d' },
-              { label: 'Mediana',      value: fmtBRL(stats.mediana), sub: 'referência principal', destaque: true,  cor: 'var(--vinho)' },
-              { label: 'Média',        value: fmtBRL(stats.media),   sub: null,                   destaque: false, cor: 'var(--preto)' },
-              { label: 'P90 (teto)',   value: fmtBRL(stats.maximo),  sub: 'ref. alto',             destaque: false, cor: '#b91c1c' },
+              { label: 'P10 (base)',      value: fmtBRL(stats.minimo),  sub: '10% dos contratos abaixo', destaque: false, cor: '#15803d' },
+              { label: 'Mediana',         value: fmtBRL(stats.mediana), sub: 'referência principal',      destaque: true,  cor: 'var(--vinho)' },
+              { label: 'Média P25–P75',   value: fmtBRL(stats.media),   sub: 'sem extremos',              destaque: false, cor: 'var(--preto)' },
+              { label: 'P90 (teto)',      value: fmtBRL(stats.maximo),  sub: '10% dos contratos acima',   destaque: false, cor: '#b91c1c' },
             ].map(card => (
               <div key={card.label} style={{
                 background: card.destaque ? 'rgba(107,15,26,0.04)' : 'var(--fundo)',
@@ -330,6 +330,11 @@ export default function PrecosPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Nota metodológica */}
+          <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
+            ⚠️ Valores representam contratos homologados — alguns podem incluir múltiplas unidades (ex: aquisição de 50 notebooks gera um único contrato). A <strong>Média P25–P75</strong> e os percentis <strong>P10/P90</strong> excluem os 10% mais baratos e 10% mais caros para reduzir distorções. A <strong>mediana</strong> é calculada sobre todos os {stats.total} contratos encontrados.
           </div>
 
           {/* Comparativo governo vs mercado */}
