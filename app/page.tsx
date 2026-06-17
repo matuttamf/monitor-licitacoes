@@ -10,9 +10,13 @@ export const metadata: Metadata = {
   description:
     'Receba alertas em tempo real de licitações públicas que combinam com o que sua empresa vende — por e-mail, Telegram e WhatsApp. Governo Federal, estados, municípios e estatais. Comece grátis por 7 dias.',
   keywords: [
-    'monitor de licitações', 'alerta de licitações', 'licitações públicas', 'PNCP',
-    'pregão eletrônico', 'compras governamentais', 'licitação empresa', 'fornecedor governo',
-    'alertas PNCP', 'monitoramento licitações', 'licitações Brasil',
+    'monitor de licitações', 'alerta de licitações', 'licitações públicas',
+    'edital de licitação', 'pregão eletrônico', 'PNCP', 'ComprasNet', 'BLL',
+    'compras governamentais', 'contratação pública', 'fornecedor governo',
+    'Portal Nacional de Contratações Públicas', 'monitoramento de licitações',
+    'notificação licitação', 'licitações para MEI', 'licitações para pequenas empresas',
+    'buscar editais públicos', 'dispensa de licitação', 'aviso de licitação',
+    'sistema de alertas licitações', 'acompanhar editais', 'licitações Brasil',
   ],
   openGraph: {
     title: 'Monitor de Licitações — Nunca mais perca um contrato público',
@@ -136,20 +140,38 @@ const jsonLd = {
   name: 'Monitor de Licitações',
   url: APP_URL,
   applicationCategory: 'BusinessApplication',
+  applicationSubCategory: 'Procurement Monitoring',
   operatingSystem: 'Web',
+  inLanguage: 'pt-BR',
   description:
-    'Plataforma de monitoramento de licitações públicas brasileiras com alertas automáticos por e-mail, Telegram e WhatsApp.',
+    'Plataforma de monitoramento de licitações públicas brasileiras com alertas automáticos por e-mail, Telegram e WhatsApp. Monitora PNCP, ComprasNet, BLL e portais estaduais.',
   offers: [
-    { '@type': 'Offer', price: '0',   priceCurrency: 'BRL', name: 'Trial 7 dias' },
-    { '@type': 'Offer', price: '49',  priceCurrency: 'BRL', name: 'Plano Basic',         billingDuration: 'P1M' },
-    { '@type': 'Offer', price: '97',  priceCurrency: 'BRL', name: 'Plano Profissional',  billingDuration: 'P1M' },
-    { '@type': 'Offer', price: '197', priceCurrency: 'BRL', name: 'Plano Gestão',        billingDuration: 'P1M' },
-    { '@type': 'Offer', price: '497', priceCurrency: 'BRL', name: 'Plano Empresarial',   billingDuration: 'P1M' },
+    { '@type': 'Offer', price: '0',   priceCurrency: 'BRL', name: 'Trial 7 dias',        availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', price: '49.90',  priceCurrency: 'BRL', name: 'Plano Basic',       billingDuration: 'P1M', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', price: '97.90',  priceCurrency: 'BRL', name: 'Plano Profissional', billingDuration: 'P1M', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', price: '197.90', priceCurrency: 'BRL', name: 'Plano Gestão',      billingDuration: 'P1M', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', price: '497',    priceCurrency: 'BRL', name: 'Plano Empresarial', billingDuration: 'P1M', availability: 'https://schema.org/InStock' },
   ],
   publisher: {
     '@type': 'Organization',
-    name: 'Monitor de Licitações',
+    name: 'Matutta Soluções Digitais',
     url: APP_URL,
+  },
+}
+
+const orgLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Monitor de Licitações',
+  url: APP_URL,
+  logo: `${APP_URL}/og-image.png`,
+  description: 'Plataforma de alertas automáticos de licitações públicas brasileiras — monitora PNCP, ComprasNet, BLL, editais estaduais e municipais.',
+  areaServed: 'BR',
+  knowsAbout: ['licitações públicas', 'pregão eletrônico', 'PNCP', 'contratação pública', 'compras governamentais'],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    availableLanguage: 'Portuguese',
   },
 }
 
@@ -157,10 +179,13 @@ const faqLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: [
-    { '@type': 'Question', name: 'Preciso de cartão de crédito para começar?', acceptedAnswer: { '@type': 'Answer', text: 'Não. Os sete dias de teste são completamente gratuitos e sem burocracia.' } },
-    { '@type': 'Question', name: 'Como o sistema sabe quais editais combinam com meu negócio?', acceptedAnswer: { '@type': 'Answer', text: 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação use termos diferentes dos seus.' } },
-    { '@type': 'Question', name: 'Vocês monitoram empresas como Petrobras, Correios e Caixa?', acceptedAnswer: { '@type': 'Answer', text: 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais: Petrobras, Caixa Econômica Federal, Correios, Eletrobras e SABESP.' } },
-    { '@type': 'Question', name: 'Posso cancelar se não for o que esperava?', acceptedAnswer: { '@type': 'Answer', text: 'Sim, a qualquer momento, sem multa e sem burocracia.' } },
+    { '@type': 'Question', name: 'Preciso de cartão de crédito para começar?', acceptedAnswer: { '@type': 'Answer', text: 'Não. Os sete dias de teste são completamente gratuitos e sem burocracia. Você só cadastra uma forma de pagamento se decidir continuar após o período de teste.' } },
+    { '@type': 'Question', name: 'Minha empresa é pequena. Isso funciona para mim?', acceptedAnswer: { '@type': 'Answer', text: 'Especialmente para você. O governo brasileiro tem cotas e benefícios para micro e pequenas empresas em licitações. MEI, ME e EPP têm vantagens legais que grandes empresas não têm. Falta apenas informação — e isso o Monitor resolve.' } },
+    { '@type': 'Question', name: 'Como o sistema sabe quais editais combinam com meu negócio?', acceptedAnswer: { '@type': 'Answer', text: 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação do edital use termos diferentes dos seus.' } },
+    { '@type': 'Question', name: 'Com que frequência recebo alertas?', acceptedAnswer: { '@type': 'Answer', text: 'Monitoramos continuamente de segunda a sexta, dentro do horário comercial. Assim que identificamos uma licitação compatível com o seu perfil, ela entra na fila de envio e chega para você em breve — sem sobrecarregar sua caixa de entrada.' } },
+    { '@type': 'Question', name: 'Vocês monitoram empresas como Petrobras, Correios e Caixa?', acceptedAnswer: { '@type': 'Answer', text: 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais brasileiras: Petrobras, Caixa Econômica Federal, Correios, Eletrobras e SABESP.' } },
+    { '@type': 'Question', name: 'Posso cancelar se não for o que esperava?', acceptedAnswer: { '@type': 'Answer', text: 'Sim, sem burocracia. No plano mensal, o cancelamento encerra a renovação imediatamente. No plano anual, o cancelamento encerra a renovação automática e o acesso permanece ativo até o fim do período já pago.' } },
+    { '@type': 'Question', name: 'O Diretório de Fornecedores é só para quem vende para o governo?', acceptedAnswer: { '@type': 'Answer', text: 'Não. Qualquer empresa pode se cadastrar no diretório — seja para ser encontrada por órgãos públicos, por outros usuários da plataforma ou por parceiros comerciais. O diretório funciona como uma vitrine aberta a todos os usuários: quem encontrar sua empresa entra em contato diretamente com você.' } },
   ],
 }
 
@@ -168,6 +193,7 @@ export default function LandingPage() {
   return (
     <div className="font-sans bg-[#FAF6F0] text-[#1A1A1C]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
       {/* ── HEADER ── */}

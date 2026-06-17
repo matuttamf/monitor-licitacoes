@@ -27,10 +27,13 @@ export const metadata: Metadata = {
   description:
     'Receba alertas automáticos de licitações públicas que combinam com o seu negócio. Monitoramos PNCP, ComprasNet, BLL e portais estaduais. Teste grátis por 7 dias.',
   keywords: [
-    'licitações públicas', 'monitor de licitações', 'alertas de editais',
-    'PNCP', 'ComprasNet', 'pregão eletrônico', 'licitação federal',
-    'licitação estadual', 'licitação municipal', 'edital público',
-    'fornecedor governo', 'contratação pública',
+    'monitor de licitações', 'alerta de licitações', 'licitações públicas',
+    'edital de licitação', 'pregão eletrônico', 'PNCP', 'ComprasNet', 'BLL',
+    'licitação federal', 'licitação estadual', 'licitação municipal',
+    'contratação pública', 'fornecedor governo', 'compras governamentais',
+    'Portal Nacional de Contratações Públicas', 'monitoramento de licitações',
+    'notificação licitação', 'licitações para MEI', 'licitações para pequenas empresas',
+    'buscar editais', 'dispensa de licitação', 'aviso de licitação',
   ],
   authors: [{ name: 'Monitor de Licitações', url: APP_URL }],
   creator: 'Monitor de Licitações',
