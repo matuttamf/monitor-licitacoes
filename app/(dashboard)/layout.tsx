@@ -123,7 +123,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div style={{ height: '2px', background: 'linear-gradient(90deg, var(--vinho), var(--dourado), transparent)' }} />
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-5 space-y-0.5">
+        <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
           {allNavItems.map(item => (
             <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} sub={item.sub} badge={item.badge} locked={item.locked} planoNecessario={item.planoNecessario} />
           ))}
