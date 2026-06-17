@@ -11,20 +11,21 @@ const ESTADOS = [
 ]
 
 interface ResultadoItem {
-  descricao_item: string
-  orgao:          string | null
-  estado:         string | null
-  municipio:      string | null
-  valor_unitario: number
-  nome_vencedor:  string | null
-  cnpj_vencedor:  string | null
-  unidade_medida: string | null
-  data_resultado: string | null
-  score:          number
-  cnpj_orgao:     string | null
-  ano_compra:     number | null
-  seq_compra:     number | null
-  fonte:          string | null
+  descricao_item:      string
+  orgao:               string | null
+  estado:              string | null
+  municipio:           string | null
+  valor_unitario:      number
+  quantidade_estimada: number | null
+  nome_vencedor:       string | null
+  cnpj_vencedor:       string | null
+  unidade_medida:      string | null
+  data_resultado:      string | null
+  score:               number
+  cnpj_orgao:          string | null
+  ano_compra:          number | null
+  seq_compra:          number | null
+  fonte:               string | null
 }
 
 interface Stats {
@@ -334,7 +335,7 @@ export default function PrecosPage() {
 
           {/* Nota metodológica */}
           <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
-            ⚠️ Valores representam contratos homologados — alguns podem incluir múltiplas unidades (ex: aquisição de 50 notebooks gera um único contrato). A <strong>Média P25–P75</strong> e os percentis <strong>P10/P90</strong> excluem os 10% mais baratos e 10% mais caros para reduzir distorções. A <strong>mediana</strong> é calculada sobre todos os {stats.total} contratos encontrados.
+            Valores unitários estimados a partir de {stats.total} contratos homologados. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor total é dividido pela quantidade para obter o preço unitário — nesses casos a coluna valor exibe &quot;estimado · contrato N un.&quot;. A <strong>Média P25–P75</strong> e os percentis <strong>P10/P90</strong> excluem os 10% mais baratos e 10% mais caros para reduzir distorções. A <strong>mediana</strong> é a referência principal.
           </div>
 
           {/* Comparativo governo vs mercado */}
@@ -428,6 +429,11 @@ export default function PrecosPage() {
                           {/* Valor */}
                           <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--vinho)', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
                             {fmtBRL(r.valor_unitario)}
+                            {(r.quantidade_estimada ?? 1) > 1 && (
+                              <div style={{ fontSize: 9, fontWeight: 400, color: 'var(--cinza)', marginTop: 2 }}>
+                                estimado · contrato {r.quantidade_estimada} un.
+                              </div>
+                            )}
                           </td>
 
                           {/* Fornecedor */}
