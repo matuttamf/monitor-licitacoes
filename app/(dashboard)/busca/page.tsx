@@ -219,24 +219,22 @@ export default function BuscaPage() {
           </div>
         </div>
 
-        {/* Ordenação */}
-        <div className="mb-4">
-          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Ordenar por</label>
-          <select
-            value={ordenar}
-            onChange={e => setOrdenar(e.target.value)}
-            className="px-3 py-2.5 rounded-xl text-sm"
-            style={{ border: '1.5px solid var(--border)', outline: 'none', color: 'var(--text-1)', background: 'var(--surface)', minWidth: '180px' }}
-          >
-            <option value="recente">Mais recentes</option>
-            <option value="valor">Maior valor</option>
-            <option value="abertura">Abertura próxima</option>
-            <option value="menor">Menor valor</option>
-          </select>
-        </div>
-
-        {/* Botões */}
-        <div className="flex gap-3 flex-wrap">
+        {/* Ordenação + Botões na mesma linha */}
+        <div className="flex gap-3 flex-wrap items-end">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Ordenar por</label>
+            <select
+              value={ordenar}
+              onChange={e => setOrdenar(e.target.value)}
+              className="px-3 py-2.5 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--border)', outline: 'none', color: 'var(--text-1)', background: 'var(--surface)', minWidth: '180px' }}
+            >
+              <option value="recente">Mais recentes</option>
+              <option value="valor">Maior valor</option>
+              <option value="abertura">Abertura próxima</option>
+              <option value="menor">Menor valor</option>
+            </select>
+          </div>
           <button
             type="submit"
             disabled={buscando}
