@@ -393,7 +393,7 @@ export default function FornecedoresPage() {
           type="text"
           value={busca}
           onChange={e => setBusca(e.target.value)}
-          placeholder="Buscar por nome, CNPJ ou segmento…"
+          placeholder="Nome, CNPJ, produto ou segmento (ex: cadeira, notebook, TI)…"
           className="flex-1 min-w-[220px] px-4 py-2.5 rounded-xl text-sm"
           style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }}
         />
@@ -597,7 +597,7 @@ export default function FornecedoresPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {vencedores.map((v, i) => (
-                <div key={v.cnpj_vencedor} style={{
+                <div key={v.cnpj_vencedor || v.nome_vencedor} style={{
                   background: 'white', border: '1px solid var(--cinza-light)',
                   borderRadius: 12, padding: '14px 18px',
                   display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
@@ -618,9 +618,11 @@ export default function FornecedoresPage() {
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--preto)', lineHeight: 1.3 }}>
                       {v.nome_vencedor}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 2 }}>
-                      {v.cnpj_vencedor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}
-                    </div>
+                    {v.cnpj_vencedor && (
+                      <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 2 }}>
+                        {v.cnpj_vencedor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}
+                      </div>
+                    )}
                   </div>
 
                   {/* Stats */}

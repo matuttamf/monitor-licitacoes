@@ -2,6 +2,9 @@
 -- Muitos contratos PNCP não têm dataAssinatura preenchida, excluindo-os do diretório
 
 DROP FUNCTION IF EXISTS buscar_vencedores_licitacoes(text,text,integer,integer,integer);
+DROP FUNCTION IF EXISTS buscar_vencedores_licitacoes(text,text,date,integer);
+DROP FUNCTION IF EXISTS buscar_vencedores_licitacoes(text,text,date,date,integer);
+DROP FUNCTION IF EXISTS buscar_vencedores_licitacoes(text,text);
 
 CREATE OR REPLACE FUNCTION buscar_vencedores_licitacoes(
   p_termo      TEXT    DEFAULT NULL,
@@ -45,7 +48,8 @@ BEGIN
 
   RETURN QUERY
   SELECT
-    r.cnpj_vencedor,
+    -- CNPJ pode ser null; usa string vazia para o frontend distinguir
+    coalesce(r.cnpj_vencedor, '')                                       AS cnpj_vencedor,
     MAX(r.nome_vencedor)                                                AS nome_vencedor,
     COUNT(*)::BIGINT                                                    AS total_vitorias,
     ROUND(AVG(r.valor_unitario), 2)                                     AS valor_medio,
@@ -53,8 +57,7 @@ BEGIN
     ARRAY_AGG(DISTINCT r.estado) FILTER (WHERE r.estado IS NOT NULL)   AS estados,
     MAX(r.data_resultado)                                               AS ultima_vitoria
   FROM resultados_itens r
-  WHERE r.cnpj_vencedor IS NOT NULL
-    AND r.nome_vencedor  IS NOT NULL
+  WHERE r.nome_vencedor IS NOT NULL
     -- NULL data_resultado = sem data de assinatura; incluir pois o item é válido
     AND (r.data_resultado IS NULL OR r.data_resultado BETWEEN v_data_ini AND v_data_fim)
     AND (p_uf IS NULL OR r.estado = p_uf)
@@ -63,7 +66,7 @@ BEGIN
       OR (v_query IS NOT NULL AND r.tsv @@ v_query)
       OR similarity(upper(r.descricao_item), v_termo) > 0.22
     )
-  GROUP BY r.cnpj_vencedor
+  GROUP BY coalesce(r.cnpj_vencedor, r.nome_vencedor)
   ORDER BY total_vitorias DESC, ultima_vitoria DESC NULLS LAST
   LIMIT p_limite;
 END;
