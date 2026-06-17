@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   const canal    = sp.get('canal') ?? ''
   const valorMin = sp.get('valor_min') ? Number(sp.get('valor_min')) : null
   const valorMax = sp.get('valor_max') ? Number(sp.get('valor_max')) : null
+  const ordenar  = sp.get('ordenar') ?? 'mais_recentes'
 
   // Regiões — aceita ?regioes=sul,RJ  e legado ?estado=SP
   const regioes = sp.get('regioes')?.split(',').filter(Boolean) ?? []
@@ -55,8 +56,21 @@ export async function GET(request: NextRequest) {
        ${kwJoin}(termo)`,
       { count: 'exact' }
     )
-    .order('enviado_em', { ascending: false, nullsFirst: false })
     .range(from, to)
+
+  // Ordenação
+  if (ordenar === 'data_licitacao') {
+    query = query.order('data_abertura', { ascending: false, referencedTable: 'licitacoes' }) as typeof query
+  } else if (ordenar === 'maior_valor') {
+    query = query.order('valor_estimado', { ascending: false, referencedTable: 'licitacoes' }) as typeof query
+  } else if (ordenar === 'menor_valor') {
+    query = query.order('valor_estimado', { ascending: true,  referencedTable: 'licitacoes' }) as typeof query
+  } else if (ordenar === 'alfabetica') {
+    query = query.order('orgao', { ascending: true, referencedTable: 'licitacoes' }) as typeof query
+  } else {
+    // mais_recentes (default)
+    query = query.order('enviado_em', { ascending: false, nullsFirst: false }) as typeof query
+  }
 
   // Filtros no banco (nível de linha)
   if (ufs)           query = query.in('licitacoes.estado', ufs) as typeof query

@@ -112,6 +112,7 @@ export default function AlertasPage() {
   const [regioes,   setRegioes]  = useState<string[]>([])
   const [valorMin,  setValorMin] = useState('')
   const [valorMax,  setValorMax] = useState('')
+  const [ordenar,   setOrdenar]  = useState('mais_recentes')
 
   // Lista de keywords do usuário para o dropdown — carrega uma só vez
   const [keywords, setKeywords] = useState<string[]>([])
@@ -132,10 +133,11 @@ export default function AlertasPage() {
     if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
     if (valorMin) params.set('valor_min', valorMin)
     if (valorMax) params.set('valor_max', valorMax)
+    if (ordenar !== 'mais_recentes') params.set('ordenar', ordenar)
     const res = await fetch(`/api/alertas?${params}`)
     if (res.ok) setResposta(await res.json())
     setCarregando(false)
-  }, [busca, keyword, regioes, valorMin, valorMax])
+  }, [busca, keyword, regioes, valorMin, valorMax, ordenar])
 
   // Re-busca quando filtros ou página mudam
   useEffect(() => {
@@ -164,7 +166,7 @@ export default function AlertasPage() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--preto)' }}>Histórico de Alertas</h1>
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>
@@ -172,17 +174,36 @@ export default function AlertasPage() {
           </p>
         </div>
 
-        {/* Exportar CSV */}
-        {resposta && resposta.total > 0 && (
-          <a
-            href={`/api/alertas/exportar?${buildExportParams()}`}
-            download
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-            style={{ background: 'white', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', textDecoration: 'none' }}
-          >
-            ↓ Exportar CSV
-          </a>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Ordenação */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>Ordenar</span>
+            <select
+              value={ordenar}
+              onChange={e => aplicarFiltro(() => setOrdenar(e.target.value))}
+              className="px-3 py-2 rounded-xl text-sm"
+              style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white', cursor: 'pointer' }}
+            >
+              <option value="mais_recentes">Mais recentes</option>
+              <option value="data_licitacao">Data da licitação</option>
+              <option value="maior_valor">Maior valor</option>
+              <option value="menor_valor">Menor valor</option>
+              <option value="alfabetica">Alfabética (órgão)</option>
+            </select>
+          </div>
+
+          {/* Exportar CSV */}
+          {resposta && resposta.total > 0 && (
+            <a
+              href={`/api/alertas/exportar?${buildExportParams()}`}
+              download
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+              style={{ background: 'white', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', textDecoration: 'none' }}
+            >
+              ↓ Exportar CSV
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}
