@@ -1,17 +1,17 @@
 -- Extrai quantidade estimada da descrição do contrato via regex.
 -- Detecta padrões como "AQUISIÇÃO DE 50 NOTEBOOKS" → 50.
 -- Retorna 1 quando não encontra quantidade explícita (contrato unitário).
-CREATE OR REPLACE FUNCTION extrair_quantidade(desc TEXT)
+CREATE OR REPLACE FUNCTION extrair_quantidade(p_desc TEXT)
 RETURNS INT LANGUAGE plpgsql IMMUTABLE AS $$
 DECLARE
   m   TEXT[];
   qty INT;
 BEGIN
-  IF desc IS NULL THEN RETURN 1; END IF;
+  IF p_desc IS NULL THEN RETURN 1; END IF;
 
   -- Padrão: "DE N <PALAVRA>" — ex: "AQUISIÇÃO DE 75 NOTEBOOKS"
   m := regexp_match(
-    upper(trim(desc)),
+    upper(trim(p_desc)),
     '\bDE\s+(\d{1,5})\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÜ]'
   );
   IF m IS NOT NULL THEN
@@ -21,7 +21,7 @@ BEGIN
 
   -- Padrão: "N UNIDADES/EQUIPAMENTOS/COMPUTADORES/NOTEBOOKS/ITENS"
   m := regexp_match(
-    upper(trim(desc)),
+    upper(trim(p_desc)),
     '\b(\d{1,5})\s+(UNIDADES?|EQUIPAMENTOS?|COMPUTADORES?|NOTEBOOKS?|ITENS?|CONJUNTOS?|KITS?)'
   );
   IF m IS NOT NULL THEN
@@ -179,6 +179,25 @@ BEGIN
   filtrado AS (
     SELECT vu AS valor_unitario FROM scored WHERE score >= 0.15
   ),
+  -- Cerca de Tukey estendida: exclui outliers extremos (Q1 - 3×IQR, Q3 + 3×IQR).
+  -- Remove contratos sem quantidade detectada mas com valor visivelmente fora da faixa
+  -- (ex: "AQUISIÇÃO DE NOTEBOOK" por R$3,2M sem indicar quantas unidades).
+  fence AS (
+    SELECT
+      PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS q1,
+      PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS q3
+    FROM filtrado
+  ),
+  sem_outliers AS (
+    SELECT f.valor_unitario
+    FROM filtrado f, fence
+    WHERE fence.q3 > fence.q1  -- só aplica quando há dispersão real
+      AND f.valor_unitario >= fence.q1 - 3 * (fence.q3 - fence.q1)
+      AND f.valor_unitario <= fence.q3 + 3 * (fence.q3 - fence.q1)
+    UNION ALL
+    -- quando todos os valores são iguais (IQR=0), usa filtrado diretamente
+    SELECT f.valor_unitario FROM filtrado f, fence WHERE fence.q3 = fence.q1
+  ),
   pcts AS (
     SELECT
       PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p10,
@@ -186,16 +205,16 @@ BEGIN
       PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p50,
       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p75,
       PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p90
-    FROM filtrado
+    FROM sem_outliers
   )
   SELECT
-    (SELECT COUNT(*) FROM filtrado)::BIGINT                             AS total,
+    (SELECT COUNT(*) FROM sem_outliers)::BIGINT                        AS total,
     (SELECT p10  FROM pcts)                                             AS minimo,
     (SELECT p90  FROM pcts)                                             AS maximo,
-    -- média trimada P25–P75 sobre valores unitários já corrigidos
-    (SELECT ROUND(AVG(f.valor_unitario), 2)
-       FROM filtrado f, pcts
-      WHERE f.valor_unitario BETWEEN pcts.p25 AND pcts.p75)            AS media,
+    -- média trimada P25–P75 sobre valores sem outliers
+    (SELECT ROUND(AVG(s.valor_unitario), 2)
+       FROM sem_outliers s, pcts
+      WHERE s.valor_unitario BETWEEN pcts.p25 AND pcts.p75)            AS media,
     (SELECT p50  FROM pcts)                                             AS mediana;
 END;
 $$;

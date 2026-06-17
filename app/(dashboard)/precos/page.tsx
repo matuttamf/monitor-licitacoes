@@ -335,7 +335,7 @@ export default function PrecosPage() {
 
           {/* Nota metodológica */}
           <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
-            Valores unitários estimados a partir de {stats.total} contratos homologados. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor total é dividido pela quantidade para obter o preço unitário — nesses casos a coluna valor exibe &quot;estimado · contrato N un.&quot;. A <strong>Média P25–P75</strong> e os percentis <strong>P10/P90</strong> excluem os 10% mais baratos e 10% mais caros para reduzir distorções. A <strong>mediana</strong> é a referência principal.
+            Estatísticas calculadas sobre {stats.total} contratos após remover outliers extremos. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor é dividido pela quantidade detectada. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> e os percentis <strong>P10/P90</strong> excluem os 10% mais baratos e 10% mais caros. A <strong>mediana</strong> é a referência principal.
           </div>
 
           {/* Comparativo governo vs mercado */}
