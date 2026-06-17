@@ -20,6 +20,16 @@ type Fornecedor = {
   website: string | null
 }
 
+type Vencedor = {
+  cnpj_vencedor:  string
+  nome_vencedor:  string
+  total_vitorias: number
+  valor_medio:    number
+  valor_total:    number
+  estados:        string[]
+  ultima_vitoria: string | null
+}
+
 const FORM_VAZIO = {
   razao_social: '', cnpj: '', descricao: '',
   email_contato: '', telefone_contato: '', website: '',
@@ -34,6 +44,11 @@ export default function FornecedoresPage() {
   const [regiao, setRegiao]     = useState('')
   const [carregando, setCarregando] = useState(true)
   const [bloqueado, setBloqueado]   = useState(false)
+
+  // vencedores de licitações
+  const [mostrarVencedores, setMostrarVencedores] = useState(false)
+  const [vencedores, setVencedores]               = useState<Vencedor[]>([])
+  const [carregandoVenc, setCarregandoVenc]       = useState(false)
 
   // cadastro
   const [showForm, setShowForm]   = useState(false)
@@ -60,16 +75,37 @@ export default function FornecedoresPage() {
 
   useEffect(() => { carregar(1, '', '') }, [carregar])
 
+  async function carregarVencedores(q: string, uf: string) {
+    setCarregandoVenc(true)
+    const params = new URLSearchParams()
+    if (q)  params.set('q', q)
+    if (uf) params.set('uf', uf)
+    const res = await fetch(`/api/fornecedores/vencedores?${params}`)
+    if (res.ok) {
+      const d = await res.json()
+      setVencedores(d.vencedores ?? [])
+    }
+    setCarregandoVenc(false)
+  }
+
+  function toggleVencedores() {
+    const novo = !mostrarVencedores
+    setMostrarVencedores(novo)
+    if (novo && vencedores.length === 0) carregarVencedores(busca, regiao)
+  }
+
   function buscar(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
     carregar(1, busca, regiao)
+    if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, regiao) }
   }
 
   function mudarRegiao(r: string) {
     setRegiao(r)
     setPage(1)
     carregar(1, busca, r)
+    if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, r) }
   }
 
   function toggleRegiao(r: string) {
@@ -380,10 +416,34 @@ export default function FornecedoresPage() {
         )}
       </form>}
 
+      {/* Checkbox vencedores */}
+      {!showForm && (
+        <label style={{
+          display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+          padding: '10px 16px', borderRadius: 10,
+          background: mostrarVencedores ? 'rgba(107,15,26,0.05)' : 'white',
+          border: `1.5px solid ${mostrarVencedores ? 'rgba(107,15,26,0.2)' : 'var(--cinza-light)'}`,
+          userSelect: 'none',
+        }}>
+          <input
+            type="checkbox"
+            checked={mostrarVencedores}
+            onChange={toggleVencedores}
+            style={{ width: 16, height: 16, accentColor: 'var(--vinho)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 13, fontWeight: 600, color: mostrarVencedores ? 'var(--vinho)' : 'var(--preto)' }}>
+            Mostrar fornecedores que venceram licitações nos últimos 24 meses
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--cinza)', fontWeight: 400 }}>
+            — dados públicos do PNCP
+          </span>
+        </label>
+      )}
+
       {/* Contador */}
       {!carregando && total > 0 && (
         <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-          {`${total} fornecedor${total !== 1 ? 'es' : ''} encontrado${total !== 1 ? 's' : ''}`}
+          {`${total} fornecedor${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''} no diretório`}
         </p>
       )}
 
@@ -462,6 +522,103 @@ export default function FornecedoresPage() {
           ))}
         </div>
       ) : null}
+
+      {/* ── Seção: Vencedores de licitações ─────────────────────────────── */}
+      {mostrarVencedores && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--cinza-light)' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+              🏆 Vencedores de licitações · últimos 24 meses
+            </span>
+            <div style={{ flex: 1, height: 1, background: 'var(--cinza-light)' }} />
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--cinza)', marginBottom: 14 }}>
+            Empresas que venceram pregões e contratos públicos{busca ? ` para "${busca}"` : ''}. Dados extraídos do PNCP — podem ser parceiros, concorrentes ou referência de mercado.
+          </p>
+
+          {carregandoVenc ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{ height: 72, borderRadius: 12, background: 'var(--cinza-light)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              ))}
+            </div>
+          ) : vencedores.length === 0 ? (
+            <div style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: 12, padding: '32px 20px', textAlign: 'center' }}>
+              <p style={{ fontSize: 13, color: 'var(--cinza)' }}>
+                {busca ? `Nenhum vencedor encontrado para "${busca}" nos últimos 24 meses.` : 'Nenhum resultado encontrado.'}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {vencedores.map((v, i) => (
+                <div key={v.cnpj_vencedor} style={{
+                  background: 'white', border: '1px solid var(--cinza-light)',
+                  borderRadius: 12, padding: '14px 18px',
+                  display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                }}>
+                  {/* Posição */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    background: i < 3 ? 'rgba(201,166,90,0.12)' : 'var(--fundo)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontWeight: 800,
+                    color: i < 3 ? '#92610a' : 'var(--cinza)',
+                  }}>
+                    {i + 1}º
+                  </div>
+
+                  {/* Nome e CNPJ */}
+                  <div style={{ flex: 1, minWidth: 180 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--preto)', lineHeight: 1.3 }}>
+                      {v.nome_vencedor}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 2 }}>
+                      {v.cnpj_vencedor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--vinho)' }}>{v.total_vitorias}</div>
+                      <div style={{ fontSize: 10, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>vitórias</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--preto)' }}>
+                        {v.valor_medio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>preço médio</div>
+                    </div>
+                    {v.estados?.length > 0 && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {v.estados.slice(0, 4).map(uf => (
+                          <span key={uf} style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                            background: 'rgba(107,15,26,0.06)', color: 'var(--vinho)',
+                          }}>{uf}</span>
+                        ))}
+                        {v.estados.length > 4 && (
+                          <span style={{ fontSize: 10, color: 'var(--cinza)' }}>+{v.estados.length - 4}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Badge PNCP */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
+                    background: 'rgba(37,99,235,0.07)', color: '#1d4ed8',
+                    border: '1px solid rgba(37,99,235,0.15)', whiteSpace: 'nowrap',
+                  }}>
+                    Dados PNCP
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Paginação */}
       {totalPaginas > 1 && (
