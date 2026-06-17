@@ -4,6 +4,30 @@ import { getLimites } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
 
+interface MLItem { price: number; currency_id: string }
+interface MLResponse { results: MLItem[] }
+
+async function buscarPrecoMercado(termo: string): Promise<{ media: number | null; minimo: number | null; total: number }> {
+  try {
+    const q = encodeURIComponent(termo.slice(0, 80))
+    const res = await fetch(
+      `https://api.mercadolibre.com/sites/MLB/search?q=${q}&limit=20&condition=new`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+    )
+    if (!res.ok) return { media: null, minimo: null, total: 0 }
+    const json: MLResponse = await res.json()
+    const precos = (json.results ?? [])
+      .filter(r => r.currency_id === 'BRL' && r.price > 0)
+      .map(r => r.price)
+    if (!precos.length) return { media: null, minimo: null, total: 0 }
+    const media = Math.round(precos.reduce((a, b) => a + b, 0) / precos.length * 100) / 100
+    const minimo = Math.min(...precos)
+    return { media, minimo, total: precos.length }
+  } catch {
+    return { media: null, minimo: null, total: 0 }
+  }
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -69,8 +93,8 @@ export async function POST(req: NextRequest) {
 
   if (!termo?.trim()) return NextResponse.json({ error: 'termo obrigatório' }, { status: 400 })
 
-  // Buscar resultados e stats em paralelo
-  const [{ data: resultados, error: rErr }, { data: stats, error: sErr }] = await Promise.all([
+  // Buscar resultados, stats e preço de mercado em paralelo
+  const [{ data: resultados, error: rErr }, { data: stats }, precoMercado] = await Promise.all([
     supabase.rpc('buscar_precos', {
       p_termo:  termo.trim(),
       p_estado: estado || null,
@@ -85,6 +109,7 @@ export async function POST(req: NextRequest) {
       p_inicio: inicio || null,
       p_fim:    fim || null,
     }),
+    buscarPrecoMercado(termo.trim()),
   ])
 
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
@@ -103,8 +128,9 @@ export async function POST(req: NextRequest) {
   await supabase.from('profiles').update(updatePayload).eq('id', user.id)
 
   return NextResponse.json({
-    resultados: resultados ?? [],
-    stats: stats?.[0] ?? null,
+    resultados:   resultados ?? [],
+    stats:        stats?.[0] ?? null,
+    precoMercado,
     buscasUsadas: buscasUsadas + 1,
     maxBuscas,
     plano: profile.plano,

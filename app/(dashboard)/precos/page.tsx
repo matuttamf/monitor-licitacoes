@@ -31,9 +31,16 @@ interface Stats {
   mediana: number
 }
 
+interface PrecoMercado {
+  media:  number | null
+  minimo: number | null
+  total:  number
+}
+
 interface BuscaResponse {
   resultados:   ResultadoItem[]
   stats:        Stats | null
+  precoMercado: PrecoMercado | null
   buscasUsadas: number
   maxBuscas:    number
   plano:        string
@@ -295,6 +302,57 @@ export default function PrecosPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Comparação com preço de mercado (Mercado Livre) */}
+      {resultado?.precoMercado?.media && resultado?.stats?.media && (
+        (() => {
+          const govMedia   = resultado.stats!.media
+          const govMediana = resultado.stats!.mediana
+          const mlMedia    = resultado.precoMercado!.media!
+          const mlMinimo   = resultado.precoMercado!.minimo!
+          const diffMedia  = ((govMedia - mlMedia) / mlMedia) * 100
+          const diffMediana = ((govMediana - mlMedia) / mlMedia) * 100
+          const acima      = diffMedia > 0
+          const cor        = acima ? '#b91c1c' : '#15803d'
+          const bgCor      = acima ? 'rgba(185,28,28,0.05)' : 'rgba(21,128,61,0.05)'
+          const bordaCor   = acima ? 'rgba(185,28,28,0.2)' : 'rgba(21,128,61,0.2)'
+          return (
+            <div style={{
+              background: bgCor, border: `1.5px solid ${bordaCor}`,
+              borderRadius: 12, padding: '16px 20px', marginBottom: 18,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--cinza)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                    Comparação com mercado consumidor
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: cor, marginBottom: 2 }}>
+                    {acima ? '▲' : '▼'} {Math.abs(diffMedia).toFixed(1)}% {acima ? 'acima' : 'abaixo'} do mercado
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--cinza)', lineHeight: 1.6 }}>
+                    Mediana governo {diffMediana > 0 ? '+' : ''}{diffMediana.toFixed(1)}% vs. média Mercado Livre
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: 'var(--cinza)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 3 }}>Média ML</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--preto)' }}>{fmtBRL(mlMedia)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 1 }}>mín. {fmtBRL(mlMinimo)}</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: 'var(--cinza)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 3 }}>Média governo</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--vinho)' }}>{fmtBRL(govMedia)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 1 }}>mediana {fmtBRL(govMediana)}</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)' }}>
+                Fonte: Mercado Livre ({resultado.precoMercado!.total} produtos novos) · Use como referência, não como base legal de proposta.
+              </div>
+            </div>
+          )
+        })()
       )}
 
       {/* Tabela de resultados */}
