@@ -59,7 +59,9 @@ export async function GET(request: NextRequest) {
     .range(from, to)
 
   // Ordenação
-  if (ordenar === 'data_licitacao') {
+  if (ordenar === 'data_proxima') {
+    query = query.order('data_abertura', { ascending: true,  referencedTable: 'licitacoes' }) as typeof query
+  } else if (ordenar === 'data_distante') {
     query = query.order('data_abertura', { ascending: false, referencedTable: 'licitacoes' }) as typeof query
   } else if (ordenar === 'maior_valor') {
     query = query.order('valor_estimado', { ascending: false, referencedTable: 'licitacoes' }) as typeof query

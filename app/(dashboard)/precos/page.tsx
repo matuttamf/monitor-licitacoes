@@ -298,10 +298,10 @@ export default function PrecosPage() {
           {/* Cards de preço */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             {[
-              { label: 'Menor preço',  value: fmtBRL(stats.minimo),  sub: null,           destaque: false, cor: '#15803d' },
+              { label: 'P10 (base)',   value: fmtBRL(stats.minimo),  sub: 'ref. baixo',          destaque: false, cor: '#15803d' },
               { label: 'Mediana',      value: fmtBRL(stats.mediana), sub: 'referência principal', destaque: true,  cor: 'var(--vinho)' },
-              { label: 'Média',        value: fmtBRL(stats.media),   sub: null,           destaque: false, cor: 'var(--preto)' },
-              { label: 'Maior preço',  value: fmtBRL(stats.maximo),  sub: null,           destaque: false, cor: '#b91c1c' },
+              { label: 'Média',        value: fmtBRL(stats.media),   sub: null,                   destaque: false, cor: 'var(--preto)' },
+              { label: 'P90 (teto)',   value: fmtBRL(stats.maximo),  sub: 'ref. alto',             destaque: false, cor: '#b91c1c' },
             ].map(card => (
               <div key={card.label} style={{
                 background: card.destaque ? 'rgba(107,15,26,0.04)' : 'var(--fundo)',

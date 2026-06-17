@@ -185,7 +185,8 @@ export default function AlertasPage() {
               style={{ border: '1.5px solid var(--cinza-light)', outline: 'none', color: 'var(--preto)', background: 'white', cursor: 'pointer' }}
             >
               <option value="mais_recentes">Mais recentes</option>
-              <option value="data_licitacao">Data da licitação</option>
+              <option value="data_proxima">Data mais próxima</option>
+              <option value="data_distante">Data mais distante</option>
               <option value="maior_valor">Maior valor</option>
               <option value="menor_valor">Menor valor</option>
               <option value="alfabetica">Alfabética (órgão)</option>
