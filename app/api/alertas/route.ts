@@ -16,6 +16,15 @@ function expandirParaUFs(regioes: string[]): string[] | null {
   return [...ufs]
 }
 
+type AlertaDedup = {
+  id: string
+  criado_em: string
+  enviado_em: string | null
+  canais: string[]
+  licitacoes: unknown
+  keywords: string[]
+}
+
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -30,61 +39,40 @@ export async function GET(request: NextRequest) {
   const valorMax = sp.get('valor_max') ? Number(sp.get('valor_max')) : null
   const ordenar  = sp.get('ordenar') ?? 'mais_recentes'
 
-  // Regiões — aceita ?regioes=sul,RJ  e legado ?estado=SP
   const regioes = sp.get('regioes')?.split(',').filter(Boolean) ?? []
   const estadoLeg = sp.get('estado') ?? ''
   if (estadoLeg && regioes.length === 0) regioes.push(estadoLeg)
 
   const ufs = expandirParaUFs(regioes)
 
-  // Usa !inner para filtrar no banco quando há filtro de localização ou valor
-  // (alertas sempre têm licitação associada, então inner join é seguro)
   const licJoin = (ufs || valorMin !== null || valorMax !== null)
     ? 'licitacoes!inner'
     : 'licitacoes'
-  // Usa !inner em keywords quando filtra por keyword (evita trazer alertas sem keyword)
   const kwJoin = kwTermo ? 'keywords!inner' : 'keywords'
 
-  const from = (pagina - 1) * POR_PAGINA
-  const to   = from + POR_PAGINA - 1
-
+  // Busca todos os alertas do usuário (sem paginação no banco) para que a
+  // ordenação + dedup sejam aplicadas ao conjunto completo, não só à página atual.
+  // Volume por usuário é pequeno — limitamos a 2000 como proteção.
   let query = supabase
     .from('alertas')
     .select(
       `id, criado_em, enviado_em, canais,
        ${licJoin}(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura),
-       ${kwJoin}(termo)`,
-      { count: 'exact' }
+       ${kwJoin}(termo)`
     )
-    .range(from, to)
+    .limit(2000)
+    .order('enviado_em', { ascending: false, nullsFirst: false })
 
-  // Ordenação
-  if (ordenar === 'data_proxima') {
-    query = query.order('data_abertura', { ascending: true,  referencedTable: 'licitacoes' }) as typeof query
-  } else if (ordenar === 'data_distante') {
-    query = query.order('data_abertura', { ascending: false, referencedTable: 'licitacoes' }) as typeof query
-  } else if (ordenar === 'maior_valor') {
-    query = query.order('valor_estimado', { ascending: false, referencedTable: 'licitacoes' }) as typeof query
-  } else if (ordenar === 'menor_valor') {
-    query = query.order('valor_estimado', { ascending: true,  referencedTable: 'licitacoes' }) as typeof query
-  } else if (ordenar === 'alfabetica') {
-    query = query.order('orgao', { ascending: true, referencedTable: 'licitacoes' }) as typeof query
-  } else {
-    // mais_recentes (default)
-    query = query.order('enviado_em', { ascending: false, nullsFirst: false }) as typeof query
-  }
+  if (ufs)      query = query.in('licitacoes.estado', ufs) as typeof query
+  if (kwTermo)  query = query.eq('keywords.termo', kwTermo) as typeof query
+  if (canal)    query = query.contains('canais', [canal]) as typeof query
+  if (valorMin) query = query.gte('licitacoes.valor_estimado', valorMin) as typeof query
+  if (valorMax) query = query.lte('licitacoes.valor_estimado', valorMax) as typeof query
 
-  // Filtros no banco (nível de linha)
-  if (ufs)           query = query.in('licitacoes.estado', ufs) as typeof query
-  if (kwTermo)       query = query.eq('keywords.termo', kwTermo) as typeof query
-  if (canal)         query = query.contains('canais', [canal]) as typeof query
-  if (valorMin)      query = query.gte('licitacoes.valor_estimado', valorMin) as typeof query
-  if (valorMax)      query = query.lte('licitacoes.valor_estimado', valorMax) as typeof query
-
-  const { data, count, error } = await query
+  const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Filtro de texto livre — client-side (não tem suporte nativo em join)
+  // Filtro de texto livre
   let resultado = data ?? []
   if (busca) {
     const termo = busca.toLowerCase()
@@ -99,16 +87,7 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // Desduplicar por licitação: agrupa keywords quando a mesma licitação
-  // aparece várias vezes (uma linha por keyword que deu match)
-  type AlertaDedup = {
-    id: string
-    criado_em: string
-    enviado_em: string | null
-    canais: string[]
-    licitacoes: unknown
-    keywords: string[]
-  }
+  // Deduplicar por licitação
   const licitacaoMap = new Map<string, AlertaDedup>()
   for (const a of resultado) {
     const lic = a.licitacoes as { orgao?: string; objeto?: string } | null
@@ -134,10 +113,43 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const dedup = [...licitacaoMap.values()]
+  let dedup = [...licitacaoMap.values()]
 
-  const total   = count ?? 0
+  // Ordenação sobre o conjunto completo já deduplicado
+  type Lic = { data_abertura?: string; valor_estimado?: number; orgao?: string }
+  const getLic = (a: AlertaDedup) => a.licitacoes as Lic | null
+
+  if (ordenar === 'mais_recentes') {
+    dedup.sort((a, b) => {
+      const ta = a.enviado_em ?? a.criado_em
+      const tb = b.enviado_em ?? b.criado_em
+      return tb.localeCompare(ta)
+    })
+  } else if (ordenar === 'data_proxima') {
+    dedup.sort((a, b) => {
+      const da = getLic(a)?.data_abertura ?? '9999'
+      const db = getLic(b)?.data_abertura ?? '9999'
+      return da.localeCompare(db)
+    })
+  } else if (ordenar === 'data_distante') {
+    dedup.sort((a, b) => {
+      const da = getLic(a)?.data_abertura ?? ''
+      const db = getLic(b)?.data_abertura ?? ''
+      return db.localeCompare(da)
+    })
+  } else if (ordenar === 'maior_valor') {
+    dedup.sort((a, b) => (getLic(b)?.valor_estimado ?? 0) - (getLic(a)?.valor_estimado ?? 0))
+  } else if (ordenar === 'menor_valor') {
+    dedup.sort((a, b) => (getLic(a)?.valor_estimado ?? 0) - (getLic(b)?.valor_estimado ?? 0))
+  } else if (ordenar === 'alfabetica') {
+    dedup.sort((a, b) => (getLic(a)?.orgao ?? '').localeCompare(getLic(b)?.orgao ?? '', 'pt-BR'))
+  }
+
+  // Paginação em memória
+  const total   = dedup.length
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
+  const from    = (pagina - 1) * POR_PAGINA
+  const pagData = dedup.slice(from, from + POR_PAGINA)
 
-  return NextResponse.json({ data: dedup, total, pagina, paginas })
+  return NextResponse.json({ data: pagData, total, pagina, paginas })
 }
