@@ -15,7 +15,7 @@ import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { salvarResultadoCron, registrarCronLog } from '@/lib/cron-log'
 import { mapearSegmento } from '@/lib/leads/segmento'
 
-export const maxDuration = 120
+export const maxDuration = 300
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     supabase.from('leads').select('id, cnpj, email')
       .is('situacao', null)
       .in('status', ['invalido', 'pendente'])
-      .limit(200),
+      .limit(500),
     supabase.from('leads').select('id, cnpj, email')
       .eq('origem', 'cnae')
       .filter('razao_social', 'match', '^[0-9]{14}$')
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
     if (visto.has(l.id)) return false
     visto.add(l.id)
     return true
-  }).slice(0, 120)
+  }).slice(0, 550)
 
   if (!semReceita?.length) {
     return NextResponse.json({
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
 
   let verificados = 0, ativos = 0, inativas = 0
 
-  const CONCORRENCIA = 5
+  const CONCORRENCIA = 15
   const lotes = []
   for (let i = 0; i < semReceita.length; i += CONCORRENCIA) {
     lotes.push(semReceita.slice(i, i + CONCORRENCIA))

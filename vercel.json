@@ -5,7 +5,8 @@
     "app/api/cron/matching/route.ts":           { "maxDuration": 300 },
     "app/api/cron/coletar-resultados/route.ts":              { "maxDuration": 300 },
     "app/api/cron/alertar-precos/route.ts":                 { "maxDuration": 300 },
-    "app/api/cron/coletar-resultados-transparencia/route.ts": { "maxDuration": 300 }
+    "app/api/cron/coletar-resultados-transparencia/route.ts": { "maxDuration": 300 },
+    "app/api/cron/enriquecer-receita/route.ts":              { "maxDuration": 300 }
   },
   "crons": [
     { "path": "/api/cron/expirar-trials",        "schedule": "0 3 * * *"         },
@@ -23,12 +24,11 @@
     { "path": "/api/cron/radar-alertas",         "schedule": "0 8 * * 1-6"       },
 
     { "path": "/api/cron/coletar-leads",               "schedule": "*/10 * * * *"  },
-    { "path": "/api/cron/enriquecer-leads",            "schedule": "*/15 * * * *"  },
     { "path": "/api/cron/coletar-participantes",       "schedule": "0 * * * *"     },
     { "path": "/api/cron/coletar-leads-cnae",          "schedule": "0 4 1 * *"     },
     { "path": "/api/cron/coletar-leads-transparencia", "schedule": "0 * * * *"     },
 
-    { "path": "/api/cron/enriquecer-receita",      "schedule": "*/5 * * * *"        },
+    { "path": "/api/cron/enriquecer-receita",      "schedule": "* * * * *"          },
     { "path": "/api/cron/enriquecer-emails",       "schedule": "*/5 * * * *"        },
     { "path": "/api/cron/disparar-leads",          "schedule": "*/10 11-21 * * 1-5" },
     { "path": "/api/cron/reconverter-trials",    "schedule": "0 8-18 * * 1-5"    },
