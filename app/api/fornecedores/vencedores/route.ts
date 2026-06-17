@@ -62,7 +62,11 @@ export async function GET(request: Request) {
     p_limite:     ufs ? 500 : 50,   // busca mais resultados quando vai filtrar depois
   })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[vencedores] rpc error:', error.message, 'ufs:', ufs)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  console.log('[vencedores] regiao:', regiao, 'ufs:', ufs, 'total:', (data ?? []).length, 'filtrado:', filtrados.length)
 
   // Filtra por região no JS usando o campo `estados` (array de UFs do vencedor)
   type Vencedor = { estados: string[] | null; [k: string]: unknown }
