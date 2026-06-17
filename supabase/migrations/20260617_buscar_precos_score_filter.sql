@@ -118,15 +118,7 @@ BEGIN
   END;
 
   RETURN QUERY
-  SELECT
-    COUNT(*)::BIGINT,
-    -- P10 como "menor preço" evita distorção por contratos de múltiplas unidades
-    PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC,
-    -- P90 como "maior preço" pelo mesmo motivo
-    PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC,
-    ROUND(AVG(sub.valor_unitario), 2),
-    PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC
-  FROM (
+  WITH scored AS (
     SELECT
       r.valor_unitario,
       CAST(
@@ -143,8 +135,28 @@ BEGIN
     AND (p_estado IS NULL OR r.estado = p_estado)
     AND (p_inicio IS NULL OR r.data_resultado >= p_inicio)
     AND (p_fim    IS NULL OR r.data_resultado <= p_fim)
-  ) sub
-  WHERE sub.score >= 0.15;
+  ),
+  filtrado AS (
+    SELECT valor_unitario FROM scored WHERE score >= 0.15
+  ),
+  pcts AS (
+    SELECT
+      PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p10,
+      PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p25,
+      PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p50,
+      PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p75,
+      PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p90
+    FROM filtrado
+  )
+  SELECT
+    (SELECT COUNT(*) FROM filtrado)::BIGINT                             AS total,
+    (SELECT p10  FROM pcts)                                             AS minimo,
+    (SELECT p90  FROM pcts)                                             AS maximo,
+    -- média trimada (P25–P75): exclui contratos de múltiplas unidades que distorcem
+    (SELECT ROUND(AVG(f.valor_unitario), 2)
+       FROM filtrado f, pcts
+      WHERE f.valor_unitario BETWEEN pcts.p25 AND pcts.p75)            AS media,
+    (SELECT p50  FROM pcts)                                             AS mediana;
 END;
 $$;
 
