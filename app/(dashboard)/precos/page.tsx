@@ -115,6 +115,8 @@ export default function PrecosPage() {
       const data: BuscaResponse = await res.json()
       setResultado(data)
       if (!data.error) analytics.busca(termo)
+    } catch {
+      setResultado({ error: 'Erro ao buscar preços. Tente novamente.' } as BuscaResponse)
     } finally {
       setLoading(false)
     }
@@ -362,8 +364,15 @@ export default function PrecosPage() {
         </div>
       )}
 
+      {/* Erro genérico (rede/timeout) */}
+      {buscou && !loading && resultado?.error && !limiteAtingido && !limiteDiarioAtingido && (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '24px', textAlign: 'center', color: 'var(--text-2)', fontSize: 14 }}>
+          {resultado.error}
+        </div>
+      )}
+
       {/* Tabela de resultados */}
-      {buscou && !loading && resultado && !limiteAtingido && (
+      {buscou && !loading && resultado && !resultado.error && !limiteAtingido && (
         <>
           {resultado.resultados.length === 0 ? (
             <div style={{

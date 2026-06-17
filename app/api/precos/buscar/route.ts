@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLimites } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 interface MLItem { price: number; currency_id: string }
 interface MLResponse { results: MLItem[] }
@@ -12,7 +13,7 @@ async function buscarPrecoMercado(termo: string): Promise<{ media: number | null
     const q = encodeURIComponent(termo.slice(0, 80))
     const res = await fetch(
       `https://api.mercadolibre.com/sites/MLB/search?q=${q}&limit=20&condition=new`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(3000) }
     )
     if (!res.ok) return { media: null, minimo: null, total: 0 }
     const json: MLResponse = await res.json()
