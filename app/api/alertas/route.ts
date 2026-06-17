@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
        ${licJoin}(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura),
        ${kwJoin}(termo)`
     )
-    .limit(2000)
+    .limit(10000)
     .order('enviado_em', { ascending: false, nullsFirst: false })
 
   if (ufs)      query = query.in('licitacoes.estado', ufs) as typeof query
