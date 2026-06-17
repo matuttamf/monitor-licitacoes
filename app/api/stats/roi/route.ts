@@ -26,11 +26,16 @@ export async function GET() {
     return NextResponse.json({ totalAlertas: 0, totalLicitacoes: 0, volumeMonitorado: 0 })
   }
 
-  const licitacaoIdsUnicos = [...new Set(alertas.map(a => a.licitacao_id))]
-  const volumeMonitorado = alertas.reduce((acc, a) => {
+  // Deduplica por licitacao_id para não somar o mesmo valor múltiplas vezes
+  // quando a licitação bate com mais de uma palavra-chave
+  const porLicitacao = new Map<string, number>()
+  for (const a of alertas) {
+    if (porLicitacao.has(a.licitacao_id)) continue
     const val = (a.licitacoes as { valor_estimado?: number } | null)?.valor_estimado ?? 0
-    return acc + val
-  }, 0)
+    porLicitacao.set(a.licitacao_id, val)
+  }
+  const licitacaoIdsUnicos = [...porLicitacao.keys()]
+  const volumeMonitorado = [...porLicitacao.values()].reduce((acc, v) => acc + v, 0)
 
   return NextResponse.json({
     totalAlertas:    alertas.length,
