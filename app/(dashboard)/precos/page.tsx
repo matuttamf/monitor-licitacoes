@@ -332,28 +332,31 @@ export default function PrecosPage() {
           </div>
 
           {/* Links verificar preço atual */}
-          <div style={{
-            marginTop: 12, padding: '10px 14px',
-            background: 'rgba(59,130,246,0.03)',
-            border: '1px solid rgba(59,130,246,0.15)',
-            borderRadius: 8, fontSize: 12,
-            display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
-          }}>
-            <span style={{ color: 'var(--cinza)', fontWeight: 600 }}>Verificar preço atual:</span>
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, color: 'var(--cinza)', fontWeight: 600 }}>Verificar preço atual no mercado:</span>
             <a
               href={`https://lista.mercadolivre.com.br/${encodeURIComponent(termo)}`}
               target="_blank" rel="noopener noreferrer"
-              style={{ color: '#1d4ed8', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                textDecoration: 'none', cursor: 'pointer',
+                background: '#fff7e6', border: '1.5px solid #f5a623', color: '#b45309',
+              }}
             >
-              🛒 Mercado Livre
+              🛒 Mercado Livre ↗
             </a>
-            <span style={{ color: 'var(--cinza-light)' }}>·</span>
             <a
               href={`https://www.google.com/search?q=${encodeURIComponent(termo + ' preço')}&tbm=shop`}
               target="_blank" rel="noopener noreferrer"
-              style={{ color: '#15803d', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                textDecoration: 'none', cursor: 'pointer',
+                background: '#f0fdf4', border: '1.5px solid #4ade80', color: '#15803d',
+              }}
             >
-              🔍 Google Shopping
+              🔍 Google Shopping ↗
             </a>
           </div>
         </div>
