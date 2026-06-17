@@ -667,6 +667,979 @@ export const SEGMENTOS: SegmentoData[] = [
       },
     ],
   },
+  // ── Novos 18 segmentos ──────────────────────────────────────────────────
+  {
+    slug: 'uniformes-epis',
+    titulo: 'Licitações de Uniformes e EPIs',
+    subtitulo: 'Fardamentos, uniformes profissionais e equipamentos de proteção individual',
+    descricaoMeta:
+      'Monitore licitações de uniformes profissionais, fardamentos, EPIs e equipamentos de proteção individual para órgãos públicos. Editais em prefeituras, estados e governo federal.',
+    keywords: [
+      'licitações uniformes', 'licitações EPI', 'licitações fardamento',
+      'licitações equipamentos de proteção', 'editais uniformes prefeitura',
+      'licitações uniformes escolares', 'licitações vestuário profissional',
+    ],
+    cnaes: ['14.12', '14.13', '46.41', '47.51', '46.63'],
+    intro:
+      'Uniformes e EPIs são adquiridos por praticamente todos os órgãos públicos: agentes de saúde, guardas municipais, servidores de campo, garis, professores de educação física e operadores de obras. O volume de editais é alto e geograficamente distribuído, com ótimo espaço para confecções, distribuidores e representantes regionais.',
+    volumen: 'R$2,5 bilhões/ano em uniformes e EPIs',
+    tiposContrato: [
+      { titulo: 'Fardamentos e uniformes', descricao: 'Uniformes para guardas municipais, agentes de saúde, servidores operacionais e professores.' },
+      { titulo: 'EPIs obrigatórios', descricao: 'Capacetes, luvas, botas, óculos, protetores auriculares e coletes conforme NR-6.' },
+      { titulo: 'Uniformes escolares', descricao: 'Kits de uniforme (camiseta, bermuda, calça, tênis) distribuídos a alunos da rede pública.' },
+      { titulo: 'Crachás e identificação', descricao: 'Crachás, coletes de identificação, distintivos e vestuário funcional.' },
+    ],
+    vantagens: [
+      { titulo: 'Alta recorrência', descricao: 'Uniformes são renovados anualmente — cada contrato vencido abre nova oportunidade no ano seguinte.' },
+      { titulo: 'Concorrência regional', descricao: 'Confecções e distribuidores locais competem em pé de igualdade com fornecedores de outros estados.' },
+      { titulo: 'Kits escolares municipais', descricao: 'Programas de uniforme escolar geram contratos únicos de alto volume para municípios inteiros.' },
+    ],
+    statsDestaque: [
+      { valor: '+4 mil', label: 'editais de uniformes/mês' },
+      { valor: 'R$2,5 bi', label: 'volume anual de contratos' },
+      { valor: '1 ano', label: 'ciclo típico de renovação' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Confecção pequena pode ganhar licitação de uniformes?',
+        resposta: 'Sim. A Lei 123/2006 garante tratamento diferenciado para ME e EPP. Muitos editais municipais têm cota reservada para empresas de pequeno porte ou são exclusivos para elas quando o valor é até R$80 mil.',
+      },
+      {
+        pergunta: 'Que certificações são exigidas para EPIs em licitações?',
+        resposta: 'Os EPIs devem possuir CA (Certificado de Aprovação) emitido pelo Ministério do Trabalho. É obrigatório para todo equipamento de proteção vendido no Brasil e frequentemente exigido nos editais.',
+      },
+      {
+        pergunta: 'Como é feita a entrega de uniformes em licitações municipais?',
+        resposta: 'Geralmente por lote (escola, secretaria ou unidade) com prazo de 15 a 45 dias após empenho. Alguns editais exigem personalização (bordado, serigrafia) com logo do órgão antes da entrega.',
+      },
+      {
+        pergunta: 'Pode participar de licitação de uniforme quem não fabrica, apenas revende?',
+        resposta: 'Sim. Distribuidores e revendedores participam normalmente, desde que forneçam o produto conforme especificações técnicas do edital. Não é exigido que o licitante seja fabricante.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de uniformes e EPIs na minha região?',
+        resposta: 'No Monitor de Licitações, configure alertas com palavras como "uniformes", "fardamento", "EPI", "equipamento de proteção individual" e filtre por estado ou município para receber notificações em tempo real.',
+      },
+    ],
+  },
+  {
+    slug: 'manutencao-predial',
+    titulo: 'Licitações de Manutenção Predial',
+    subtitulo: 'Manutenção elétrica, hidráulica e civil em edificações públicas',
+    descricaoMeta:
+      'Monitore licitações de manutenção predial, manutenção elétrica, hidráulica, ar condicionado e reformas em edificações públicas. Editais em todo o Brasil.',
+    keywords: [
+      'licitações manutenção predial', 'licitações manutenção elétrica', 'licitações manutenção hidráulica',
+      'licitações reforma predial', 'editais manutenção prefeitura',
+      'licitações conservação predial', 'licitações instalações elétricas',
+    ],
+    cnaes: ['43.21', '43.22', '43.29', '43.30', '71.12'],
+    intro:
+      'Todo prédio público precisa de manutenção preventiva e corretiva contínua — instalações elétricas, hidráulicas, estrutura civil, telhados e sistemas prediais. O setor público mantém um dos maiores estoques prediais do país e terceiriza boa parte das manutenções, gerando demanda constante para empresas especializadas.',
+    volumen: 'R$8 bilhões/ano em manutenção predial pública',
+    tiposContrato: [
+      { titulo: 'Manutenção elétrica', descricao: 'Troca de fiação, quadros elétricos, luminárias, tomadas e sistemas de SPDA.' },
+      { titulo: 'Manutenção hidráulica', descricao: 'Reparos em encanamentos, caixas d\'água, bombas e sistemas de esgoto.' },
+      { titulo: 'Manutenção civil', descricao: 'Reparos em alvenaria, pisos, revestimentos, telhados e impermeabilização.' },
+      { titulo: 'Manutenção de elevadores', descricao: 'Contrato de manutenção preventiva e corretiva de elevadores em prédios públicos.' },
+    ],
+    vantagens: [
+      { titulo: 'Contratos de longa duração', descricao: 'Contratos de manutenção predial duram de 12 a 60 meses com receita mensal fixa.' },
+      { titulo: 'Alta recorrência', descricao: 'Cada prédio público precisa de manutenção continuada — a demanda nunca cessa.' },
+      { titulo: 'Barreira técnica moderada', descricao: 'Empresas com bons atestados técnicos e equipe qualificada competem com grandes players.' },
+    ],
+    statsDestaque: [
+      { valor: '+5 mil', label: 'editais de manutenção/mês' },
+      { valor: 'R$8 bi', label: 'volume anual de contratos' },
+      { valor: '60 meses', label: 'duração máxima de contratos' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Empresa de manutenção elétrica precisa de registro no CREA?',
+        resposta: 'Sim. Serviços de instalação e manutenção elétrica exigem responsável técnico com registro no CREA (engenheiro eletricista ou técnico em eletrotécnica). A ART deve ser emitida para cada serviço.',
+      },
+      {
+        pergunta: 'Qual a diferença entre manutenção preventiva e corretiva em contratos públicos?',
+        resposta: 'Preventiva é programada — vistorias e ajustes periódicos para evitar falhas. Corretiva é reativa — atendimento quando algo quebra. A maioria dos contratos inclui ambas, com SLA definido para o tempo de atendimento.',
+      },
+      {
+        pergunta: 'Empresa nova pode ganhar contrato de manutenção predial?',
+        resposta: 'Sim, desde que apresente atestados de capacidade técnica compatíveis. Para contratos de maior valor, o edital pode exigir atestados de serviços anteriores com quantidade mínima de m² ou valor de contrato.',
+      },
+      {
+        pergunta: 'Como funciona o contrato de manutenção de elevadores?',
+        resposta: 'O contrato geralmente inclui visitas mensais preventivas, peças de desgaste e atendimento corretivo com SLA de 4 a 24h. A empresa deve ter técnico habilitado e registro no sindicato da categoria (SEMAPI em SP, equivalentes nos demais estados).',
+      },
+      {
+        pergunta: 'Como monitorar licitações de manutenção predial no meu estado?',
+        resposta: 'No Monitor de Licitações, cadastre palavras como "manutenção predial", "manutenção elétrica", "manutenção hidráulica" e filtre por estado. Você receberá alertas por e-mail assim que novos editais forem publicados.',
+      },
+    ],
+  },
+  {
+    slug: 'material-construcao',
+    titulo: 'Licitações de Material de Construção',
+    subtitulo: 'Insumos, ferramentas e materiais hidráulicos e elétricos para obras públicas',
+    descricaoMeta:
+      'Monitore licitações de material de construção, ferramentas, material elétrico, hidráulico e insumos para obras de prefeituras, estados e governo federal.',
+    keywords: [
+      'licitações material de construção', 'licitações ferramentas', 'licitações material elétrico',
+      'licitações material hidráulico', 'editais material construção prefeitura',
+      'licitações cimento areia', 'pregão material construção',
+    ],
+    cnaes: ['46.74', '47.44', '46.62', '46.63', '47.59'],
+    intro:
+      'Prefeituras, autarquias e secretarias de obras compram material de construção com alta frequência para manutenção da infraestrutura municipal. Cimento, areia, tintas, material elétrico, hidráulico, ferragens e ferramentas são itens presentes em praticamente todo almoxarifado público.',
+    volumen: 'R$5 bilhões/ano em material de construção',
+    tiposContrato: [
+      { titulo: 'Materiais básicos de construção', descricao: 'Cimento, areia, brita, blocos, telhas, tintas e acabamentos.' },
+      { titulo: 'Material elétrico', descricao: 'Fios, cabos, disjuntores, tomadas, luminárias e componentes elétricos.' },
+      { titulo: 'Material hidráulico', descricao: 'Tubos, conexões, registros, caixas d\'água, bombas e acessórios.' },
+      { titulo: 'Ferramentas e equipamentos', descricao: 'Ferramentas manuais, elétricas, andaimes, betoneiras e compressores.' },
+    ],
+    vantagens: [
+      { titulo: 'Volume alto de editais', descricao: 'Prefeituras compram material de construção com frequência mensal ou trimestral.' },
+      { titulo: 'Atas de registro de preços', descricao: 'Uma licitação gera fornecimento por 12 meses para múltiplos órgãos participantes.' },
+      { titulo: 'Revenda local competitiva', descricao: 'Lojas de material de construção locais competem em pé de igualdade com distribuidoras estaduais.' },
+    ],
+    statsDestaque: [
+      { valor: '+6 mil', label: 'editais de material/mês' },
+      { valor: 'R$5 bi', label: 'volume anual de contratos' },
+      { valor: '5.570', label: 'municípios compradores' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Loja de material de construção pode participar de licitação?',
+        resposta: 'Sim. Qualquer empresa com CNPJ, regularidade fiscal e atividade compatível pode participar. Lojas locais têm vantagem logística em municípios menores, onde o prazo de entrega é fator competitivo.',
+      },
+      {
+        pergunta: 'Como funciona a licitação de material de construção por ata de registro de preços?',
+        resposta: 'O órgão realiza uma licitação e registra os preços por item. Durante 12 meses, ele (e outros órgãos que aderirem) podem solicitar quantidades conforme a necessidade, sem nova licitação.',
+      },
+      {
+        pergunta: 'É necessário CNPJ de atacadista ou varejista pode participar?',
+        resposta: 'Varejistas participam normalmente. O edital não exige CNAE de atacadista. O que importa é o produto fornecido atender às especificações e o prazo de entrega ser cumprido.',
+      },
+      {
+        pergunta: 'Como são especificados os materiais nos editais?',
+        resposta: 'Geralmente por norma ABNT, especificação técnica ou marca de referência (com cláusula "ou equivalente"). A empresa pode oferecer o produto de referência ou outro que atenda às mesmas especificações técnicas.',
+      },
+      {
+        pergunta: 'Como receber alertas de licitações de material de construção perto de mim?',
+        resposta: 'Configure o Monitor de Licitações com palavras como "material de construção", "material elétrico", "ferramentas" ou "material hidráulico" e aplique filtro por estado ou município.',
+      },
+    ],
+  },
+  {
+    slug: 'telecomunicacoes',
+    titulo: 'Licitações de Telecomunicações',
+    subtitulo: 'Internet, telefonia, links dedicados e PABX para o setor público',
+    descricaoMeta:
+      'Monitore licitações de telecomunicações: internet banda larga, telefonia fixa e móvel, links dedicados, PABX e redes corporativas para órgãos públicos.',
+    keywords: [
+      'licitações telecomunicações', 'licitações internet', 'licitações telefonia',
+      'licitações link dedicado', 'licitações PABX', 'editais telecomunicações governo',
+      'licitações banda larga', 'pregão internet prefeitura',
+    ],
+    cnaes: ['61.10', '61.20', '61.30', '61.40', '61.90'],
+    intro:
+      'Todo órgão público depende de conectividade e telefonia para funcionar. Links de internet, telefonia fixa e móvel, PABX e redes WAN são contratados regularmente por prefeituras, estados e governo federal. O mercado de telecomunicações para o setor público movimenta bilhões por ano.',
+    volumen: 'R$7 bilhões/ano em telecomunicações públicas',
+    tiposContrato: [
+      { titulo: 'Internet e links dedicados', descricao: 'Banda larga simétrica, links dedicados com SLA e fibra óptica para órgãos públicos.' },
+      { titulo: 'Telefonia fixa', descricao: 'STFC, ramais, PABX e terminais telefônicos para repartições.' },
+      { titulo: 'Telefonia móvel corporativa', descricao: 'Planos corporativos de celular para servidores e veículos operacionais.' },
+      { titulo: 'Redes e infraestrutura', descricao: 'Implantação de redes locais, wi-fi, cabeamento estruturado e data centers.' },
+    ],
+    vantagens: [
+      { titulo: 'Contratos longos', descricao: 'Contratos de telecomunicações duram de 12 a 60 meses com receita recorrente.' },
+      { titulo: 'Mercado em expansão', descricao: 'A transformação digital do governo aumenta a demanda por mais banda e soluções avançadas.' },
+      { titulo: 'Alta barreira de saída', descricao: 'Uma vez implantada a infraestrutura, a troca de fornecedor tem custo elevado para o órgão.' },
+    ],
+    statsDestaque: [
+      { valor: '+1,5 mil', label: 'editais de telecom/mês' },
+      { valor: 'R$7 bi', label: 'volume anual de contratos' },
+      { valor: '60 meses', label: 'duração máxima de contratos' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Provedores regionais podem disputar licitações de internet com as grandes operadoras?',
+        resposta: 'Sim, especialmente em municípios onde as grandes operadoras não têm infraestrutura. ISPs regionais com outorga da Anatel e SCM têm plena capacidade de participar e frequentemente ganham contratos municipais.',
+      },
+      {
+        pergunta: 'Que documentos a Anatel exige para participar de licitações de telecom?',
+        resposta: 'Licença ou autorização da Anatel para o serviço ofertado (SCM para internet, STFC para telefonia fixa, SMP para celular). Cada serviço tem sua outorga específica.',
+      },
+      {
+        pergunta: 'Como funciona licitação de PABX?',
+        resposta: 'Pode ser locação de PABX (hardware + manutenção), aquisição definitiva ou PABX virtual (VOIP em nuvem). Editais especificam número de ramais, funcionalidades e SLA de atendimento a falhas.',
+      },
+      {
+        pergunta: 'O que é o PGMQ e como afeta licitações de telecom?',
+        resposta: 'O Programa Governo Mais Qualidade impõe padrões de qualidade mínimos para serviços de telecomunicações contratados pelo governo federal. Operadoras devem cumprir índices de disponibilidade e velocidade definidos em contrato.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de internet e telefonia em todo o Brasil?',
+        resposta: 'No Monitor de Licitações, configure alertas com palavras como "internet", "link dedicado", "telefonia", "PABX" ou "banda larga" para receber notificações de novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'ar-condicionado-climatizacao',
+    titulo: 'Licitações de Ar Condicionado e Climatização',
+    subtitulo: 'Instalação e manutenção de HVAC em prédios públicos',
+    descricaoMeta:
+      'Monitore licitações de ar condicionado, climatização, instalação e manutenção de HVAC para escolas, hospitais, repartições e prédios públicos em todo o Brasil.',
+    keywords: [
+      'licitações ar condicionado', 'licitações climatização', 'licitações HVAC',
+      'licitações manutenção ar condicionado', 'editais ar condicionado prefeitura',
+      'licitações split', 'licitações refrigeração', 'pregão ar condicionado',
+    ],
+    cnaes: ['43.22', '33.14', '46.93'],
+    intro:
+      'Escolas, hospitais, repartições, bibliotecas e todos os prédios públicos precisam de climatização adequada. A instalação, manutenção preventiva e corretiva de sistemas de ar condicionado gera contratos recorrentes em todo o Brasil — com destaque para regiões Norte, Nordeste e Centro-Oeste, onde o calor torna o serviço essencial.',
+    volumen: 'R$3 bilhões/ano em climatização pública',
+    tiposContrato: [
+      { titulo: 'Fornecimento e instalação', descricao: 'Aquisição e instalação de splits, multi-splits, VRF e centrais de ar em prédios públicos.' },
+      { titulo: 'Manutenção preventiva', descricao: 'Limpeza, recarga de gás, revisão e ajuste de sistemas de climatização.' },
+      { titulo: 'Manutenção corretiva', descricao: 'Atendimento a chamados de falha com SLA definido em contrato.' },
+      { titulo: 'Renovação de frota', descricao: 'Substituição de equipamentos antigos (Freon R22) por novos modelos com gases ecológicos.' },
+    ],
+    vantagens: [
+      { titulo: 'Demanda ininterrupta', descricao: 'Equipamentos instalados precisam de manutenção anual obrigatória — o contrato se renova sozinho.' },
+      { titulo: 'Concorrência regional', descricao: 'Técnicos de refrigeração locais competem com vantagem em municípios menores.' },
+      { titulo: 'Crescimento acelerado', descricao: 'A universalização do ar condicionado em escolas públicas amplia o mercado ano a ano.' },
+    ],
+    statsDestaque: [
+      { valor: '+2 mil', label: 'editais de climatização/mês' },
+      { valor: 'R$3 bi', label: 'volume anual de contratos' },
+      { valor: '12 meses', label: 'ciclo de manutenção preventiva' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Técnico em refrigeração precisa de registro para participar de licitações?',
+        resposta: 'Sim. O responsável técnico deve possuir Certificação de Técnico em Refrigeração e Climatização (SENAI/SENAC ou similar) e, para sistemas de maior porte, registro no CREA como engenheiro mecânico ou eletromecânico.',
+      },
+      {
+        pergunta: 'Que certificação o equipamento precisa ter para ser aceito em licitações?',
+        resposta: 'O equipamento deve ser certificado pelo INMETRO e estar em conformidade com as normas de eficiência energética vigentes (Programa Brasileiro de Etiquetagem). Alguns editais exigem nível A de eficiência.',
+      },
+      {
+        pergunta: 'Como funciona o contrato de manutenção preventiva de ar condicionado?',
+        resposta: 'Geralmente inclui visitas trimestrais ou semestrais, limpeza de filtros e serpentinas, verificação de gás e componentes elétricos. O contrato define SLA para atendimento corretivo emergencial.',
+      },
+      {
+        pergunta: 'Empresa de ar condicionado pode atender municípios de outros estados?',
+        resposta: 'Sim. Pregões eletrônicos permitem participação nacional. A empresa deve avaliar a viabilidade logística e considerar o custo de deslocamento da equipe técnica ao elaborar a proposta.',
+      },
+      {
+        pergunta: 'Como receber alertas de licitações de ar condicionado na minha região?',
+        resposta: 'Configure no Monitor de Licitações palavras como "ar condicionado", "climatização", "HVAC" ou "manutenção de refrigeração". Aplique filtro regional para focar nos editais mais próximos.',
+      },
+    ],
+  },
+  {
+    slug: 'graficos-impressao',
+    titulo: 'Licitações de Serviços Gráficos e Impressão',
+    subtitulo: 'Publicidade legal, impressão de materiais e gráfica para o setor público',
+    descricaoMeta:
+      'Monitore licitações de serviços gráficos, impressão de materiais institucionais, publicidade legal, plotagem e confecção de materiais para órgãos públicos.',
+    keywords: [
+      'licitações serviços gráficos', 'licitações impressão', 'licitações gráfica',
+      'licitações publicidade legal', 'editais gráfica prefeitura',
+      'licitações material gráfico', 'licitações plotagem', 'pregão impressão',
+    ],
+    cnaes: ['18.11', '18.12', '18.13', '18.20'],
+    intro:
+      'Órgãos públicos têm obrigação legal de publicar atos oficiais em jornais e diários, além de produzir materiais impressos para campanhas, eventos e comunicação institucional. Gráficas, empresas de plotagem e produtoras de materiais visuais têm demanda constante no setor público.',
+    volumen: 'R$2 bilhões/ano em serviços gráficos públicos',
+    tiposContrato: [
+      { titulo: 'Publicidade legal', descricao: 'Publicação de editais, atas, contratos e avisos em jornais de grande circulação ou diários oficiais.' },
+      { titulo: 'Impressão de materiais', descricao: 'Folders, cartilhas, formulários, banners, outdoors e material de campanhas.' },
+      { titulo: 'Plotagem e sinalização', descricao: 'Plotagem de veículos, sinalização de obras, fachadas e ambientes públicos.' },
+      { titulo: 'Confecção de brindes', descricao: 'Brindes institucionais, camisetas de evento, bonés e materiais promocionais.' },
+    ],
+    vantagens: [
+      { titulo: 'Publicidade legal obrigatória', descricao: 'Todo edital de licitação exige publicação — demanda gerada pelo próprio processo licitatório.' },
+      { titulo: 'Alta frequência de editais', descricao: 'Prefeituras precisam de materiais gráficos o ano todo para campanhas de saúde, educação e eventos.' },
+      { titulo: 'Segmento acessível a MPEs', descricao: 'Gráficas de pequeno porte competem diretamente por contratos de menor valor.' },
+    ],
+    statsDestaque: [
+      { valor: '+3 mil', label: 'editais gráficos/mês' },
+      { valor: 'R$2 bi', label: 'volume anual de contratos' },
+      { valor: '5–30', label: 'dias de prazo de entrega típico' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Jornal local pode participar de licitações de publicidade legal?',
+        resposta: 'Sim, desde que comprovem circulação na área de abrangência exigida no edital. A maioria dos editais municipais aceita jornais de circulação regional, sem exigir circulação estadual ou nacional.',
+      },
+      {
+        pergunta: 'Gráfica digital pequena pode participar de licitações?',
+        resposta: 'Sim. Com CNPJ regular e atestado de capacidade técnica, gráficas de qualquer porte participam. A Lei 123/2006 favorece MPEs em licitações de até R$80 mil.',
+      },
+      {
+        pergunta: 'Como funciona a especificação técnica em editais de impressão?',
+        resposta: 'O edital detalha gramatura do papel, número de cores, acabamento (laminação, verniz, dobras), dimensões e quantidade. A gráfica deve confirmar que consegue atender todas as especificações antes de apresentar proposta.',
+      },
+      {
+        pergunta: 'O que são brindes institucionais em licitações públicas?',
+        resposta: 'São materiais personalizados com a marca do órgão (canetas, blocos, bonés, sacolas) distribuídos em eventos ou campanhas. A aquisição deve seguir limites de valor e se justificar no interesse público.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de gráfica para a minha cidade?',
+        resposta: 'No Monitor de Licitações, configure alertas com palavras como "serviços gráficos", "impressão", "material gráfico", "publicidade legal" ou "plotagem" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'saude-ocupacional',
+    titulo: 'Licitações de Saúde Ocupacional',
+    subtitulo: 'Exames admissionais, PCMSO, PPRA e medicina do trabalho para o setor público',
+    descricaoMeta:
+      'Monitore licitações de saúde ocupacional, medicina do trabalho, exames admissionais e periódicos, PCMSO e PPRA para órgãos públicos em todo o Brasil.',
+    keywords: [
+      'licitações saúde ocupacional', 'licitações medicina do trabalho', 'licitações PCMSO',
+      'licitações exames admissionais', 'licitações PPRA', 'editais saúde ocupacional prefeitura',
+      'licitações SESMT', 'pregão medicina do trabalho',
+    ],
+    cnaes: ['86.20', '86.90', '71.20'],
+    intro:
+      'Todo órgão público com servidores é obrigado por lei a manter programas de saúde e segurança no trabalho — PCMSO, PPRA, exames admissionais, periódicos e demissionais. A terceirização desses serviços via licitação é prática comum, gerando demanda constante para clínicas, médicos do trabalho e empresas de SST.',
+    volumen: 'R$1,5 bilhão/ano em saúde ocupacional pública',
+    tiposContrato: [
+      { titulo: 'Exames médicos ocupacionais', descricao: 'Admissionais, periódicos, retorno ao trabalho, mudança de função e demissionais (NR-7).' },
+      { titulo: 'PCMSO e PPRA', descricao: 'Elaboração e gestão do Programa de Controle Médico de Saúde Ocupacional e Programa de Prevenção de Riscos Ambientais.' },
+      { titulo: 'SESMT terceirizado', descricao: 'Serviço Especializado em Eng. de Segurança e Medicina do Trabalho para órgãos de menor porte.' },
+      { titulo: 'Vacinação corporativa', descricao: 'Campanhas de vacinação (gripe, hepatite, COVID) para servidores públicos.' },
+    ],
+    vantagens: [
+      { titulo: 'Demanda obrigatória por lei', descricao: 'As NRs exigem PCMSO e exames periódicos — o órgão é obrigado a contratar, independente de orçamento.' },
+      { titulo: 'Alta recorrência', descricao: 'Contratos anuais com renovação — cada contrato vencido reabre como nova oportunidade.' },
+      { titulo: 'Pequenas clínicas bem-posicionadas', descricao: 'Clínicas locais têm vantagem de proximidade nos municípios menores.' },
+    ],
+    statsDestaque: [
+      { valor: '+800', label: 'editais de SST/mês' },
+      { valor: 'R$1,5 bi', label: 'volume anual de contratos' },
+      { valor: '12 meses', label: 'ciclo típico de contrato' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Clínica médica precisa de CRM de pessoa jurídica?',
+        resposta: 'Sim. Para prestação de serviços médicos, a empresa deve ter registro no CRM do estado como pessoa jurídica, além do responsável técnico (médico do trabalho) com CRM individual ativo.',
+      },
+      {
+        pergunta: 'O que é o e-Social e como afeta contratos de saúde ocupacional?',
+        resposta: 'O e-Social exige que todos os exames e laudos médicos sejam integrados ao sistema do governo. Empresas de SST devem ter sistema homologado e a empresa contratada geralmente assume a responsabilidade de envio dos dados.',
+      },
+      {
+        pergunta: 'Empresa de segurança do trabalho sem médico pode participar?',
+        resposta: 'Para serviços exclusivamente de segurança do trabalho (PPRA, LTCAT, laudos de ergonomia), sim. Para PCMSO e exames médicos, é obrigatória a presença de médico do trabalho no quadro funcional ou como subcontratado.',
+      },
+      {
+        pergunta: 'Como funciona a licitação para vacinação de servidores?',
+        resposta: 'O órgão lança pregão especificando tipo de vacina, número de doses e local de aplicação. Clínicas e laboratórios com câmara fria e enfermeiros habilitados participam. Algumas prefeituras realizam no próprio local de trabalho.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de saúde ocupacional no meu estado?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "saúde ocupacional", "medicina do trabalho", "PCMSO", "exames admissionais" ou "PPRA" e filtre por estado para receber notificações em tempo real.',
+      },
+    ],
+  },
+  {
+    slug: 'seguros',
+    titulo: 'Licitações de Seguros',
+    subtitulo: 'Seguro de frota, prédios, responsabilidade civil e vida coletivo para o setor público',
+    descricaoMeta:
+      'Monitore licitações de seguros para o setor público: seguro de frota, patrimonial, responsabilidade civil, seguro de vida coletivo e seguros de obras.',
+    keywords: [
+      'licitações seguros', 'licitações seguro frota', 'licitações seguro patrimonial',
+      'licitações seguro de vida', 'licitações seguro veicular', 'editais seguro prefeitura',
+      'licitações corretora de seguros', 'pregão seguro',
+    ],
+    cnaes: ['65.11', '65.12', '65.20', '66.22'],
+    intro:
+      'O poder público é obrigado por lei a segurar sua frota, obras com financiamento federal, edificações tombadas e servidores em atividades de risco. Corretoras de seguros e seguradoras que conhecem o mercado público têm espaço significativo nesse segmento, especialmente considerando o tamanho da frota e do patrimônio imobiliário público no Brasil.',
+    volumen: 'R$3 bilhões/ano em seguros públicos',
+    tiposContrato: [
+      { titulo: 'Seguro de frota', descricao: 'RCFAT, casco e cobertura abrangente para veículos públicos leves, pesados e especiais.' },
+      { titulo: 'Seguro patrimonial', descricao: 'Incêndio, roubo, vendaval e danos a prédios, equipamentos e mobiliário público.' },
+      { titulo: 'Seguro de vida coletivo', descricao: 'Cobertura de acidentes pessoais e morte para servidores em atividades de risco.' },
+      { titulo: 'Seguro garantia', descricao: 'Seguro garantia de execução para contratos de obras e serviços públicos.' },
+    ],
+    vantagens: [
+      { titulo: 'Obrigatoriedade legal', descricao: 'Obras com financiamento do FNDE, BNDES e outros exigem contratação de seguro.' },
+      { titulo: 'Tickets elevados', descricao: 'Frotas e patrimônios públicos de grande porte geram prêmios significativos.' },
+      { titulo: 'Renovação anual garantida', descricao: 'Seguros têm vigência de 12 meses — o contrato retorna como nova licitação todo ano.' },
+    ],
+    statsDestaque: [
+      { valor: '+500', label: 'editais de seguro/mês' },
+      { valor: 'R$3 bi', label: 'volume anual de contratos' },
+      { valor: '1 ano', label: 'vigência padrão de contrato' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Corretora de seguros pode participar de licitações?',
+        resposta: 'Sim, corretoras registradas na SUSEP podem participar. O papel da corretora é apresentar a proposta da seguradora, gerenciar o contrato e intermediar sinistros. Muitos editais aceitam tanto seguradoras quanto corretoras.',
+      },
+      {
+        pergunta: 'O que é seguro garantia em licitações?',
+        resposta: 'É uma modalidade de garantia que o licitante apresenta para assegurar o cumprimento do contrato. Equivale à caução em dinheiro ou fiança bancária, mas com custo menor para o contratado e maior segurança para o contratante.',
+      },
+      {
+        pergunta: 'Como funciona a licitação de seguro de frota pública?',
+        resposta: 'O órgão apresenta relação de veículos, histórico de sinistros e uso previsto. Seguradoras e corretoras apresentam propostas de cobertura e prêmio. O critério é geralmente menor preço para a mesma cobertura definida no edital.',
+      },
+      {
+        pergunta: 'Seguro de vida coletivo para servidores é obrigatório?',
+        resposta: 'Varia por legislação estadual e municipal. Para servidores em atividades de alto risco (guardas, bombeiros, agentes penitenciários), muitos entes federativos têm obrigação legal de contratar cobertura de acidentes pessoais.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de seguros no setor público?',
+        resposta: 'No Monitor de Licitações, configure alertas com palavras como "seguro de frota", "seguro patrimonial", "seguro de vida coletivo" ou simplesmente "seguros" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'publicidade-comunicacao',
+    titulo: 'Licitações de Publicidade e Comunicação',
+    subtitulo: 'Campanhas institucionais, comunicação pública e marketing governamental',
+    descricaoMeta:
+      'Monitore licitações de publicidade institucional, comunicação pública, assessoria de imprensa, campanhas de saúde e educação para órgãos públicos em todo o Brasil.',
+    keywords: [
+      'licitações publicidade', 'licitações comunicação', 'licitações agência de publicidade',
+      'licitações assessoria de imprensa', 'editais publicidade governo',
+      'licitações campanhas', 'pregão publicidade institucional',
+    ],
+    cnaes: ['73.11', '73.12', '70.20', '90.03'],
+    intro:
+      'Órgãos públicos contratam regularmente agências de publicidade, assessorias de imprensa e produtoras para campanhas de utilidade pública, comunicação institucional e divulgação de serviços. Com a Lei 12.232/2010 regulamentando especificamente a licitação de publicidade, o mercado tem regras claras e acesso bem definido.',
+    volumen: 'R$4 bilhões/ano em publicidade pública',
+    tiposContrato: [
+      { titulo: 'Agência de publicidade', descricao: 'Planejamento, criação e veiculação de campanhas publicitárias institucionais.' },
+      { titulo: 'Assessoria de imprensa', descricao: 'Produção de releases, relacionamento com mídia e monitoramento de notícias.' },
+      { titulo: 'Produção audiovisual', descricao: 'Vídeos institucionais, spots de rádio, peças para TV e conteúdo para redes sociais.' },
+      { titulo: 'Comunicação digital', descricao: 'Gestão de redes sociais, criação de sites institucionais e e-mail marketing.' },
+    ],
+    vantagens: [
+      { titulo: 'Lei específica', descricao: 'A Lei 12.232/2010 regulamenta licitações de publicidade — processo mais previsível e transparente.' },
+      { titulo: 'Contratos de AOR', descricao: 'Agências de publicidade podem ter contratos de Agência de Registro e Operações recorrentes.' },
+      { titulo: 'Mercado crescente', descricao: 'Comunicação digital e redes sociais ampliam as oportunidades para agências especializadas.' },
+    ],
+    statsDestaque: [
+      { valor: '+600', label: 'editais de publicidade/mês' },
+      { valor: 'R$4 bi', label: 'volume anual de contratos' },
+      { valor: '24 meses', label: 'duração típica de contratos' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Agência pequena pode participar de licitação de publicidade pública?',
+        resposta: 'Sim. A Lei 12.232/2010 não exige porte mínimo. Municípios de menor porte preferem agências regionais que conheçam a cultura local. A qualificação técnica (portfólio, equipe) tem peso importante na seleção.',
+      },
+      {
+        pergunta: 'Como funciona a licitação de publicidade segundo a Lei 12.232/2010?',
+        resposta: 'É feita em duas etapas: habilitação técnica (portfólio, equipe, prêmios) e proposta de preço (valor dos serviços, desconto de mídia). A agência vencedora firma um contrato de prestação de serviços de publicidade.',
+      },
+      {
+        pergunta: 'Assessoria de imprensa pode participar separadamente de publicidade?',
+        resposta: 'Sim. Assessoria de imprensa é licitada separadamente da publicidade em muitos órgãos. Empresas especializadas em comunicação podem disputar contratos de assessoria sem precisar ter estrutura de agência full service.',
+      },
+      {
+        pergunta: 'Quais são os documentos técnicos exigidos em licitações de publicidade?',
+        resposta: 'Geralmente: portfólio de campanhas anteriores, relação de profissionais da equipe com currículos, comprovação de prêmios e reconhecimentos, e experiência em campanhas de temática similar ao objeto do edital.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de publicidade governamental?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "publicidade", "agência de publicidade", "comunicação social", "assessoria de imprensa" para receber novos editais automaticamente.',
+      },
+    ],
+  },
+  {
+    slug: 'servicos-juridicos',
+    titulo: 'Licitações de Serviços Jurídicos',
+    subtitulo: 'Advocacia, assessoria jurídica e pareceres para municípios e autarquias',
+    descricaoMeta:
+      'Monitore licitações de serviços jurídicos, advocacia, assessoria jurídica, consultoria em direito administrativo e pareceres legais para órgãos públicos.',
+    keywords: [
+      'licitações serviços jurídicos', 'licitações advocacia', 'licitações assessoria jurídica',
+      'licitações consultoria jurídica', 'editais serviços jurídicos prefeitura',
+      'licitações parecer jurídico', 'licitações direito administrativo',
+    ],
+    cnaes: ['69.11', '69.12'],
+    intro:
+      'Municípios de menor porte e autarquias frequentemente não têm quadro jurídico próprio suficiente e terceirizam serviços de assessoria jurídica via licitação. Escritórios de advocacia especializados em direito público, administrativo, previdenciário e tributário têm amplo mercado nesse segmento.',
+    volumen: 'R$1,2 bilhão/ano em serviços jurídicos públicos',
+    tiposContrato: [
+      { titulo: 'Assessoria jurídica geral', descricao: 'Consultoria permanente em direito administrativo, contratos e licitações para municípios.' },
+      { titulo: 'Representação judicial', descricao: 'Defesa do ente público em ações judiciais cíveis, trabalhistas e tributárias.' },
+      { titulo: 'Pareceres técnicos', descricao: 'Pareceres pontuais sobre contratos, licitações, convênios e questões regulatórias.' },
+      { titulo: 'Execução fiscal', descricao: 'Cobrança judicial de dívidas ativas de municípios e autarquias.' },
+    ],
+    vantagens: [
+      { titulo: 'Demanda estrutural', descricao: 'Municípios pequenos sem PGM própria terceirizam toda a assessoria jurídica.' },
+      { titulo: 'Contratos de longa duração', descricao: 'Assessorias jurídicas geralmente têm contratos de 12 a 24 meses com renovação.' },
+      { titulo: 'Especialização como diferencial', descricao: 'Escritórios especializados em direito público têm vantagem decisiva na qualificação técnica.' },
+    ],
+    statsDestaque: [
+      { valor: '+400', label: 'editais jurídicos/mês' },
+      { valor: 'R$1,2 bi', label: 'volume anual de contratos' },
+      { valor: '24 meses', label: 'duração típica de contratos' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Escritório de advocacia pode participar de licitação?',
+        resposta: 'Sim. Escritórios com CNPJ e registro na OAB (pessoa jurídica) participam normalmente. A qualificação técnica costuma avaliar especialização em direito público, tempo de atuação e portfólio de clientes públicos anteriores.',
+      },
+      {
+        pergunta: 'Advocacia pública não substitui a terceirizada?',
+        resposta: 'Em muitos municípios, o quadro de procuradores é insuficiente para todas as demandas. A terceirização complementa e não substitui — especialmente em áreas específicas como execuções fiscais e ações trabalhistas em massa.',
+      },
+      {
+        pergunta: 'O êxito pode ser remunerado em contratos com o poder público?',
+        resposta: 'Sim, desde que previsto no edital e no contrato. A remuneração por êxito (percentual sobre valores recuperados em execuções fiscais, por exemplo) é permitida e comum em contratos de cobrança da dívida ativa.',
+      },
+      {
+        pergunta: 'Advogado individual (sem escritório) pode participar?',
+        resposta: 'Alguns editais admitem profissional autônomo (pessoa física), especialmente para pareceres pontuais. Para contratos de assessoria contínua, em geral é exigido CNPJ de escritório ou sociedade de advogados.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de serviços jurídicos em municípios?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "assessoria jurídica", "serviços jurídicos", "advocacia", "consultoria jurídica" para receber novos editais automaticamente.',
+      },
+    ],
+  },
+  {
+    slug: 'auditoria-contabilidade',
+    titulo: 'Licitações de Auditoria e Contabilidade',
+    subtitulo: 'Serviços contábeis, auditorias externas e assessoria fiscal para o poder público',
+    descricaoMeta:
+      'Monitore licitações de auditoria externa, contabilidade pública, assessoria fiscal, gestão de folha de pagamento e serviços contábeis para órgãos públicos.',
+    keywords: [
+      'licitações auditoria', 'licitações contabilidade', 'licitações auditoria externa',
+      'licitações serviços contábeis', 'editais auditoria prefeitura',
+      'licitações assessoria fiscal', 'licitações gestão folha pagamento',
+    ],
+    cnaes: ['69.20', '70.20'],
+    intro:
+      'Câmaras municipais, autarquias, fundos de previdência e consórcios públicos frequentemente não têm estrutura interna para todas as demandas contábeis e de auditoria, terceirizando esses serviços. O mercado é estável, com contratos anuais recorrentese boa previsibilidade de receita para escritórios de contabilidade e auditoria.',
+    volumen: 'R$800 milhões/ano em contabilidade e auditoria pública',
+    tiposContrato: [
+      { titulo: 'Auditoria externa independente', descricao: 'Auditoria das demonstrações financeiras de autarquias, fundos e entidades públicas.' },
+      { titulo: 'Assessoria contábil', descricao: 'Escrituração contábil, balanços, relatórios de gestão fiscal e SICONFI para câmaras e autarquias.' },
+      { titulo: 'Gestão da folha de pagamento', descricao: 'Processamento da folha, cálculos trabalhistas e obrigações acessórias para entes pequenos.' },
+      { titulo: 'Consultoria tributária', descricao: 'Recuperação de créditos tributários, planejamento fiscal e conformidade com legislação.' },
+    ],
+    vantagens: [
+      { titulo: 'Demanda estrutural', descricao: 'Câmaras e autarquias de municípios pequenos terceirizam quase toda a contabilidade.' },
+      { titulo: 'Contratos anuais recorrentes', descricao: 'Serviços contínuos renovados anualmente — alta previsibilidade de receita.' },
+      { titulo: 'Especialização diferencia', descricao: 'Contadores com CRC e conhecimento em contabilidade pública e SICONFI se destacam.' },
+    ],
+    statsDestaque: [
+      { valor: '+350', label: 'editais de contabilidade/mês' },
+      { valor: 'R$800 mi', label: 'volume anual de contratos' },
+      { valor: '1 ano', label: 'ciclo típico de renovação' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Escritório de contabilidade precisa de CRC para participar de licitações?',
+        resposta: 'Sim. O responsável técnico deve ser contador com CRC ativo. O escritório (pessoa jurídica) também deve ter registro no CRC como empresa de contabilidade.',
+      },
+      {
+        pergunta: 'Auditor independente pessoa física pode participar?',
+        resposta: 'Para auditorias, em geral sim, com registro no CFC e CRC. Para contratos de maior porte, é comum a exigência de empresa de auditoria com quadro mínimo de profissionais.',
+      },
+      {
+        pergunta: 'O que é o SICONFI e por que é importante para contratos públicos?',
+        resposta: 'O SICONFI é o sistema da STN para envio das informações contábeis dos entes públicos ao governo federal. Contadores que prestam serviços a municípios precisam dominar esse sistema para cumprir as obrigações de transparência.',
+      },
+      {
+        pergunta: 'Câmara municipal pode contratar serviço contábil separado do executivo?',
+        resposta: 'Sim. Câmaras são unidades orçamentárias independentes e podem contratar sua própria assessoria contábil. Na prática, muitas câmaras de municípios menores terceirizam integralmente sua contabilidade.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de auditoria e contabilidade?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "auditoria", "serviços contábeis", "assessoria contábil", "escrituração contábil" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'saneamento-meio-ambiente',
+    titulo: 'Licitações de Saneamento e Meio Ambiente',
+    subtitulo: 'Tratamento de água, resíduos sólidos, licenciamento e estudos ambientais',
+    descricaoMeta:
+      'Monitore licitações de saneamento básico, tratamento de água e esgoto, gestão de resíduos sólidos, licenciamento ambiental e estudos de impacto para órgãos públicos.',
+    keywords: [
+      'licitações saneamento', 'licitações meio ambiente', 'licitações resíduos sólidos',
+      'licitações tratamento de água', 'licitações licenciamento ambiental',
+      'editais saneamento prefeitura', 'licitações EIA RIMA', 'licitações aterro sanitário',
+    ],
+    cnaes: ['37.01', '37.02', '38.11', '38.12', '38.21', '38.22', '71.20'],
+    intro:
+      'O Marco Legal do Saneamento (Lei 14.026/2020) impulsionou investimentos massivos em saneamento básico no Brasil. Municípios são obrigados a universalizar o acesso à água tratada e coleta de esgoto até 2033, gerando bilhões em contratos para empresas de saneamento, engenharia ambiental e gestão de resíduos.',
+    volumen: 'R$20 bilhões/ano em saneamento e meio ambiente',
+    tiposContrato: [
+      { titulo: 'Tratamento de água e esgoto', descricao: 'Operação de ETAs e ETEs, manutenção de redes e expansão de sistemas de saneamento.' },
+      { titulo: 'Gestão de resíduos sólidos', descricao: 'Coleta, transporte, triagem, reciclagem e disposição final de RSU.' },
+      { titulo: 'Licenciamento ambiental', descricao: 'EIA/RIMA, PBA, estudos de impacto e acompanhamento do licenciamento de obras.' },
+      { titulo: 'Controle ambiental', descricao: 'Monitoramento de qualidade da água, ar e solo; gestão de passivos ambientais.' },
+    ],
+    vantagens: [
+      { titulo: 'Marco legal favorável', descricao: 'A Lei 14.026/2020 criou obrigações de investimento que geram demanda estrutural de longo prazo.' },
+      { titulo: 'Tickets elevados', descricao: 'Contratos de saneamento e obras ambientais têm valores significativos.' },
+      { titulo: 'Crescimento acelerado', descricao: 'Prazo de 2033 para universalização cria urgência e aumenta o volume de editais.' },
+    ],
+    statsDestaque: [
+      { valor: '+800', label: 'editais de saneamento/mês' },
+      { valor: 'R$20 bi', label: 'volume anual de contratos' },
+      { valor: '2033', label: 'meta de universalização do saneamento' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Empresa de engenharia ambiental pode participar de licitações de saneamento?',
+        resposta: 'Sim. Engenheiros ambientais com CREA e empresas especializadas participam de licitações de licenciamento, estudos e consultoria ambiental. Para operação de sistemas, é necessário habilitação técnica específica.',
+      },
+      {
+        pergunta: 'O que mudou com o Marco Legal do Saneamento?',
+        resposta: 'A Lei 14.026/2020 abriu o saneamento para a iniciativa privada via concessão, estabeleceu metas de universalização e criou regras mais rígidas para os contratos. Isso ampliou o mercado e atraiu novos players.',
+      },
+      {
+        pergunta: 'Empresa de coleta de lixo pode participar de licitações de aterro sanitário?',
+        resposta: 'Depende do edital. Coleta e disposição final são atividades diferentes. Alguns municípios licitam juntas (coleta + disposição), outros separadamente. Verifique se a empresa tem licença ambiental para operação de aterro.',
+      },
+      {
+        pergunta: 'Como funciona o licenciamento ambiental terceirizado via licitação?',
+        resposta: 'O órgão contrata empresa de consultoria ambiental para conduzir o processo de licenciamento junto ao IBAMA, OEMAS e municípios. A empresa elabora os estudos, coordena audiências públicas e acompanha a obtenção das licenças.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de saneamento e meio ambiente?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "saneamento", "resíduos sólidos", "tratamento de esgoto", "licenciamento ambiental" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'jardinagem-paisagismo',
+    titulo: 'Licitações de Jardinagem e Paisagismo',
+    subtitulo: 'Manutenção de praças, parques e áreas verdes públicas',
+    descricaoMeta:
+      'Monitore licitações de jardinagem, paisagismo, manutenção de praças, parques e áreas verdes, poda de árvores e roçagem em vias públicas para prefeituras e órgãos públicos.',
+    keywords: [
+      'licitações jardinagem', 'licitações paisagismo', 'licitações manutenção de praças',
+      'licitações poda de árvores', 'licitações roçagem', 'editais jardinagem prefeitura',
+      'licitações areas verdes', 'pregão jardinagem',
+    ],
+    cnaes: ['81.30'],
+    intro:
+      'Todo município tem parques, praças, canteiros e áreas verdes que precisam de manutenção contínua. Jardinagem e paisagismo para o setor público é um mercado recorrente com alta distribuição geográfica — há editais em todos os municípios brasileiros, do interior à capital.',
+    volumen: 'R$1,5 bilhão/ano em jardinagem pública',
+    tiposContrato: [
+      { titulo: 'Manutenção de praças e parques', descricao: 'Corte de grama, capina, limpeza, irrigação e cuidado geral de áreas verdes urbanas.' },
+      { titulo: 'Poda de árvores', descricao: 'Poda preventiva, emergencial e remoção de árvores em risco nas vias públicas.' },
+      { titulo: 'Roçagem de vias', descricao: 'Limpeza de terrenos baldios, margens de estradas, acostamentos e faixas de domínio.' },
+      { titulo: 'Paisagismo e implantação', descricao: 'Projeto e implantação de jardins em novos espaços públicos, praças e rotatórias.' },
+    ],
+    vantagens: [
+      { titulo: 'Presença em todos os municípios', descricao: 'Qualquer cidade tem áreas verdes a manter — o mercado está distribuído por todo o Brasil.' },
+      { titulo: 'Baixa barreira de entrada', descricao: 'Empresa com equipamentos de jardinagem e equipe treinada pode começar a participar.' },
+      { titulo: 'Contratos contínuos', descricao: 'Manutenção de praças é serviço mensal recorrente, com contratos de 12 a 24 meses.' },
+    ],
+    statsDestaque: [
+      { valor: '+2 mil', label: 'editais de jardinagem/mês' },
+      { valor: 'R$1,5 bi', label: 'volume anual de contratos' },
+      { valor: '5.570', label: 'municípios com áreas verdes públicas' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Empresa de jardinagem precisa de CREA ou CAU para participar de licitações?',
+        resposta: 'Para serviços simples de manutenção (corte de grama, capina, roçagem), geralmente não. Para projetos de paisagismo ou remoção de árvores de grande porte, pode ser exigido responsável técnico com registro no CREA (engenheiro agrônomo ou florestal) ou CAU (arquiteto paisagista).',
+      },
+      {
+        pergunta: 'O que é roçagem e como é licitada?',
+        resposta: 'Roçagem é o corte mecanizado da vegetação rasteira em faixas de domínio, acostamentos e terrenos. Geralmente é licitada por km² ou m², com frequência definida (mensal, bimestral) e equipamento mínimo especificado no edital.',
+      },
+      {
+        pergunta: 'Poda de árvores pode ser feita por qualquer empresa de jardinagem?',
+        resposta: 'Não necessariamente. Para remoção e poda de árvores de grande porte em vias públicas, muitas prefeituras exigem responsável técnico habilitado (engenheiro florestal ou agrônomo) e equipe com treinamento específico em segurança.',
+      },
+      {
+        pergunta: 'Empresa de pequeno porte tem vantagem em licitações de jardinagem?',
+        resposta: 'Sim. Para contratos de menor valor, há cota reservada para ME e EPP. Empresas locais têm vantagem logística e são preferidas por órgãos que valorizam atendimento rápido e presença regional.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de jardinagem e paisagismo?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "jardinagem", "paisagismo", "roçagem", "poda de árvores" ou "manutenção de praças" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'energia-eficiencia-energetica',
+    titulo: 'Licitações de Energia e Eficiência Energética',
+    subtitulo: 'Energia solar, eficiência energética e gestão de energia para prédios públicos',
+    descricaoMeta:
+      'Monitore licitações de energia solar fotovoltaica, eficiência energética, iluminação pública LED e gestão energética para órgãos públicos em todo o Brasil.',
+    keywords: [
+      'licitações energia solar', 'licitações energia fotovoltaica', 'licitações eficiência energética',
+      'licitações iluminação pública LED', 'editais energia solar prefeitura',
+      'licitações painéis solares', 'licitações PPP energia',
+    ],
+    cnaes: ['35.11', '35.12', '71.12', '43.21'],
+    intro:
+      'O programa federal de eficiência energética e a queda nos custos de energia solar criaram um mercado crescente de contratos públicos no setor. Prefeituras instalam painéis solares em escolas e hospitais, modernizam a iluminação pública com LED e contratam gestão energética para reduzir a conta de luz.',
+    volumen: 'R$5 bilhões/ano em energia e eficiência pública',
+    tiposContrato: [
+      { titulo: 'Instalação fotovoltaica', descricao: 'Painéis solares em escolas, postos de saúde, prédios públicos e estacionamentos.' },
+      { titulo: 'Iluminação pública LED', descricao: 'Substituição de luminárias convencionais por LED em vias, praças e avenidas.' },
+      { titulo: 'Gestão e auditoria energética', descricao: 'Diagnóstico de consumo, projetos de eficiência e monitoramento de energia.' },
+      { titulo: 'PPP de iluminação', descricao: 'Parcerias Público-Privadas para modernização e gestão da iluminação pública municipal.' },
+    ],
+    vantagens: [
+      { titulo: 'Mercado em expansão acelerada', descricao: 'A transição energética pública está apenas começando — há décadas de demanda pela frente.' },
+      { titulo: 'Incentivos e financiamentos', descricao: 'BNDES, BID e Banco Mundial financiam projetos de eficiência energética no setor público.' },
+      { titulo: 'ROI mensurável', descricao: 'Prefeituras aprovam projetos de eficiência porque a economia na conta de luz paga o investimento.' },
+    ],
+    statsDestaque: [
+      { valor: '+400', label: 'editais de energia/mês' },
+      { valor: 'R$5 bi', label: 'volume anual de contratos' },
+      { valor: '60%', label: 'redução típica na conta de iluminação com LED' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Empresa de energia solar precisa de CREA para participar de licitações?',
+        resposta: 'Sim. A instalação de sistemas fotovoltaicos exige responsável técnico com registro no CREA (engenheiro eletricista). A empresa deve também ter profissional habilitado pela distribuidora de energia local.',
+      },
+      {
+        pergunta: 'O que é uma PPP de iluminação pública?',
+        resposta: 'É um contrato de Parceria Público-Privada em que a empresa privada substitui toda a iluminação da cidade por LED, mantém o sistema e é remunerada pela economia gerada ou por tarifa mensal, por 15 a 30 anos.',
+      },
+      {
+        pergunta: 'Como funciona o financiamento de projetos fotovoltaicos em escolas?',
+        resposta: 'Municípios usam recursos do BNDES, BID ou FNDE para financiar a instalação. A licitação é para escolher o fornecedor/instalador. Em alguns casos, usa-se PPP ou leasing de equipamentos com pagamento via economia de energia.',
+      },
+      {
+        pergunta: 'Empresa de iluminação LED pode participar sem ser fabricante?',
+        resposta: 'Sim. Distribuidores e integradores participam normalmente, desde que os produtos atendam às especificações técnicas (INMETRO, PROCEL) e a empresa comprove capacidade de instalação e manutenção.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de energia solar e eficiência energética?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "energia solar", "fotovoltaico", "LED", "iluminação pública", "eficiência energética" para receber novos editais automaticamente.',
+      },
+    ],
+  },
+  {
+    slug: 'equipamentos-laboratorio',
+    titulo: 'Licitações de Equipamentos de Laboratório',
+    subtitulo: 'Equipamentos analíticos, reagentes e materiais para laboratórios públicos',
+    descricaoMeta:
+      'Monitore licitações de equipamentos de laboratório, reagentes, materiais de análise, instrumentação científica e equipamentos para laboratórios de saúde e pesquisa públicos.',
+    keywords: [
+      'licitações equipamentos laboratório', 'licitações reagentes', 'licitações instrumentação',
+      'licitações materiais laboratoriais', 'editais laboratório prefeitura',
+      'licitações equipamentos analíticos', 'pregão laboratório',
+    ],
+    cnaes: ['26.51', '26.52', '46.45', '72.10'],
+    intro:
+      'Laboratórios de saúde pública, institutos de pesquisa, universidades federais e laboratórios de controle ambiental contratam regularmente equipamentos, reagentes e materiais laboratoriais. O segmento tem alta especialização, o que reduz a concorrência e mantém margens atrativas para fornecedores qualificados.',
+    volumen: 'R$3 bilhões/ano em equipamentos laboratoriais',
+    tiposContrato: [
+      { titulo: 'Equipamentos analíticos', descricao: 'Microscópios, espectrofotômetros, cromatógrafos, PCR e equipamentos de diagnóstico.' },
+      { titulo: 'Reagentes e insumos', descricao: 'Reagentes químicos, meios de cultura, kits de diagnóstico e insumos para análises.' },
+      { titulo: 'Equipamentos de biossegurança', descricao: 'Capelas de fluxo laminar, autoclaves, câmaras frias e EPIs laboratoriais.' },
+      { titulo: 'Calibração e manutenção', descricao: 'Calibração de equipamentos de medição e manutenção preventiva/corretiva de instrumentação.' },
+    ],
+    vantagens: [
+      { titulo: 'Alta especialização', descricao: 'Poucos fornecedores qualificados — menor concorrência e margens mais altas.' },
+      { titulo: 'Demanda constante', descricao: 'Reagentes e insumos são consumidos continuamente e precisam de reposição periódica.' },
+      { titulo: 'Vínculo técnico', descricao: 'Uma vez instalado o equipamento, o laboratório tende a continuar comprando do mesmo fornecedor.' },
+    ],
+    statsDestaque: [
+      { valor: '+600', label: 'editais de laboratório/mês' },
+      { valor: 'R$3 bi', label: 'volume anual de contratos' },
+      { valor: '12 meses', label: 'ata de registro de preços para reagentes' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Importadora pode participar de licitações de equipamentos laboratoriais?',
+        resposta: 'Sim, desde que o equipamento tenha registro na ANVISA (quando necessário), INMETRO e documentação de importação regularizada. Importadoras autorizadas pelos fabricantes participam normalmente.',
+      },
+      {
+        pergunta: 'O que é o Registro ANVISA e quando é obrigatório?',
+        resposta: 'Equipamentos de diagnóstico in vitro, reagentes para diagnóstico e equipamentos médicos precisam de registro ou notificação na ANVISA antes de serem comercializados ou importados. É frequentemente exigido em editais de saúde.',
+      },
+      {
+        pergunta: 'Como funciona a calibração de equipamentos em contratos públicos?',
+        resposta: 'O edital geralmente exige certificado de calibração rastreável à RBC (Rede Brasileira de Calibração) para equipamentos de medição. A calibração é renovada anualmente e o fornecedor pode ser contratado para prestá-la.',
+      },
+      {
+        pergunta: 'Assistência técnica pode ser licitada junto com o equipamento?',
+        resposta: 'Sim. Muitos editais incluem garantia estendida e contrato de assistência técnica no objeto da licitação. O fornecedor precisa comprovar capacidade de atendimento técnico no território do órgão contratante.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de equipamentos de laboratório?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "equipamentos de laboratório", "reagentes", "instrumentação laboratorial" ou o nome do equipamento específico para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'agronegocio-insumos',
+    titulo: 'Licitações para Agronegócio e Insumos Agrícolas',
+    subtitulo: 'Sementes, defensivos, implementos e assistência técnica rural para o setor público',
+    descricaoMeta:
+      'Monitore licitações de insumos agrícolas, sementes, defensivos, implementos, máquinas agrícolas e assistência técnica rural para secretarias de agricultura e ATER públicas.',
+    keywords: [
+      'licitações agronegócio', 'licitações insumos agrícolas', 'licitações sementes',
+      'licitações defensivos agrícolas', 'licitações máquinas agrícolas',
+      'editais agricultura prefeitura', 'licitações implementos agrícolas', 'licitações ATER',
+    ],
+    cnaes: ['01.11', '01.13', '46.83', '46.21', '28.33'],
+    intro:
+      'Secretarias municipais de agricultura, ATER (Assistência Técnica e Extensão Rural), cooperativas públicas e programas de apoio ao produtor rural compram sementes, defensivos, implementos e máquinas via licitação. Municípios agrícolas têm alta demanda por esses insumos para programas de distribuição aos agricultores familiares.',
+    volumen: 'R$4 bilhões/ano em insumos agrícolas públicos',
+    tiposContrato: [
+      { titulo: 'Sementes e mudas', descricao: 'Sementes certificadas, mudas frutíferas e material propagativo para distribuição a produtores.' },
+      { titulo: 'Defensivos e fertilizantes', descricao: 'Agroquímicos, fertilizantes e corretivos de solo para programas agrícolas municipais.' },
+      { titulo: 'Máquinas e implementos', descricao: 'Tratores, colheitadeiras, roçadeiras, grades e implementos para uso comunitário.' },
+      { titulo: 'Assistência técnica rural', descricao: 'Serviços de extensão rural, consultoria agronômica e capacitação de produtores.' },
+    ],
+    vantagens: [
+      { titulo: 'Alta demanda em municípios rurais', descricao: 'Municípios com perfil agrícola têm demanda elevada por insumos e máquinas agrícolas.' },
+      { titulo: 'Sazonalidade previsível', descricao: 'Licitações seguem o calendário agrícola — é possível planejar antecipadamente a participação.' },
+      { titulo: 'Programas federais como motor', descricao: 'Recursos do PAA, PNAE e programas estaduais aumentam as compras municipais de insumos.' },
+    ],
+    statsDestaque: [
+      { valor: '+1 mil', label: 'editais de agro/mês' },
+      { valor: 'R$4 bi', label: 'volume anual de contratos' },
+      { valor: '70%', label: 'municípios com atividade agropecuária' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Distribuidora de defensivos pode participar de licitações sem ser fabricante?',
+        resposta: 'Sim. Distribuidoras com CNPJ, alvará sanitário para comercialização de agroquímicos e defensivos registrados no MAPA participam normalmente. Não é exigido que o licitante seja o fabricante.',
+      },
+      {
+        pergunta: 'Engenheiro agrônomo pode participar de licitações de assistência técnica?',
+        resposta: 'Sim. Profissional autônomo com CREA ativo pode participar de licitações de ATER em municípios menores. Para contratos maiores, geralmente é exigido CNPJ de empresa de consultoria agronômica.',
+      },
+      {
+        pergunta: 'O que é o PAA e como gera oportunidades?',
+        resposta: 'O Programa de Aquisição de Alimentos compra da agricultura familiar sem licitação (via chamada pública). Mas os insumos e máquinas para apoiar os beneficiários do PAA são licitados pelas prefeituras.',
+      },
+      {
+        pergunta: 'Como funciona a licitação de máquinas agrícolas?',
+        resposta: 'Geralmente via pregão eletrônico, com especificações técnicas de potência, capacidade e marca de referência (com "ou equivalente"). O prazo de entrega é crítico — máquinas devem chegar antes do período de plantio.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de insumos agrícolas em todo o Brasil?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "insumos agrícolas", "sementes", "defensivos", "implementos agrícolas" ou "máquinas agrícolas" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'odontologia-saude-bucal',
+    titulo: 'Licitações de Odontologia e Saúde Bucal',
+    subtitulo: 'Equipamentos odontológicos, materiais dentários e serviços para o SUS',
+    descricaoMeta:
+      'Monitore licitações de equipamentos odontológicos, materiais dentários, serviços de saúde bucal e unidades móveis odontológicas para o SUS e prefeituras.',
+    keywords: [
+      'licitações odontologia', 'licitações saúde bucal', 'licitações equipamentos odontológicos',
+      'licitações materiais dentários', 'licitações unidade odontológica móvel',
+      'editais odontologia prefeitura', 'licitações SUS odontologia',
+    ],
+    cnaes: ['32.50', '46.45', '86.30'],
+    intro:
+      'O Brasil Sorridente e os serviços de saúde bucal do SUS geram demanda constante por equipamentos, materiais e serviços odontológicos. Prefeituras equipam UBSs, CEOs e unidades móveis com materiais dentários e equipamentos comprados via licitação.',
+    volumen: 'R$1,8 bilhão/ano em odontologia pública',
+    tiposContrato: [
+      { titulo: 'Equipamentos odontológicos', descricao: 'Cadeiras, equipo, fotopolimerizador, ultrassom, autoclave e instrumentais.' },
+      { titulo: 'Materiais e insumos', descricao: 'Amálgamas, resinas, anestésicos, luvas, máscaras, sugadores e materiais de consumo.' },
+      { titulo: 'Unidades odontológicas móveis', descricao: 'Ônibus ou trailers equipados para atendimento odontológico em locais remotos.' },
+      { titulo: 'Próteses dentárias', descricao: 'Confecção de próteses totais e parciais para pacientes do SUS via laboratórios credenciados.' },
+    ],
+    vantagens: [
+      { titulo: 'Programa permanente', descricao: 'O Brasil Sorridente é uma política de Estado — a demanda por saúde bucal no SUS é estrutural.' },
+      { titulo: 'Alta frequência de insumos', descricao: 'Materiais dentários são consumíveis — comprados mensalmente ou trimestralmente.' },
+      { titulo: 'Mercado especializado', descricao: 'Distribuidores especializados competem com vantagem sobre fornecedores generalistas.' },
+    ],
+    statsDestaque: [
+      { valor: '+500', label: 'editais de odontologia/mês' },
+      { valor: 'R$1,8 bi', label: 'volume anual de contratos' },
+      { valor: '5 mil+', label: 'CEOs (Centros de Especialidades) pelo Brasil' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Distribuidora de materiais odontológicos precisa de registro na ANVISA?',
+        resposta: 'Sim. Materiais e equipamentos odontológicos são produtos de saúde regulados pela ANVISA. A distribuidora precisa de Autorização de Funcionamento de Empresa (AFE) da ANVISA para comercializar esses produtos.',
+      },
+      {
+        pergunta: 'O que é CEO e quais licitações ele gera?',
+        resposta: 'CEO é o Centro de Especialidades Odontológicas — unidade do SUS para tratamentos especializados. CEOs compram equipamentos de maior complexidade (radiografia panorâmica, laser, implantes) e materiais para procedimentos especializados.',
+      },
+      {
+        pergunta: 'Como funciona a licitação de próteses dentárias para o SUS?',
+        resposta: 'As prefeituras credenciam ou licitam laboratórios de próteses para confecção de próteses totais e parciais para pacientes do SUS. A remuneração é tabelada pelo Ministério da Saúde e o credenciamento é permanente enquanto houver demanda.',
+      },
+      {
+        pergunta: 'Empresa de equipamentos odontológicos pode vender para municípios de outros estados?',
+        resposta: 'Sim. Pregões eletrônicos permitem participação nacional. A empresa deve garantir assistência técnica no local ou em prazo razoável definido no edital.',
+      },
+      {
+        pergunta: 'Como monitorar licitações de odontologia e saúde bucal?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "odontologia", "saúde bucal", "equipamentos odontológicos", "materiais dentários" para receber novos editais por e-mail.',
+      },
+    ],
+  },
+  {
+    slug: 'fotografia-audiovisual',
+    titulo: 'Licitações de Fotografia e Audiovisual',
+    subtitulo: 'Cobertura fotográfica, produção de vídeos e transmissão ao vivo para o setor público',
+    descricaoMeta:
+      'Monitore licitações de fotografia, filmagem, produção audiovisual, transmissão ao vivo e cobertura de eventos para órgãos públicos em todo o Brasil.',
+    keywords: [
+      'licitações fotografia', 'licitações audiovisual', 'licitações filmagem',
+      'licitações produção de vídeo', 'licitações cobertura fotográfica',
+      'editais fotografia prefeitura', 'licitações transmissão ao vivo',
+    ],
+    cnaes: ['74.20', '60.21', '59.11', '59.12'],
+    intro:
+      'Órgãos públicos realizam centenas de eventos por ano — solenidades, inaugurações, campanhas de saúde, eventos culturais — e precisam de cobertura fotográfica, filmagem e produção de conteúdo audiovisual. Fotógrafos e produtoras com CNPJ têm acesso a um mercado constante e geograficamente distribuído.',
+    volumen: 'R$500 milhões/ano em serviços audiovisuais públicos',
+    tiposContrato: [
+      { titulo: 'Cobertura fotográfica', descricao: 'Fotografias de eventos oficiais, solenidades, inaugurações e campanhas institucionais.' },
+      { titulo: 'Produção de vídeo', descricao: 'Vídeos institucionais, documentários, spots para TV e conteúdo para redes sociais.' },
+      { titulo: 'Transmissão ao vivo', descricao: 'Streaming de sessões legislativas, audiências públicas e eventos governamentais.' },
+      { titulo: 'Drone e fotografia aérea', descricao: 'Imagens aéreas de obras, perímetros urbanos e monitoramento territorial.' },
+    ],
+    vantagens: [
+      { titulo: 'Baixa barreira de entrada', descricao: 'Fotógrafo com equipamento próprio e CNPJ pode participar de licitações municipais.' },
+      { titulo: 'Alta frequência', descricao: 'Prefeituras têm eventos todos os meses e precisam de cobertura contínua.' },
+      { titulo: 'Contratos anuais possíveis', descricao: 'Contratos de cobertura fotográfica anual (por cachê mensal) são uma alternativa à contratação por evento.' },
+    ],
+    statsDestaque: [
+      { valor: '+400', label: 'editais audiovisuais/mês' },
+      { valor: 'R$500 mi', label: 'volume anual de contratos' },
+      { valor: '12 meses', label: 'duração de contrato de cobertura anual' },
+    ],
+    faqs: [
+      {
+        pergunta: 'Fotógrafo autônomo pode participar de licitações?',
+        resposta: 'Para contratos de menor valor, sim, como pessoa física. Para contratos mais expressivos, é recomendável ter CNPJ de MEI ou empresa de fotografia para facilitar a emissão de nota fiscal e participação formal no processo licitatório.',
+      },
+      {
+        pergunta: 'Operador de drone precisa de autorização para trabalhar em licitações?',
+        resposta: 'Sim. O piloto de drone deve ter habilitação ANAC (para drones acima de 250g) e o equipamento deve estar registrado no SISANT. Alguns municípios exigem seguro de responsabilidade civil para o drone.',
+      },
+      {
+        pergunta: 'Como funciona o contrato de cobertura fotográfica anual?',
+        resposta: 'O órgão contrata o fotógrafo por um valor mensal fixo, com obrigação de cobrir todos os eventos oficiais do mês. As imagens ficam de propriedade do órgão para uso institucional sem restrições.',
+      },
+      {
+        pergunta: 'Produtora de vídeo pode participar de licitação de transmissão ao vivo?',
+        resposta: 'Sim. Câmaras municipais e assembleias contratam transmissão ao vivo de sessões. A licitação avalia equipamentos, largura de banda, qualidade de streaming e experiência anterior comprovada.',
+      },
+      {
+        pergunta: 'Como encontrar licitações de fotografia e audiovisual?',
+        resposta: 'Configure alertas no Monitor de Licitações com palavras como "fotografia", "filmagem", "audiovisual", "produção de vídeo" ou "transmissão ao vivo" para receber novos editais por e-mail.',
+      },
+    ],
+  },
 ]
 
 export const SEGMENTOS_MAP: Record<string, SegmentoData> = Object.fromEntries(
