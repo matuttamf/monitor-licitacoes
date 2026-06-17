@@ -125,7 +125,7 @@ BEGIN
     -- P90 como "maior preço" pelo mesmo motivo
     PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC,
     ROUND(AVG(sub.valor_unitario), 2),
-    PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY sub.valor_unitario)
+    PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY sub.valor_unitario)::NUMERIC
   FROM (
     SELECT
       r.valor_unitario,
