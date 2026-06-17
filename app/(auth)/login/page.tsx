@@ -31,8 +31,19 @@ function LoginForm() {
       setCarregando(false)
       return
     }
-    const dest = redirect && redirect.startsWith('/') ? redirect : '/dashboard'
-    window.location.href = dest
+    // Se há redirect explícito, respeita
+    if (redirect && redirect.startsWith('/')) {
+      window.location.href = redirect
+      return
+    }
+    // Detecta tipo de conta para redirecionar corretamente
+    try {
+      const res = await fetch('/api/auth/tipo-conta')
+      const { tipo } = await res.json()
+      window.location.href = tipo === 'afiliado' ? '/afiliados/dashboard' : '/dashboard'
+    } catch {
+      window.location.href = '/dashboard'
+    }
   }
 
   return (
