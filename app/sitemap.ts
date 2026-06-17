@@ -3,8 +3,9 @@ import { MetadataRoute } from 'next'
 const BASE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://monitordelicitacoes.com.br'
 
 const pages: Array<{ path: string; freq: MetadataRoute.Sitemap[0]['changeFrequency']; priority: number }> = [
-  { path: '',              freq: 'weekly',  priority: 1.0 },
-  { path: '/assinar',      freq: 'weekly',  priority: 0.95 },
+  { path: '',                           freq: 'weekly',  priority: 1.0 },
+  { path: '/como-monitorar-licitacoes', freq: 'monthly', priority: 0.95 },
+  { path: '/assinar',                   freq: 'weekly',  priority: 0.9 },
   { path: '/planos',       freq: 'weekly',  priority: 0.9 },
   { path: '/cadastro',     freq: 'monthly', priority: 0.85 },
   { path: '/contato',      freq: 'monthly', priority: 0.7 },

@@ -669,6 +669,81 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── SEO CONTENT — monitorar licitações ── */}
+      <section className="px-6 md:px-[60px] py-[70px] md:py-[90px] bg-white">
+        <div className="max-w-[960px] mx-auto">
+          <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#6B0F1A] mb-4">Guia rápido</div>
+          <h2 className="text-3xl md:text-[40px] font-black tracking-tight text-[#1A1A1C] mb-4 max-w-[700px] leading-tight">
+            Como monitorar licitações públicas sem gastar horas por dia
+          </h2>
+          <p className="text-base md:text-lg text-[#4a4a4d] leading-relaxed mb-14 max-w-[680px]">
+            Monitorar licitações manualmente exige vasculhar o PNCP, ComprasNet, BLL e dezenas de portais municipais todos os dias — cada um com interface diferente. O Monitor de Licitações automatiza esse processo inteiro e entrega só o que importa para o seu negócio.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Card 1 — consultar licitações abertas */}
+            <div className="bg-[#FAF6F0] rounded-2xl p-7 border border-[#E8E4DC]">
+              <div className="text-2xl mb-3">🔍</div>
+              <h3 className="text-[17px] font-bold text-[#1A1A1C] mb-2">Consultar licitações abertas em tempo real</h3>
+              <p className="text-sm text-[#4a4a4d] leading-relaxed">
+                O painel de busca manual permite consultar todos os editais abertos agora — com filtros por órgão, estado, valor e data de abertura. Nenhuma licitação compatível fica de fora.
+              </p>
+            </div>
+
+            {/* Card 2 — acompanhar licitações do dia */}
+            <div className="bg-[#FAF6F0] rounded-2xl p-7 border border-[#E8E4DC]">
+              <div className="text-2xl mb-3">📬</div>
+              <h3 className="text-[17px] font-bold text-[#1A1A1C] mb-2">Acompanhar licitações do dia por e-mail e WhatsApp</h3>
+              <p className="text-sm text-[#4a4a4d] leading-relaxed">
+                Todo dia útil, antes das 9h, os editais publicados na madrugada são analisados e os que combinam com suas palavras-chave chegam por e-mail, Telegram ou WhatsApp.
+              </p>
+            </div>
+
+            {/* Card 3 — onde encontrar licitações públicas */}
+            <div className="bg-[#FAF6F0] rounded-2xl p-7 border border-[#E8E4DC]">
+              <div className="text-2xl mb-3">🏛️</div>
+              <h3 className="text-[17px] font-bold text-[#1A1A1C] mb-2">Onde encontrar licitações públicas no Brasil</h3>
+              <p className="text-sm text-[#4a4a4d] leading-relaxed">
+                As principais fontes são o <strong>PNCP</strong> (Portal Nacional de Contratações Públicas), <strong>ComprasNet</strong>, <strong>BLL</strong>, portais estaduais e Diários Oficiais. O Monitor centraliza todas num único painel.
+              </p>
+            </div>
+
+            {/* Card 4 — plataforma de licitação gratuita */}
+            <div className="bg-[#FAF6F0] rounded-2xl p-7 border border-[#E8E4DC]">
+              <div className="text-2xl mb-3">🎁</div>
+              <h3 className="text-[17px] font-bold text-[#1A1A1C] mb-2">Plataforma de licitação gratuita por 7 dias</h3>
+              <p className="text-sm text-[#4a4a4d] leading-relaxed">
+                O período de teste é completamente gratuito — sem cartão de crédito. Você configura as palavras-chave e já recebe alertas reais nos primeiros dias, sem custo.
+              </p>
+            </div>
+
+            {/* Card 5 — empresas que participam de licitações */}
+            <div className="bg-[#FAF6F0] rounded-2xl p-7 border border-[#E8E4DC]">
+              <div className="text-2xl mb-3">🏢</div>
+              <h3 className="text-[17px] font-bold text-[#1A1A1C] mb-2">Quais empresas podem participar de licitações?</h3>
+              <p className="text-sm text-[#4a4a4d] leading-relaxed">
+                Qualquer empresa com CNPJ ativo pode participar — MEI, ME, EPP e grandes empresas. Micro e pequenas empresas têm vantagens legais garantidas pela LC 123/2006: desempate técnico e tratamento diferenciado.
+              </p>
+            </div>
+
+            {/* Card 6 — pregão eletrônico PNCP */}
+            <div className="bg-[#FAF6F0] rounded-2xl p-7 border border-[#E8E4DC]">
+              <div className="text-2xl mb-3">⚡</div>
+              <h3 className="text-[17px] font-bold text-[#1A1A1C] mb-2">Pregão eletrônico: como não perder o prazo</h3>
+              <p className="text-sm text-[#4a4a4d] leading-relaxed">
+                Pregões eletrônicos no PNCP têm prazo médio de 8 dias úteis. Quem monitora chega primeiro — tem tempo para analisar o edital, preparar documentação e montar uma proposta competitiva.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link href="/como-monitorar-licitacoes" className="text-sm font-semibold text-[#6B0F1A] no-underline">
+              Guia completo: como monitorar licitações passo a passo →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ ── */}
       <section className="px-6 md:px-[60px] py-[70px] md:py-20 bg-[#FAF6F0]">
         <div className="max-w-[760px] mx-auto">
