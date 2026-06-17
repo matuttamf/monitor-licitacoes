@@ -25,9 +25,9 @@ export async function GET(
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Incremento atômico — não bloqueia o redirect
-  admin.rpc('incrementar_cliques_campanha', { campanha_id: campanha.id })
-    .then(({ error }) => { if (error) console.error('[/r] erro ao incrementar cliques:', error) })
+  // Incremento atômico — await necessário: em serverless a função encerra no return
+  const { error: rpcErr } = await admin.rpc('incrementar_cliques_campanha', { campanha_id: campanha.id })
+  if (rpcErr) console.error('[/r] erro ao incrementar cliques:', rpcErr)
 
   const base = campanha.url_destino?.startsWith('http')
     ? campanha.url_destino
