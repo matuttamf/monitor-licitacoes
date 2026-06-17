@@ -579,7 +579,7 @@ export default function DashboardPage() {
 
           {/* Cabeçalho */}
           <div className="px-6 pt-5 pb-4 flex items-center gap-2">
-            <span className="text-xs font-black tracking-widest uppercase" style={{ color: '#C9A65A' }}>Seu impacto</span>
+            <span className="text-xs font-black tracking-widest uppercase" style={{ color: '#C9A65A' }}>Monitoramento ativo</span>
             <span className="text-[10px] px-2.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(201,166,90,0.12)', color: '#C9A65A', border: '1px solid rgba(201,166,90,0.2)' }}>
               acumulado desde o início
             </span>

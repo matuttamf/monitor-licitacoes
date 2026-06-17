@@ -48,7 +48,7 @@ export default function FornecedoresPage() {
   const [bloqueado, setBloqueado]   = useState(false)
 
   // vencedores de licitações
-  const [mostrarVencedores, setMostrarVencedores] = useState(false)
+  const [mostrarVencedores, setMostrarVencedores] = useState(true)
   const [vencedores, setVencedores]               = useState<Vencedor[]>([])
   const [carregandoVenc, setCarregandoVenc]       = useState(false)
 
@@ -77,7 +77,10 @@ export default function FornecedoresPage() {
     setCarregando(false)
   }, [])
 
-  useEffect(() => { carregar(1, '', '', '', '') }, [carregar])
+  useEffect(() => {
+    carregar(1, '', '', '', '')
+    carregarVencedores('', '', '', '')
+  }, [carregar])
 
   async function carregarVencedores(q: string, r: string, ai: string, af: string) {
     setCarregandoVenc(true)
