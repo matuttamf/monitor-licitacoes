@@ -37,14 +37,14 @@ async function getMLToken(): Promise<string | null> {
 
 async function buscarPrecoMercado(termo: string): Promise<{ media: number | null; minimo: number | null; total: number }> {
   try {
-    const token = await getMLToken()
-    if (!token) return { media: null, minimo: null, total: 0 }
+    const appId = process.env.ML_APP_ID
+    if (!appId) return { media: null, minimo: null, total: 0 }
 
     const q = encodeURIComponent(termo.slice(0, 80))
     const res = await fetch(
-      `https://api.mercadolibre.com/catalog_products/search?q=${q}&site_id=MLB&limit=20`,
+      `https://api.mercadolibre.com/sites/MLB/search?q=${q}&limit=20&condition=new&APP_ID=${appId}`,
       {
-        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        headers: { 'Accept': 'application/json' },
         signal: AbortSignal.timeout(5000),
       }
     )
@@ -53,10 +53,10 @@ async function buscarPrecoMercado(termo: string): Promise<{ media: number | null
       console.error('[ML search] HTTP', res.status, body.slice(0, 200))
       return { media: null, minimo: null, total: 0 }
     }
-    const json = await res.json() as { results?: { price_info?: { median?: number; min_price?: number } }[] }
+    const json = await res.json() as { results?: { price: number; currency_id: string }[] }
     const precos = (json.results ?? [])
-      .map(r => r.price_info?.median ?? r.price_info?.min_price ?? 0)
-      .filter(p => p > 0)
+      .filter(r => r.currency_id === 'BRL' && r.price > 0)
+      .map(r => r.price)
     if (!precos.length) return { media: null, minimo: null, total: 0 }
     const media = Math.round(precos.reduce((a, b) => a + b, 0) / precos.length * 100) / 100
     const minimo = Math.min(...precos)
