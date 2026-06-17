@@ -40,8 +40,10 @@ export default function FornecedoresPage() {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [total, setTotal]       = useState(0)
   const [page, setPage]         = useState(1)
-  const [busca, setBusca]       = useState('')
-  const [regiao, setRegiao]     = useState('')
+  const [busca, setBusca]           = useState('')
+  const [regiao, setRegiao]         = useState('')
+  const [anoInicio, setAnoInicio]   = useState('')
+  const [anoFim, setAnoFim]         = useState('')
   const [carregando, setCarregando] = useState(true)
   const [bloqueado, setBloqueado]   = useState(false)
 
@@ -59,11 +61,13 @@ export default function FornecedoresPage() {
   const [buscandoKws, setBuscandoKws]   = useState(false)
   const [carregandoForm, setCarregandoForm] = useState(false)
 
-  const carregar = useCallback(async (p: number, q: string, r: string) => {
+  const carregar = useCallback(async (p: number, q: string, r: string, ai: string, af: string) => {
     setCarregando(true)
     const params = new URLSearchParams({ page: String(p) })
-    if (q) params.set('q', q)
-    if (r) params.set('regiao', r)
+    if (q)  params.set('q', q)
+    if (r)  params.set('regiao', r)
+    if (ai) params.set('ano_inicio', ai)
+    if (af) params.set('ano_fim', af)
     const res = await fetch(`/api/fornecedores?${params}`)
     if (res.status === 403) { setBloqueado(true); setCarregando(false); return }
     const data = await res.json()
@@ -73,13 +77,15 @@ export default function FornecedoresPage() {
     setCarregando(false)
   }, [])
 
-  useEffect(() => { carregar(1, '', '') }, [carregar])
+  useEffect(() => { carregar(1, '', '', '', '') }, [carregar])
 
-  async function carregarVencedores(q: string, uf: string) {
+  async function carregarVencedores(q: string, r: string, ai: string, af: string) {
     setCarregandoVenc(true)
     const params = new URLSearchParams()
     if (q)  params.set('q', q)
-    if (uf) params.set('uf', uf)
+    if (r)  params.set('regiao', r)
+    if (ai) params.set('ano_inicio', ai)
+    if (af) params.set('ano_fim', af)
     const res = await fetch(`/api/fornecedores/vencedores?${params}`)
     if (res.ok) {
       const d = await res.json()
@@ -91,21 +97,21 @@ export default function FornecedoresPage() {
   function toggleVencedores() {
     const novo = !mostrarVencedores
     setMostrarVencedores(novo)
-    if (novo && vencedores.length === 0) carregarVencedores(busca, regiao)
+    if (novo && vencedores.length === 0) carregarVencedores(busca, regiao, anoInicio, anoFim)
   }
 
   function buscar(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
-    carregar(1, busca, regiao)
-    if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, regiao) }
+    carregar(1, busca, regiao, anoInicio, anoFim)
+    if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, regiao, anoInicio, anoFim) }
   }
 
   function mudarRegiao(r: string) {
     setRegiao(r)
     setPage(1)
-    carregar(1, busca, r)
-    if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, r) }
+    carregar(1, busca, r, anoInicio, anoFim)
+    if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, r, anoInicio, anoFim) }
   }
 
   function toggleRegiao(r: string) {
@@ -401,14 +407,36 @@ export default function FornecedoresPage() {
             {REGIOES_UF.map(r => <option key={r} value={r}>{r}</option>)}
           </optgroup>
         </select>
+        <input
+          type="number"
+          value={anoInicio}
+          onChange={e => setAnoInicio(e.target.value)}
+          placeholder="Ano início"
+          min="2014" max="2099"
+          className="px-3 py-2.5 rounded-xl text-sm"
+          style={{ width: 110, border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }}
+        />
+        <input
+          type="number"
+          value={anoFim}
+          onChange={e => setAnoFim(e.target.value)}
+          placeholder="Ano fim"
+          min="2014" max="2099"
+          className="px-3 py-2.5 rounded-xl text-sm"
+          style={{ width: 100, border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }}
+        />
         <button type="submit"
           className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
           style={{ background: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
           Buscar
         </button>
-        {(busca || regiao) && (
+        {(busca || regiao || anoInicio || anoFim) && (
           <button type="button"
-            onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '') }}
+            onClick={() => {
+              setBusca(''); setRegiao(''); setAnoInicio(''); setAnoFim('')
+              setPage(1); carregar(1, '', '', '', '')
+              if (mostrarVencedores) { setVencedores([]); carregarVencedores('', '', '', '') }
+            }}
             className="px-4 py-2.5 rounded-xl text-sm font-medium"
             style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
             Limpar

@@ -34,12 +34,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'plano_insuficiente' }, { status: 403 })
   }
 
-  const { searchParams } = new URL(request.url)
-  const busca  = searchParams.get('q')?.trim() ?? ''
-  const regiao = searchParams.get('regiao')?.trim() ?? ''
-  const page   = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
-  const limit  = 20
-  const offset = (page - 1) * limit
+  const url       = new URL(request.url)
+  const busca     = url.searchParams.get('q')?.trim()          ?? ''
+  const regiao    = url.searchParams.get('regiao')?.trim()     ?? ''
+  const anoInicio = url.searchParams.get('ano_inicio')?.trim() ?? ''
+  const anoFim    = url.searchParams.get('ano_fim')?.trim()    ?? ''
+  const page      = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10))
+  const limit     = 20
+  const offset    = (page - 1) * limit
 
   let query = supabase
     .from('fornecedores')
@@ -49,7 +51,6 @@ export async function GET(request: Request) {
     .range(offset, offset + limit - 1)
 
   if (busca) {
-    // busca em razao_social, descricao e CNPJ (sem máscara)
     const cnpjLimpo = busca.replace(/\D/g, '')
     if (cnpjLimpo.length >= 8) {
       query = query.or(`razao_social.ilike.%${busca}%,descricao.ilike.%${busca}%,cnpj.ilike.%${cnpjLimpo}%`)
@@ -59,6 +60,13 @@ export async function GET(request: Request) {
   }
   if (regiao) {
     query = query.contains('regioes', [regiao])
+  }
+  // Ano de cadastro no diretório (criado_em)
+  if (anoInicio) {
+    query = query.gte('criado_em', `${anoInicio}-01-01`)
+  }
+  if (anoFim) {
+    query = query.lte('criado_em', `${anoFim}-12-31`)
   }
 
   const { data, count, error } = await query

@@ -28,22 +28,25 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'plano_insuficiente' }, { status: 403 })
   }
 
-  const url   = new URL(request.url)
-  const busca = url.searchParams.get('q')?.trim() ?? ''
-  const uf    = url.searchParams.get('uf')?.trim() ?? ''
+  const url       = new URL(request.url)
+  const busca     = url.searchParams.get('q')?.trim()          ?? ''
+  const regiao    = url.searchParams.get('regiao')?.trim()     ?? ''
+  const anoInicio = url.searchParams.get('ano_inicio')?.trim() ?? ''
+  const anoFim    = url.searchParams.get('ano_fim')?.trim()    ?? ''
 
-  // Corte de 24 meses
-  const vinte4m = new Date()
-  vinte4m.setMonth(vinte4m.getMonth() - 24)
-  const inicioIso = vinte4m.toISOString().slice(0, 10)
+  // Só passa UF (2 chars); macros como "Sudeste" não filtram no resultados_itens
+  const uf = regiao.length === 2 ? regiao : null
 
-  // Busca vencedores agrupados por CNPJ nos últimos 24 meses
-  // Usa RPC para poder fazer GROUP BY + filtro por similaridade
+  // Fallback: se não informou ano, usa últimos 24 meses
+  const anoInicioNum = anoInicio ? parseInt(anoInicio, 10) : null
+  const anoFimNum    = anoFim    ? parseInt(anoFim,    10) : null
+
   const { data, error } = await supabase.rpc('buscar_vencedores_licitacoes', {
-    p_termo:  busca || null,
-    p_uf:     uf    || null,
-    p_inicio: inicioIso,
-    p_limite: 50,
+    p_termo:      busca      || null,
+    p_uf:         uf         || null,
+    p_ano_inicio: anoInicioNum,
+    p_ano_fim:    anoFimNum,
+    p_limite:     50,
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
