@@ -34,20 +34,30 @@ export async function GET(request: Request) {
   const anoInicio = url.searchParams.get('ano_inicio')?.trim() ?? ''
   const anoFim    = url.searchParams.get('ano_fim')?.trim()    ?? ''
 
-  const REGIAO_UFS: Record<string, string[]> = {
-    'Norte':        ['AC','AM','AP','PA','RO','RR','TO'],
-    'Nordeste':     ['AL','BA','CE','MA','PB','PE','PI','RN','SE'],
-    'Centro-Oeste': ['DF','GO','MS','MT'],
-    'Sudeste':      ['ES','MG','RJ','SP'],
-    'Sul':          ['PR','RS','SC'],
+  // Mapa usando nomes completos pois r.estado no banco armazena nome por extenso
+  const REGIAO_ESTADOS: Record<string, string[]> = {
+    'Norte':        ['Acre','Amazonas','Amapá','Pará','Rondônia','Roraima','Tocantins'],
+    'Nordeste':     ['Alagoas','Bahia','Ceará','Maranhão','Paraíba','Pernambuco','Piauí','Rio Grande do Norte','Sergipe'],
+    'Centro-Oeste': ['Distrito Federal','Goiás','Mato Grosso do Sul','Mato Grosso'],
+    'Sudeste':      ['Espírito Santo','Minas Gerais','Rio de Janeiro','São Paulo'],
+    'Sul':          ['Paraná','Rio Grande do Sul','Santa Catarina'],
+  }
+  // Mapa de sigla → nome completo para quando o usuário selecionar UF individual
+  const UF_NOME: Record<string, string> = {
+    AC:'Acre',AL:'Alagoas',AP:'Amapá',AM:'Amazonas',BA:'Bahia',CE:'Ceará',
+    DF:'Distrito Federal',ES:'Espírito Santo',GO:'Goiás',MA:'Maranhão',
+    MT:'Mato Grosso',MS:'Mato Grosso do Sul',MG:'Minas Gerais',PA:'Pará',
+    PB:'Paraíba',PR:'Paraná',PE:'Pernambuco',PI:'Piauí',RJ:'Rio de Janeiro',
+    RN:'Rio Grande do Norte',RS:'Rio Grande do Sul',RO:'Rondônia',RR:'Roraima',
+    SC:'Santa Catarina',SP:'São Paulo',SE:'Sergipe',TO:'Tocantins',
   }
 
-  // Expande macro-região em lista de UFs; UF única vira array de 1 elemento
   let ufs: string[] | null = null
-  if (REGIAO_UFS[regiao]) {
-    ufs = REGIAO_UFS[regiao]
+  if (REGIAO_ESTADOS[regiao]) {
+    ufs = REGIAO_ESTADOS[regiao]
   } else if (regiao.length === 2) {
-    ufs = [regiao.toUpperCase()]
+    const nome = UF_NOME[regiao.toUpperCase()]
+    ufs = nome ? [nome] : null
   }
 
   const anoInicioNum = anoInicio ? parseInt(anoInicio, 10) : null
