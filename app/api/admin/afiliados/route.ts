@@ -36,9 +36,12 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Para cada afiliado com campanha, busca métricas de conversão
-  const ids = afiliados
-    ?.map(a => (a.campanha as { id: string } | null)?.id)
-    .filter(Boolean) as string[]
+  const ids = (afiliados ?? [])
+    .map(a => {
+      const camp = a.campanha as unknown as { id: string } | null
+      return camp?.id
+    })
+    .filter((id): id is string => !!id)
 
   let conversoesPorCampanha: Record<string, { conversoes: number; mrr: number }> = {}
 
