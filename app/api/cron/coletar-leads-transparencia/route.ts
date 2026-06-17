@@ -176,10 +176,10 @@ export async function GET(req: NextRequest) {
   let dataInicio: string = (cfgData?.valor as string) || BACKFILL_INICIO
   let orgaoIdx   = parseInt((cfgIdx?.valor as string) || '0', 10) || 0
 
-  // Se a data já chegou em hoje, reinicia no começo do período contínuo (2 dias atrás)
+  // Se a data já chegou em hoje, reinicia no começo do período contínuo (6 dias atrás)
   if (dataInicio >= hojeIso) {
     const d = new Date(hoje)
-    d.setDate(d.getDate() - 2)
+    d.setDate(d.getDate() - 6)
     dataInicio = fmtIso(d)
     orgaoIdx   = 0
   }

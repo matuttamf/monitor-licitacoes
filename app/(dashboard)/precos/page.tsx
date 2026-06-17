@@ -21,6 +21,10 @@ interface ResultadoItem {
   unidade_medida: string | null
   data_resultado: string | null
   score:          number
+  cnpj_orgao:     string | null
+  ano_compra:     number | null
+  seq_compra:     number | null
+  fonte:          string | null
 }
 
 interface Stats {
@@ -40,6 +44,7 @@ interface PrecoMercado {
 interface BuscaResponse {
   resultados:   ResultadoItem[]
   stats:        Stats | null
+  statsLabel:   string | null
   precoMercado: PrecoMercado | null
   buscasUsadas: number
   maxBuscas:    number
@@ -57,11 +62,20 @@ function fmtData(iso: string | null) {
   return `${d}/${m}/${y}`
 }
 
+function fmtCnpj(s: string) {
+  return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+}
+
+function pncpLink(r: ResultadoItem): string | null {
+  if (!r.cnpj_orgao || !r.ano_compra || !r.seq_compra) return null
+  return `https://pncp.gov.br/app/contratos/${r.cnpj_orgao}/${r.ano_compra}/${r.seq_compra}`
+}
+
 function ScoreBar({ score }: { score: number }) {
   const pct = Math.min(100, Math.round(score * 100))
   const color = pct >= 60 ? '#16a34a' : pct >= 35 ? '#ca8a04' : '#9ca3af'
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 80 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 70 }}>
       <div style={{ flex: 1, height: 4, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4 }} />
       </div>
@@ -81,7 +95,7 @@ export default function PrecosPage() {
   const [resultado, setResultado] = useState<BuscaResponse | null>(null)
   const [buscou, setBuscou]       = useState(false)
 
-  const limiteAtingido      = resultado?.error === 'limite_atingido'
+  const limiteAtingido       = resultado?.error === 'limite_atingido'
   const limiteDiarioAtingido = resultado?.error === 'limite_diario_atingido'
   const buscasUsadas         = resultado?.buscasUsadas ?? 0
   const maxBuscas            = resultado?.maxBuscas ?? 20
@@ -105,8 +119,12 @@ export default function PrecosPage() {
     }
   }
 
+  const stats        = resultado?.stats
+  const statsLabel   = resultado?.statsLabel ?? null
+  const precoMercado = resultado?.precoMercado
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ maxWidth: 980, margin: '0 auto' }}>
 
       {/* Cabeçalho */}
       <div style={{ marginBottom: 24 }}>
@@ -174,18 +192,9 @@ export default function PrecosPage() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[
-              {
-                label: 'Estado', value: estado, onChange: (v: string) => setEstado(v),
-                isSelect: true,
-              },
-              {
-                label: 'Data inicial', value: inicio, onChange: (v: string) => setInicio(v),
-                type: 'date',
-              },
-              {
-                label: 'Data final', value: fim, onChange: (v: string) => setFim(v),
-                type: 'date',
-              },
+              { label: 'Estado', value: estado, onChange: (v: string) => setEstado(v), isSelect: true },
+              { label: 'Data inicial', value: inicio, onChange: (v: string) => setInicio(v), type: 'date' },
+              { label: 'Data final',   value: fim,    onChange: (v: string) => setFim(v),    type: 'date' },
             ].map(f => (
               <div key={f.label} style={{ flex: '1 1 130px', minWidth: 120 }}>
                 <label style={{ display: 'block', fontSize: 11, color: 'var(--cinza)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
@@ -220,7 +229,7 @@ export default function PrecosPage() {
         </div>
       </form>
 
-      {/* Limite diário atingido (basic / trial: 10 buscas/dia) */}
+      {/* Limites */}
       {limiteDiarioAtingido && (
         <div style={{
           background: 'rgba(107,15,26,0.06)', border: '1.5px solid rgba(107,15,26,0.2)',
@@ -232,29 +241,15 @@ export default function PrecosPage() {
               Limite de 10 buscas diárias atingido
             </div>
             <div style={{ color: 'var(--cinza)', fontSize: 13 }}>
-              {resultado?.plano === 'trial'
-                ? 'Assine um plano para continuar pesquisando hoje.'
-                : 'Faça upgrade para o Plano Profissional e tenha buscas ilimitadas.'}
+              {resultado?.plano === 'trial' ? 'Assine um plano para continuar pesquisando hoje.' : 'Faça upgrade para o Plano Profissional e tenha buscas ilimitadas.'}
             </div>
           </div>
-          <button
-            onClick={() => {
-              const dest = resultado?.plano === 'trial' ? '/assinar' : '/assinar?plano=profissional'
-              analytics.upsellClicado('limite_diario', dest)
-              router.push(dest)
-            }}
-            style={{
-              padding: '10px 22px', borderRadius: 8, fontWeight: 700, fontSize: 14,
-              background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <button onClick={() => { const dest = resultado?.plano === 'trial' ? '/assinar' : '/assinar?plano=profissional'; analytics.upsellClicado('limite_diario', dest); router.push(dest) }}
+            style={{ padding: '10px 22px', borderRadius: 8, fontWeight: 700, fontSize: 14, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {resultado?.plano === 'trial' ? 'Ver planos →' : 'Fazer upgrade →'}
           </button>
         </div>
       )}
-
-      {/* Limite mensal atingido */}
       {limiteAtingido && (
         <div style={{
           background: 'rgba(201,166,90,0.07)', border: '1.5px solid rgba(201,166,90,0.3)',
@@ -265,94 +260,100 @@ export default function PrecosPage() {
             <div style={{ fontWeight: 700, color: '#92610a', fontSize: 15, marginBottom: 4 }}>
               Limite de {maxBuscas} buscas atingido este mês
             </div>
-            <div style={{ color: 'var(--cinza)', fontSize: 13 }}>
-              Faça upgrade para o Plano Profissional e tenha buscas ilimitadas.
-            </div>
+            <div style={{ color: 'var(--cinza)', fontSize: 13 }}>Faça upgrade para o Plano Profissional e tenha buscas ilimitadas.</div>
           </div>
-          <button
-            onClick={() => router.push('/assinar?plano=profissional')}
-            style={{
-              padding: '10px 22px', borderRadius: 8, fontWeight: 700, fontSize: 14,
-              background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <button onClick={() => router.push('/assinar?plano=profissional')}
+            style={{ padding: '10px 22px', borderRadius: 8, fontWeight: 700, fontSize: 14, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Ver planos →
           </button>
         </div>
       )}
 
-      {/* Stats cards */}
-      {resultado?.stats && resultado.stats.total > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 18 }}>
-          {[
-            { label: 'Resultados',  value: resultado.stats.total.toString(), destaque: false },
-            { label: 'Menor valor', value: fmtBRL(resultado.stats.minimo),   destaque: false },
-            { label: 'Mediana',     value: fmtBRL(resultado.stats.mediana),  destaque: true  },
-            { label: 'Média',       value: fmtBRL(resultado.stats.media),    destaque: false },
-            { label: 'Maior valor', value: fmtBRL(resultado.stats.maximo),   destaque: false },
-          ].map(card => (
-            <div key={card.label} style={{
-              background: card.destaque ? 'rgba(107,15,26,0.04)' : 'white',
-              border: `1.5px solid ${card.destaque ? 'rgba(107,15,26,0.15)' : 'var(--cinza-light)'}`,
-              borderRadius: 10, padding: '12px 16px',
-            }}>
-              <div style={{ fontSize: 11, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5, fontWeight: 600 }}>{card.label}</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: card.destaque ? 'var(--vinho)' : 'var(--preto)' }}>{card.value}</div>
+      {/* ── PAINEL DE COMPARATIVOS ─────────────────────────────────────────── */}
+      {stats && Number(stats.total) > 0 && (
+        <div style={{
+          background: 'white', border: '1px solid var(--cinza-light)',
+          borderRadius: 14, padding: '18px 20px', marginBottom: 16,
+        }}>
+          {/* Badge de período */}
+          {statsLabel && (
+            <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: statsLabel.startsWith('Últimos') ? 'rgba(22,163,74,0.08)' : 'rgba(107,15,26,0.06)',
+                border: `1px solid ${statsLabel.startsWith('Últimos') ? 'rgba(22,163,74,0.25)' : 'rgba(107,15,26,0.15)'}`,
+                borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 600,
+                color: statsLabel.startsWith('Últimos') ? '#15803d' : 'var(--vinho)',
+              }}>
+                {statsLabel.startsWith('Últimos') ? '📅' : '📚'} {statsLabel}
+              </span>
+              {!statsLabel.startsWith('Últimos') && (
+                <span style={{ fontSize: 11, color: 'var(--cinza)' }}>
+                  — poucos resultados nos últimos 12 meses, usando histórico completo
+                </span>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Comparação com preço de mercado (Mercado Livre) */}
-      {resultado?.precoMercado?.media && resultado?.stats?.media && (
-        (() => {
-          const govMedia   = resultado.stats!.media
-          const govMediana = resultado.stats!.mediana
-          const mlMedia    = resultado.precoMercado!.media!
-          const mlMinimo   = resultado.precoMercado!.minimo!
-          const diffMedia  = ((govMedia - mlMedia) / mlMedia) * 100
-          const diffMediana = ((govMediana - mlMedia) / mlMedia) * 100
-          const acima      = diffMedia > 0
-          const cor        = acima ? '#b91c1c' : '#15803d'
-          const bgCor      = acima ? 'rgba(185,28,28,0.05)' : 'rgba(21,128,61,0.05)'
-          const bordaCor   = acima ? 'rgba(185,28,28,0.2)' : 'rgba(21,128,61,0.2)'
-          return (
-            <div style={{
-              background: bgCor, border: `1.5px solid ${bordaCor}`,
-              borderRadius: 12, padding: '16px 20px', marginBottom: 18,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: 'var(--cinza)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-                    Comparação com mercado consumidor
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: cor, marginBottom: 2 }}>
-                    {acima ? '▲' : '▼'} {Math.abs(diffMedia).toFixed(1)}% {acima ? 'acima' : 'abaixo'} do mercado
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--cinza)', lineHeight: 1.6 }}>
-                    Mediana governo {diffMediana > 0 ? '+' : ''}{diffMediana.toFixed(1)}% vs. média Mercado Livre
-                  </div>
+          {/* Cards de preço */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+            {[
+              { label: 'Menor preço',  value: fmtBRL(stats.minimo),  sub: null,           destaque: false, cor: '#15803d' },
+              { label: 'Mediana',      value: fmtBRL(stats.mediana), sub: 'referência principal', destaque: true,  cor: 'var(--vinho)' },
+              { label: 'Média',        value: fmtBRL(stats.media),   sub: null,           destaque: false, cor: 'var(--preto)' },
+              { label: 'Maior preço',  value: fmtBRL(stats.maximo),  sub: null,           destaque: false, cor: '#b91c1c' },
+            ].map(card => (
+              <div key={card.label} style={{
+                background: card.destaque ? 'rgba(107,15,26,0.04)' : 'var(--fundo)',
+                border: `1.5px solid ${card.destaque ? 'rgba(107,15,26,0.18)' : 'var(--cinza-light)'}`,
+                borderRadius: 10, padding: '12px 14px',
+              }}>
+                <div style={{ fontSize: 10, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5, fontWeight: 600 }}>{card.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: card.cor }}>{card.value}</div>
+                {card.sub && <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>{card.sub}</div>}
+              </div>
+            ))}
+
+            {/* Card de mercado (Mercado Livre) */}
+            {precoMercado?.media && (
+              <div style={{
+                background: 'rgba(59,130,246,0.04)',
+                border: '1.5px solid rgba(59,130,246,0.2)',
+                borderRadius: 10, padding: '12px 14px',
+              }}>
+                <div style={{ fontSize: 10, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5, fontWeight: 600 }}>
+                  Mercado Livre
                 </div>
-                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--cinza)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 3 }}>Média ML</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--preto)' }}>{fmtBRL(mlMedia)}</div>
-                    <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 1 }}>mín. {fmtBRL(mlMinimo)}</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--cinza)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 3 }}>Média governo</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--vinho)' }}>{fmtBRL(govMedia)}</div>
-                    <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 1 }}>mediana {fmtBRL(govMediana)}</div>
-                  </div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#1d4ed8' }}>{fmtBRL(precoMercado.media)}</div>
+                <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 3 }}>
+                  mín. {fmtBRL(precoMercado.minimo!)} · {precoMercado.total} produtos
                 </div>
               </div>
-              <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)' }}>
-                Fonte: Mercado Livre ({resultado.precoMercado!.total} produtos novos) · Use como referência, não como base legal de proposta.
+            )}
+          </div>
+
+          {/* Comparativo governo vs mercado */}
+          {precoMercado?.media && (() => {
+            const diff = ((stats.mediana - precoMercado.media!) / precoMercado.media!) * 100
+            const acima = diff > 0
+            return (
+              <div style={{
+                marginTop: 12, padding: '10px 14px',
+                background: acima ? 'rgba(185,28,28,0.04)' : 'rgba(21,128,61,0.04)',
+                border: `1px solid ${acima ? 'rgba(185,28,28,0.15)' : 'rgba(21,128,61,0.15)'}`,
+                borderRadius: 8, fontSize: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
+              }}>
+                <span style={{ color: acima ? '#b91c1c' : '#15803d', fontWeight: 700 }}>
+                  {acima ? '▲' : '▼'} Mediana governo {Math.abs(diff).toFixed(1)}% {acima ? 'acima' : 'abaixo'} da média do Mercado Livre
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--cinza)' }}>
+                  Fonte: Mercado Livre (produtos novos) · referência, não base legal
+                </span>
               </div>
-            </div>
-          )
-        })()
+            )
+          })()}
+        </div>
       )}
 
       {/* Tabela de resultados */}
@@ -382,7 +383,7 @@ export default function PrecosPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--fundo)' }}>
-                      {['Descrição', 'Valor unit.', 'Unidade', 'Vencedor', 'Órgão', 'UF', 'Data', 'Relevância'].map(h => (
+                      {['Descrição', 'Valor unit.', 'Fornecedor', 'Órgão', 'UF', 'Data', 'Rel.'].map(h => (
                         <th key={h} style={{
                           padding: '9px 14px', textAlign: 'left', fontSize: 11,
                           color: 'var(--cinza)', fontWeight: 700,
@@ -393,48 +394,73 @@ export default function PrecosPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {resultado.resultados.map((r, i) => (
-                      <tr
-                        key={i}
-                        style={{ borderBottom: '1px solid var(--cinza-light)', transition: 'background 0.1s' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--fundo)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        <td style={{ padding: '10px 14px', color: 'var(--preto)', maxWidth: 260, verticalAlign: 'top' }}>
-                          <div style={{ lineHeight: 1.4, wordBreak: 'break-word', fontSize: 12 }}>{r.descricao_item}</div>
-                        </td>
-                        <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--vinho)', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
-                          {fmtBRL(r.valor_unitario)}
-                        </td>
-                        <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
-                          {r.unidade_medida ?? '—'}
-                        </td>
-                        <td style={{ padding: '10px 14px', maxWidth: 180, verticalAlign: 'top' }}>
-                          <div style={{ color: 'var(--preto)', wordBreak: 'break-word', lineHeight: 1.3, fontSize: 12 }}>
-                            {r.nome_vencedor ?? '—'}
-                          </div>
-                          {r.cnpj_vencedor && (
-                            <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 2 }}>
-                              {r.cnpj_vencedor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}
+                    {resultado.resultados.map((r, i) => {
+                      const link = pncpLink(r)
+                      return (
+                        <tr
+                          key={i}
+                          style={{ borderBottom: '1px solid var(--cinza-light)', transition: 'background 0.1s' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--fundo)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          {/* Descrição — mais larga */}
+                          <td style={{ padding: '10px 14px', maxWidth: 300, minWidth: 200, verticalAlign: 'top' }}>
+                            <div style={{ lineHeight: 1.45, wordBreak: 'break-word', fontSize: 12, color: 'var(--preto)' }}>
+                              {r.descricao_item}
                             </div>
-                          )}
-                        </td>
-                        <td style={{ padding: '10px 14px', maxWidth: 160, verticalAlign: 'top' }}>
-                          <div style={{ color: 'var(--cinza)', wordBreak: 'break-word', lineHeight: 1.3, fontSize: 12 }}>
-                            {r.orgao ?? '—'}
-                          </div>
-                        </td>
-                        <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
-                          {r.estado ?? '—'}
-                        </td>
-                        <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
-                          {fmtData(r.data_resultado)}
-                        </td>
-                        <td style={{ padding: '10px 14px', verticalAlign: 'top', minWidth: 90 }}>
-                          <ScoreBar score={r.score} />
-                        </td>
-                      </tr>
-                    ))}
+                            {link && (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 4, fontSize: 10, color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}
+                              >
+                                🔗 Ver no PNCP
+                              </a>
+                            )}
+                          </td>
+
+                          {/* Valor */}
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--vinho)', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                            {fmtBRL(r.valor_unitario)}
+                          </td>
+
+                          {/* Fornecedor */}
+                          <td style={{ padding: '10px 14px', maxWidth: 180, minWidth: 140, verticalAlign: 'top' }}>
+                            <div style={{ color: 'var(--preto)', wordBreak: 'break-word', lineHeight: 1.35, fontSize: 12 }}>
+                              {r.nome_vencedor ?? '—'}
+                            </div>
+                            {r.cnpj_vencedor && (
+                              <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 2 }}>
+                                {fmtCnpj(r.cnpj_vencedor)}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Órgão — mais largo */}
+                          <td style={{ padding: '10px 14px', maxWidth: 220, minWidth: 160, verticalAlign: 'top' }}>
+                            <div style={{ color: 'var(--cinza)', wordBreak: 'break-word', lineHeight: 1.35, fontSize: 12 }}>
+                              {r.orgao ?? '—'}
+                            </div>
+                            {r.municipio && (
+                              <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 2, opacity: 0.8 }}>
+                                {r.municipio}
+                              </div>
+                            )}
+                          </td>
+
+                          <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
+                            {r.estado ?? '—'}
+                          </td>
+                          <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
+                            {fmtData(r.data_resultado)}
+                          </td>
+                          <td style={{ padding: '10px 14px', verticalAlign: 'top', minWidth: 80 }}>
+                            <ScoreBar score={r.score} />
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -448,13 +474,8 @@ export default function PrecosPage() {
                   <span style={{ fontSize: 12, color: 'var(--cinza)' }}>
                     Plano Basic · Upgrade para buscas ilimitadas e histórico completo
                   </span>
-                  <button
-                    onClick={() => router.push('/assinar?plano=profissional')}
-                    style={{
-                      padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      background: 'var(--vinho)', color: 'white', border: 'none',
-                    }}
-                  >
+                  <button onClick={() => router.push('/assinar?plano=profissional')}
+                    style={{ padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'var(--vinho)', color: 'white', border: 'none' }}>
                     Upgrade →
                   </button>
                 </div>
@@ -488,10 +509,10 @@ export default function PrecosPage() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             {[
-              { icone: '📋', titulo: 'Histórico real',   texto: 'Preços homologados no PNCP e Transparência desde 2021.' },
-              { icone: '📊', titulo: 'Mediana por item', texto: 'O valor médio praticado e o menor preço que passou.' },
-              { icone: '🏆', titulo: 'Quem venceu',      texto: 'Veja qual fornecedor ganhou e por qual valor.' },
-              { icone: '🔍', titulo: 'Filtro por estado', texto: 'Compare preços por região — variam bastante no Brasil.' },
+              { icone: '📋', titulo: 'Histórico real',      texto: 'Preços homologados no PNCP e Transparência desde 2021.' },
+              { icone: '📊', titulo: 'Mediana por item',    texto: 'O valor médio praticado e o menor preço que passou.' },
+              { icone: '🛒', titulo: 'Preço de mercado',    texto: 'Comparativo com Mercado Livre para calibrar a proposta.' },
+              { icone: '🔍', titulo: 'Filtro por estado',   texto: 'Compare preços por região — variam bastante no Brasil.' },
             ].map(c => (
               <div key={c.titulo} style={{
                 background: 'var(--fundo)', borderRadius: 10,

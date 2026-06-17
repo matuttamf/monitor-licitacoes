@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
   const hojeStr = hoje.toISOString().slice(0, 10)
   const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10)
 
-  // ── Resetar contador mensal se virou mês ─────────────────────────────────
   const resetEm = profile.precos_buscas_reset_em ?? primeiroDiaMes
   let buscasUsadas = profile.precos_buscas_mes ?? 0
   if (resetEm < primeiroDiaMes) {
@@ -60,31 +59,18 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
   }
 
-  // ── Verificar limite mensal (ilimitado = 99999) ───────────────────────────
   if (maxBuscas < 99999 && buscasUsadas >= maxBuscas) {
-    return NextResponse.json({
-      error: 'limite_atingido',
-      buscasUsadas,
-      maxBuscas,
-      plano,
-    }, { status: 429 })
+    return NextResponse.json({ error: 'limite_atingido', buscasUsadas, maxBuscas, plano }, { status: 429 })
   }
 
-  // ── Limite diário para basic e trial (10 buscas/dia) ─────────────────────
   const MAX_DIA = 10
   const planoComLimiteDiario = plano === 'basic' || plano === 'trial'
   if (planoComLimiteDiario) {
     const diaReset = profile.precos_buscas_dia_reset ?? hojeStr
     let buscasDia = profile.precos_buscas_dia ?? 0
-    if (diaReset < hojeStr) buscasDia = 0  // novo dia, zera
-
+    if (diaReset < hojeStr) buscasDia = 0
     if (buscasDia >= MAX_DIA) {
-      return NextResponse.json({
-        error: 'limite_diario_atingido',
-        buscasDia,
-        maxDia: MAX_DIA,
-        plano,
-      }, { status: 429 })
+      return NextResponse.json({ error: 'limite_diario_atingido', buscasDia, maxDia: MAX_DIA, plano }, { status: 429 })
     }
   }
 
@@ -93,8 +79,17 @@ export async function POST(req: NextRequest) {
 
   if (!termo?.trim()) return NextResponse.json({ error: 'termo obrigatório' }, { status: 400 })
 
-  // Buscar resultados, stats e preço de mercado em paralelo
-  const [{ data: resultados, error: rErr }, { data: stats }, precoMercado] = await Promise.all([
+  // Corte para stats dos últimos 12 meses (só usa se usuário não especificou datas)
+  const dozeM = new Date(hoje)
+  dozeM.setFullYear(dozeM.getFullYear() - 1)
+  const inicioDozeM = dozeM.toISOString().slice(0, 10)
+
+  const [
+    { data: resultados, error: rErr },
+    { data: statsGeral },
+    { data: stats12m },
+    precoMercado,
+  ] = await Promise.all([
     supabase.rpc('buscar_precos', {
       p_termo:  termo.trim(),
       p_estado: estado || null,
@@ -109,12 +104,33 @@ export async function POST(req: NextRequest) {
       p_inicio: inicio || null,
       p_fim:    fim || null,
     }),
+    // Stats filtrados aos últimos 12 meses (só quando o usuário não filtrou datas)
+    (!inicio && !fim)
+      ? supabase.rpc('stats_precos', {
+          p_termo:  termo.trim(),
+          p_estado: estado || null,
+          p_inicio: inicioDozeM,
+          p_fim:    null,
+        })
+      : Promise.resolve({ data: null }),
     buscarPrecoMercado(termo.trim()),
   ])
 
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
 
-  // Incrementar contadores (mensal + diário se aplicável)
+  const geralRow  = statsGeral?.[0]  ?? null
+  const dozeRow   = stats12m?.[0]    ?? null
+
+  // Usa stats dos últimos 12 meses se tiver >= 5 resultados nesse período
+  const MIN_RESULTADOS_12M = 5
+  const usarDozeM = !inicio && !fim && dozeRow && Number(dozeRow.total) >= MIN_RESULTADOS_12M
+  const stats     = usarDozeM ? dozeRow : geralRow
+  const statsLabel = usarDozeM
+    ? `Últimos 12 meses · ${dozeRow!.total} resultado${Number(dozeRow!.total) !== 1 ? 's' : ''}`
+    : geralRow
+      ? `Histórico completo · ${geralRow.total} resultado${Number(geralRow.total) !== 1 ? 's' : ''}`
+      : null
+
   const updatePayload: Record<string, unknown> = {
     precos_buscas_mes: buscasUsadas + 1,
     precos_buscas_reset_em: primeiroDiaMes,
@@ -129,7 +145,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     resultados:   resultados ?? [],
-    stats:        stats?.[0] ?? null,
+    stats,
+    statsLabel,
     precoMercado,
     buscasUsadas: buscasUsadas + 1,
     maxBuscas,
