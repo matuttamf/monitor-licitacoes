@@ -101,6 +101,7 @@ export default function BuscaPage() {
   const [valorMax,   setValorMax]   = useState('')
   const [dataInicio, setDataInicio] = useState('')
 
+  const [ordenar,    setOrdenar]    = useState('recente')
   const [resposta,   setResposta]   = useState<Resposta | null>(null)
   const [buscando,   setBuscando]   = useState(false)
   const [buscouUmaVez, setBuscouUmaVez] = useState(false)
@@ -110,7 +111,7 @@ export default function BuscaPage() {
     setBuscando(true)
     setBuscouUmaVez(true)
 
-    const params = new URLSearchParams({ pagina: String(p) })
+    const params = new URLSearchParams({ pagina: String(p), ordenar })
     if (termo)      params.set('q', termo)
     if (regioes.length > 0 && !regioes.includes('brasil')) params.set('regioes', regioes.join(','))
     if (valorMin)   params.set('valor_min', valorMin)
@@ -120,7 +121,7 @@ export default function BuscaPage() {
     const res = await fetch(`/api/busca?${params}`)
     if (res.ok) setResposta(await res.json())
     setBuscando(false)
-  }, [termo, regioes, valorMin, valorMax, dataInicio])
+  }, [termo, regioes, valorMin, valorMax, dataInicio, ordenar])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -216,6 +217,22 @@ export default function BuscaPage() {
               style={{ border: '1.5px solid var(--border)', outline: 'none', color: 'var(--text-1)', background: 'var(--surface)' }}
             />
           </div>
+        </div>
+
+        {/* Ordenação */}
+        <div className="mb-4">
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Ordenar por</label>
+          <select
+            value={ordenar}
+            onChange={e => setOrdenar(e.target.value)}
+            className="px-3 py-2.5 rounded-xl text-sm"
+            style={{ border: '1.5px solid var(--border)', outline: 'none', color: 'var(--text-1)', background: 'var(--surface)', minWidth: '180px' }}
+          >
+            <option value="recente">Mais recentes</option>
+            <option value="valor">Maior valor</option>
+            <option value="abertura">Abertura próxima</option>
+            <option value="menor">Menor valor</option>
+          </select>
         </div>
 
         {/* Botões */}

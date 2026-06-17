@@ -456,6 +456,7 @@ export default function DashboardPage() {
   const [filtroRegioes,  setFiltroRegioes] = useState<string[]>([])
   const [filtroValorMin, setFiltroValorMin] = useState('')
   const [filtroValorMax, setFiltroValorMax] = useState('')
+  const [ordenar,        setOrdenar]        = useState('valor')
   const [statsEstados, setStatsEstados]     = useState<EstadoStat[]>([])
   const [pcaItems, setPcaItems]             = useState<Licitacao[]>([])
 
@@ -479,7 +480,7 @@ export default function DashboardPage() {
 
   const carregar = useCallback(async (p: number) => {
     setCarregando(true)
-    const params = new URLSearchParams({ pagina: String(p) })
+    const params = new URLSearchParams({ pagina: String(p), ordenar })
     if (filtroRegioes.length > 0 && !filtroRegioes.includes('brasil'))
       params.set('regioes', filtroRegioes.join(','))
     if (filtroValorMin) params.set('valor_min', filtroValorMin)
@@ -488,12 +489,12 @@ export default function DashboardPage() {
     if (res.ok) setResposta(await res.json())
     setCarregando(false)
     setPrimeiraVez(false)
-  }, [filtroRegioes, filtroValorMin, filtroValorMax])
+  }, [filtroRegioes, filtroValorMin, filtroValorMax, ordenar])
 
   useEffect(() => {
     setPagina(1)
     carregar(1)
-  }, [filtroRegioes, filtroValorMin, filtroValorMax]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filtroRegioes, filtroValorMin, filtroValorMax, ordenar]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     carregar(pagina)
@@ -555,6 +556,20 @@ export default function DashboardPage() {
                 className="text-sm rounded-xl px-3 py-2.5 outline-none w-full sm:w-28"
                 style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
               />
+            </div>
+            <div className="flex-1 sm:flex-none">
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>Ordenar por</label>
+              <select
+                value={ordenar}
+                onChange={e => setOrdenar(e.target.value)}
+                className="text-sm rounded-xl px-3 py-2.5 outline-none w-full sm:w-36"
+                style={{ border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-1)' }}
+              >
+                <option value="valor">Maior valor</option>
+                <option value="recente">Mais recentes</option>
+                <option value="abertura">Abertura próxima</option>
+                <option value="menor">Menor valor</option>
+              </select>
             </div>
             {!semFiltros && (
               <button

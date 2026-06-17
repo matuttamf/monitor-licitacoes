@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   const valorMin   = sp.get('valor_min')
   const valorMax   = sp.get('valor_max')
   const pagina     = Math.max(1, Number(sp.get('pagina') ?? '1'))
+  const ordenar    = sp.get('ordenar') ?? 'recente'
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -44,7 +45,11 @@ export async function GET(request: NextRequest) {
     .from('licitacoes')
     .select(cols, { count: 'exact' })
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-    .order('coletado_em', { ascending: false })
+
+  if (ordenar === 'valor')         textoQuery = textoQuery.order('valor_estimado', { ascending: false, nullsFirst: false }) as typeof textoQuery
+  else if (ordenar === 'menor')    textoQuery = textoQuery.order('valor_estimado', { ascending: true,  nullsFirst: false }) as typeof textoQuery
+  else if (ordenar === 'abertura') textoQuery = textoQuery.order('data_abertura',  { ascending: true,  nullsFirst: false }) as typeof textoQuery
+  else /* recente (padrão) */      textoQuery = textoQuery.order('coletado_em', { ascending: false }) as typeof textoQuery
 
   if (termo)      textoQuery = textoQuery.ilike('objeto', `%${termo}%`) as typeof textoQuery
   if (ufs)        textoQuery = textoQuery.in('estado', ufs) as typeof textoQuery

@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const pagina = Math.max(1, Number(searchParams.get('pagina') ?? '1'))
+  const pagina   = Math.max(1, Number(searchParams.get('pagina') ?? '1'))
+  const ordenar  = searchParams.get('ordenar') ?? 'valor'
   const from   = (pagina - 1) * POR_PAGINA
   const to     = from + POR_PAGINA - 1
 
@@ -62,9 +63,13 @@ export async function GET(request: NextRequest) {
     .from('licitacoes')
     .select('id, fonte, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, coletado_em', { count: 'exact' })
     .in('id', licitacaoIds)
-    .order('valor_estimado', { ascending: false, nullsFirst: false })
-    .order('coletado_em',    { ascending: false })
-    .range(from, to)
+
+  if (ordenar === 'recente')      query = query.order('coletado_em', { ascending: false }) as typeof query
+  else if (ordenar === 'abertura') query = query.order('data_abertura', { ascending: true, nullsFirst: false }) as typeof query
+  else if (ordenar === 'menor')    query = query.order('valor_estimado', { ascending: true, nullsFirst: false }) as typeof query
+  else /* valor (padrão) */        query = query.order('valor_estimado', { ascending: false, nullsFirst: false }).order('coletado_em', { ascending: false }) as typeof query
+
+  query = query.range(from, to) as typeof query
 
   // Região — aceita ?regioes=sul,RJ  e legado ?estado=SP
   const regioes = searchParams.get('regioes')?.split(',').filter(Boolean) ?? []
