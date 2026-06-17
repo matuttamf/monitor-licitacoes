@@ -13,9 +13,9 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
-// Processa até 800k linhas por execução — ~30-60s na edge function
-const MAX_LINHAS   = 800_000
-const MAX_LEADS    = 20_000
+// Processa até 200k linhas por execução — evita WORKER_RESOURCE_LIMIT
+const MAX_LINHAS   = 200_000
+const MAX_LEADS    = 5_000
 const COL = { BASICO: 0, ORDEM: 1, DV: 2, MATFIL: 3, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 
 const CNAE_SEED = new Set([

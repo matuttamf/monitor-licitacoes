@@ -25,7 +25,7 @@ export const maxDuration = 120   // coleta pura é bem mais rápida
 const PNCP_BASE       = 'https://pncp.gov.br/api/consulta/v1'
 const BACKFILL_INICIO = '2021-01-01'
 const JANELA_BACKFILL = 7    // dias por execução no modo backfill
-const JANELA_CONTINUA = 2    // ontem + hoje no modo contínuo
+const JANELA_CONTINUA = 6    // 6 dias anteriores + hoje no modo contínuo
 const MAX_FALHAS_SKIP = 5    // timeouts consecutivos antes de pular o período
 
 const fmt    = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '')
