@@ -16,10 +16,10 @@ function baseEmail(conteudo: string, email: string): string {
 <body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
 <tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
 
   <!-- Header -->
-  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+  <tr><td style="background:#6B0F1A;padding:24px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
@@ -39,7 +39,7 @@ function baseEmail(conteudo: string, email: string): string {
   ${conteudo}
 
   <!-- Footer -->
-  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+  <tr><td style="padding:20px 28px;border-top:1px solid #E8E4DC;">
     <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
       Monitor de Licitações · Matutta<br>
       Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
@@ -69,7 +69,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
     subject: 'Bem-vindo ao Monitor de Licitações — seus 7 dias começam agora',
     html: baseEmail(`
   <!-- Hero -->
-  <tr><td style="padding:40px 40px 0;">
+  <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Conta ativada com sucesso</div>
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       O governo compra o que você vende.<br>
@@ -81,7 +81,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
   </td></tr>
 
   <!-- Passos -->
-  <tr><td style="padding:0 40px 28px;">
+  <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
       <tr><td style="padding:20px 24px 12px;">
         <div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">3 passos para seu primeiro alerta</div>
@@ -106,7 +106,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
   </td></tr>
 
   <!-- CTA -->
-  <tr><td style="padding:0 40px 40px;" align="center">
+  <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/palavras-chave"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
       Configurar palavras-chave agora →
@@ -150,7 +150,7 @@ export async function enviarEmailDia3(
     subject,
     html: baseEmail(`
   <!-- Hero -->
-  <tr><td style="padding:40px 40px 0;">
+  <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Atualização do seu monitoramento</div>
     ${totalLicitacoes > 0 ? `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
@@ -171,7 +171,7 @@ export async function enviarEmailDia3(
   </td></tr>
 
   <!-- Estatísticas -->
-  <tr><td style="padding:0 40px 28px;">
+  <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
       <tr>
         <td style="padding:24px;text-align:center;width:33%;">
@@ -191,7 +191,7 @@ export async function enviarEmailDia3(
   </td></tr>
 
   <!-- CTA -->
-  <tr><td style="padding:0 40px 40px;" align="center">
+  <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/dashboard"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Ver licitações no painel →
@@ -214,7 +214,7 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
     subject: 'Seu acesso expira amanhã — não perca as próximas oportunidades',
     html: baseEmail(`
   <!-- Urgência header -->
-  <tr><td style="padding:40px 40px 0;">
+  <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Aviso importante</div>
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       Seu período de teste<br>
@@ -226,7 +226,7 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
   </td></tr>
 
   <!-- Planos -->
-  <tr><td style="padding:0 40px 28px;">
+  <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #6B0F1A;border-radius:14px;overflow:hidden;">
       <tr><td style="background:#6B0F1A;padding:16px 24px;">
         <span style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Plano recomendado</span>
@@ -260,7 +260,7 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
   </td></tr>
 
   <!-- CTA duplo -->
-  <tr><td style="padding:0 40px 40px;" align="center">
+  <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/assinar"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;margin-bottom:12px;">
       Assinar e continuar monitorando →

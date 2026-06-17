@@ -60,7 +60,7 @@ function gerarHtmlResumo(params: {
 <body style="margin:0;padding:0;background:#F5F0E8;font-family:system-ui,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr><td align="center" style="padding:40px 20px">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #E8E0D5">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #E8E0D5">
 
   <!-- Header -->
   <tr><td style="background:#1A1A1C;padding:28px 32px">

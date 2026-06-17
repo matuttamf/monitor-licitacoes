@@ -118,11 +118,17 @@ export async function GET(req: NextRequest) {
 
     const linhas = unicos.map(m => `
       <tr style="border-bottom:1px solid #f0ede8;">
-        <td style="padding:10px 12px;font-size:13px;color:#1A1A1C;line-height:1.4;">${m.descricao}</td>
-        <td style="padding:10px 12px;font-size:13px;font-weight:700;color:#6B0F1A;white-space:nowrap;">${fmtBRL(m.valor)}</td>
-        <td style="padding:10px 12px;font-size:12px;color:#666;max-width:180px;">${m.orgao}</td>
-        <td style="padding:10px 12px;font-size:12px;color:#666;white-space:nowrap;">${m.estado}</td>
-        <td style="padding:10px 12px;font-size:12px;color:#666;white-space:nowrap;">${fmtData(m.data)}</td>
+        <td style="padding:14px 16px;">
+          <div style="font-size:13px;color:#1A1A1C;line-height:1.45;margin-bottom:8px;">${m.descricao}</div>
+          <table cellpadding="0" cellspacing="0" style="width:100%;">
+            <tr>
+              <td style="font-size:14px;font-weight:700;color:#6B0F1A;padding-right:16px;">${fmtBRL(m.valor)}</td>
+              <td style="font-size:12px;color:#666;padding-right:12px;">${m.estado}</td>
+              <td style="font-size:12px;color:#aaa;text-align:right;">${fmtData(m.data)}</td>
+            </tr>
+          </table>
+          <div style="font-size:11px;color:#999;margin-top:4px;">${m.orgao}</div>
+        </td>
       </tr>`).join('')
 
     const nomeExibido = profile.nome?.trim() || email.split('@')[0]
