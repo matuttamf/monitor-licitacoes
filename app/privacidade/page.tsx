@@ -2,7 +2,9 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Política de Privacidade — Monitor de Licitações',
-  description: 'Saiba como o Monitor de Licitações coleta, utiliza e protege seus dados pessoais em conformidade com a LGPD.',
+  description: 'Saiba como o Monitor de Licitações coleta, utiliza e protege seus dados pessoais em conformidade com a LGPD — Lei Geral de Proteção de Dados.',
+  robots: { index: true, follow: false },
+  alternates: { canonical: 'https://monitordelicitacoes.com.br/privacidade' },
 }
 
 const EMPRESA_NOME  = 'Matutta Soluções Digitais'

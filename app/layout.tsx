@@ -21,11 +21,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: 'Monitor de Licitações — Alertas de Editais em Tempo Real',
+    default: 'Monitor de Licitações — Alertas Automáticos de Editais Públicos',
     template: '%s | Monitor de Licitações',
   },
   description:
-    'Receba alertas automáticos de licitações públicas que combinam com o seu negócio. Monitoramos PNCP, ComprasNet, BLL e portais estaduais. Teste grátis por 7 dias.',
+    'Monitore licitações públicas do PNCP, ComprasNet, BLL, estados e municípios. Alertas por e-mail, Telegram e WhatsApp assim que o edital é publicado. 7 dias grátis, sem cartão.',
   keywords: [
     'monitor de licitações', 'alerta de licitações', 'licitações públicas',
     'edital de licitação', 'pregão eletrônico', 'PNCP', 'ComprasNet', 'BLL',
@@ -38,7 +38,17 @@ export const metadata: Metadata = {
   authors: [{ name: 'Monitor de Licitações', url: APP_URL }],
   creator: 'Monitor de Licitações',
   publisher: 'Monitor de Licitações',
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
   verification: {
     google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
   },
@@ -47,16 +57,25 @@ export const metadata: Metadata = {
     locale: 'pt_BR',
     url: APP_URL,
     siteName: 'Monitor de Licitações',
-    title: 'Monitor de Licitações — Alertas de Editais em Tempo Real',
+    title: 'Monitor de Licitações — Alertas Automáticos de Editais Públicos',
     description:
-      'Receba alertas automáticos de licitações públicas que combinam com o seu negócio. Monitoramos PNCP, ComprasNet, BLL e portais estaduais.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Monitor de Licitações' }],
+      'Monitore licitações do PNCP, ComprasNet, BLL, estados e municípios. Alertas por e-mail, Telegram e WhatsApp assim que o edital é publicado. 7 dias grátis.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Monitor de Licitações — Alertas automáticos de editais públicos',
+        type: 'image/png',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Monitor de Licitações — Alertas de Editais em Tempo Real',
+    site: '@monitorlicit',
+    title: 'Monitor de Licitações — Alertas Automáticos de Editais Públicos',
     description:
-      'Receba alertas automáticos de licitações públicas que combinam com o seu negócio.',
+      'Monitore licitações do PNCP, ComprasNet e portais estaduais. Alertas por e-mail, Telegram e WhatsApp. 7 dias grátis, sem cartão.',
     images: ['/og-image.png'],
   },
 };

@@ -6,9 +6,9 @@ import TogglePeriodo from '@/app/components/TogglePeriodo'
 // ─── SEO ─────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title: 'Monitor de Licitações — Alertas Automáticos de Licitações Públicas',
+  title: 'Alertas de Licitações Públicas em Tempo Real — Monitor de Licitações',
   description:
-    'Receba alertas em tempo real de licitações públicas que combinam com o que sua empresa vende — por e-mail, Telegram e WhatsApp. Governo Federal, estados, municípios e estatais. Comece grátis por 7 dias.',
+    'Monitore licitações do PNCP, ComprasNet, BLL, estados e municípios. Alertas por e-mail, Telegram e WhatsApp no momento da publicação. Grátis por 7 dias, sem cartão.',
   keywords: [
     'monitor de licitações', 'alerta de licitações', 'licitações públicas',
     'edital de licitação', 'pregão eletrônico', 'PNCP', 'ComprasNet', 'BLL',
@@ -26,19 +26,34 @@ export const metadata: Metadata = {
     siteName: 'Monitor de Licitações',
     locale: 'pt_BR',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Monitor de Licitações — Alertas automáticos de editais públicos',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Monitor de Licitações — Alertas automáticos de editais públicos',
-    description: 'Receba alertas de licitações que combinam com o que você vende. 7 dias grátis, sem cartão.',
+    title: 'Nunca mais perca um contrato público — Monitor de Licitações',
+    description: 'Alertas de licitações do PNCP, ComprasNet, estados e municípios por e-mail, Telegram e WhatsApp. 7 dias grátis.',
   },
   alternates: {
     canonical: 'https://monitordelicitacoes.com.br',
+    languages: { 'pt-BR': 'https://monitordelicitacoes.com.br' },
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' },
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
   },
 }
 
@@ -159,6 +174,23 @@ const jsonLd = {
   },
 }
 
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Monitor de Licitações',
+  url: APP_URL,
+  description: 'Plataforma de alertas automáticos de licitações públicas brasileiras.',
+  inLanguage: 'pt-BR',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${APP_URL}/cadastro?busca={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+}
+
 const orgLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
@@ -192,6 +224,7 @@ const faqLd = {
 export default function LandingPage() {
   return (
     <div className="font-sans bg-[#FAF6F0] text-[#1A1A1C]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />

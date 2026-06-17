@@ -2,7 +2,9 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Termos de Uso — Monitor de Licitações',
-  description: 'Termos e condições de uso da plataforma Monitor de Licitações.',
+  description: 'Termos e condições de uso da plataforma Monitor de Licitações. Saiba sobre planos, cancelamento, responsabilidades e direitos dos usuários.',
+  robots: { index: true, follow: false },
+  alternates: { canonical: 'https://monitordelicitacoes.com.br/termos' },
 }
 
 const EMPRESA_NOME        = 'Matutta Soluções Digitais'
