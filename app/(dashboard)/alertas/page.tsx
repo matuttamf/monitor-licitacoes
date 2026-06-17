@@ -193,17 +193,7 @@ export default function AlertasPage() {
             </select>
           </div>
 
-          {/* Exportar CSV */}
-          {resposta && resposta.total > 0 && (
-            <a
-              href={`/api/alertas/exportar?${buildExportParams()}`}
-              download
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-              style={{ background: 'white', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', textDecoration: 'none' }}
-            >
-              ↓ Exportar CSV
-            </a>
-          )}
+
         </div>
       </div>
 
