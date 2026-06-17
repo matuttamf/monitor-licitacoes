@@ -66,9 +66,9 @@ export default function ComoMonitorarLicitacoes() {
             <span>Como monitorar licitações públicas</span>
           </div>
 
-          <div className="inline-flex items-center gap-2 bg-[rgba(201,166,90,0.1)] border border-[rgba(201,166,90,0.25)] rounded-full px-4 py-1.5 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A65A] inline-block"></span>
-            <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#C9A65A]">Guia completo · Atualizado em 2025</span>
+          <div className="inline-flex items-center gap-2 bg-[rgba(201,166,90,0.1)] border border-[rgba(201,166,90,0.25)] rounded-full px-3 py-1.5 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A65A] inline-block shrink-0"></span>
+            <span className="text-[10px] font-bold tracking-[0.08em] uppercase text-[#C9A65A]">Guia completo · Atualizado em 2025</span>
           </div>
 
           <h1 className="text-3xl md:text-[48px] font-black leading-[1.1] tracking-tight text-white mb-6">
@@ -80,15 +80,15 @@ export default function ComoMonitorarLicitacoes() {
           </p>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-3 gap-4 md:gap-8 mb-10 border-t border-[rgba(255,255,255,0.08)] pt-8">
+          <div className="grid grid-cols-3 gap-2 md:gap-8 mb-10 border-t border-[rgba(255,255,255,0.08)] pt-8">
             {[
               { n: 'R$2,4 tri', l: 'movimentados/ano em licitações' },
               { n: '5.500+', l: 'municípios publicando editais' },
               { n: '72%', l: 'das contratações via pregão eletrônico' },
             ].map(({ n, l }) => (
               <div key={n}>
-                <div className="text-xl md:text-3xl font-black text-[#C9A65A] mb-1">{n}</div>
-                <div className="text-xs text-[rgba(255,255,255,0.4)] leading-relaxed">{l}</div>
+                <div className="text-base md:text-3xl font-black text-[#C9A65A] mb-1 leading-tight">{n}</div>
+                <div className="text-[10px] md:text-xs text-[rgba(255,255,255,0.4)] leading-relaxed">{l}</div>
               </div>
             ))}
           </div>
@@ -343,9 +343,9 @@ export default function ComoMonitorarLicitacoes() {
                   { label: 'Alerta automático no dia da publicação', pct: 100, texto: 'Prazo completo', cor: 'bg-[#C9A65A]' },
                 ].map(({ label, pct, texto, cor }) => (
                   <div key={label}>
-                    <div className="flex justify-between text-xs text-[#4a4a4d] mb-2">
-                      <span>{label}</span>
-                      <span className="font-bold">{texto}</span>
+                    <div className="flex flex-wrap justify-between gap-1 text-xs text-[#4a4a4d] mb-2">
+                      <span className="mr-2">{label}</span>
+                      <span className="font-bold shrink-0">{texto}</span>
                     </div>
                     <div className="h-2.5 bg-[#F0EDE8] rounded-full overflow-hidden">
                       <div className={`h-full ${cor} rounded-full`} style={{ width: `${pct}%` }} />
@@ -469,7 +469,7 @@ export default function ComoMonitorarLicitacoes() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#111113] px-10 py-7 text-center mt-10">
+      <footer className="bg-[#111113] px-6 md:px-10 py-7 text-center mt-10">
         <div className="flex items-center justify-center gap-2.5 mb-4">
           <div className="w-7 h-7 rounded-[7px] bg-[#6B0F1A] flex items-center justify-center text-[10px] font-black text-[#C9A65A]">ML</div>
           <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2021–{new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
