@@ -39,10 +39,12 @@ export async function GET(request: NextRequest) {
   const keywordIds = keywords.map(k => k.id)
 
   // Buscar alertas para obter licitacao_ids e keywords associadas
+  // Supabase retorna 1000 linhas por padrão — com muitas keywords pode cortar; usamos limit alto
   const { data: alertas } = await supabase
     .from('alertas')
     .select('licitacao_id, keywords(termo)')
     .in('keyword_id', keywordIds)
+    .limit(10000)
 
   if (!alertas?.length) return NextResponse.json({ data: [], total: 0, pagina: 1, paginas: 1 })
 
