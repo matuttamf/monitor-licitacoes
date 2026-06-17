@@ -1,6 +1,6 @@
 /**
  * Cron: alertar-precos
- * Horário: 0 9 * * 1-6 (seg-sáb às 9h)
+ * Horário: 0 9 * * 1-5 (seg-sex às 9h)
  *
  * Para cada usuário ativo com palavras-chave:
  *   1. Busca resultados novos (coletados ontem) que batem com algum termo via FTS
