@@ -126,10 +126,18 @@ export async function GET(request: NextRequest) {
       return tb.localeCompare(ta)
     })
   } else if (ordenar === 'data_proxima') {
+    const hoje = new Date().toISOString().slice(0, 10)
     dedup.sort((a, b) => {
-      const da = getLic(a)?.data_abertura ?? '9999'
-      const db = getLic(b)?.data_abertura ?? '9999'
-      return da.localeCompare(db)
+      const da = getLic(a)?.data_abertura ?? ''
+      const db = getLic(b)?.data_abertura ?? ''
+      const aFutura = da >= hoje
+      const bFutura = db >= hoje
+      if (aFutura && !bFutura) return -1
+      if (!aFutura && bFutura) return 1
+      // ambas futuras: mais próxima primeiro (asc)
+      if (aFutura) return da.localeCompare(db)
+      // ambas passadas: mais recente primeiro (desc)
+      return db.localeCompare(da)
     })
   } else if (ordenar === 'data_distante') {
     dedup.sort((a, b) => {
