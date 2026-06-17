@@ -6,8 +6,8 @@ import { verificarCronAuth } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
-  ? process.env.MP_ACCESS_TOKEN_PROD!
-  : process.env.MP_ACCESS_TOKEN_TEST!
+  ? process.env.MP_ACCESS_TOKEN_PROD
+  : process.env.MP_ACCESS_TOKEN_TEST
 
 const PRECOS: Record<string, number> = {
   basic: 49.90, profissional: 97.90, gestao: 197.90, pro: 197.90, empresarial: 497.00,
@@ -18,6 +18,11 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: Request) {
   if (!verificarCronAuth(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  if (!ACCESS_TOKEN) {
+    console.error('[cron/sync-assinaturas] MP_ACCESS_TOKEN não configurado')
+    return NextResponse.json({ error: 'MP_ACCESS_TOKEN não configurado' }, { status: 500 })
   }
 
   const supabase = createAdminClient()
@@ -96,6 +101,7 @@ export async function GET(request: Request) {
           update.plano        = planoId
           update.max_keywords = limites.maxKeywords
           update.max_usuarios = limites.maxUsers
+          update.acesso_ate   = null  // Limpa carência anterior em reativações
           if (!profile.assinatura_inicio) update.assinatura_inicio = new Date().toISOString()
           acao = 'reativado'
         } else {

@@ -40,6 +40,11 @@ function LoginForm() {
     try {
       const res = await fetch('/api/auth/tipo-conta')
       const { tipo } = await res.json()
+      if (tipo === 'bloqueado') {
+        setErro('Sua conta de parceiro está bloqueada. Entre em contato com o suporte.')
+        setCarregando(false)
+        return
+      }
       window.location.href = tipo === 'afiliado' ? '/afiliados/dashboard' : '/dashboard'
     } catch {
       window.location.href = '/dashboard'

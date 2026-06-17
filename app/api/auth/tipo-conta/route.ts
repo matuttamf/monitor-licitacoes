@@ -20,7 +20,8 @@ export async function GET() {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (afiliado && afiliado.status !== 'bloqueado') {
+  if (afiliado) {
+    if (afiliado.status === 'bloqueado') return NextResponse.json({ tipo: 'bloqueado' })
     return NextResponse.json({ tipo: 'afiliado' })
   }
 

@@ -59,10 +59,17 @@ export async function GET() {
 
   const campanhaMap = Object.fromEntries((campanhas ?? []).map(c => [c.id, c]))
 
+  // Comissões one-time por assinante (afiliado_pagamentos)
+  const { data: comissoesPorProfile } = await supabase
+    .from('afiliado_pagamentos')
+    .select('profile_id, valor, status')
+  const comissaoByProfile: Record<string, { valor: number; status: string }> = {}
+  for (const c of comissoesPorProfile ?? []) {
+    if (c.profile_id) comissaoByProfile[c.profile_id] = { valor: c.valor, status: c.status }
+  }
+
   const assinantes = profilesSemAdmin.map(p => {
     const periodoAssinante: 'mensal' | 'anual' = p.periodo === 'anual' ? 'anual' : 'mensal'
-    // valor_mensalidade armazena o valor cobrado por ciclo (mensal ou anual)
-    // Para MRR, sempre usar equivalente mensal
     const valorCobrado = p.valor_mensalidade ?? PRECOS[p.plano ?? ''] ?? null
     const valorMensalEquiv = valorCobrado
       ? periodoAssinante === 'anual' ? Math.round(valorCobrado / 12 * 100) / 100 : valorCobrado
@@ -71,19 +78,12 @@ export async function GET() {
     const trialExpirado = p.status === 'trial' && p.trial_fim && new Date(p.trial_fim) < hoje
     const statusFinal = trialExpirado ? 'expired' : p.status
 
-    // Calcular comissão mensal deste assinante (baseada no equivalente mensal)
+    // Comissão one-time registrada no afiliado_pagamentos
     let comissaoMensal = 0
     let campanhaNome: string | null = null
-    if (p.campanha_id && statusFinal === 'active' && valorMensalEquiv) {
-      const camp = campanhaMap[p.campanha_id]
-      if (camp) {
-        campanhaNome = camp.nome
-        if (camp.comissao_tipo === 'percentual') {
-          comissaoMensal = Math.round(valorMensalEquiv * camp.comissao_valor / 100 * 100) / 100
-        } else if (camp.comissao_tipo === 'fixo') {
-          comissaoMensal = camp.comissao_valor
-        }
-      }
+    if (p.campanha_id) {
+      campanhaNome = campanhaMap[p.campanha_id]?.nome ?? null
+      comissaoMensal = comissaoByProfile[p.id]?.valor ?? 0
     }
 
     return {

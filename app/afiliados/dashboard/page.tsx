@@ -17,8 +17,7 @@ type Metricas = {
   link: string
   cliques: number
   conversoes: number
-  mrr: number
-  comissao_mensal: number
+  comissao_pendente: number
   total_pago: number
   comissao_tipo: string
   comissao_valor: number
@@ -90,9 +89,9 @@ export default function AfiliadorDashboard() {
     : '—'
 
   const descricaoComissao = dados.comissao_tipo === 'percentual'
-    ? `${dados.comissao_valor}% do MRR`
+    ? `${dados.comissao_valor}% do primeiro pagamento`
     : dados.comissao_tipo === 'fixo'
-      ? `${fmtMoeda(dados.comissao_valor)} por conversão`
+      ? `${fmtMoeda(dados.comissao_valor)} por assinatura`
       : 'Sem comissão configurada'
 
   return (
@@ -143,10 +142,10 @@ export default function AfiliadorDashboard() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 24 }}>
           {[
             { label: 'Cliques', valor: dados.cliques.toLocaleString('pt-BR'), sub: 'no seu link' },
-            { label: 'Conversões', valor: dados.conversoes.toLocaleString('pt-BR'), sub: 'assinantes ativos' },
+            { label: 'Conversões', valor: dados.conversoes.toLocaleString('pt-BR'), sub: 'assinantes via seu link' },
             { label: 'Taxa', valor: `${taxaConversao}%`, sub: 'cliques → assinantes' },
-            { label: 'Comissão/mês', valor: fmtMoeda(dados.comissao_mensal), sub: descricaoComissao },
-            { label: 'Total recebido', valor: fmtMoeda(dados.total_pago), sub: 'histórico de pagamentos' },
+            { label: 'Comissão pendente', valor: fmtMoeda(dados.comissao_pendente), sub: descricaoComissao },
+            { label: 'Total recebido', valor: fmtMoeda(dados.total_pago), sub: 'comissões pagas' },
           ].map(c => (
             <div key={c.label} style={{ background: 'white', borderRadius: 14, border: '1px solid #E8E4DC', padding: '18px 20px' }}>
               <div style={{ fontSize: 12, color: '#9AA0A6', fontWeight: 600, marginBottom: 6 }}>{c.label}</div>

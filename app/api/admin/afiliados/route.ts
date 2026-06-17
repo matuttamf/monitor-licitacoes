@@ -35,55 +35,37 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Para cada afiliado com campanha, busca métricas de conversão
-  const ids = (afiliados ?? [])
-    .map(a => {
-      const camp = a.campanha as unknown as { id: string } | null
-      return camp?.id
-    })
-    .filter((id): id is string => !!id)
+  // Métricas one-time via afiliado_pagamentos (uma comissão por assinante)
+  const afiliadoIds = (afiliados ?? []).map(a => a.id)
+  let pagamentosPorAfiliado: Record<string, { conversoes: number; pendente: number; pago: number }> = {}
 
-  let conversoesPorCampanha: Record<string, { conversoes: number; mrr: number }> = {}
+  if (afiliadoIds.length > 0) {
+    const { data: pagamentos } = await admin
+      .from('afiliado_pagamentos')
+      .select('afiliado_id, valor, status')
+      .in('afiliado_id', afiliadoIds)
 
-  if (ids.length > 0) {
-    const { data: profiles } = await admin
-      .from('profiles')
-      .select('campanha_id, status, valor_mensalidade, periodo')
-      .in('campanha_id', ids)
-
-    if (profiles) {
-      for (const p of profiles) {
-        if (!p.campanha_id) continue
-        if (!conversoesPorCampanha[p.campanha_id]) {
-          conversoesPorCampanha[p.campanha_id] = { conversoes: 0, mrr: 0 }
-        }
-        if (p.status === 'active') {
-          conversoesPorCampanha[p.campanha_id].conversoes++
-          const valorMensal = p.periodo === 'anual'
-            ? (p.valor_mensalidade ?? 0) / 12
-            : (p.valor_mensalidade ?? 0)
-          conversoesPorCampanha[p.campanha_id].mrr += valorMensal
-        }
+    for (const p of pagamentos ?? []) {
+      if (!pagamentosPorAfiliado[p.afiliado_id]) {
+        pagamentosPorAfiliado[p.afiliado_id] = { conversoes: 0, pendente: 0, pago: 0 }
       }
+      pagamentosPorAfiliado[p.afiliado_id].conversoes++
+      if (p.status === 'pendente') pagamentosPorAfiliado[p.afiliado_id].pendente += p.valor
+      else if (p.status === 'pago')    pagamentosPorAfiliado[p.afiliado_id].pago    += p.valor
     }
   }
 
   const resultado = afiliados?.map(a => {
     const camp = (a.campanha as unknown) as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number; ativo: boolean } | null
-    const metricas = camp ? (conversoesPorCampanha[camp.id] ?? { conversoes: 0, mrr: 0 }) : { conversoes: 0, mrr: 0 }
-    const comissao = camp?.comissao_tipo === 'percentual'
-      ? Math.round(metricas.mrr * (camp.comissao_valor / 100) * 100) / 100
-      : camp?.comissao_tipo === 'fixo'
-        ? metricas.conversoes * (camp.comissao_valor ?? 0)
-        : 0
+    const m = pagamentosPorAfiliado[a.id] ?? { conversoes: 0, pendente: 0, pago: 0 }
 
     return {
       ...a,
-      campanha: camp,
-      cliques: camp?.cliques ?? 0,
-      conversoes: metricas.conversoes,
-      mrr: Math.round(metricas.mrr * 100) / 100,
-      comissao_mensal: comissao,
+      campanha:          camp,
+      cliques:           camp?.cliques ?? 0,
+      conversoes:        m.conversoes,
+      comissao_pendente: Math.round(m.pendente * 100) / 100,
+      comissao_paga:     Math.round(m.pago     * 100) / 100,
     }
   })
 
@@ -146,6 +128,16 @@ export async function PATCH(request: NextRequest) {
   const admin = adminClient()
 
   if (acao === 'reenviar') {
+    // Não reenviar convite para afiliado já ativado (user_id preenchido)
+    const { data: check } = await admin
+      .from('afiliados')
+      .select('user_id')
+      .eq('id', id)
+      .single()
+    if (check?.user_id) {
+      return NextResponse.json({ error: 'Afiliado já ativou a conta' }, { status: 409 })
+    }
+
     const token = crypto.randomBytes(32).toString('hex')
     const expira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 

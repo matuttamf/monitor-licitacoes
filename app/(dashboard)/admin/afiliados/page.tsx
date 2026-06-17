@@ -20,8 +20,8 @@ type Afiliado = {
   campanha: Campanha | null
   cliques: number
   conversoes: number
-  mrr: number
-  comissao_mensal: number
+  comissao_pendente: number
+  comissao_paga: number
 }
 
 type CampanhaOpcao = { id: string; nome: string; codigo: string }
@@ -93,7 +93,7 @@ export default function AdminAfiliados() {
 
   const totalComissao = afiliados
     .filter(a => a.status === 'ativo')
-    .reduce((s, a) => s + a.comissao_mensal, 0)
+    .reduce((s, a) => s + a.comissao_pendente, 0)
 
   return (
     <div>
@@ -101,7 +101,7 @@ export default function AdminAfiliados() {
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--preto)', margin: 0 }}>Afiliados</h1>
           <p style={{ fontSize: 13, color: 'var(--cinza)', margin: '4px 0 0' }}>
-            Parceiros ativos: {afiliados.filter(a => a.status === 'ativo').length} · Comissão/mês: {fmtMoeda(totalComissao)}
+            Parceiros ativos: {afiliados.filter(a => a.status === 'ativo').length} · Comissão pendente: {fmtMoeda(totalComissao)}
           </p>
         </div>
         <button
@@ -181,7 +181,7 @@ export default function AdminAfiliados() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--surface-2)' }}>
-                {['Parceiro', 'Campanha', 'Cliques', 'Conversões', 'Comissão/mês', 'Status', 'Ações'].map(h => (
+                {['Parceiro', 'Campanha', 'Cliques', 'Conversões', 'Comissão pendente', 'Status', 'Ações'].map(h => (
                   <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: 'var(--cinza)' }}>{h}</th>
                 ))}
               </tr>
@@ -208,8 +208,8 @@ export default function AdminAfiliados() {
                     <td style={{ padding: '14px 16px', fontSize: 14, color: 'var(--preto)' }}>
                       {a.conversoes}
                     </td>
-                    <td style={{ padding: '14px 16px', fontSize: 14, fontWeight: 600, color: a.comissao_mensal > 0 ? '#059669' : 'var(--cinza)' }}>
-                      {fmtMoeda(a.comissao_mensal)}
+                    <td style={{ padding: '14px 16px', fontSize: 14, fontWeight: 600, color: a.comissao_pendente > 0 ? '#b45309' : 'var(--cinza)' }}>
+                      {fmtMoeda(a.comissao_pendente)}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: cfg.bg, color: cfg.cor }}>

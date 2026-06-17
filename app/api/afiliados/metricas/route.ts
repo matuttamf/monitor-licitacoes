@@ -29,56 +29,29 @@ export async function GET() {
 
   const camp = (afiliado.campanha as unknown) as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number } | null
 
-  let conversoes = 0
-  let mrr = 0
-
-  if (camp) {
-    const { data: profiles } = await admin
-      .from('profiles')
-      .select('status, valor_mensalidade, periodo')
-      .eq('campanha_id', camp.id)
-
-    for (const p of profiles ?? []) {
-      if (p.status === 'active') {
-        conversoes++
-        const valorMensal = p.periodo === 'anual'
-          ? (p.valor_mensalidade ?? 0) / 12
-          : (p.valor_mensalidade ?? 0)
-        mrr += valorMensal
-      }
-    }
-  }
-
-  const comissao_mensal = camp?.comissao_tipo === 'percentual'
-    ? Math.round(mrr * (camp.comissao_valor / 100) * 100) / 100
-    : camp?.comissao_tipo === 'fixo'
-      ? conversoes * (camp.comissao_valor ?? 0)
-      : 0
-
   const { data: pagamentos } = await admin
     .from('afiliado_pagamentos')
-    .select('mes_ref, valor, status, pago_em')
+    .select('valor, status, mes_ref, pago_em, tipo_gatilho')
     .eq('afiliado_id', afiliado.id)
-    .order('mes_ref', { ascending: false })
-    .limit(12)
+    .order('criado_em', { ascending: false })
+    .limit(50)
 
-  const totalPago = (pagamentos ?? [])
-    .filter(p => p.status === 'pago')
-    .reduce((s, p) => s + p.valor, 0)
+  const conversoes     = pagamentos?.length ?? 0
+  const totalPendente  = (pagamentos ?? []).filter(p => p.status === 'pendente').reduce((s, p) => s + p.valor, 0)
+  const totalPago      = (pagamentos ?? []).filter(p => p.status === 'pago').reduce((s, p) => s + p.valor, 0)
 
   const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
 
   return NextResponse.json({
-    nome:            afiliado.nome,
-    codigo:          camp?.codigo ?? '',
-    link:            camp ? `${APP_URL}/r/${camp.codigo}` : '',
-    cliques:         camp?.cliques ?? 0,
+    nome:              afiliado.nome,
+    codigo:            camp?.codigo ?? '',
+    link:              camp ? `${APP_URL}/r/${camp.codigo}` : '',
+    cliques:           camp?.cliques ?? 0,
     conversoes,
-    mrr:             Math.round(mrr * 100) / 100,
-    comissao_mensal,
-    total_pago:      Math.round(totalPago * 100) / 100,
-    comissao_tipo:   camp?.comissao_tipo ?? 'nenhum',
-    comissao_valor:  camp?.comissao_valor ?? 0,
-    pagamentos:      pagamentos ?? [],
+    comissao_pendente: Math.round(totalPendente * 100) / 100,
+    total_pago:        Math.round(totalPago * 100) / 100,
+    comissao_tipo:     camp?.comissao_tipo ?? 'nenhum',
+    comissao_valor:    camp?.comissao_valor ?? 0,
+    pagamentos:        pagamentos ?? [],
   })
 }
