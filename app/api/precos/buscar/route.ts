@@ -42,16 +42,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'limite_atingido', buscasUsadas, maxBuscas, plano }, { status: 429 })
   }
 
-  const MAX_DIA = 10
-  const planoComLimiteDiario = plano === 'basic' || plano === 'trial'
-  if (planoComLimiteDiario) {
-    const diaReset = profile.precos_buscas_dia_reset ?? hojeStr
-    let buscasDia = profile.precos_buscas_dia ?? 0
-    if (diaReset < hojeStr) buscasDia = 0
-    if (buscasDia >= MAX_DIA) {
-      return NextResponse.json({ error: 'limite_diario_atingido', buscasDia, maxDia: MAX_DIA, plano }, { status: 429 })
-    }
-  }
 
   const body = await req.json()
   const { termo, estado, inicio, fim, limite = 50, offset = 0 } = body
@@ -108,17 +98,10 @@ export async function POST(req: NextRequest) {
       ? `Histórico completo · ${geralRow.total} resultado${Number(geralRow.total) !== 1 ? 's' : ''}`
       : null
 
-  const updatePayload: Record<string, unknown> = {
+  await supabase.from('profiles').update({
     precos_buscas_mes: buscasUsadas + 1,
     precos_buscas_reset_em: primeiroDiaMes,
-  }
-  if (planoComLimiteDiario) {
-    const diaReset = profile.precos_buscas_dia_reset ?? hojeStr
-    const buscasDiaAtual = diaReset < hojeStr ? 0 : (profile.precos_buscas_dia ?? 0)
-    updatePayload.precos_buscas_dia       = buscasDiaAtual + 1
-    updatePayload.precos_buscas_dia_reset = hojeStr
-  }
-  await supabase.from('profiles').update(updatePayload).eq('id', user.id)
+  }).eq('id', user.id)
 
   return NextResponse.json({
     resultados:   resultados ?? [],

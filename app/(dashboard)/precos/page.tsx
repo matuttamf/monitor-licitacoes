@@ -96,8 +96,7 @@ export default function PrecosPage() {
   const [resultado, setResultado] = useState<BuscaResponse | null>(null)
   const [buscou, setBuscou]       = useState(false)
 
-  const limiteAtingido       = resultado?.error === 'limite_atingido'
-  const limiteDiarioAtingido = resultado?.error === 'limite_diario_atingido'
+  const limiteAtingido = resultado?.error === 'limite_atingido'
   const buscasUsadas         = resultado?.buscasUsadas ?? 0
   const maxBuscas            = resultado?.maxBuscas ?? 20
 
@@ -233,26 +232,6 @@ export default function PrecosPage() {
       </form>
 
       {/* Limites */}
-      {limiteDiarioAtingido && (
-        <div style={{
-          background: 'rgba(107,15,26,0.06)', border: '1.5px solid rgba(107,15,26,0.2)',
-          borderRadius: 12, padding: '20px 24px', marginBottom: 20,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
-        }}>
-          <div>
-            <div style={{ fontWeight: 700, color: 'var(--vinho)', fontSize: 15, marginBottom: 4 }}>
-              Limite de 10 buscas diárias atingido
-            </div>
-            <div style={{ color: 'var(--cinza)', fontSize: 13 }}>
-              {resultado?.plano === 'trial' ? 'Assine um plano para continuar pesquisando hoje.' : 'Faça upgrade para o Plano Profissional e tenha buscas ilimitadas.'}
-            </div>
-          </div>
-          <button onClick={() => { const dest = resultado?.plano === 'trial' ? '/assinar' : '/assinar?plano=profissional'; analytics.upsellClicado('limite_diario', dest); router.push(dest) }}
-            style={{ padding: '10px 22px', borderRadius: 8, fontWeight: 700, fontSize: 14, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {resultado?.plano === 'trial' ? 'Ver planos →' : 'Fazer upgrade →'}
-          </button>
-        </div>
-      )}
       {limiteAtingido && (
         <div style={{
           background: 'rgba(201,166,90,0.07)', border: '1.5px solid rgba(201,166,90,0.3)',
@@ -363,7 +342,7 @@ export default function PrecosPage() {
       )}
 
       {/* Erro genérico (rede/timeout) */}
-      {buscou && !loading && resultado?.error && !limiteAtingido && !limiteDiarioAtingido && (
+      {buscou && !loading && resultado?.error && !limiteAtingido && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '24px', textAlign: 'center', color: 'var(--text-2)', fontSize: 14 }}>
           {resultado.error}
         </div>
