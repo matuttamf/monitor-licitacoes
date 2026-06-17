@@ -444,28 +444,42 @@ export default function FornecedoresPage() {
         )}
       </form>}
 
-      {/* Checkbox vencedores */}
+      {/* Toggle vencedores */}
       {!showForm && (
-        <label style={{
-          display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer',
-          padding: '10px 16px', borderRadius: 10,
-          background: mostrarVencedores ? 'rgba(107,15,26,0.05)' : 'white',
-          border: `1.5px solid ${mostrarVencedores ? 'rgba(107,15,26,0.2)' : 'var(--cinza-light)'}`,
-          userSelect: 'none',
-        }}>
-          <input
-            type="checkbox"
-            checked={mostrarVencedores}
-            onChange={toggleVencedores}
-            style={{ width: 16, height: 16, accentColor: 'var(--vinho)', cursor: 'pointer' }}
-          />
-          <span style={{ fontSize: 13, fontWeight: 600, color: mostrarVencedores ? 'var(--vinho)' : 'var(--preto)' }}>
-            Mostrar fornecedores que venceram licitações nos últimos 24 meses
-          </span>
-          <span style={{ fontSize: 11, color: 'var(--cinza)', fontWeight: 400 }}>
-            — dados públicos do PNCP
-          </span>
-        </label>
+        <button
+          type="button"
+          onClick={toggleVencedores}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+            padding: '10px 18px', borderRadius: 12,
+            background: mostrarVencedores ? 'rgba(107,15,26,0.06)' : 'white',
+            border: `1.5px solid ${mostrarVencedores ? 'rgba(107,15,26,0.25)' : 'var(--cinza-light)'}`,
+            outline: 'none', transition: 'all 0.2s',
+          }}
+        >
+          {/* Toggle switch visual */}
+          <div style={{
+            width: 36, height: 20, borderRadius: 10, flexShrink: 0,
+            background: mostrarVencedores ? 'var(--vinho)' : '#d1d5db',
+            position: 'relative', transition: 'background 0.2s',
+          }}>
+            <div style={{
+              position: 'absolute', top: 3, width: 14, height: 14, borderRadius: '50%',
+              background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              left: mostrarVencedores ? 19 : 3,
+              transition: 'left 0.2s',
+            }} />
+          </div>
+
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: mostrarVencedores ? 'var(--vinho)' : 'var(--preto)', lineHeight: 1.3 }}>
+              🏆 Vencedores de licitações nos últimos 24 meses
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 1 }}>
+              Dados públicos do PNCP — aparecem abaixo dos parceiros cadastrados
+            </div>
+          </div>
+        </button>
       )}
 
       {/* Contador */}

@@ -1,5 +1,9 @@
 -- v2: adiciona cnpj_orgao/ano_compra/seq_compra para link PNCP
---     e stats_precos_periodo para cálculo dos últimos 12 meses
+--     e stats_precos para cálculo dos últimos 12 meses
+
+-- DROP obrigatório pois o RETURNS TABLE mudou
+DROP FUNCTION IF EXISTS buscar_precos(text,text,date,date,integer,integer);
+DROP FUNCTION IF EXISTS stats_precos(text,text,date,date);
 
 CREATE OR REPLACE FUNCTION buscar_precos(
   p_termo   TEXT,
@@ -48,7 +52,7 @@ BEGIN
     r.unidade_medida,
     r.data_resultado,
     CAST(
-      coalesce(similarity(r.descricao_item, v_termo), 0) * 0.65 +
+      coalesce(similarity(upper(r.descricao_item), v_termo), 0) * 0.65 +
       CASE WHEN v_query IS NOT NULL
            THEN ts_rank(r.tsv, v_query) * 0.35
            ELSE 0 END
@@ -60,7 +64,7 @@ BEGIN
   FROM resultados_itens r
   WHERE (
     (v_query IS NOT NULL AND r.tsv @@ v_query)
-    OR similarity(r.descricao_item, v_termo) > 0.22
+    OR similarity(upper(r.descricao_item), v_termo) > 0.22
   )
   AND (p_estado IS NULL OR r.estado = p_estado)
   AND (p_inicio IS NULL OR r.data_resultado >= p_inicio)

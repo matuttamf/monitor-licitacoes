@@ -60,7 +60,7 @@ BEGIN
     AND (
       p_termo IS NULL OR trim(p_termo) = ''
       OR (v_query IS NOT NULL AND r.tsv @@ v_query)
-      OR similarity(r.descricao_item, v_termo) > 0.22
+      OR similarity(upper(r.descricao_item), v_termo) > 0.22
     )
   GROUP BY r.cnpj_vencedor
   ORDER BY total_vitorias DESC, ultima_vitoria DESC NULLS LAST
