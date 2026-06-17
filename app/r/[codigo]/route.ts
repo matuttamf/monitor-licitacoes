@@ -27,7 +27,7 @@ export async function GET(
 
   // Incremento atômico — não bloqueia o redirect
   admin.rpc('incrementar_cliques_campanha', { campanha_id: campanha.id })
-    .catch(err => console.error('[/r] erro ao incrementar cliques:', err))
+    .then(({ error }) => { if (error) console.error('[/r] erro ao incrementar cliques:', error) })
 
   const base = campanha.url_destino?.startsWith('http')
     ? campanha.url_destino

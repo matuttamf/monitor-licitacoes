@@ -27,7 +27,7 @@ export async function GET() {
   if (!afiliado) return NextResponse.json({ error: 'Não é afiliado' }, { status: 403 })
   if (afiliado.status === 'bloqueado') return NextResponse.json({ error: 'Conta bloqueada' }, { status: 403 })
 
-  const camp = afiliado.campanha as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number } | null
+  const camp = (afiliado.campanha as unknown) as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number } | null
 
   let conversoes = 0
   let mrr = 0

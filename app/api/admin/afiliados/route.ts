@@ -69,7 +69,7 @@ export async function GET() {
   }
 
   const resultado = afiliados?.map(a => {
-    const camp = a.campanha as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number; ativo: boolean } | null
+    const camp = (a.campanha as unknown) as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number; ativo: boolean } | null
     const metricas = camp ? (conversoesPorCampanha[camp.id] ?? { conversoes: 0, mrr: 0 }) : { conversoes: 0, mrr: 0 }
     const comissao = camp?.comissao_tipo === 'percentual'
       ? Math.round(metricas.mrr * (camp.comissao_valor / 100) * 100) / 100
