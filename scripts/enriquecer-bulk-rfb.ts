@@ -45,6 +45,8 @@ const BATCH_SIZE = 1000
 const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/rf-cnpj`
 const RF_BASE      = 'https://arquivos.receitafederal.gov.br/public.php/dav/files/YggdBLfdninEJX9'
 
+const MAX_POR_RUN = 200_000   // limite de CNPJs carregados por execução
+
 // Colunas dos arquivos Estabelecimentos
 const COL = { BASICO: 0, ORDEM: 1, DV: 2, NOME_FANTASIA: 4, SITUACAO: 5, CNAE: 11, UF: 19, EMAIL: 27 }
 // Colunas dos arquivos Empresas
@@ -199,14 +201,14 @@ function getUrls(tipo: 'Estabelecimentos' | 'Empresas', idx: number): string[] {
   return [`${STORAGE_BASE}/${tipo}${idx}.zip`, `${RF_BASE}/${tipo}${idx}.zip`]
 }
 
-// ── Fase 1: todos os CNPJs da base em memória (via RPC com timeout próprio) ───
+// ── Fase 1: CNPJs da base em memória, limitado a MAX_POR_RUN ─────────────────
 async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBase: Set<string> }> {
   console.log('\n── Fase 1: Carregando CNPJs da base ──')
   const cnpjsBase   = new Set<string>()
   const basicosBase = new Set<string>()
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
-  while (true) {
+  while (cnpjsBase.size < MAX_POR_RUN) {
     const { data, error } = await supabase.rpc('get_cnpjs_page', { last_id: lastId, page_size: 1000 })
     if (error) {
       errosConsecutivos++
@@ -223,8 +225,9 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
     }
     lastId = (data[data.length - 1].id as string)
     if (data.length < 1000) break
-    if (cnpjsBase.size % 500_000 < 1000) console.log(`  ${cnpjsBase.size.toLocaleString('pt-BR')} carregados...`)
+    if (cnpjsBase.size % 50_000 < 1000) console.log(`  ${cnpjsBase.size.toLocaleString('pt-BR')} carregados...`)
   }
+  if (cnpjsBase.size >= MAX_POR_RUN) console.log(`  Limite de ${MAX_POR_RUN.toLocaleString('pt-BR')} CNPJs atingido — próximo run continuará de onde parou.`)
   console.log(`  CNPJs: ${cnpjsBase.size.toLocaleString('pt-BR')} | Básicos únicos: ${basicosBase.size.toLocaleString('pt-BR')}`)
   return { cnpjsBase, basicosBase }
 }
