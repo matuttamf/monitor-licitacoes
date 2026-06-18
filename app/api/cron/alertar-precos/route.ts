@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
     // Para cada palavra-chave buscar resultados recentes (sem contar no limite)
     const matches: { descricao: string; valor: number; orgao: string; estado: string; data: string | null }[] = []
 
-    for (const kw of keywords) {
+    for (const kw of keywords!) {
       const termo = kw.termo?.trim()
       if (!termo) continue
 
@@ -190,7 +190,7 @@ export async function GET(req: NextRequest) {
     else enviados++
   }
 
-  await salvarResultadoCron(supabase, 'alertar-precos', { enviados, erros, usuarios: profiles.length })
+  await salvarResultadoCron(supabase, 'alertar-precos', { enviados, erros, usuarios: profiles!.length })
 
   return NextResponse.json({ ok: true, enviados, erros })
 }
