@@ -518,7 +518,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MAX_ROWS: '500000'
+          MAX_ROWS: '100000'
         run: npx tsx scripts/enriquecer-receita.ts
       - name: Notificar conclusão
         if: always()
