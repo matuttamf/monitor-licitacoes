@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   if (!profiles?.length) return NextResponse.json({ ok: true, enviados: 0 })
 
   // Buscar e-mails dos usuários (auth.users)
-  const ids = profiles.map(p => p.id)
+  const ids = profiles!.map(p => p.id)
   const { data: authUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 })
   const emailPorId = new Map(authUsers?.users?.map(u => [u.id, u.email ?? '']) ?? [])
 
