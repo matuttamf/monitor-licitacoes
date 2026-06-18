@@ -19,7 +19,7 @@ export default function UpdatePasswordPage() {
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password: senha })
     if (error) {
-      setErro('Erro ao atualizar senha: ' + error.message)
+      setErro('Não foi possível atualizar sua senha. O link pode ter expirado — solicite um novo em "Esqueci minha senha".')
       setCarregando(false)
       return
     }

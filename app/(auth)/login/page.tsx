@@ -26,7 +26,7 @@ function LoginForm() {
       } else if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_credentials')) {
         setErro('E-mail ou senha incorretos.')
       } else {
-        setErro('Erro ao entrar: ' + error.message)
+        setErro('Não foi possível fazer login. Tente novamente.')
       }
       setCarregando(false)
       return

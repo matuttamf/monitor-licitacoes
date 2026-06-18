@@ -37,7 +37,7 @@ const SUGESTOES_POR_SETOR = [
   },
   {
     label: 'Alimentação',
-    termos: ['gêneros alimentícios', 'refeições coletivas', 'merenda escolar', 'coffee break', 'agua mineral'],
+    termos: ['gêneros alimentícios', 'refeições coletivas', 'merenda escolar', 'coffee break', 'água mineral'],
   },
   {
     label: 'Saúde',

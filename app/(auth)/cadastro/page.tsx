@@ -107,7 +107,7 @@ function CadastroConteudo() {
       } else if (msg.includes('Password')) {
         setErro('Senha inválida. Use pelo menos 8 caracteres.')
       } else {
-        setErro(`Erro ao criar conta: ${msg}`)
+        setErro('Não foi possível criar sua conta. Tente novamente ou entre em contato com o suporte.')
       }
       setCarregando(false)
       return

@@ -301,7 +301,7 @@ export default function AlertasPage() {
             {temFiltro ? 'Nenhum alerta encontrado para esses filtros' : 'Nenhum alerta enviado ainda'}
           </p>
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>
-            {temFiltro ? 'Tente ampliar os critérios de busca.' : 'Os alertas aparecerão aqui quando houver licitações com match nas suas palavras-chave.'}
+            {temFiltro ? 'Tente ampliar os critérios de busca.' : 'Os alertas aparecerão aqui quando houver licitações compatíveis com suas palavras-chave.'}
           </p>
         </div>
       ) : (

@@ -29,6 +29,7 @@ function fmtData(iso: string | null) {
 
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) return NextResponse.json({ error: 'não autorizado' }, { status: 401 })
+  return NextResponse.json({ ok: true, msg: 'desativado' })
 
   const pausado = await sistemaPausado()
   if (pausado) return NextResponse.json({ ok: true, msg: 'sistema pausado' })

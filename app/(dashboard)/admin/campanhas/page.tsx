@@ -311,7 +311,7 @@ export default function CampanhasPage() {
 
       {/* Abas */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
-        {([['campanhas','📣 Campanhas'], ['configuracoes','⚙ Configurações MP']] as const).map(([id, label]) => (
+        {([['campanhas','📣 Campanhas'], ['configuracoes','⚙ Configurações de Pagamento']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
             style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
               background: aba === id ? 'var(--vinho)' : 'white', color: aba === id ? 'white' : 'var(--cinza)',
@@ -490,7 +490,7 @@ export default function CampanhasPage() {
 
           {/* Status atual */}
           <div className="rounded-2xl p-6" style={{ background: 'white', border: '1px solid var(--cinza-light)', gridColumn: '1 / -1' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 16px' }}>Status da integração MercadoPago</h2>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 16px' }}>Status da integração de pagamento</h2>
             {carregando || !mpConfig ? (
               <div style={{ color: 'var(--cinza)', fontSize: '13px' }}>Carregando…</div>
             ) : (
@@ -543,11 +543,11 @@ export default function CampanhasPage() {
             <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 12px' }}>Como configurar as variáveis</h3>
             <ol style={{ paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
-                'Acesse o painel da Vercel → Settings → Environment Variables',
+                'Acesse o painel de hospedagem → configurações de variáveis de ambiente',
                 'Adicione MP_AMBIENTE = production (ou test para sandbox)',
-                'Adicione MP_ACCESS_TOKEN_PROD com o token de produção do MP',
+                'Adicione MP_ACCESS_TOKEN_PROD com o token de produção',
                 'Adicione MP_ACCESS_TOKEN_TEST com o token de teste (sandbox)',
-                'Adicione MP_WEBHOOK_SECRET com o secret configurado no painel do MP',
+                'Adicione MP_WEBHOOK_SECRET com o secret configurado no painel de pagamento',
                 'Faça um novo deploy para as variáveis entrarem em vigor',
               ].map((txt, i) => (
                 <li key={i} style={{ fontSize: '12px', color: 'var(--cinza)', lineHeight: 1.5 }}>
@@ -559,7 +559,7 @@ export default function CampanhasPage() {
 
           {/* Instruções webhook MP */}
           <div className="rounded-2xl p-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 12px' }}>Configurar webhook no MercadoPago</h3>
+            <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 12px' }}>Configurar webhook de pagamento</h3>
             <ol style={{ paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
                 'No painel do MP → Seu negócio → Configurações → Webhooks',

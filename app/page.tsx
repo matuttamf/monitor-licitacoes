@@ -213,7 +213,7 @@ const faqLd = {
   mainEntity: [
     { '@type': 'Question', name: 'Preciso de cartão de crédito para começar?', acceptedAnswer: { '@type': 'Answer', text: 'Não. Os sete dias de teste são completamente gratuitos e sem burocracia. Você só cadastra uma forma de pagamento se decidir continuar após o período de teste.' } },
     { '@type': 'Question', name: 'Minha empresa é pequena. Isso funciona para mim?', acceptedAnswer: { '@type': 'Answer', text: 'Especialmente para você. O governo brasileiro tem cotas e benefícios para micro e pequenas empresas em licitações. MEI, ME e EPP têm vantagens legais que grandes empresas não têm. Falta apenas informação — e isso o Monitor resolve.' } },
-    { '@type': 'Question', name: 'Como o sistema sabe quais editais combinam com meu negócio?', acceptedAnswer: { '@type': 'Answer', text: 'Você informa as palavras-chave do que vende, e nosso sistema inteligente lê o objeto de cada licitação publicada e identifica se há compatibilidade — mesmo que a redação do edital use termos diferentes dos seus.' } },
+    { '@type': 'Question', name: 'Como o Monitor sabe quais editais combinam com meu negócio?', acceptedAnswer: { '@type': 'Answer', text: 'Você informa as palavras-chave do que vende, e a plataforma analisa o objeto de cada licitação publicada e identifica compatibilidade — mesmo que a redação do edital use termos diferentes dos seus.' } },
     { '@type': 'Question', name: 'Com que frequência recebo alertas?', acceptedAnswer: { '@type': 'Answer', text: 'Monitoramos continuamente de segunda a sexta, dentro do horário comercial. Assim que identificamos uma licitação compatível com o seu perfil, ela entra na fila de envio e chega para você em breve — sem sobrecarregar sua caixa de entrada.' } },
     { '@type': 'Question', name: 'Vocês monitoram empresas como Petrobras, Correios e Caixa?', acceptedAnswer: { '@type': 'Answer', text: 'Sim. Além de todos os portais governamentais, monitoramos as principais estatais brasileiras: Petrobras, Caixa Econômica Federal, Correios, Eletrobras e SABESP.' } },
     { '@type': 'Question', name: 'Posso cancelar se não for o que esperava?', acceptedAnswer: { '@type': 'Answer', text: 'Sim, sem burocracia. No plano mensal, o cancelamento encerra a renovação imediatamente. No plano anual, o cancelamento encerra a renovação automática e o acesso permanece ativo até o fim do período já pago.' } },
@@ -361,9 +361,9 @@ export default function LandingPage() {
           <div className="bg-[#1A1A1C] rounded-[20px] p-8 md:p-12 flex flex-col md:flex-row gap-10 md:gap-14 items-start md:items-center relative overflow-hidden">
             <div className="absolute -top-16 -right-16 w-[300px] h-[300px] rounded-full bg-[radial-gradient(circle,rgba(107,15,26,0.4)_0%,transparent_70%)] pointer-events-none" />
             <div className="flex-1 relative">
-              <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#C9A65A] mb-3">Inteligência a seu favor</div>
+              <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-[#C9A65A] mb-3">Busca contextual</div>
               <h3 className="text-2xl md:text-[28px] font-black text-white mb-4 tracking-tight leading-snug">
-                O sistema entende o que você vende — não apenas o que você escreveu.
+                A busca vai além das palavras exatas — encontra editais mesmo quando o governo usa outros termos.
               </h3>
               <p className="text-sm md:text-[15px] text-[rgba(255,255,255,0.5)] leading-relaxed m-0">
                 Diferente dos buscadores comuns, nosso sistema interpreta contexto. Quem monitora <strong className="text-[rgba(255,255,255,0.8)]">"notebook"</strong> recebe alertas de <em>"equipamentos de informática"</em>, <em>"computadores portáteis"</em> e <em>"material de tecnologia"</em> também.

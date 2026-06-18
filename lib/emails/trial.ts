@@ -87,7 +87,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
         <div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">3 passos para seu primeiro alerta</div>
       </td></tr>
       ${[
-        ['1', 'Cadastre suas palavras-chave', 'Informe os produtos que sua empresa vende — o sistema faz o cruzamento automático com os editais.'],
+        ['1', 'Cadastre suas palavras-chave', 'Informe os produtos que sua empresa vende — a plataforma identifica automaticamente os editais compatíveis.'],
         ['2', 'Aguarde o próximo dia útil', 'Coletamos novos editais toda madrugada. Seu primeiro alerta chega pela manhã.'],
         ['3', 'Receba e responda', 'Alertas por e-mail e Telegram com as oportunidades filtradas para o seu negócio.'],
       ].map(([n, t, d]) => `

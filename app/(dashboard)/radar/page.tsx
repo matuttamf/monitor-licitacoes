@@ -67,7 +67,7 @@ const FAIXAS = [
     corBg: 'rgba(16,185,129,0.04)',
     corBorder: 'rgba(16,185,129,0.15)',
     icone: '📋',
-    acao: 'Moment ideal para contatar o órgão e alinhar especificações.',
+    acao: 'Momento ideal para contatar o órgão e alinhar especificações.',
   },
   {
     key: 'em180dias' as const,

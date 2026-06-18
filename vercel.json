@@ -4,7 +4,6 @@
     "app/api/cron/coletar/route.ts":            { "maxDuration": 300 },
     "app/api/cron/matching/route.ts":           { "maxDuration": 300 },
     "app/api/cron/coletar-resultados/route.ts":              { "maxDuration": 300 },
-    "app/api/cron/alertar-precos/route.ts":                 { "maxDuration": 300 },
     "app/api/cron/coletar-resultados-transparencia/route.ts": { "maxDuration": 300 },
     "app/api/cron/enriquecer-receita/route.ts":              { "maxDuration": 300 }
   },
@@ -36,7 +35,6 @@
     { "path": "/api/cron/backup-db",             "schedule": "0 5 * * 0"          },
     { "path": "/api/cron/limpar-alertas",        "schedule": "0 3 1 * *"           },
     { "path": "/api/cron/coletar-resultados",                "schedule": "* * * * *" },
-    { "path": "/api/cron/coletar-resultados-transparencia", "schedule": "* * * * *" },
-    { "path": "/api/cron/alertar-precos",                   "schedule": "0 9 * * 1-5"  }
+    { "path": "/api/cron/coletar-resultados-transparencia", "schedule": "* * * * *" }
   ]
 }

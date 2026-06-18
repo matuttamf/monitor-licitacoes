@@ -97,7 +97,7 @@ export default async function SegmentoPage({
           <div className="flex items-center gap-2 mb-4">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6B0F1A]">Guia de segmento</span>
             <span className="text-[#E8E4DC]">·</span>
-            <span className="text-xs text-[#9AA0A6]">Atualizado em 2025</span>
+            <span className="text-xs text-[#9AA0A6]">Atualizado em {new Date().getFullYear()}</span>
           </div>
 
           <h1 className="text-[26px] md:text-[36px] font-black leading-[1.15] tracking-tight text-[#1A1A1C] mb-4">

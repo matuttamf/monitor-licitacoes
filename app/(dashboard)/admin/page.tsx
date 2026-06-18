@@ -63,7 +63,7 @@ const statusConfig: Record<string, { label: string; cor: string; bg: string }> =
 
 const JOB_LABELS: Record<string, string> = {
   coletar:                'Coleta editais',
-  matching:               'Matching IA',
+  matching:               'Correspondência automática',
   alertar:                'Alertas e-mail',
   'alertar-urgente':      'Alertas Telegram/WA',
   'emails-trial':         'E-mails trial',

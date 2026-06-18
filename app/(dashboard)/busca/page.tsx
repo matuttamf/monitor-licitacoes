@@ -148,9 +148,9 @@ export default function BuscaPage() {
     <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text-1)' }}>Busca manual</h1>
+        <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text-1)' }}>Pesquisa avançada</h1>
         <p className="text-sm" style={{ color: 'var(--text-2)' }}>
-          Pesquise no banco de licitações coletadas — independente das suas palavras-chave
+          Pesquise licitações coletadas — independentemente das suas palavras-chave
         </p>
       </div>
 
@@ -241,7 +241,7 @@ export default function BuscaPage() {
             className="px-6 py-2.5 rounded-xl text-sm font-semibold"
             style={{ background: 'var(--vinho)', color: 'white', cursor: buscando ? 'not-allowed' : 'pointer', opacity: buscando ? 0.7 : 1 }}
           >
-            {buscando ? 'Buscando…' : 'Buscar no banco'}
+            {buscando ? 'Buscando…' : 'Buscar licitações'}
           </button>
           <button
             type="button"
@@ -305,7 +305,7 @@ export default function BuscaPage() {
                         {l._semantico && (
                           <span className="text-xs font-medium px-2.5 py-1 rounded-lg"
                             style={{ background: 'rgba(107,15,26,0.07)', color: 'var(--vinho)' }}>
-                            🤖 Correspondência inteligente
+                            Resultado relacionado
                           </span>
                         )}
                         {l.cidade && (

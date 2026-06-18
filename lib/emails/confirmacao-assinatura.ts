@@ -13,6 +13,7 @@ interface ParamsConfirmacao {
   email: string
   plano: string
   valor: number
+  periodo?: 'mensal' | 'anual'
   appUrl?: string
 }
 
@@ -72,7 +73,7 @@ export function emailConfirmacaoAssinatura(p: ParamsConfirmacao) {
       </td></tr>
       ${[
         ['Plano', plano],
-        ['Cobrança mensal', `${valor}/mês`],
+        [p.periodo === 'anual' ? 'Cobrança anual' : 'Cobrança mensal', p.periodo === 'anual' ? `${valor}/ano` : `${valor}/mês`],
         ['Status', '✓ Ativo'],
       ].map(([label, valor]) => `
       <tr><td style="padding:10px 24px;border-bottom:1px solid #E8E4DC;">

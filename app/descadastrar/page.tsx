@@ -75,7 +75,7 @@ export default async function DescadastrarPage({ searchParams }: Props) {
               </p>
             )}
             <p style={{ color: '#888', fontSize: 14, marginBottom: 32 }}>
-              Você não receberá mais nenhum e-mail de captação nosso.<br />
+              Você não receberá mais nenhum e-mail promocional nosso.<br />
               Se mudar de ideia, pode criar uma conta gratuita a qualquer momento.
             </p>
           </>

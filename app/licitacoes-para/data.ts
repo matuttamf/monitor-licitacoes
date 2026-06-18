@@ -1221,7 +1221,7 @@ export const SEGMENTOS: SegmentoData[] = [
     ],
     cnaes: ['69.20', '70.20'],
     intro:
-      'Câmaras municipais, autarquias, fundos de previdência e consórcios públicos frequentemente não têm estrutura interna para todas as demandas contábeis e de auditoria, terceirizando esses serviços. O mercado é estável, com contratos anuais recorrentese boa previsibilidade de receita para escritórios de contabilidade e auditoria.',
+      'Câmaras municipais, autarquias, fundos de previdência e consórcios públicos frequentemente não têm estrutura interna para todas as demandas contábeis e de auditoria, terceirizando esses serviços. O mercado é estável, com contratos anuais recorrentes e boa previsibilidade de receita para escritórios de contabilidade e auditoria.',
     volumen: 'R$800 milhões/ano em contabilidade e auditoria pública',
     tiposContrato: [
       { titulo: 'Auditoria externa independente', descricao: 'Auditoria das demonstrações financeiras de autarquias, fundos e entidades públicas.' },
@@ -1325,7 +1325,7 @@ export const SEGMENTOS: SegmentoData[] = [
     keywords: [
       'licitações jardinagem', 'licitações paisagismo', 'licitações manutenção de praças',
       'licitações poda de árvores', 'licitações roçagem', 'editais jardinagem prefeitura',
-      'licitações areas verdes', 'pregão jardinagem',
+      'licitações áreas verdes', 'pregão jardinagem',
     ],
     cnaes: ['81.30'],
     intro:

@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 const EMPRESA_NOME        = 'Matutta Soluções Digitais'
-const EMPRESA_CNPJ        = '[CNPJ em processo de registro]'
+const EMPRESA_CNPJ        = 'CNPJ em registro'
 const EMPRESA_SEDE_CIDADE = 'Belo Horizonte/MG'
 const CONTATO_EMAIL       = 'contato@monitordelicitacoes.com.br'
 
@@ -274,7 +274,7 @@ export default function TermosPage() {
               <ul>
                 <li><strong>Alterações relevantes</strong> (preços, condições de cancelamento, responsabilidades): notificação por e-mail com antecedência mínima de <strong>15 dias</strong>.</li>
                 <li><strong>Alterações operacionais</strong> (atualização de fornecedores, correções editoriais): publicação imediata com atualização da data.</li>
-                <li>O uso continuado do serviço após a vigência das alterações constitui aceite tácito.</li>
+                <li>O uso continuado do serviço após a vigência das alterações constitui aceitação tácita.</li>
                 <li>Caso o usuário não concorde, poderá cancelar a conta sem ônus antes da data de vigência.</li>
               </ul>
             </Section>

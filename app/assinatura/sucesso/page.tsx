@@ -34,8 +34,8 @@ function SucessoContent() {
     detalhe = 'A mudança será aplicada no próximo ciclo de cobrança.'
   } else {
     titulo = 'Bem-vindo ao Monitor de Licitações!'
-    subtitulo = 'Sua assinatura está sendo processada. Em alguns minutos você terá acesso completo.'
-    detalhe = 'Você receberá um e-mail de confirmação.'
+    subtitulo = 'Sua assinatura foi recebida e está sendo ativada.'
+    detalhe = 'Você receberá um e-mail de confirmação. Caso o acesso não seja liberado em alguns minutos, entre em contato com o suporte.'
   }
 
   return (

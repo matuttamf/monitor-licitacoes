@@ -103,7 +103,7 @@ export default function CancelamentoPage() {
             fontSize: 14, fontWeight: 600, textDecoration: 'none',
             border: '1.5px solid #e5e7eb', color: '#666',
           }}>
-            Cancelar
+            Voltar ao painel
           </a>
           <button onClick={enviar} disabled={!motivo || enviando} style={{
             flex: 2, padding: '12px 0', borderRadius: 10, fontSize: 14, fontWeight: 700,
@@ -116,8 +116,7 @@ export default function CancelamentoPage() {
         </div>
 
         <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginTop: 16 }}>
-          O cancelamento da assinatura é feito diretamente no MercadoPago.
-          Esta página apenas registra seu feedback.
+          O cancelamento é processado automaticamente. Esta página registra seu feedback.
         </p>
       </div>
     </div>
