@@ -38,9 +38,10 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
 
 const cliArgs  = process.argv.slice(2)
-const IDX_START = Number(cliArgs[0] ?? 0)
-const IDX_END   = Number(cliArgs[1] ?? 9)
+const IDX_START  = Number(cliArgs[0] ?? 0)
+const IDX_END    = Number(cliArgs[1] ?? 9)
 const BATCH_SIZE = 1000
+const MAX_ROWS   = parseInt(process.env.MAX_ROWS ?? '0') || 0
 
 const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/rf-cnpj`
 const RF_BASE      = 'https://arquivos.receitafederal.gov.br/public.php/dav/files/YggdBLfdninEJX9'
@@ -323,7 +324,13 @@ async function processarEstabelecimentos(
     })
 
     // Flush de todos os lotes acumulados do arquivo
+    let parou = false
     for (let i = 0; i < lote.length; i += BATCH_SIZE) {
+      if (MAX_ROWS > 0 && totalAtualizados >= MAX_ROWS) {
+        console.log(`  Limite de ${MAX_ROWS.toLocaleString('pt-BR')} atingido.`)
+        parou = true
+        break
+      }
       const atualizados = await enviarBatch(lote.slice(i, i + BATCH_SIZE))
       totalAtualizados += atualizados
       totalBatches++
@@ -334,6 +341,7 @@ async function processarEstabelecimentos(
 
     console.log(`  Encontrados: ${encontrados.toLocaleString('pt-BR')} | Acumulado: ${totalAtualizados.toLocaleString('pt-BR')}`)
     if (existsSync(tmpPath)) unlinkSync(tmpPath)
+    if (parou) break
   }
 
   console.log(`\n✓ Total atualizado: ${totalAtualizados.toLocaleString('pt-BR')} leads em ${totalBatches} batches`)
