@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
   let enviados = 0
   let erros    = 0
 
-  for (const profile of profiles) {
+  for (const profile of profiles!) {
     // Verificar acesso ativo
     if (profile.owner_id && profile.membro_ativo === false) continue
     if (profile.status === 'trial' && profile.trial_fim && new Date(profile.trial_fim) < new Date()) {
