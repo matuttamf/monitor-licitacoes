@@ -577,7 +577,7 @@ export const SEGMENTOS: SegmentoData[] = [
       { titulo: 'Capacitação de servidores', descricao: 'Cursos presenciais, semipresenciais e EAD para desenvolvimento de equipes públicas.' },
       { titulo: 'Material didático', descricao: 'Apostilas, livros, kits pedagógicos e materiais de apoio para ensino público.' },
       { titulo: 'Plataformas EAD', descricao: 'Licenças de LMS, plataformas de e-learning e ambientes virtuais de aprendizagem.' },
-      { titulo: 'Treinamentos obrigatórios', descricao: 'NR's (segurança do trabalho), primeiros socorros, reciclagem de habilitação e CIPA.' },
+      { titulo: 'Treinamentos obrigatórios', descricao: 'NRs (segurança do trabalho), primeiros socorros, reciclagem de habilitação e CIPA.' },
       { titulo: 'Eventos e congressos', descricao: 'Organização de seminários, fóruns técnicos, workshops e conferências oficiais.' },
     ],
     vantagens: [
