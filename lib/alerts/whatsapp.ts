@@ -121,6 +121,26 @@ export async function enviarAlertaWhatsApp(
   return tudo_ok
 }
 
+/** Confirmação de pagamento / assinatura via WhatsApp */
+export async function enviarConfirmacaoPagamentoWhatsApp(
+  telefone: string,
+  nome: string,
+  email: string,
+): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+
+  const numero = formatarNumero(telefone)
+  const primeiroNome = nome.split(' ')[0]
+
+  const texto =
+    `Olá, ${primeiroNome}! 👋\n\n` +
+    `✅ Seu pagamento foi confirmado.\n\n` +
+    `Sua Nota Fiscal foi encaminhada para o e-mail *${email}*.\n\n` +
+    `_Monitor de Licitações_`
+
+  return enviarMensagemZApi(numero, texto)
+}
+
 /** Resumo semanal via WhatsApp */
 export async function enviarResumoSemanalWhatsApp(
   telefone: string,

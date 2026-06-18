@@ -6,6 +6,7 @@ import { PLANOS, atualizarValorAssinatura } from '@/lib/mercadopago'
 import { Resend } from 'resend'
 import { emailConfirmacaoAssinatura } from '@/lib/emails/confirmacao-assinatura'
 import { emailFornecedor } from '@/lib/emails/fornecedor'
+import { enviarConfirmacaoPagamentoWhatsApp } from '@/lib/alerts/whatsapp'
 
 const PRECOS_PLANO: Record<string, number> = {
   basic:        49.90,
@@ -243,7 +244,7 @@ export async function POST(request: Request) {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('email, nome')
+          .select('email, nome, whatsapp')
           .eq('id', userId)
           .maybeSingle()
 
@@ -280,6 +281,18 @@ export async function POST(request: Request) {
             console.log(`[webhook/mp] E-mail fornecedor enviado para ${profile.email}`)
           } catch (ef) {
             console.error('[webhook/mp] Erro ao enviar e-mail fornecedor:', ef)
+          }
+
+          // WhatsApp — só dispara se houver número cadastrado
+          if (profile.whatsapp) {
+            enviarConfirmacaoPagamentoWhatsApp(
+              profile.whatsapp,
+              profile.nome ?? 'Cliente',
+              profile.email,
+            ).then(ok => {
+              if (ok) console.log(`[webhook/mp] WhatsApp confirmação enviado para ${profile.whatsapp}`)
+              else    console.warn(`[webhook/mp] WhatsApp confirmação falhou para ${profile.whatsapp}`)
+            }).catch(ew => console.error('[webhook/mp] Erro WhatsApp confirmação:', ew))
           }
         }
       } catch (e) {
