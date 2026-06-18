@@ -309,7 +309,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 0 0
 
   email-1:
@@ -328,7 +328,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 1 1
 
   email-2:
@@ -347,7 +347,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 2 2
 
   email-3:
@@ -366,7 +366,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 3 3
 
   email-4:
@@ -385,7 +385,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 4 4
 
   email-5:
@@ -404,7 +404,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 5 5
 
   email-6:
@@ -423,7 +423,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 6 6
 
   email-7:
@@ -442,7 +442,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 7 7
 
   email-8:
@@ -461,7 +461,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 8 8
 
   email-9:
@@ -480,7 +480,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 9 9
       - name: Limpar cache do Storage
         if: always()
@@ -518,7 +518,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MAX_ROWS: '100000'
+          MAX_ROWS: '500000'
         run: npx tsx scripts/enriquecer-receita.ts
       - name: Notificar conclusão
         if: always()
