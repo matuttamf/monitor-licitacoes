@@ -35,6 +35,7 @@ const idxEnd     = Number(numArgs[1] ?? 9)
 
 const CACHE_FILE   = 'cnpjs-sem-email.json'
 const MAX_POR_RUN  = parseInt(process.env.MAX_ROWS ?? '0') || 200_000
+const MAX_CACHE    = parseInt(process.env.MAX_CACHE ?? '0') || MAX_POR_RUN
 const UPDATE_CONC  = 20        // updates paralelos simultâneos
 
 // Índices fixos usados como fallback se o cabeçalho não for encontrado
@@ -267,7 +268,7 @@ async function main() {
   // ── Modo preparação: carrega do banco e salva cache no Storage ──────────────
   if (MODE === 'prepare') {
     console.log('Carregando CNPJs sem e-mail no banco...')
-    const semEmail = await carregarCnpjsSemEmailDoBanco()
+    const semEmail = await carregarCnpjsSemEmailDoBanco(MAX_CACHE)
     console.log(`Total: ${semEmail.size.toLocaleString('pt-BR')} CNPJs sem e-mail`)
     if (!semEmail.size) { console.log('Nenhum lead sem e-mail. Nada a fazer.'); return }
     await salvarCacheNoStorage(semEmail)
