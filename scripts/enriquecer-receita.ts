@@ -15,6 +15,7 @@ const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
 const CONCORRENCIA = 8
 const LOTE         = 500
+const MAX_ROWS     = parseInt(process.env.MAX_ROWS ?? '0') || 0
 
 console.log('SUPABASE_URL:', SUPABASE_URL || '*** UNDEFINED ***')
 console.log('REST base:', `${SUPABASE_URL}/rest/v1`)
@@ -185,6 +186,7 @@ async function main() {
     let lastId = '00000000-0000-0000-0000-000000000000'
     let lote = 1
     while (true) {
+      if (MAX_ROWS > 0 && totalVerificados >= MAX_ROWS) { console.log(`  Limite de ${MAX_ROWS} atingido.`); break }
       const leads = await buscarLeads(lastId, filtro)
       if (leads.length === 0) break
       console.log(`\nLote ${lote++}: ${leads.length} leads`)

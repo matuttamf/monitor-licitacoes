@@ -34,7 +34,7 @@ const idxStart   = Number(numArgs[0] ?? 0)
 const idxEnd     = Number(numArgs[1] ?? 9)
 
 const CACHE_FILE   = 'cnpjs-sem-email.json'
-const MAX_POR_RUN  = 200_000   // limite de CNPJs processados por execução
+const MAX_POR_RUN  = parseInt(process.env.MAX_ROWS ?? '0') || 200_000
 const UPDATE_CONC  = 20        // updates paralelos simultâneos
 
 // Índices fixos usados como fallback se o cabeçalho não for encontrado

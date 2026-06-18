@@ -27,9 +27,10 @@ const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
   .replace(/\/$/, '')
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const cliArgs  = process.argv.slice(2)
+const cliArgs   = process.argv.slice(2)
 const IDX_START = Number(cliArgs[0] ?? 0)
 const IDX_END   = Number(cliArgs[1] ?? 9)
+const MAX_ROWS  = parseInt(process.env.MAX_ROWS ?? '0') || 0
 
 function getAnoMes(): { ano: number; mes: number } {
   const d = new Date()
@@ -646,7 +647,10 @@ async function enriquecerEmpresa(tmpPath: string, leads: Map<string, LeadRFB>): 
 }
 
 async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, { razao: string; porte: string|null }>): Promise<{ inseridos: number; emailsEnriquecidos: number }> {
-  const rows = Array.from(leads.values()).map(l => {
+  const allLeads = Array.from(leads.values())
+  const limitedLeads = MAX_ROWS > 0 ? allLeads.slice(0, MAX_ROWS) : allLeads
+  if (MAX_ROWS > 0 && allLeads.length > MAX_ROWS) console.log(`  Limite de ${MAX_ROWS} aplicado (${allLeads.length} disponíveis → ${MAX_ROWS} processados)`)
+  const rows = limitedLeads.map(l => {
     const emp = empresas.get(l.cnpj.slice(0, 8))
     const razaoSocial = emp?.razao ?? l.cnpj
     const razaoVerificada = /[a-zA-ZÀ-ÿ]/.test(razaoSocial)
