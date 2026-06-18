@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
         </td>
       </tr>`).join('')
 
-    const nomeExibido = profile.nome?.trim() || email.split('@')[0]
+    const nomeExibido = profile.nome?.trim() || email!.split('@')[0]
 
     const html = `
 <!DOCTYPE html>
