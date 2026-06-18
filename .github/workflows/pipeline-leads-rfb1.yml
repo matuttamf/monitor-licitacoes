@@ -9,12 +9,16 @@ on:
       mes:
         description: 'Mês dos dados (ex: 5). Vazio = mês anterior'
         default: ''
+      fase_inicio:
+        description: 'Fase inicial (1–22). 1=coleta arq0 … 10=coleta arq9 | 11=preparar cache | 12=emails arq0 … 21=emails arq9 | 22=enriquecer Receita'
+        default: '1'
 
 jobs:
   arquivo-0:
-    name: 'Fase 1/10 — Coleta arquivo 0'
+    name: 'Fase 1/22 — Coleta arquivo 0'
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    if: fromJSON(github.event.inputs.fase_inicio || '1') <= 1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,11 +40,11 @@ jobs:
           fi
 
   arquivo-1:
-    name: 'Fase 2/10 — Coleta arquivo 1'
+    name: 'Fase 2/22 — Coleta arquivo 1'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-0
-    if: success()
+    if: always() && (needs.arquivo-0.result == 'success' || needs.arquivo-0.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 2
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -62,11 +66,11 @@ jobs:
           fi
 
   arquivo-2:
-    name: 'Fase 3/10 — Coleta arquivo 2'
+    name: 'Fase 3/22 — Coleta arquivo 2'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-1
-    if: success()
+    if: always() && (needs.arquivo-1.result == 'success' || needs.arquivo-1.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -88,11 +92,11 @@ jobs:
           fi
 
   arquivo-3:
-    name: 'Fase 4/10 — Coleta arquivo 3'
+    name: 'Fase 4/22 — Coleta arquivo 3'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-2
-    if: success()
+    if: always() && (needs.arquivo-2.result == 'success' || needs.arquivo-2.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -114,11 +118,11 @@ jobs:
           fi
 
   arquivo-4:
-    name: 'Fase 5/10 — Coleta arquivo 4'
+    name: 'Fase 5/22 — Coleta arquivo 4'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-3
-    if: success()
+    if: always() && (needs.arquivo-3.result == 'success' || needs.arquivo-3.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -140,11 +144,11 @@ jobs:
           fi
 
   arquivo-5:
-    name: 'Fase 6/10 — Coleta arquivo 5'
+    name: 'Fase 6/22 — Coleta arquivo 5'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-4
-    if: success()
+    if: always() && (needs.arquivo-4.result == 'success' || needs.arquivo-4.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -166,11 +170,11 @@ jobs:
           fi
 
   arquivo-6:
-    name: 'Fase 7/10 — Coleta arquivo 6'
+    name: 'Fase 7/22 — Coleta arquivo 6'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-5
-    if: success()
+    if: always() && (needs.arquivo-5.result == 'success' || needs.arquivo-5.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 7
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -192,11 +196,11 @@ jobs:
           fi
 
   arquivo-7:
-    name: 'Fase 8/10 — Coleta arquivo 7'
+    name: 'Fase 8/22 — Coleta arquivo 7'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-6
-    if: success()
+    if: always() && (needs.arquivo-6.result == 'success' || needs.arquivo-6.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -218,11 +222,11 @@ jobs:
           fi
 
   arquivo-8:
-    name: 'Fase 9/10 — Coleta arquivo 8'
+    name: 'Fase 9/22 — Coleta arquivo 8'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-7
-    if: success()
+    if: always() && (needs.arquivo-7.result == 'success' || needs.arquivo-7.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 9
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -244,11 +248,11 @@ jobs:
           fi
 
   arquivo-9:
-    name: 'Fase 10/10 — Coleta arquivo 9'
+    name: 'Fase 10/22 — Coleta arquivo 9'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-8
-    if: success()
+    if: always() && (needs.arquivo-8.result == 'success' || needs.arquivo-8.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -270,11 +274,11 @@ jobs:
           fi
 
   preparar-cnpjs:
-    name: 'Fase 11/21 — Preparar cache de CNPJs sem e-mail'
+    name: 'Fase 11/22 — Preparar cache de CNPJs sem e-mail'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: arquivo-9
-    if: success()
+    if: always() && (needs.arquivo-9.result == 'success' || needs.arquivo-9.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 11
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -290,11 +294,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --prepare
 
   email-0:
-    name: 'Fase 12/21 — E-mails arquivo 0'
+    name: 'Fase 12/22 — E-mails arquivo 0'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: preparar-cnpjs
-    if: success()
+    if: always() && (needs.preparar-cnpjs.result == 'success' || needs.preparar-cnpjs.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -309,11 +313,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 0 0
 
   email-1:
-    name: 'Fase 13/21 — E-mails arquivo 1'
+    name: 'Fase 13/22 — E-mails arquivo 1'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-0
-    if: success()
+    if: always() && (needs.email-0.result == 'success' || needs.email-0.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 13
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -328,11 +332,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 1 1
 
   email-2:
-    name: 'Fase 14/21 — E-mails arquivo 2'
+    name: 'Fase 14/22 — E-mails arquivo 2'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-1
-    if: success()
+    if: always() && (needs.email-1.result == 'success' || needs.email-1.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 14
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -347,11 +351,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 2 2
 
   email-3:
-    name: 'Fase 15/21 — E-mails arquivo 3'
+    name: 'Fase 15/22 — E-mails arquivo 3'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-2
-    if: success()
+    if: always() && (needs.email-2.result == 'success' || needs.email-2.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -366,11 +370,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 3 3
 
   email-4:
-    name: 'Fase 16/21 — E-mails arquivo 4'
+    name: 'Fase 16/22 — E-mails arquivo 4'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-3
-    if: success()
+    if: always() && (needs.email-3.result == 'success' || needs.email-3.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 16
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -385,11 +389,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 4 4
 
   email-5:
-    name: 'Fase 17/21 — E-mails arquivo 5'
+    name: 'Fase 17/22 — E-mails arquivo 5'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-4
-    if: success()
+    if: always() && (needs.email-4.result == 'success' || needs.email-4.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 17
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -404,11 +408,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 5 5
 
   email-6:
-    name: 'Fase 18/21 — E-mails arquivo 6'
+    name: 'Fase 18/22 — E-mails arquivo 6'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-5
-    if: success()
+    if: always() && (needs.email-5.result == 'success' || needs.email-5.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -423,11 +427,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 6 6
 
   email-7:
-    name: 'Fase 19/21 — E-mails arquivo 7'
+    name: 'Fase 19/22 — E-mails arquivo 7'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-6
-    if: success()
+    if: always() && (needs.email-6.result == 'success' || needs.email-6.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 19
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -442,11 +446,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 7 7
 
   email-8:
-    name: 'Fase 20/21 — E-mails arquivo 8'
+    name: 'Fase 20/22 — E-mails arquivo 8'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-7
-    if: success()
+    if: always() && (needs.email-7.result == 'success' || needs.email-7.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -461,11 +465,11 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 8 8
 
   email-9:
-    name: 'Fase 21/21 — E-mails arquivo 9'
+    name: 'Fase 21/22 — E-mails arquivo 9'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-8
-    if: success()
+    if: always() && (needs.email-8.result == 'success' || needs.email-8.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 21
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -500,11 +504,11 @@ jobs:
         run: npx tsx scripts/notificar-cron.ts "pipeline-emails-rfb" "${{ job.status }}"
 
   enriquecer-receita:
-    name: 'Fase 21 — Enriquecer via Receita Federal'
+    name: 'Fase 22/22 — Enriquecer via Receita Federal'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-9
-    if: success()
+    if: always() && (needs.email-9.result == 'success' || needs.email-9.result == 'skipped') && fromJSON(github.event.inputs.fase_inicio || '1') <= 22
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
