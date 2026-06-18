@@ -78,7 +78,7 @@ export async function enviarEmailSugestoesKeywords(
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: `${primeiroNome}, mais ${sugestoes.length} palavras-chave para não perder editais`,
+    subject: `${primeiroNome}, mais ${sugestoes.length} ${sugestoes.length === 1 ? 'palavra-chave' : 'palavras-chave'} para não perder editais`,
     html: baseEmail(`
   <tr><td style="padding:40px 40px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Sugestões personalizadas</div>

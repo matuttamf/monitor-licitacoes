@@ -362,7 +362,7 @@ export default function OnboardingPage() {
               <button
                 onClick={() => {
                   setPasso(3)
-                  fetch('/api/cron/matching', { method: 'GET' }).catch(() => null)
+                  fetch('/api/matching/trigger', { method: 'POST' }).catch(() => null)
                   fetch('/api/onboarding/concluir', { method: 'POST' }).catch(() => null)
                 }}
                 style={{

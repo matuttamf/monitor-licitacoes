@@ -529,7 +529,7 @@ function wrapEmail(opts: {
         </td>
         <td style="padding-left:12px;">
           <div style="color:white;font-size:15px;font-weight:700;">Monitor de Licitações</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:1px;">Inteligência em licitações públicas</div>
+          <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:1px;">Monitoramento de licitações públicas</div>
         </td>
       </tr>
     </table>
