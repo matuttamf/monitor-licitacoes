@@ -138,7 +138,8 @@ export default function PerfilPage() {
     setBuscandoKws(true)
     const res = await fetch('/api/keywords')
     if (res.ok) {
-      const kws: { termo: string }[] = await res.json()
+      const data = await res.json()
+      const kws: { termo: string }[] = Array.isArray(data) ? data : (data.keywords ?? [])
       if (kws.length > 0) {
         const termos = kws.map(k => k.termo).join(', ')
         setFornecedor(prev => ({
