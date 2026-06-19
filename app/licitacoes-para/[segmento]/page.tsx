@@ -126,16 +126,19 @@ export default async function SegmentoPage({
         </div>
       </header>
 
-      <main className="px-6 md:px-8 py-10 md:py-16">
+      <main className="px-4 md:px-8 py-8 md:py-16">
         <article className="max-w-[720px] mx-auto">
 
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-[#9AA0A6] mb-6">
-            <Link href="/" className="text-[#6B0F1A] no-underline hover:underline">Início</Link>
-            <span>›</span>
-            <Link href="/licitacoes-para" className="text-[#6B0F1A] no-underline hover:underline">Licitações por Segmento</Link>
-            <span>›</span>
-            <span className="truncate max-w-[200px]">{data.titulo.split(' para ')[1] ?? data.titulo}</span>
+          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-[#9AA0A6] mb-6">
+            <Link href="/" className="text-[#6B0F1A] no-underline hover:underline shrink-0">Início</Link>
+            <span className="shrink-0">›</span>
+            <Link href="/licitacoes-para" className="text-[#6B0F1A] no-underline hover:underline shrink-0">
+              <span className="hidden sm:inline">Licitações por Segmento</span>
+              <span className="sm:hidden">Segmentos</span>
+            </Link>
+            <span className="shrink-0">›</span>
+            <span className="truncate">{data.titulo.split(' para ')[1] ?? data.titulo.split(' de ')[1] ?? data.titulo}</span>
           </nav>
 
           {/* Badge + H1 */}
@@ -154,11 +157,11 @@ export default async function SegmentoPage({
           </p>
 
           {/* Stats em destaque */}
-          <div className="grid grid-cols-3 gap-4 mb-10 p-6 bg-[#FAF6F0] rounded-2xl border border-[#F0EDE8]">
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-10 p-4 md:p-6 bg-[#FAF6F0] rounded-2xl border border-[#F0EDE8]">
             {data.statsDestaque.map(stat => (
               <div key={stat.label} className="text-center">
-                <div className="text-xl md:text-2xl font-black text-[#6B0F1A] mb-1">{stat.valor}</div>
-                <div className="text-xs text-[#9AA0A6] leading-tight">{stat.label}</div>
+                <div className="text-lg md:text-2xl font-black text-[#6B0F1A] mb-1 leading-tight">{stat.valor}</div>
+                <div className="text-[10px] md:text-xs text-[#9AA0A6] leading-tight">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -251,7 +254,7 @@ export default async function SegmentoPage({
           )}
 
           {/* Seção emocional — genérica, aparece em todos os segmentos */}
-          <div className="my-10 p-7 md:p-9 rounded-2xl border border-[#F0EDE8] bg-[#FAF6F0]">
+          <div className="my-10 p-5 md:p-9 rounded-2xl border border-[#F0EDE8] bg-[#FAF6F0]">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B0F1A] mb-3">Por que isso importa</p>
             <h2 className="text-[18px] md:text-[22px] font-black text-[#1A1A1C] leading-snug mb-4">
               O governo gasta R$ 2 trilhões por ano — e a maioria das empresas ainda não monitora os editais do seu segmento.
@@ -266,15 +269,15 @@ export default async function SegmentoPage({
               estável, com contratos de 12 a 60 meses e pagamento garantido pelo erário público.
               Não é um atalho — é um canal de vendas que seus concorrentes ainda subestimam.
             </p>
-            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-[#E8E4DC]">
+            <div className="grid grid-cols-3 gap-2 md:gap-4 pt-5 border-t border-[#E8E4DC]">
               {[
-                { valor: 'R$ 2 tri', label: 'compras públicas/ano' },
-                { valor: '70%', label: 'editais sem disputa acirrada' },
-                { valor: '30 dias', label:'prazo médio de pagamento' },
+                { valor: 'R$ 2 tri', label: 'compras/ano' },
+                { valor: '70%', label: 'sem disputa acirrada' },
+                { valor: '30 dias', label: 'prazo de pagamento' },
               ].map(item => (
                 <div key={item.label} className="text-center">
-                  <div className="text-lg md:text-xl font-black text-[#6B0F1A]">{item.valor}</div>
-                  <div className="text-[11px] text-[#9AA0A6] leading-tight mt-0.5">{item.label}</div>
+                  <div className="text-base md:text-xl font-black text-[#6B0F1A] leading-tight">{item.valor}</div>
+                  <div className="text-[10px] md:text-[11px] text-[#9AA0A6] leading-tight mt-0.5">{item.label}</div>
                 </div>
               ))}
             </div>
