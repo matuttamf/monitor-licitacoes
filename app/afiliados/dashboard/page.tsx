@@ -126,7 +126,7 @@ export default function AfiliadorDashboard() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{dados.nome}</span>
+          <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{dados.nome}</span>
           <a href="/dashboard" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}>
             ← Painel
           </a>
@@ -168,7 +168,7 @@ export default function AfiliadorDashboard() {
         </div>
 
         {/* Cards de métricas — linha 1: tráfego */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 14, marginBottom: 14 }}>
           {[
             { label: 'Cliques', valor: dados.cliques.toLocaleString('pt-BR'), sub: 'no seu link' },
             { label: 'Conversões', valor: dados.conversoes.toLocaleString('pt-BR'), sub: 'assinantes via seu link' },
@@ -183,7 +183,7 @@ export default function AfiliadorDashboard() {
         </div>
 
         {/* Cards de métricas — linha 2: financeiro */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 24 }}>
           {[
             { label: 'Comissão a receber', valor: fmtMoeda(dados.comissao_pendente), sub: descricaoComissao, destaque: dados.comissao_pendente > 0 },
             { label: 'Total recebido', valor: fmtMoeda(dados.total_pago), sub: 'comissões já pagas' },
@@ -254,7 +254,8 @@ export default function AfiliadorDashboard() {
               Nenhum pagamento registrado ainda.
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 420 }}>
               <thead>
                 <tr style={{ background: '#FAF6F0' }}>
                   {['Mês', 'Plano', 'Valor', 'Status', 'Pago em'].map(h => (
@@ -291,6 +292,7 @@ export default function AfiliadorDashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 
