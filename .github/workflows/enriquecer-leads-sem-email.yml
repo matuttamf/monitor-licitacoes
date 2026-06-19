@@ -36,7 +36,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MAX_ROWS: '100000'
+          MAX_ROWS: '0'
         run: npx tsx scripts/enriquecer-receita.ts
 
       - name: Notificar conclusão
@@ -73,7 +73,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '0'
         run: |
           IDX_START="${{ github.event.inputs.idx_start || '0' }}"
           IDX_END="${{ github.event.inputs.idx_end || '9' }}"
