@@ -153,14 +153,13 @@ BEGIN
       PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p10,
       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p25,
       PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p50,
-      PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p75,
-      PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p90
+      PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p75
     FROM filtrado
   )
   SELECT
     (SELECT COUNT(*) FROM filtrado)::BIGINT                             AS total,
     (SELECT p10  FROM pcts)                                             AS minimo,
-    (SELECT p90  FROM pcts)                                             AS maximo,
+    (SELECT p75  FROM pcts)                                             AS maximo,
     (SELECT ROUND(AVG(f.valor_unitario), 2)
        FROM filtrado f, pcts
       WHERE f.valor_unitario BETWEEN pcts.p25 AND pcts.p75)            AS media,
