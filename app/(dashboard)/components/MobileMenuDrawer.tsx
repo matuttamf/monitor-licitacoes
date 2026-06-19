@@ -114,7 +114,7 @@ export function MobileMenuDrawer({
             return (
               <Link
                 key={item.href}
-                href={item.locked ? '/assinar' : item.href}
+                href={item.href}
                 onClick={() => setAberto(false)}
                 className="flex items-center gap-3 rounded-lg"
                 style={{
