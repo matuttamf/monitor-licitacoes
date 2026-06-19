@@ -121,21 +121,29 @@ export default function AfiliadorDashboard() {
         {/* Link de afiliado */}
         <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E8E4DC', padding: '24px', marginBottom: 24 }}>
           <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Seu link de parceiro</div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 0, background: '#FAF6F0', border: '1.5px solid #E8E4DC', borderRadius: 10, padding: '11px 16px', fontSize: 14, color: '#1A1A1C', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {dados.link}
-            </div>
-            <button onClick={copiarLink} style={{
-              background: copiado ? '#059669' : '#6B0F1A', color: 'white', border: 'none',
-              borderRadius: 10, padding: '11px 22px', fontWeight: 700, fontSize: 14,
-              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s',
-            }}>
-              {copiado ? '✓ Copiado!' : 'Copiar link'}
-            </button>
-          </div>
-          <p style={{ fontSize: 12, color: '#9AA0A6', margin: '10px 0 0' }}>
-            Compartilhe este link. Cada visitante que assinar pelo seu link gera comissão para você.
-          </p>
+          {dados.link ? (
+            <>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 0, background: '#FAF6F0', border: '1.5px solid #E8E4DC', borderRadius: 10, padding: '11px 16px', fontSize: 14, color: '#1A1A1C', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {dados.link}
+                </div>
+                <button onClick={copiarLink} style={{
+                  background: copiado ? '#059669' : '#6B0F1A', color: 'white', border: 'none',
+                  borderRadius: 10, padding: '11px 22px', fontWeight: 700, fontSize: 14,
+                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s',
+                }}>
+                  {copiado ? '✓ Copiado!' : 'Copiar link'}
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: '#9AA0A6', margin: '10px 0 0' }}>
+                Compartilhe este link. Cada visitante que assinar pelo seu link gera comissão para você.
+              </p>
+            </>
+          ) : (
+            <p style={{ fontSize: 14, color: '#9AA0A6', margin: 0 }}>
+              Seu link de parceiro será gerado em breve. Entre em contato pelo WhatsApp caso precise de ajuda.
+            </p>
+          )}
         </div>
 
         {/* Cards de métricas */}
