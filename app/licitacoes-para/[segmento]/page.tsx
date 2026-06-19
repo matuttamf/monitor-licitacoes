@@ -217,12 +217,6 @@ export default async function SegmentoPage({
                           )}
                         </div>
                       </div>
-                      {e.url && (
-                        <a href={e.url} target="_blank" rel="noopener noreferrer"
-                          className="text-xs font-semibold text-[#6B0F1A] no-underline shrink-0 hover:underline">
-                          Ver edital →
-                        </a>
-                      )}
                     </div>
                   </div>
                 ))}
