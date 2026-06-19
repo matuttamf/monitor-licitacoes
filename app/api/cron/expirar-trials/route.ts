@@ -39,20 +39,40 @@ export async function GET(request: Request) {
     .lt('acesso_ate', agora)
     .select('id')
 
-  // Reativa pausas expiradas (14 dias encerrados)
-  const { data: pausasReativadas, error: erroPausa } = await supabase
+  // Reativa pausas expiradas (14 dias encerrados) — também reativa no MercadoPago
+  const { data: pausasParaReativar, error: erroPausa } = await supabase
     .from('profiles')
-    .update({ status: 'active', pausa_ate: null })
+    .select('id, mp_subscription_id')
     .eq('status', 'paused')
     .not('pausa_ate', 'is', null)
     .lt('pausa_ate', agora)
-    .select('id')
 
-  if (erroPausa) console.error('Erro ao reativar pausas:', erroPausa.message)
+  if (erroPausa) console.error('Erro ao buscar pausas expiradas:', erroPausa.message)
+
+  const MP_TOKEN = process.env.MP_AMBIENTE === 'production'
+    ? process.env.MP_ACCESS_TOKEN_PROD!
+    : process.env.MP_ACCESS_TOKEN_TEST!
+
+  const pausasReativadasIds: string[] = []
+  for (const p of pausasParaReativar ?? []) {
+    if (p.mp_subscription_id) {
+      const res = await fetch(`https://api.mercadopago.com/preapproval/${p.mp_subscription_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MP_TOKEN}` },
+        body: JSON.stringify({ status: 'authorized' }),
+      })
+      if (!res.ok) {
+        console.error(`Erro ao reativar MP para profile ${p.id}:`, await res.text())
+        continue
+      }
+    }
+    await supabase.from('profiles').update({ status: 'active', pausa_ate: null }).eq('id', p.id)
+    pausasReativadasIds.push(p.id)
+  }
 
   const expirados = data?.length ?? 0
   const assinaturasExp = assinaturasExpiradas?.length ?? 0
-  const pausasReativ = pausasReativadas?.length ?? 0
+  const pausasReativ = pausasReativadasIds.length
   console.log(`${expirados} trial(s), ${assinaturasExp} assinatura(s) cancelada(s) e ${pausasReativ} pausa(s) reativada(s)`)
 
   // Limpeza automática: remover cron_logs com mais de 90 dias

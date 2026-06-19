@@ -51,6 +51,7 @@ type Perfil = {
   plano: string
   periodo: 'mensal' | 'anual'
   status: string
+  pausa_ate: string | null
   trial_fim: string | null
   email_pausado_ate: string | null
   telegram_pausado_ate: string | null
@@ -58,7 +59,7 @@ type Perfil = {
 }
 
 export default function PerfilPage() {
-  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', cnpj: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', periodo: 'mensal', status: 'trial', trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
+  const [perfil, setPerfil] = useState<Perfil>({ nome: '', email: '', empresa: '', cnpj: '', telefone: '', whatsapp: '', telegram_chat_id: '', min_valor_interesse: 0, max_valor_interesse: 0, emails_por_dia: 5, itens_por_email: 10, plano: 'basic', periodo: 'mensal', status: 'trial', pausa_ate: null, trial_fim: null, email_pausado_ate: null, telegram_pausado_ate: null, whatsapp_pausado_ate: null })
   const [salvandoAlerta, setSalvandoAlerta] = useState(false)
   const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [pausandoCanal, setPausandoCanal] = useState<string | null>(null)
@@ -72,6 +73,9 @@ export default function PerfilPage() {
     ativo: false, razao_social: '', cnpj: '', descricao: '',
     regioes: [], email_contato: '', telefone_contato: '', website: '',
   })
+  const [reativando, setReativando] = useState(false)
+  const [reativarMsg, setReativarMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
+
   const [salvandoFornecedor, setSalvandoFornecedor] = useState(false)
   const [fornecedorMsg, setFornecedorMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
   const [buscandoKws, setBuscandoKws] = useState(false)
@@ -110,6 +114,7 @@ export default function PerfilPage() {
         plano:               prof.plano ?? 'basic',
         periodo:             prof.periodo === 'anual' ? 'anual' : 'mensal',
         status:              prof.status ?? 'trial',
+        pausa_ate:           prof.pausa_ate ?? null,
         trial_fim:           prof.trial_fim ?? null,
         email_pausado_ate:   prof.email_pausado_ate ?? null,
         telegram_pausado_ate: prof.telegram_pausado_ate ?? null,
@@ -118,6 +123,20 @@ export default function PerfilPage() {
     }).finally(() => setCarregando(false))
 
   }, [])
+
+  async function reativarAssinatura() {
+    setReativando(true)
+    setReativarMsg(null)
+    const res = await fetch('/api/assinatura/reativar', { method: 'POST' })
+    setReativando(false)
+    if (res.ok) {
+      setPerfil(prev => ({ ...prev, status: 'active', pausa_ate: null }))
+      setReativarMsg({ tipo: 'ok', texto: 'Assinatura reativada! A cobrança retomará normalmente.' })
+    } else {
+      const d = await res.json()
+      setReativarMsg({ tipo: 'erro', texto: d.error ?? 'Erro ao reativar. Tente novamente.' })
+    }
+  }
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault()
@@ -920,6 +939,41 @@ export default function PerfilPage() {
           })}
         </div>
       </div>
+
+      {/* ── Assinatura pausada ── */}
+      {perfil.status === 'paused' && (
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+          <div className="px-8 py-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>⏸️ Assinatura pausada</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>
+                  {perfil.pausa_ate
+                    ? `Cobrança volta automaticamente em ${new Date(perfil.pausa_ate).toLocaleDateString('pt-BR')}.`
+                    : 'Sua cobrança está suspensa durante a pausa.'}
+                </div>
+              </div>
+              <button
+                onClick={reativarAssinatura}
+                disabled={reativando}
+                className="px-4 py-2 rounded-xl text-xs font-semibold flex-shrink-0"
+                style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: reativando ? 'not-allowed' : 'pointer', opacity: reativando ? 0.7 : 1 }}>
+                {reativando ? 'Reativando...' : 'Reativar agora'}
+              </button>
+            </div>
+            {reativarMsg && (
+              <div className="px-4 py-3 rounded-xl text-xs"
+                style={{
+                  background: reativarMsg.tipo === 'ok' ? 'rgba(22,163,74,0.06)' : 'rgba(185,28,28,0.06)',
+                  border: `1px solid ${reativarMsg.tipo === 'ok' ? 'rgba(22,163,74,0.2)' : 'rgba(185,28,28,0.2)'}`,
+                  color: reativarMsg.tipo === 'ok' ? '#15803d' : '#b91c1c',
+                }}>
+                {reativarMsg.tipo === 'ok' ? '✓ ' : '⚠ '}{reativarMsg.texto}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Cancelar assinatura ── */}
       {perfil.status === 'active' && (
