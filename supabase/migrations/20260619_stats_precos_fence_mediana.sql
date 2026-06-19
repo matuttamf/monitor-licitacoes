@@ -62,13 +62,13 @@ BEGIN
     SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY valor_unitario) AS med
     FROM filtrado
   ),
-  -- 2ª camada: mantém apenas valores dentro de 3x da mediana
-  -- ex: mediana R$10k → aceita R$3.3k–R$30k; exclui cartuchos e industriais
+  -- 2ª camada: mantém apenas valores dentro de 2.5x da mediana
+  -- ex: mediana R$10k → aceita R$4k–R$25k; exclui cartuchos e industriais
   limpo AS (
     SELECT f.valor_unitario
     FROM filtrado f, ref r
     WHERE r.med > 0
-      AND f.valor_unitario BETWEEN r.med / 3 AND r.med * 3
+      AND f.valor_unitario BETWEEN r.med / 2.5 AND r.med * 2.5
   ),
   pcts AS (
     SELECT
