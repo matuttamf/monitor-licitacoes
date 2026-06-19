@@ -1,0 +1,113 @@
+name: Enriquecer Leads Cron 2 (idx 1-9, bulk)
+
+on:
+  schedule:
+    - cron: '0 1/2 * * *'   # a cada 2h no minuto :00, offset de 1h em relação ao cron 1
+  workflow_dispatch: {}
+
+jobs:
+  emails-rfb:
+    name: Buscar e-mails nos arquivos RFB
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Enriquecer e-mails via arquivos RFB
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+          MAX_ROWS: '0'
+        run: npx tsx scripts/enriquecer-emails-rfb.ts 1 9
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "enriquecer-emails-rfb-cron2" "${{ job.status }}"
+
+  dados-receita:
+    name: Enriquecer razão social e situação via Receita
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: emails-rfb
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Enriquecer CNPJs via Receita Federal
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MAX_ROWS: '0'
+        run: npx tsx scripts/enriquecer-receita.ts
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "enriquecer-receita-cron2" "${{ job.status }}"
+
+  bulk-enrich-rfb:
+    name: Bulk enrichment RFB (idx 1-9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: emails-rfb
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Bulk enrichment via arquivos RFB
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+          MAX_ROWS: '0'
+        run: npx tsx scripts/enriquecer-bulk-rfb.ts 1 9
+
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "enriquecer-bulk-rfb-cron2" "${{ job.status }}"
