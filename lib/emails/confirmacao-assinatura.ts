@@ -41,8 +41,7 @@ export function emailConfirmacaoAssinatura(p: ParamsConfirmacao) {
           <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
         </td>
         <td style="padding-left:12px;">
-          <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br>
-          <span style="color:rgba(255,255,255,0.45);font-size:12px;">Confirmação de Assinatura</span>
+          <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span>
         </td>
         <td align="right">
           <span style="background:rgba(201,166,90,0.15);border:1px solid rgba(201,166,90,0.3);border-radius:99px;padding:4px 12px;color:#C9A65A;font-size:11px;font-weight:700;">✓ ATIVA</span>
@@ -145,14 +144,14 @@ export function emailConfirmacaoAssinatura(p: ParamsConfirmacao) {
   const text = `${nome}, sua assinatura está ativa!
 
 Plano: ${plano}
-Cobrança: ${valor}/mês
+Cobrança: ${valor}/${p.periodo === 'anual' ? 'ano' : 'mês'}
 Status: Ativo ✓
 
 Acesse seu painel: ${url}/dashboard
 
 Primeiros passos:
 - Configure suas palavras-chave
-- Ative o Telegram para notificações instantâneas
+- Ative o Telegram e o WhatsApp para notificações instantâneas
 - Explore o painel e personalize seus filtros
 
 Dúvidas? WhatsApp +55 31 99831-7066

@@ -26,8 +26,7 @@ function baseEmail(conteudo: string, email: string): string {
           <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
         </td>
         <td style="padding-left:12px;">
-          <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br>
-          <span style="color:rgba(255,255,255,0.45);font-size:12px;">Matutta</span>
+          <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span>
         </td>
       </tr>
     </table>
@@ -245,9 +244,12 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
         <hr style="border:none;border-top:1px solid #E8E4DC;margin:16px 0;">
         ${[
           'Palavras-chave ilimitadas',
-          'Alertas por e-mail e Telegram',
-          'Painel com busca e histórico',
-          'Cobertura de 5.500+ municípios',
+          'Alertas por e-mail, Telegram e WhatsApp',
+          'Municípios, estados e órgãos federais',
+          'Painel completo com busca, filtros e histórico',
+          'Busca de preços ilimitada',
+          'Radar de fornecedores e parceiros',
+          'Resumo semanal de oportunidades',
           'Cancele quando quiser',
         ].map(item => `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;color:#4a4a4d;font-size:14px;">

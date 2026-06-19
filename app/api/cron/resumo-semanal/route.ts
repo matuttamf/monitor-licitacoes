@@ -50,7 +50,7 @@ function gerarHtmlResumo(params: {
   const topList = topKeywords.slice(0, 5).map((k, i) =>
     `<tr>
       <td style="padding:8px 12px;font-size:13px;color:#4a4a4d">${i + 1}. ${k.termo}</td>
-      <td style="padding:8px 12px;font-size:13px;color:#6B0F1A;font-weight:700;text-align:right">${k.count} match${k.count !== 1 ? 'es' : ''}</td>
+      <td style="padding:8px 12px;font-size:13px;color:#6B0F1A;font-weight:700;text-align:right">${k.count} alerta${k.count !== 1 ? 's' : ''}</td>
     </tr>`
   ).join('')
 
@@ -136,7 +136,7 @@ function gerarTextoTelegramResumo(params: {
   const { total, volumeTotal, topKeywords, inicio, fim, appUrl } = params
   const volume = volumeTotal > 0 ? `\n💰 *Volume estimado:* ${formatarMoeda(volumeTotal)}` : ''
   const topList = topKeywords.slice(0, 5)
-    .map((k, i) => `${i + 1}. ${k.termo} — ${k.count} match${k.count !== 1 ? 'es' : ''}`)
+    .map((k, i) => `${i + 1}. ${k.termo} — ${k.count} alerta${k.count !== 1 ? 's' : ''}`)
     .join('\n')
 
   return (
