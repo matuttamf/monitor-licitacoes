@@ -91,7 +91,9 @@ BEGIN
     AND (p_fim    IS NULL OR r.data_resultado <= p_fim)
   ) sub
   WHERE sub.score >= 0.15
-  ORDER BY sub.data_resultado DESC NULLS LAST, sub.score DESC
+  ORDER BY
+    CASE WHEN sub.data_resultado >= CURRENT_DATE - INTERVAL '24 months' THEN 0 ELSE 1 END,
+    sub.score DESC
   LIMIT  p_limite
   OFFSET p_offset;
 END;

@@ -386,9 +386,14 @@ export default function PrecosPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {resultado.resultados.map((r, i) => {
-                      const link = pncpLink(r)
-                      return (
+                    {(() => {
+                      const corte24 = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000)
+                      const recentes = resultado.resultados.filter(r => !r.data_resultado || new Date(r.data_resultado) >= corte24)
+                      const antigos  = resultado.resultados.filter(r => r.data_resultado && new Date(r.data_resultado) < corte24)
+                      const renderRow = (r: ResultadoItem, i: number) => {
+                        const link = pncpLink(r)
+                        const isAntigo = r.data_resultado && new Date(r.data_resultado) < corte24
+                        return (
                         <tr
                           key={i}
                           style={{ borderBottom: '1px solid var(--cinza-light)', transition: 'background 0.1s' }}
@@ -463,8 +468,30 @@ export default function PrecosPage() {
                             <ScoreBar score={r.score} />
                           </td>
                         </tr>
+                        )
+                      }
+                      const separador = (label: string) => (
+                        <tr key={label}>
+                          <td colSpan={7} style={{
+                            padding: '8px 14px', fontSize: 11, fontWeight: 700,
+                            textTransform: 'uppercase', letterSpacing: '0.05em',
+                            color: 'var(--cinza)', background: 'var(--fundo)',
+                            borderTop: '2px solid var(--cinza-light)',
+                            borderBottom: '1px solid var(--cinza-light)',
+                          }}>
+                            {label}
+                          </td>
+                        </tr>
                       )
-                    })}
+                      return (
+                        <>
+                          {recentes.length > 0 && separador(`Últimos 24 meses · ${recentes.length} resultado${recentes.length !== 1 ? 's' : ''}`)}
+                          {recentes.map((r, i) => renderRow(r, i))}
+                          {antigos.length > 0 && separador(`25 a 36 meses atrás · ${antigos.length} resultado${antigos.length !== 1 ? 's' : ''}`)}
+                          {antigos.map((r, i) => renderRow(r, recentes.length + i))}
+                        </>
+                      )
+                    })()}
                   </tbody>
                 </table>
               </div>
