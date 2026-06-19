@@ -90,7 +90,7 @@ BEGIN
     AND (p_inicio IS NULL OR r.data_resultado >= p_inicio)
     AND (p_fim    IS NULL OR r.data_resultado <= p_fim)
   ) sub
-  WHERE sub.score >= 0.15
+  WHERE sub.score >= 0.20
   ORDER BY
     CASE WHEN sub.data_resultado >= CURRENT_DATE - INTERVAL '24 months' THEN 0 ELSE 1 END,
     sub.score DESC
