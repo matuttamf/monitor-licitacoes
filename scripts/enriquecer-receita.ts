@@ -14,7 +14,7 @@ const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABA
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
 const CONCORRENCIA = 25
-const LOTE         = 50000
+const LOTE         = 20000
 const MAX_ROWS     = parseInt(process.env.MAX_ROWS ?? '0') || 0
 
 console.log('SUPABASE_URL:', SUPABASE_URL || '*** UNDEFINED ***')
@@ -195,7 +195,6 @@ async function main() {
       }
       console.log(`  verificados=${totalVerificados} ativos=${totalAtivos} com_email=${totalComEmail} inativas=${totalInativos} sem_dados=${totalSemDados}`)
       lastId = leads[leads.length - 1].id
-      if (leads.length < LOTE) break
     }
   }
 
