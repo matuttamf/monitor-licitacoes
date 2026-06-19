@@ -3,6 +3,22 @@
 import { useEffect, useState } from 'react'
 import { getLimites, OPCOES_EMAILS_DIA, OPCOES_ITENS_EMAIL, HORARIOS_POR_QTD } from '@/lib/planos'
 
+function mascaraCNPJ(v: string) {
+  const d = v.replace(/\D/g, '').slice(0, 14)
+  return d
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2')
+}
+
+function mascaraTelefone(v: string) {
+  const d = v.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 10)
+    return d.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+  return d.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+}
+
 const REGIOES_OPCOES = [
   'Nacional',
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
@@ -377,7 +393,7 @@ export default function PerfilPage() {
                 value={(perfil as unknown as Record<string, string>)[key] ?? ''}
                 onChange={e => {
                   if (readOnly) return
-                  const val = tel ? formatTel(e.target.value) : e.target.value
+                  const val = tel ? mascaraTelefone(e.target.value) : e.target.value
                   setPerfil(prev => ({ ...prev, [key]: val }))
                 }}
                 placeholder={placeholder}
@@ -520,7 +536,7 @@ export default function PerfilPage() {
               CNPJ <span style={{ color: 'var(--vinho)' }}>*</span>
             </label>
             <input type="text" value={fornecedor.cnpj}
-              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: e.target.value }))}
+              onChange={e => setFornecedor(prev => ({ ...prev, cnpj: mascaraCNPJ(e.target.value) }))}
               placeholder="00.000.000/0000-00"
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
@@ -595,7 +611,7 @@ export default function PerfilPage() {
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Telefone</label>
               <input type="tel" value={fornecedor.telefone_contato}
-                onChange={e => setFornecedor(prev => ({ ...prev, telefone_contato: e.target.value }))}
+                onChange={e => setFornecedor(prev => ({ ...prev, telefone_contato: mascaraTelefone(e.target.value) }))}
                 placeholder="(31) 99999-9999"
                 className="w-full px-4 py-3 rounded-xl text-sm"
                 style={{ border: '1.5px solid var(--cinza-light)', background: 'white', color: 'var(--preto)', outline: 'none' }} />
