@@ -244,7 +244,7 @@ export default function PrecosPage() {
             </div>
             <div style={{ color: 'var(--cinza)', fontSize: 13 }}>Faça upgrade para o Plano Profissional e tenha buscas ilimitadas.</div>
           </div>
-          <button onClick={() => router.push('/assinar?plano=profissional')}
+          <button onClick={() => router.push('/assinar?from=painel')}
             style={{ padding: '10px 22px', borderRadius: 8, fontWeight: 700, fontSize: 14, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Ver planos →
           </button>
@@ -471,7 +471,7 @@ export default function PrecosPage() {
                   <span style={{ fontSize: 12, color: 'var(--cinza)' }}>
                     Plano Basic · Upgrade para buscas ilimitadas e histórico completo
                   </span>
-                  <button onClick={() => router.push('/assinar?plano=profissional')}
+                  <button onClick={() => router.push('/assinar?from=painel')}
                     style={{ padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'var(--vinho)', color: 'white', border: 'none' }}>
                     Upgrade →
                   </button>
