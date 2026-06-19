@@ -89,6 +89,17 @@ export default function AfiliadorDashboard() {
     ? ((dados.conversoes / dados.cliques) * 100).toFixed(1)
     : '—'
 
+  // Breakdown de conversões por plano
+  const porPlano = dados.pagamentos.reduce<Record<string, number>>((acc, p) => {
+    const plano = p.tipo_gatilho ?? 'outros'
+    acc[plano] = (acc[plano] ?? 0) + 1
+    return acc
+  }, {})
+  const planoNome: Record<string, string> = {
+    basic: 'Basic', profissional: 'Profissional', gestao: 'Gestão',
+    empresarial: 'Empresarial', pro: 'Gestão', outros: 'Outros',
+  }
+
   const descricaoComissao = dados.comissao_tipo === 'percentual'
     ? `${dados.comissao_valor}% do primeiro pagamento`
     : dados.comissao_tipo === 'fixo'
@@ -175,6 +186,22 @@ export default function AfiliadorDashboard() {
             </div>
           ))}
         </div>
+
+        {/* Breakdown por plano */}
+        {Object.keys(porPlano).length > 0 && (
+          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E8E4DC', padding: '20px 24px', marginBottom: 24 }}>
+            <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Assinantes por plano</div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {Object.entries(porPlano).map(([plano, qtd]) => (
+                <div key={plano} style={{ background: '#FAF6F0', border: '1px solid #E8E4DC', borderRadius: 12, padding: '14px 20px', minWidth: 120, flex: '1 1 120px' }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#6B0F1A', marginBottom: 4 }}>{qtd}</div>
+                  <div style={{ fontSize: 13, color: '#4a4a4d', fontWeight: 600 }}>{planoNome[plano] ?? plano}</div>
+                  <div style={{ fontSize: 11, color: '#9AA0A6', marginTop: 2 }}>{qtd === 1 ? 'assinante' : 'assinantes'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Histórico de pagamentos */}
         <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E8E4DC', overflow: 'hidden' }}>
