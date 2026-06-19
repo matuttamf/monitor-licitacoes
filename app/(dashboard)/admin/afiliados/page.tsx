@@ -272,13 +272,15 @@ export default function AdminAfiliados() {
                           }}>
                             Pagamentos
                           </button>
-                          <button onClick={() => acao(a.id, 'reenviar')} style={{
-                            fontSize: 12, padding: '5px 10px', borderRadius: 7,
-                            border: '1px solid var(--cinza-light)', background: 'none',
-                            cursor: 'pointer', color: 'var(--cinza)',
-                          }}>
-                            Reenviar
-                          </button>
+                          {a.status === 'pendente' && (
+                            <button onClick={() => acao(a.id, 'reenviar')} style={{
+                              fontSize: 12, padding: '5px 10px', borderRadius: 7,
+                              border: '1px solid var(--cinza-light)', background: 'none',
+                              cursor: 'pointer', color: 'var(--cinza)',
+                            }}>
+                              Reenviar
+                            </button>
+                          )}
                           {a.status !== 'bloqueado' ? (
                             <button onClick={() => acao(a.id, 'bloquear')} style={{
                               fontSize: 12, padding: '5px 10px', borderRadius: 7,
