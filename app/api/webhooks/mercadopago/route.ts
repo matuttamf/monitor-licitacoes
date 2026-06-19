@@ -286,10 +286,36 @@ export async function POST(request: Request) {
         console.error('[webhook/mp] Erro ao enviar e-mail confirmação:', e)
       }
 
-    } else if (['cancelled', 'paused'].includes(subscription.status)) {
+    } else if (subscription.status === 'paused') {
+      // Pausa iniciada pelo nosso sistema via /api/assinatura/pausar — ignorar.
+      // O mp_subscription_id já foi preservado e a data pausa_ate já está no banco.
+      // Não limpar mp_subscription_id para que a reativação funcione.
+      const { data: perfilPausa } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (perfilPausa?.status === 'paused') {
+        // Pausa já registrada pelo nosso sistema — nada a fazer
+        console.log(`[webhook/mp] Pausa ignorada (já gerenciada pelo sistema): user=${userId}`)
+      } else {
+        // Pausa externa (pelo painel do MP) — tratar como cancelamento
+        const proximaCobranca: string | null = subscription.next_payment_date
+          ?? subscription.date_of_next_payment
+          ?? null
+        const updatePausaExt: Record<string, unknown> = { mp_subscription_id: null }
+        if (proximaCobranca) {
+          updatePausaExt.acesso_ate = new Date(proximaCobranca).toISOString()
+        } else {
+          updatePausaExt.status = 'expired'
+        }
+        await supabase.from('profiles').update(updatePausaExt).eq('id', userId)
+        console.log(`[webhook/mp] Pausa externa MP: user=${userId}`)
+      }
+
+    } else if (subscription.status === 'cancelled') {
       // Mantém acesso ativo até o fim do período já pago.
-      // date_of_next_payment é a data em que SERIA a próxima cobrança — coincide
-      // com o fim do ciclo atual que já foi cobrado.
       const proximaCobranca: string | null = subscription.next_payment_date
         ?? subscription.date_of_next_payment
         ?? null
@@ -299,18 +325,15 @@ export async function POST(request: Request) {
       }
 
       if (proximaCobranca) {
-        // Acesso liberado até o fim do ciclo pago; cron expirar-trials encerra depois
         updateCancelado.acesso_ate = new Date(proximaCobranca).toISOString()
-        // Mantém 'active' — o cron vai expirar quando acesso_ate passar
       } else {
-        // Sem data de fim conhecida: encerra imediatamente
         updateCancelado.status = 'expired'
       }
 
       await supabase.from('profiles').update(updateCancelado).eq('id', userId)
 
       console.log(
-        `[webhook/mp] Assinatura ${subscription.status}: user=${userId}` +
+        `[webhook/mp] Cancelamento: user=${userId}` +
         (proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado imediatamente')
       )
     }
