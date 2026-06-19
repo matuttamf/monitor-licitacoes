@@ -237,6 +237,7 @@ export default function LandingPage() {
         </div>
         <nav className="flex items-center gap-1 md:gap-2">
           <Link href="#como-funciona" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Como funciona</Link>
+          <Link href="/licitacoes-para" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Por segmento</Link>
           <Link href="/assinar" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Planos</Link>
           <Link href="/contato" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Contato</Link>
           <Link href="/login" className="px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Entrar</Link>
@@ -799,7 +800,7 @@ export default function LandingPage() {
           <span className="text-sm text-[rgba(255,255,255,0.25)]">© 2021–{new Date().getFullYear()} Monitor de Licitações · Matutta Soluções Digitais</span>
         </div>
         <div className="flex gap-7 justify-center flex-wrap">
-          {[['Início', '/'], ['Planos', '/assinar'], ['Contato', '/contato'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (
+          {[['Início', '/'], ['Por segmento', '/licitacoes-para'], ['Planos', '/assinar'], ['Contato', '/contato'], ['Entrar', '/login'], ['Cadastrar', '/cadastro'], ['Privacidade', '/privacidade'], ['Termos de Uso', '/termos']].map(([label, href]) => (
             <Link key={label} href={href} className="text-sm text-[rgba(255,255,255,0.3)] no-underline">{label}</Link>
           ))}
         </div>
