@@ -19,7 +19,12 @@ export default function UpdatePasswordPage() {
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password: senha })
     if (error) {
-      setErro('Não foi possível atualizar sua senha. O link pode ter expirado — solicite um novo em "Esqueci minha senha".')
+      const msg = error.message?.toLowerCase() ?? ''
+      const senhaIgual = msg.includes('same password') || msg.includes('different password') || msg.includes('should be different')
+      setErro(senhaIgual
+        ? 'A nova senha deve ser diferente da senha atual.'
+        : 'Não foi possível atualizar sua senha. O link pode ter expirado — solicite um novo em "Esqueci minha senha".'
+      )
       setCarregando(false)
       return
     }
