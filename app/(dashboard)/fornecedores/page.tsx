@@ -37,15 +37,16 @@ const FORM_VAZIO = {
 }
 
 export default function FornecedoresPage() {
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  const [fornecedores, setFornecedores] = useState<Fornecedor[] | null>(null)
   const [total, setTotal]       = useState(0)
   const [page, setPage]         = useState(1)
   const [busca, setBusca]           = useState('')
   const [regiao, setRegiao]         = useState('')
   const [anoInicio, setAnoInicio]   = useState('')
   const [anoFim, setAnoFim]         = useState('')
-  const [carregando, setCarregando] = useState(true)
+  const [carregando, setCarregando] = useState(false)
   const [bloqueado, setBloqueado]   = useState(false)
+  const [buscaFeita, setBuscaFeita] = useState(false)
 
   // vencedores de licitações
   const [mostrarVencedores, setMostrarVencedores] = useState(true)
@@ -79,7 +80,6 @@ export default function FornecedoresPage() {
   }, [])
 
   useEffect(() => {
-    carregar(1, '', '', '', '')
     carregarVencedores('', '', '', '')
   }, [carregar])
 
@@ -109,6 +109,7 @@ export default function FornecedoresPage() {
 
   function buscar(e: React.FormEvent) {
     e.preventDefault()
+    setBuscaFeita(true)
     setPage(1)
     carregar(1, busca, regiao, anoInicio, anoFim)
     if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, regiao, anoInicio, anoFim) }
@@ -116,6 +117,7 @@ export default function FornecedoresPage() {
 
   function mudarRegiao(r: string) {
     setRegiao(r)
+    if (!buscaFeita) return
     setPage(1)
     carregar(1, busca, r, anoInicio, anoFim)
     if (mostrarVencedores) { setVencedores([]); carregarVencedores(busca, r, anoInicio, anoFim) }
@@ -441,7 +443,7 @@ export default function FornecedoresPage() {
           <button type="button"
             onClick={() => {
               setBusca(''); setRegiao(''); setAnoInicio(''); setAnoFim('')
-              setPage(1); carregar(1, '', '', '', '')
+              setPage(1); setBuscaFeita(false); setFornecedores(null); setTotal(0)
               if (mostrarVencedores) { setVencedores([]); carregarVencedores('', '', '', '') }
             }}
             className="px-4 py-2.5 rounded-xl text-sm font-medium"
@@ -480,7 +482,7 @@ export default function FornecedoresPage() {
 
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: mostrarVencedores ? 'var(--vinho)' : 'var(--preto)', lineHeight: 1.3 }}>
-              🏆 Vencedores de licitações nos últimos 24 meses
+              🏆 Vencedores de licitações nos últimos 48 meses
             </div>
             <div style={{ fontSize: 11, color: 'var(--cinza)', marginTop: 1 }}>
               Dados públicos do PNCP — aparecem abaixo dos parceiros cadastrados
@@ -490,33 +492,39 @@ export default function FornecedoresPage() {
       )}
 
       {/* Contador */}
-      {!carregando && total > 0 && (
+      {!carregando && buscaFeita && total > 0 && (
         <p className="text-xs" style={{ color: 'var(--cinza)' }}>
-          {`${total} fornecedor${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''} no diretório`}
+          {`${total} fornecedor${total !== 1 ? 'es' : ''} encontrado${total !== 1 ? 's' : ''}`}
         </p>
       )}
 
       {/* Lista */}
-      {carregando ? (
+      {!buscaFeita ? (
+        <div className="rounded-2xl p-12 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+          <div className="text-3xl mb-3">🔍</div>
+          <p className="text-sm font-semibold mb-1" style={{ color: 'var(--preto)' }}>Busque parceiros cadastrados</p>
+          <p className="text-xs" style={{ color: 'var(--cinza)' }}>Digite um produto, serviço ou segmento no campo acima e clique em Buscar.</p>
+        </div>
+      ) : carregando ? (
         <div className="space-y-4">
           {[1,2,3].map(i => (
             <div key={i} className="h-28 rounded-2xl animate-pulse"
               style={{ background: 'white', border: '1px solid var(--cinza-light)' }} />
           ))}
         </div>
-      ) : fornecedores.length === 0 && (busca || regiao) ? (
+      ) : (fornecedores ?? []).length === 0 ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
           <div className="text-3xl mb-3">🔍</div>
           <p className="text-sm mb-4" style={{ color: 'var(--cinza)' }}>Nenhum fornecedor encontrado com esses filtros.</p>
-          <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); carregar(1, '', '', '', '') }}
+          <button onClick={() => { setBusca(''); setRegiao(''); setPage(1); setBuscaFeita(false); setFornecedores(null) }}
             className="px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: 'var(--cinza-light)', color: 'var(--cinza)', border: 'none', cursor: 'pointer' }}>
             Limpar filtros
           </button>
         </div>
-      ) : fornecedores.length > 0 ? (
+      ) : (fornecedores ?? []).length > 0 ? (
         <div className="space-y-4">
-          {fornecedores.map(f => (
+          {(fornecedores ?? []).map(f => (
             <div key={f.id} className="rounded-2xl p-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="min-w-0 flex-1">
@@ -578,7 +586,7 @@ export default function FornecedoresPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{ flex: 1, height: 1, background: 'var(--cinza-light)' }} />
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
-              🏆 Vencedores de licitações · últimos 24 meses
+              🏆 Vencedores de licitações · últimos 48 meses
             </span>
             <div style={{ flex: 1, height: 1, background: 'var(--cinza-light)' }} />
           </div>
@@ -599,7 +607,7 @@ export default function FornecedoresPage() {
           ) : vencedores.length === 0 ? (
             <div style={{ background: 'white', border: '1px solid var(--cinza-light)', borderRadius: 12, padding: '32px 20px', textAlign: 'center' }}>
               <p style={{ fontSize: 13, color: 'var(--cinza)' }}>
-                {busca ? `Nenhum vencedor encontrado para "${busca}" nos últimos 24 meses.` : 'Nenhum resultado encontrado.'}
+                {busca ? `Nenhum vencedor encontrado para "${busca}" nos últimos 48 meses.` : 'Nenhum resultado encontrado.'}
               </p>
             </div>
           ) : (
