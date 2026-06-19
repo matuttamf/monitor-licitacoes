@@ -250,18 +250,6 @@ export default async function SegmentoPage({
             </Link>
           </div>
 
-          {/* CNAEs */}
-          <div className="mb-10 p-5 bg-[#FAF6F0] rounded-xl border border-[#F0EDE8]">
-            <div className="text-xs font-semibold text-[#9AA0A6] uppercase tracking-wider mb-3">CNAEs relacionados</div>
-            <div className="flex flex-wrap gap-2">
-              {data.cnaes.map(cnae => (
-                <span key={cnae} className="text-xs font-mono bg-white border border-[#E8E4DC] px-2.5 py-1 rounded-lg text-[#4a4a4d]">
-                  {cnae}
-                </span>
-              ))}
-            </div>
-          </div>
-
           {/* FAQ */}
           <h2 className="text-[20px] md:text-[24px] font-bold text-[#1A1A1C] mb-6">
             Perguntas frequentes
