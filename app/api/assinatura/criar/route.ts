@@ -8,11 +8,21 @@ import {
 } from '@/lib/mercadopago'
 import { getLimites } from '@/lib/planos'
 import { NextResponse } from 'next/server'
+import { rateLimitGuard, getIp } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
+  const ip = getIp(request)
+  if (!rateLimitGuard(`ip:${ip}:criar`, 10, 60_000)) {
+    return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
+  if (!rateLimitGuard(`user:${user.id}:criar`, 5, 60_000)) {
+    return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
+  }
 
   const { plano, periodo = 'mensal' } = await request.json()
 

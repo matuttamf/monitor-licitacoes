@@ -975,6 +975,27 @@ export default function PerfilPage() {
         </div>
       )}
 
+      {/* ── Privacidade / LGPD ── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="px-8 py-6 flex items-center justify-between">
+          <div>
+            <div className="font-semibold text-sm" style={{ color: 'var(--preto)' }}>Meus dados</div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--cinza)' }}>
+              Conforme a LGPD, você pode exportar ou solicitar a exclusão dos seus dados.
+            </div>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <a
+              href="/api/meus-dados"
+              download="meus-dados-monitor-licitacoes.json"
+              className="px-4 py-2 rounded-xl text-xs font-semibold no-underline"
+              style={{ background: 'rgba(107,15,26,0.06)', color: 'var(--vinho)', border: '1.5px solid rgba(107,15,26,0.2)' }}>
+              Exportar dados
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* ── Cancelar assinatura ── */}
       {perfil.status === 'active' && (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>

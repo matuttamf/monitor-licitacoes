@@ -1,11 +1,16 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { rateLimitGuard, getIp } from '@/lib/rate-limit'
 
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
   : process.env.MP_ACCESS_TOKEN_TEST!
 
-export async function POST() {
+export async function POST(request: Request) {
+  const ip = getIp(request)
+  if (!rateLimitGuard(`ip:${ip}:reativar`, 5, 60_000)) {
+    return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
+  }
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })

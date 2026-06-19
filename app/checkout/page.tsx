@@ -139,6 +139,9 @@ function CheckoutConteudo() {
         <h1 className="text-xl font-bold text-[#1A1A1C] mb-2">Preparando seu checkout…</h1>
         <p className="text-sm text-[#9AA0A6]">Você será redirecionado para o pagamento em instantes.</p>
         <p className="text-xs text-[#9AA0A6] mt-2 font-medium">{nomePlano}</p>
+        <p className="text-xs text-[#9AA0A6] mt-4 border-t border-[#E8E4DC] pt-4">
+          Conforme o Código de Defesa do Consumidor, você tem <strong>7 dias</strong> para cancelar a assinatura após a contratação sem custo.
+        </p>
       </div>
     </div>
   )
