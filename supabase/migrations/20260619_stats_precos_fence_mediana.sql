@@ -2,7 +2,7 @@
 -- Problema: buscar "impressora" retornava desde cartuchos (R$50) até
 -- impressoras industriais (R$100k), distorcendo média e P75.
 -- Solução: após o filtro de score, aplica cerca de 1 ordem de magnitude
--- em torno da mediana (mediana/5 até mediana*5).
+-- em torno da mediana (mediana/2.5 até mediana*5).
 -- Isso mantém produtos do mesmo cluster de preço sem precisar de
 -- categorização manual.
 
@@ -68,7 +68,7 @@ BEGIN
     SELECT f.valor_unitario
     FROM filtrado f, ref r
     WHERE r.med > 0
-      AND f.valor_unitario BETWEEN r.med / 2.5 AND r.med * 2.5
+      AND f.valor_unitario BETWEEN r.med / 2 AND r.med * 2
   ),
   pcts AS (
     SELECT
