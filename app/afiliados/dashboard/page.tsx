@@ -125,8 +125,11 @@ export default function AfiliadorDashboard() {
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>Painel de Parceiro</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{dados.nome}</span>
+          <a href="/dashboard" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}>
+            ← Painel
+          </a>
           <button onClick={sair} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer' }}>
             Sair
           </button>
