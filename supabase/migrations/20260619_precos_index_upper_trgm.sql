@@ -3,6 +3,9 @@
 -- O índice anterior (idx_ri_trgm) era em descricao_item lowercase e não
 -- era aproveitado por similarity(upper(descricao_item), ...).
 
+DROP FUNCTION IF EXISTS buscar_precos(text,text,date,date,integer,integer);
+DROP FUNCTION IF EXISTS stats_precos(text,text,date,date);
+
 CREATE INDEX IF NOT EXISTS idx_ri_upper_trgm
   ON public.resultados_itens
   USING GIN (upper(descricao_item) gin_trgm_ops);
