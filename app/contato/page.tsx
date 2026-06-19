@@ -61,7 +61,7 @@ export default function ContatoPage() {
         ) : (
           <form onSubmit={enviar} style={{ background: 'white', borderRadius: '20px', padding: '36px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[14px]">
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '6px' }}>Nome</label>
                 <input required value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}

@@ -199,7 +199,7 @@ export default function AlertasPage() {
 
       {/* Filtros */}
       <div className="rounded-2xl p-4 mb-5" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
-        <div className="grid gap-3" style={{ gridTemplateColumns: '2fr 1.4fr 1.6fr 1fr 1fr' }}>
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           {/* Busca livre */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cinza)' }}>Buscar</label>
