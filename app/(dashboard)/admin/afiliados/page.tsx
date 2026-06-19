@@ -52,10 +52,12 @@ export default function AdminAfiliados() {
   const [abrirForm, setAbrirForm]               = useState(false)
   const [enviando, setEnviando]                 = useState(false)
   const [feedback, setFeedback]                 = useState('')
-  const [form, setForm]                         = useState({ nome: '', email: '', campanha_id: '' })
+  const [form, setForm]                         = useState({ nome: '', email: '', campanha_id: '', cnpj: '', chave_pix: '' })
   const [pagamentosAberto, setPagamentosAberto] = useState<string | null>(null)
   const [pagamentos, setPagamentos]             = useState<Record<string, Pagamento[]>>({})
   const [marcandoPago, setMarcandoPago]         = useState<string | null>(null)
+  const [nfModal, setNfModal]                   = useState<{ afiliadoId: string; mesRef: string; valor: number } | null>(null)
+  const [nfNumero, setNfNumero]                 = useState('')
 
   async function carregar() {
     setCarregando(true)
@@ -88,7 +90,7 @@ export default function AdminAfiliados() {
       return
     }
     setFeedback('Convite enviado com sucesso!')
-    setForm({ nome: '', email: '', campanha_id: '' })
+    setForm({ nome: '', email: '', campanha_id: '', cnpj: '', chave_pix: '' })
     setAbrirForm(false)
     setEnviando(false)
     carregar()
@@ -118,13 +120,16 @@ export default function AdminAfiliados() {
     setPagamentos(prev => ({ ...prev, [afiliadoId]: data.pagamentos ?? [] }))
   }
 
-  async function marcarComoPago(afiliadoId: string, mesRef: string, valor: number) {
+  async function confirmarPagamento() {
+    if (!nfModal) return
+    const { afiliadoId, mesRef, valor } = nfModal
     const chave = `${afiliadoId}-${mesRef}`
     setMarcandoPago(chave)
+    setNfModal(null)
     await fetch('/api/admin/afiliados/pagamentos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ afiliado_id: afiliadoId, mes_ref: mesRef, valor }),
+      body: JSON.stringify({ afiliado_id: afiliadoId, mes_ref: mesRef, valor, numero_nf: nfNumero || null }),
     })
     const [resPag, resAfil] = await Promise.all([
       fetch(`/api/admin/afiliados/pagamentos?afiliado_id=${afiliadoId}`),
@@ -135,6 +140,7 @@ export default function AdminAfiliados() {
     setPagamentos(prev => ({ ...prev, [afiliadoId]: dataPag.pagamentos ?? [] }))
     setAfiliados(dataAfil.afiliados ?? [])
     setMarcandoPago(null)
+    setNfNumero('')
   }
 
   const totalComissao = afiliados
@@ -175,6 +181,22 @@ export default function AdminAfiliados() {
               <input
                 type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 required placeholder="email@parceiro.com"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 9, border: '1.5px solid var(--cinza-light)', fontSize: 14, boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--preto)', display: 'block', marginBottom: 6 }}>CNPJ <span style={{ fontWeight: 400, color: 'var(--cinza)' }}>(opcional)</span></label>
+              <input
+                value={form.cnpj} onChange={e => setForm(f => ({ ...f, cnpj: e.target.value }))}
+                placeholder="00.000.000/0001-00"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 9, border: '1.5px solid var(--cinza-light)', fontSize: 14, boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--preto)', display: 'block', marginBottom: 6 }}>Chave PIX <span style={{ fontWeight: 400, color: 'var(--cinza)' }}>(opcional)</span></label>
+              <input
+                value={form.chave_pix} onChange={e => setForm(f => ({ ...f, chave_pix: e.target.value }))}
+                placeholder="CPF, CNPJ, e-mail ou chave aleatória"
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 9, border: '1.5px solid var(--cinza-light)', fontSize: 14, boxSizing: 'border-box' }}
               />
             </div>
@@ -320,7 +342,7 @@ export default function AdminAfiliados() {
                               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                                 <thead>
                                   <tr style={{ background: 'var(--surface-2)' }}>
-                                    {['Mês', 'Plano', 'Valor', 'Status', 'Pago em', ''].map(h => (
+                                    {['Mês', 'Plano', 'Valor', 'Status', 'Pago em', 'NF', ''].map(h => (
                                       <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--cinza)' }}>{h}</th>
                                     ))}
                                   </tr>
@@ -341,10 +363,13 @@ export default function AdminAfiliados() {
                                         <td style={{ padding: '10px 14px', color: 'var(--cinza)' }}>
                                           {p.pago_em ? new Date(p.pago_em).toLocaleDateString('pt-BR') : '—'}
                                         </td>
+                                        <td style={{ padding: '10px 14px', color: 'var(--cinza)', fontSize: 12 }}>
+                                          {(p as any).numero_nf ?? '—'}
+                                        </td>
                                         <td style={{ padding: '10px 14px' }}>
                                           {p.status === 'pendente' && (
                                             <button
-                                              onClick={() => marcarComoPago(a.id, p.mes_ref, p.valor)}
+                                              onClick={() => { setNfModal({ afiliadoId: a.id, mesRef: p.mes_ref, valor: p.valor }); setNfNumero('') }}
                                               disabled={marcandoPago === chave}
                                               style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#059669', color: 'white', fontWeight: 700, cursor: marcandoPago === chave ? 'not-allowed' : 'pointer', opacity: marcandoPago === chave ? 0.7 : 1 }}
                                             >
@@ -369,6 +394,42 @@ export default function AdminAfiliados() {
           </table>
         )}
       </div>
+
+      {/* Modal: número da NF */}
+      {nfModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 420, boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: 'var(--preto)' }}>Confirmar pagamento</h3>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--cinza)' }}>
+              {fmtMoeda(nfModal.valor)} · referência {nfModal.mesRef}
+            </p>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--preto)', display: 'block', marginBottom: 6 }}>
+              Número da NF <span style={{ fontWeight: 400, color: 'var(--cinza)' }}>(opcional)</span>
+            </label>
+            <input
+              autoFocus
+              value={nfNumero}
+              onChange={e => setNfNumero(e.target.value)}
+              placeholder="Ex: 1234"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 9, border: '1.5px solid var(--cinza-light)', fontSize: 14, boxSizing: 'border-box', marginBottom: 20 }}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={confirmarPagamento}
+                style={{ flex: 1, background: '#059669', color: 'white', border: 'none', borderRadius: 9, padding: '11px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+              >
+                Confirmar
+              </button>
+              <button
+                onClick={() => setNfModal(null)}
+                style={{ flex: 1, background: 'none', border: '1px solid var(--cinza-light)', color: 'var(--cinza)', borderRadius: 9, padding: '11px', fontSize: 14, cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

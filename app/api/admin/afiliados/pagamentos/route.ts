@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!await verificarAdmin()) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { afiliado_id, mes_ref, valor, observacao } = await request.json()
+  const { afiliado_id, mes_ref, valor, observacao, numero_nf } = await request.json()
 
   if (!afiliado_id || !mes_ref || valor == null) {
     return NextResponse.json({ error: 'afiliado_id, mes_ref e valor são obrigatórios' }, { status: 400 })
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       status:     'pago',
       pago_em:    new Date().toISOString(),
       observacao: observacao ?? null,
+      numero_nf:  numero_nf ?? null,
     }, { onConflict: 'afiliado_id,mes_ref' })
     .select()
     .single()

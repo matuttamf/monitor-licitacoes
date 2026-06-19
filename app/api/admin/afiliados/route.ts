@@ -76,7 +76,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   if (!await verificarAdmin()) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { nome, email, campanha_id } = await request.json()
+  const { nome, email, campanha_id, cnpj, chave_pix } = await request.json()
 
   if (!nome?.trim() || !email?.trim() || !campanha_id) {
     return NextResponse.json({ error: 'nome, email e campanha_id são obrigatórios' }, { status: 400 })
@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
       status:          'pendente',
       token_convite:   token,
       token_expira_em: expira,
+      cnpj:            cnpj?.trim() || null,
+      chave_pix:       chave_pix?.trim() || null,
     })
     .select()
     .single()
