@@ -89,10 +89,16 @@ export default function AfiliadorDashboard() {
     ? ((dados.conversoes / dados.cliques) * 100).toFixed(1)
     : '—'
 
-  // Breakdown de conversões por plano
-  const porPlano = dados.pagamentos.reduce<Record<string, number>>((acc, p) => {
-    const plano = p.tipo_gatilho ?? 'outros'
-    acc[plano] = (acc[plano] ?? 0) + 1
+  // Breakdown de conversões por plano + período
+  // tipo_gatilho ex: 'profissional_mensal', 'basic_anual'
+  type BreakdownItem = { mensal: number; anual: number }
+  const porPlano = dados.pagamentos.reduce<Record<string, BreakdownItem>>((acc, p) => {
+    const gatilho = p.tipo_gatilho ?? 'outros'
+    const partes   = gatilho.split('_')
+    const periodo  = partes[partes.length - 1] === 'anual' ? 'anual' : 'mensal'
+    const plano    = partes.slice(0, -1).join('_') || gatilho
+    if (!acc[plano]) acc[plano] = { mensal: 0, anual: 0 }
+    acc[plano][periodo]++
     return acc
   }, {})
   const planoNome: Record<string, string> = {
@@ -187,18 +193,49 @@ export default function AfiliadorDashboard() {
           ))}
         </div>
 
-        {/* Breakdown por plano */}
+        {/* Breakdown por plano + período */}
         {Object.keys(porPlano).length > 0 && (
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E8E4DC', padding: '20px 24px', marginBottom: 24 }}>
-            <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Assinantes por plano</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Assinantes por plano</div>
+              <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#9AA0A6' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: '#6B0F1A', display: 'inline-block' }}></span> Anual
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: '#E8E4DC', display: 'inline-block' }}></span> Mensal
+                </span>
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              {Object.entries(porPlano).map(([plano, qtd]) => (
-                <div key={plano} style={{ background: '#FAF6F0', border: '1px solid #E8E4DC', borderRadius: 12, padding: '14px 20px', minWidth: 120, flex: '1 1 120px' }}>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#6B0F1A', marginBottom: 4 }}>{qtd}</div>
-                  <div style={{ fontSize: 13, color: '#4a4a4d', fontWeight: 600 }}>{planoNome[plano] ?? plano}</div>
-                  <div style={{ fontSize: 11, color: '#9AA0A6', marginTop: 2 }}>{qtd === 1 ? 'assinante' : 'assinantes'}</div>
-                </div>
-              ))}
+              {Object.entries(porPlano).map(([plano, { mensal, anual }]) => {
+                const total = mensal + anual
+                return (
+                  <div key={plano} style={{ background: '#FAF6F0', border: '1px solid #E8E4DC', borderRadius: 12, padding: '16px 20px', flex: '1 1 130px' }}>
+                    <div style={{ fontSize: 13, color: '#4a4a4d', fontWeight: 700, marginBottom: 10 }}>{planoNome[plano] ?? plano}</div>
+                    <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#6B0F1A' }}>{anual}</div>
+                        <div style={{ fontSize: 10, color: '#9AA0A6', marginTop: 1 }}>anuais</div>
+                      </div>
+                      <div style={{ width: 1, background: '#E8E4DC' }}></div>
+                      <div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#9AA0A6' }}>{mensal}</div>
+                        <div style={{ fontSize: 10, color: '#9AA0A6', marginTop: 1 }}>mensais</div>
+                      </div>
+                    </div>
+                    {/* Barra visual anual vs mensal */}
+                    {total > 0 && (
+                      <div style={{ height: 4, background: '#E8E4DC', borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${Math.round((anual / total) * 100)}%`, background: '#6B0F1A', borderRadius: 99 }}></div>
+                      </div>
+                    )}
+                    <div style={{ fontSize: 10, color: '#9AA0A6', marginTop: 4 }}>
+                      {total > 0 ? `${Math.round((anual / total) * 100)}% anuais` : '—'}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
