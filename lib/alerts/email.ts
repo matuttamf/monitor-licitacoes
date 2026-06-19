@@ -64,7 +64,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
               <tr>
                 <td>
-                  <span style="display:inline-block;background:#FDF5E6;border:1px solid #C9A65A;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#8B6914;text-transform:uppercase;letter-spacing:0.5px">${l.keyword}</span>
+                  ${l.keyword.split(', ').map(k => `<span style="display:inline-block;background:#FDF5E6;border:1px solid #C9A65A;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#8B6914;text-transform:uppercase;letter-spacing:0.5px;margin-right:4px">${k}</span>`).join('')}
                   ${l.reenvio ? `<span style="display:inline-block;margin-left:8px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#4338CA;text-transform:uppercase;letter-spacing:0.5px">🔁 Lembrete</span>` : ''}
                   ${localidade ? `<span style="display:inline-block;margin-left:8px;background:#F0F4FF;border:1px solid #BFD0FF;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:#2D4EA0">📍 ${localidade}</span>` : ''}
                 </td>

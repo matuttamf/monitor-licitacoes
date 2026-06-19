@@ -177,20 +177,36 @@ export async function GET(request: Request) {
       const alertasParaEnviar = [...novosParaEnviar, ...reenviosParaEnviar]
       if (!alertasParaEnviar.length) return
 
-      // Montar lista de licitações
-      const licitacoesDoUsuario = alertasParaEnviar.map(a => ({
-        id:             a.licitacao_id,
-        orgao:          (a.licitacoes as any).orgao,
-        objeto:         (a.licitacoes as any).objeto,
-        valor_estimado: (a.licitacoes as any).valor_estimado,
-        data_abertura:  (a.licitacoes as any).data_abertura,
-        url:            (a.licitacoes as any).url,
-        estado:         (a.licitacoes as any).estado,
-        cidade:         (a.licitacoes as any).cidade,
-        keyword:        (a.keywords as any).termo,
-        reenvio:        !!(a as any)._reenvio,
-        score:          (a as any).score ?? 0,
-      }))
+      // Montar lista de licitações — deduplicar por licitacao_id, agrupando keywords
+      const licitacoesMap = new Map<string, {
+        id: string; orgao: string; objeto: string; valor_estimado: number | null;
+        data_abertura: string | null; url: string; estado: string | null; cidade: string | null;
+        keyword: string; reenvio: boolean; score: number;
+      }>()
+      for (const a of alertasParaEnviar) {
+        const lid = a.licitacao_id
+        const termo = (a.keywords as any).termo
+        if (licitacoesMap.has(lid)) {
+          const existing = licitacoesMap.get(lid)!
+          const termos = existing.keyword.split(', ')
+          if (!termos.includes(termo)) existing.keyword = [...termos, termo].join(', ')
+        } else {
+          licitacoesMap.set(lid, {
+            id:             lid,
+            orgao:          (a.licitacoes as any).orgao,
+            objeto:         (a.licitacoes as any).objeto,
+            valor_estimado: (a.licitacoes as any).valor_estimado,
+            data_abertura:  (a.licitacoes as any).data_abertura,
+            url:            (a.licitacoes as any).url,
+            estado:         (a.licitacoes as any).estado,
+            cidade:         (a.licitacoes as any).cidade,
+            keyword:        termo,
+            reenvio:        !!(a as any)._reenvio,
+            score:          (a as any).score ?? 0,
+          })
+        }
+      }
+      const licitacoesDoUsuario = [...licitacoesMap.values()]
 
       const canaisEnviados: string[] = []
 
