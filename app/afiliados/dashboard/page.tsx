@@ -40,6 +40,7 @@ export default function AfiliadorDashboard() {
   const [dados, setDados] = useState<Metricas | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [copiado, setCopiado] = useState(false)
+  const [isCliente, setIsCliente] = useState(false)
 
   useEffect(() => {
     async function carregar() {
@@ -47,10 +48,15 @@ export default function AfiliadorDashboard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login?redirect=/afiliados/dashboard'); return }
 
-      const res = await fetch('/api/afiliados/metricas')
-      if (res.status === 403) { router.push('/dashboard'); return }
-      if (!res.ok) { setCarregando(false); return }
-      setDados(await res.json())
+      const [resMetricas, resTipo] = await Promise.all([
+        fetch('/api/afiliados/metricas'),
+        fetch('/api/auth/tipo-conta'),
+      ])
+      if (resMetricas.status === 403) { router.push('/dashboard'); return }
+      if (!resMetricas.ok) { setCarregando(false); return }
+      const tipo = await resTipo.json()
+      setIsCliente(!!tipo.isCliente)
+      setDados(await resMetricas.json())
       setCarregando(false)
     }
     carregar()
@@ -127,9 +133,11 @@ export default function AfiliadorDashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{dados.nome}</span>
-          <a href="/dashboard" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}>
-            ← Painel
-          </a>
+          {isCliente && (
+            <a href="/dashboard" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}>
+              ← Painel
+            </a>
+          )}
           <button onClick={sair} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer' }}>
             Sair
           </button>
