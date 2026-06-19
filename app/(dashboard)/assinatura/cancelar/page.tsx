@@ -152,15 +152,16 @@ export default function CancelarAssinaturaPage() {
           Que tal pausar em vez de cancelar?
         </h1>
         <p className="text-sm mb-6" style={{ color: 'var(--cinza)', lineHeight: '1.7' }}>
-          Se você não precisa do Monitor agora mas pode querer usar futuramente, a pausa suspende sua cobrança e mantém tudo salvo — palavras-chave, histórico e configurações.
+          Se você não precisa do Monitor agora mas pode querer usar futuramente, a pausa suspende sua cobrança por <strong>14 dias</strong> e mantém tudo salvo — palavras-chave, histórico e configurações.
         </p>
 
         <div className="rounded-xl px-4 py-3 mb-6 flex items-start gap-3"
           style={{ background: 'rgba(201,166,90,0.08)', border: '1px solid rgba(201,166,90,0.3)' }}>
           <span className="text-lg flex-shrink-0">✨</span>
-          <p className="text-xs leading-relaxed" style={{ color: '#78350f' }}>
-            Com a pausa, você não é cobrado enquanto não precisar. Quando quiser retomar, basta reativar e as cobranças voltam normalmente.
-          </p>
+          <div className="text-xs leading-relaxed" style={{ color: '#78350f' }}>
+            <p className="mb-1">Durante os 14 dias de pausa, <strong>você não é cobrado</strong>. Ao final, a cobrança volta automaticamente.</p>
+            <p>Pode ser usado <strong>1 vez a cada 6 meses</strong> por assinatura.</p>
+          </div>
         </div>
 
         {erro && (

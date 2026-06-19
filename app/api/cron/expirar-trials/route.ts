@@ -39,9 +39,21 @@ export async function GET(request: Request) {
     .lt('acesso_ate', agora)
     .select('id')
 
+  // Reativa pausas expiradas (14 dias encerrados)
+  const { data: pausasReativadas, error: erroPausa } = await supabase
+    .from('profiles')
+    .update({ status: 'active', pausa_ate: null })
+    .eq('status', 'paused')
+    .not('pausa_ate', 'is', null)
+    .lt('pausa_ate', agora)
+    .select('id')
+
+  if (erroPausa) console.error('Erro ao reativar pausas:', erroPausa.message)
+
   const expirados = data?.length ?? 0
   const assinaturasExp = assinaturasExpiradas?.length ?? 0
-  console.log(`${expirados} trial(s) e ${assinaturasExp} assinatura(s) cancelada(s) expirada(s)`)
+  const pausasReativ = pausasReativadas?.length ?? 0
+  console.log(`${expirados} trial(s), ${assinaturasExp} assinatura(s) cancelada(s) e ${pausasReativ} pausa(s) reativada(s)`)
 
   // Limpeza automática: remover cron_logs com mais de 90 dias
   await supabase
@@ -52,7 +64,7 @@ export async function GET(request: Request) {
   await registrarCronLog({
     job: 'expirar-trials',
     status: 'ok',
-    mensagem: `${expirados} trial(s) + ${assinaturasExp} assinatura(s) cancelada(s) expirada(s)`,
+    mensagem: `${expirados} trial(s) + ${assinaturasExp} cancelada(s) + ${pausasReativ} pausa(s) reativada(s)`,
   })
   return NextResponse.json({ ok: true, expirados })
 }
