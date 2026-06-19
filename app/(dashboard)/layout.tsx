@@ -4,6 +4,7 @@ import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
 import { MobileMenuDrawer } from './components/MobileMenuDrawer'
 import { temMultiUsuario, temRadar, temFornecedores, temPrecosFiltros } from '@/lib/planos'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     if (expirado && !emCarencia) redirect('/expirado')
   }
 
+  // Verifica se o usuário também é afiliado ativo (duplo papel: cliente + parceiro)
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: afiliadoRow } = await adminClient
+    .from('afiliados')
+    .select('status')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  const isAfiliado = !!afiliadoRow && afiliadoRow.status !== 'bloqueado'
+
   // Equipe visível apenas para owners de planos Pro/Empresarial
   const exibirEquipe       = !profile?.owner_id && temMultiUsuario(profile?.plano ?? 'basic')
   // Radar, Fornecedores e Preços visíveis para Profissional+; admin vê sempre
@@ -73,6 +86,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     exibirEquipe
       ? { href: '/equipe',       label: 'Minha Equipe', icon: '◫' }
       : { href: '/equipe',       label: 'Minha Equipe', icon: '◫', locked: true, planoNecessario: 'Pro' },
+    ...(isAfiliado ? [
+      { href: '/afiliados/dashboard', label: 'Painel Parceiro', icon: '🤝' },
+    ] : []),
     ...(user.email === ADMIN_EMAIL ? [
       { href: '/admin',               label: 'Admin',          icon: '⚙' },
       { href: '/admin/afiliados',     label: '↳ Afiliados',    icon: '🤝', sub: true },

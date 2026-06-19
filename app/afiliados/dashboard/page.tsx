@@ -203,7 +203,7 @@ export default function AfiliadorDashboard() {
                   <span style={{ width: 8, height: 8, borderRadius: 2, background: '#6B0F1A', display: 'inline-block' }}></span> Anual
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 2, background: '#E8E4DC', display: 'inline-block' }}></span> Mensal
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: '#6B7280', display: 'inline-block' }}></span> Mensal
                 </span>
               </div>
             </div>
@@ -220,8 +220,8 @@ export default function AfiliadorDashboard() {
                       </div>
                       <div style={{ width: 1, background: '#E8E4DC' }}></div>
                       <div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#9AA0A6' }}>{mensal}</div>
-                        <div style={{ fontSize: 10, color: '#9AA0A6', marginTop: 1 }}>mensais</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#4a4a4d' }}>{mensal}</div>
+                        <div style={{ fontSize: 10, color: '#6B7280', marginTop: 1 }}>mensais</div>
                       </div>
                     </div>
                     {/* Barra visual anual vs mensal */}
@@ -264,7 +264,12 @@ export default function AfiliadorDashboard() {
                   <tr key={p.mes_ref} style={{ borderTop: '1px solid #E8E4DC' }}>
                     <td style={{ padding: '14px 20px', fontSize: 14, fontWeight: 600, color: '#1A1A1C' }}>{fmtMes(p.mes_ref)}</td>
                     <td style={{ padding: '14px 20px', fontSize: 13, color: '#6B7280' }}>
-                      {p.tipo_gatilho ? p.tipo_gatilho.charAt(0).toUpperCase() + p.tipo_gatilho.slice(1) : '—'}
+                      {p.tipo_gatilho ? (() => {
+                        const partes = p.tipo_gatilho.split('_')
+                        const periodo = partes[partes.length - 1] === 'anual' ? 'anual' : 'mensal'
+                        const plano = partes.slice(0, -1).join('_') || p.tipo_gatilho
+                        return `${planoNome[plano] ?? plano} (${periodo})`
+                      })() : '—'}
                     </td>
                     <td style={{ padding: '14px 20px', fontSize: 14, color: '#1A1A1C' }}>{fmtMoeda(p.valor)}</td>
                     <td style={{ padding: '14px 20px' }}>

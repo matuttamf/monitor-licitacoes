@@ -166,3 +166,21 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ error: 'ação inválida' }, { status: 400 })
 }
+
+// DELETE /api/admin/afiliados?id=xxx — remover afiliado
+export async function DELETE(request: NextRequest) {
+  if (!await verificarAdmin()) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
+  const id = request.nextUrl.searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 })
+
+  const admin = adminClient()
+
+  // Remove pagamentos associados primeiro
+  await admin.from('afiliado_pagamentos').delete().eq('afiliado_id', id)
+
+  const { error } = await admin.from('afiliados').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
+}

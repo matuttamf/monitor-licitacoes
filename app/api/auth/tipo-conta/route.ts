@@ -22,7 +22,14 @@ export async function GET() {
 
   if (afiliado) {
     if (afiliado.status === 'bloqueado') return NextResponse.json({ tipo: 'bloqueado' })
-    return NextResponse.json({ tipo: 'afiliado' })
+    // Verifica se também é assinante (pode ter os dois papéis)
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('plano_id')
+      .eq('id', user.id)
+      .maybeSingle()
+    const isCliente = !!profile?.plano_id
+    return NextResponse.json({ tipo: 'afiliado', isCliente })
   }
 
   return NextResponse.json({ tipo: 'usuario' })

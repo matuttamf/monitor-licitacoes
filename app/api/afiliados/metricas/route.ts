@@ -31,12 +31,12 @@ export async function GET() {
 
   const { data: pagamentos } = await admin
     .from('afiliado_pagamentos')
-    .select('valor, status, mes_ref, pago_em, tipo_gatilho')
+    .select('valor, status, mes_ref, pago_em, tipo_gatilho, profile_id')
     .eq('afiliado_id', afiliado.id)
     .order('criado_em', { ascending: false })
     .limit(50)
 
-  const conversoes     = pagamentos?.length ?? 0
+  const conversoes     = new Set((pagamentos ?? []).map(p => p.profile_id).filter(Boolean)).size
   const totalPendente  = (pagamentos ?? []).filter(p => p.status === 'pendente').reduce((s, p) => s + p.valor, 0)
   const totalPago      = (pagamentos ?? []).filter(p => p.status === 'pago').reduce((s, p) => s + p.valor, 0)
 

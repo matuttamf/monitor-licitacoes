@@ -13,8 +13,13 @@ function CadastroConteudo() {
 
   const segmento    = searchParams.get('segmento') ?? ''
 
-  // Captura de atribuição: ?ref=CODIGO ou parâmetros UTM padrão
-  const utmRef      = searchParams.get('ref')      ?? ''
+  // Captura de atribuição: ?ref=CODIGO ou cookie affiliate_ref (persiste mesmo após navegação)
+  const [refFromCookie, setRefFromCookie] = useState('')
+  useEffect(() => {
+    const cookie = document.cookie.split('; ').find(r => r.startsWith('affiliate_ref='))
+    if (cookie) setRefFromCookie(cookie.split('=')[1])
+  }, [])
+  const utmRef      = searchParams.get('ref') || refFromCookie
   const utmSource   = searchParams.get('utm_source')   ?? ''
   const utmMedium   = searchParams.get('utm_medium')   ?? ''
   const utmCampaign = searchParams.get('utm_campaign') ?? ''

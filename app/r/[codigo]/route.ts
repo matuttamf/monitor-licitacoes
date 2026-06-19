@@ -35,5 +35,13 @@ export async function GET(
   const destino = new URL(base)
   destino.searchParams.set('ref', codigo)
 
-  return NextResponse.redirect(destino)
+  const response = NextResponse.redirect(destino)
+  // Cookie de atribuição — persiste por 30 dias mesmo que o visitante navegue antes de se cadastrar
+  response.cookies.set('affiliate_ref', codigo, {
+    maxAge: 60 * 60 * 24 * 30,
+    path: '/',
+    httpOnly: false, // precisa ser lido pelo JS client-side no /cadastro
+    sameSite: 'lax',
+  })
+  return response
 }
