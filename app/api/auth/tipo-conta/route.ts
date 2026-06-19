@@ -25,10 +25,19 @@ export async function GET() {
     // Verifica se também é assinante (pode ter os dois papéis)
     const { data: profile } = await admin
       .from('profiles')
-      .select('id')
+      .select('id, status, trial_fim, acesso_ate')
       .eq('id', user.id)
       .maybeSingle()
-    const isCliente = !!profile
+
+    let isCliente = false
+    if (profile) {
+      const emCarencia = profile.acesso_ate && new Date(profile.acesso_ate) > new Date()
+      const expirado =
+        profile.status === 'expired' ||
+        profile.status === 'bloqueado' ||
+        (profile.status === 'trial' && profile.trial_fim && new Date(profile.trial_fim) < new Date())
+      isCliente = !expirado || !!emCarencia
+    }
     return NextResponse.json({ tipo: 'afiliado', isCliente })
   }
 

@@ -32,41 +32,23 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-coleta" "${{ job.status }}"
 
-  preparar-cache:
-    name: Preparar cache CNPJs sem e-mail
+  emails-rfb:
+    name: Enriquecer e-mails arquivos 1-9
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     needs: coletar
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '24', cache: 'npm' }
       - run: npm ci
-      - name: Exportar CNPJs sem e-mail para Storage
+      - name: Enriquecer e-mails arquivos 1-9
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
           MAX_ROWS: '0'
-        run: npx tsx scripts/enriquecer-emails-rfb.ts --prepare
-
-  emails-rfb:
-    name: Enriquecer e-mails arquivos 1-9
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    needs: preparar-cache
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'npm' }
-      - run: npm ci
-      - name: Enriquecer e-mails arquivos 1-9 via cache
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '0'
-        run: npx tsx scripts/enriquecer-emails-rfb.ts 1 9 --from-cache
+        run: npx tsx scripts/enriquecer-emails-rfb.ts 1 9
       - name: Notificar conclusão
         if: always()
         env:
@@ -100,3 +82,29 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-receita" "${{ job.status }}"
+
+  bulk-enrich-rfb:
+    name: Bulk enrichment RFB (arquivos 1-9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: emails-rfb
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Bulk enrichment via arquivos RFB
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+          MAX_ROWS: '0'
+        run: npx tsx scripts/enriquecer-bulk-rfb.ts 1 9
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-bulk" "${{ job.status }}"
