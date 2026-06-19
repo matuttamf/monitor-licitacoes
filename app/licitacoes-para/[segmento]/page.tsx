@@ -254,7 +254,7 @@ export default async function SegmentoPage({
           <div className="my-10 p-7 md:p-9 rounded-2xl border border-[#F0EDE8] bg-[#FAF6F0]">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B0F1A] mb-3">Por que isso importa</p>
             <h2 className="text-[18px] md:text-[22px] font-black text-[#1A1A1C] leading-snug mb-4">
-              O governo movimenta mais de R$ 2 trilhões por ano em compras.<br className="hidden md:block" /> A maioria das empresas nem sabe que existe edital para o que vende.
+              O governo gasta R$ 2 trilhões por ano — e a maioria das empresas ainda não monitora os editais do seu segmento.
             </h2>
             <p className="text-sm text-[#4a4a4d] leading-relaxed mb-4">
               Diferente do mercado privado — onde contratos dependem de relacionamento, indicação ou sorte —
