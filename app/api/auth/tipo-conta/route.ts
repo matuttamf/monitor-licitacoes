@@ -25,10 +25,10 @@ export async function GET() {
     // Verifica se também é assinante (pode ter os dois papéis)
     const { data: profile } = await admin
       .from('profiles')
-      .select('plano_id')
+      .select('id')
       .eq('id', user.id)
       .maybeSingle()
-    const isCliente = !!profile?.plano_id
+    const isCliente = !!profile
     return NextResponse.json({ tipo: 'afiliado', isCliente })
   }
 
