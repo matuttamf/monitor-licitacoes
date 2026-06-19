@@ -289,7 +289,7 @@ export default function PrecosPage() {
             {[
               { label: 'P10 (base)',      value: fmtBRL(stats.minimo),  sub: 'piso da faixa principal',  destaque: false, cor: '#15803d' },
               { label: 'Mediana',         value: fmtBRL(stats.mediana), sub: 'referência principal',      destaque: true,  cor: 'var(--vinho)' },
-              { label: 'Média P25–P75',   value: fmtBRL(stats.media),   sub: 'sem extremos',              destaque: false, cor: 'var(--preto)' },
+              { label: 'Média',            value: fmtBRL(stats.media),   sub: 'sem extremos',              destaque: false, cor: 'var(--preto)' },
               { label: 'P75 (teto)',      value: fmtBRL(stats.maximo),  sub: 'teto da faixa principal',   destaque: false, cor: '#b91c1c' },
             ].map(card => (
               <div key={card.label} style={{

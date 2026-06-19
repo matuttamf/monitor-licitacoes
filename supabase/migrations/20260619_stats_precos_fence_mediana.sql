@@ -2,7 +2,7 @@
 -- Problema: buscar "impressora" retornava desde cartuchos (R$50) até
 -- impressoras industriais (R$100k), distorcendo média e P75.
 -- Solução: após o filtro de score, aplica cerca de 1 ordem de magnitude
--- em torno da mediana (mediana/2.5 até mediana*5).
+-- em torno da mediana (mediana/2 até mediana*2).
 -- Isso mantém produtos do mesmo cluster de preço sem precisar de
 -- categorização manual.
 
@@ -70,9 +70,13 @@ BEGIN
     WHERE r.med > 0
       AND f.valor_unitario BETWEEN r.med / 2 AND r.med * 2
   ),
+  -- P10 vem do conjunto pré-fence para mostrar o piso real do mercado
+  p10_ref AS (
+    SELECT PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p10
+    FROM filtrado
+  ),
   pcts AS (
     SELECT
-      PERCENTILE_CONT(0.10) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p10,
       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p25,
       PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p50,
       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY valor_unitario)::NUMERIC AS p75
@@ -80,7 +84,7 @@ BEGIN
   )
   SELECT
     (SELECT COUNT(*) FROM limpo)::BIGINT                               AS total,
-    (SELECT p10  FROM pcts)                                            AS minimo,
+    (SELECT p10  FROM p10_ref)                                         AS minimo,
     (SELECT p75  FROM pcts)                                            AS maximo,
     (SELECT ROUND(AVG(l.valor_unitario), 2)
        FROM limpo l, pcts
