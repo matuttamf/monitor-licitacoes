@@ -11,6 +11,8 @@ function CadastroConteudo() {
   const searchParams  = useSearchParams()
   const conviteToken  = searchParams.get('convite')
 
+  const segmento    = searchParams.get('segmento') ?? ''
+
   // Captura de atribuição: ?ref=CODIGO ou parâmetros UTM padrão
   const utmRef      = searchParams.get('ref')      ?? ''
   const utmSource   = searchParams.get('utm_source')   ?? ''
@@ -133,6 +135,7 @@ function CadastroConteudo() {
       }
     }
 
+    if (segmento) localStorage.setItem('onboarding_segmento', segmento)
     setSucesso(true)
     setCarregando(false)
   }

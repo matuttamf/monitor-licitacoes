@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { RegiaoSelector, RegiaoChips } from '@/components/RegiaoSelector'
+import { SEGMENTOS_MAP } from '@/app/licitacoes-para/data'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '12px 14px', borderRadius: '10px',
@@ -60,6 +61,19 @@ export default function OnboardingPage() {
   const [erro, setErro]               = useState('')
   const [salvas, setSalvas]           = useState<string[]>([])
   const [setorAberto, setSetorAberto] = useState<string | null>('Serviços gerais')
+  const [segmentoNome, setSegmentoNome]       = useState<string | null>(null)
+  const [segmentoSugestoes, setSegmentoSugestoes] = useState<string[]>([])
+
+  useEffect(() => {
+    const slug = localStorage.getItem('onboarding_segmento')
+    if (slug) {
+      const seg = SEGMENTOS_MAP[slug]
+      if (seg) {
+        setSegmentoNome(seg.titulo.replace('Licitações para ', '').replace('Licitações de ', ''))
+        setSegmentoSugestoes(seg.keywords.slice(0, 8).map(k => k.replace('licitações ', '').replace('editais ', '')))
+      }
+    }
+  }, [])
 
   useEffect(() => {
     fetch('/api/keywords')
@@ -247,6 +261,34 @@ export default function OnboardingPage() {
                     ✓ {s}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {/* Sugestões do segmento de origem */}
+            {segmentoSugestoes.length > 0 && (
+              <div style={{ marginBottom: '20px', padding: '14px 16px', background: 'rgba(107,15,26,0.04)', border: '1.5px solid rgba(107,15,26,0.15)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B0F1A', marginBottom: '10px' }}>
+                  ✦ Sugestões para {segmentoNome}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {segmentoSugestoes.map(t => (
+                    <button
+                      key={t}
+                      disabled={salvas.includes(t)}
+                      onClick={() => setTermo(t)}
+                      style={{
+                        padding: '5px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: 600,
+                        border: '1px solid',
+                        borderColor: salvas.includes(t) ? '#22c55e' : 'rgba(107,15,26,0.3)',
+                        background: salvas.includes(t) ? 'rgba(34,197,94,0.1)' : 'white',
+                        color: salvas.includes(t) ? '#16a34a' : '#6B0F1A',
+                        cursor: salvas.includes(t) ? 'default' : 'pointer',
+                      }}
+                    >
+                      {salvas.includes(t) ? `✓ ${t}` : `+ ${t}`}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

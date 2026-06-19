@@ -2,11 +2,34 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { SEGMENTOS, SEGMENTOS_MAP } from '../data'
+import { createAdminClient } from '@/lib/supabase/server'
 
 const BASE = 'https://monitordelicitacoes.com.br'
 
+export const revalidate = 3600
+
 export async function generateStaticParams() {
   return SEGMENTOS.map(s => ({ segmento: s.slug }))
+}
+
+type Edital = { id: string; orgao: string; objeto: string; valor_estimado: number | null; data_abertura: string | null; estado: string | null; url: string | null }
+
+async function buscarEditaisSegmento(keywords: string[]): Promise<Edital[]> {
+  try {
+    const supabase = createAdminClient()
+    const termo = keywords[0].replace('licitações ', '').replace('editais ', '')
+    const hoje = new Date().toISOString().slice(0, 10)
+    const { data } = await supabase
+      .from('licitacoes')
+      .select('id, orgao, objeto, valor_estimado, data_abertura, estado, url')
+      .ilike('objeto', `%${termo}%`)
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+      .order('coletado_em', { ascending: false })
+      .limit(3)
+    return (data ?? []) as Edital[]
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({
@@ -41,6 +64,8 @@ export default async function SegmentoPage({
   const { segmento } = await params
   const data = SEGMENTOS_MAP[segmento]
   if (!data) notFound()
+
+  const editais = await buscarEditaisSegmento(data.keywords)
 
   const ldJson = {
     '@context': 'https://schema.org',
@@ -77,7 +102,7 @@ export default async function SegmentoPage({
         </Link>
         <div className="flex items-center gap-2">
           <Link href="/login" className="px-3 py-2 text-sm text-[#6B7280] no-underline">Entrar</Link>
-          <Link href="/cadastro" className="px-4 py-2 text-sm font-semibold bg-[#6B0F1A] text-white no-underline rounded-lg">Começar grátis</Link>
+          <Link href={`/cadastro?segmento=${data.slug}`} className="px-4 py-2 text-sm font-semibold bg-[#6B0F1A] text-white no-underline rounded-lg">Começar grátis</Link>
         </div>
       </header>
 
@@ -163,6 +188,54 @@ export default async function SegmentoPage({
             ))}
           </div>
 
+          {/* Editais reais */}
+          {editais.length > 0 && (
+            <div className="mb-10">
+              <h2 className="text-[20px] md:text-[24px] font-bold text-[#1A1A1C] mb-2">
+                Editais recentes deste segmento
+              </h2>
+              <p className="text-[#6B7280] text-sm mb-5">Licitações publicadas nos últimos dias — atualizadas a cada hora.</p>
+              <div className="space-y-3">
+                {editais.map(e => (
+                  <div key={e.id} className="p-5 bg-white border border-[#F0EDE8] rounded-xl">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1">
+                          {e.orgao}{e.estado ? ` · ${e.estado}` : ''}
+                        </div>
+                        <p className="text-sm font-medium text-[#1A1A1C] leading-snug line-clamp-2 mb-2">{e.objeto}</p>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {e.valor_estimado && (
+                            <span className="text-xs font-semibold text-[#6B0F1A]">
+                              R$ {e.valor_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                          {e.data_abertura && (
+                            <span className="text-xs text-[#9AA0A6]">
+                              Abertura: {new Date(e.data_abertura).toLocaleDateString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {e.url && (
+                        <a href={e.url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs font-semibold text-[#6B0F1A] no-underline shrink-0 hover:underline">
+                          Ver edital →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-[#9AA0A6] mt-3 text-center">
+                Veja todos os editais e configure alertas automáticos →{' '}
+                <Link href={`/cadastro?segmento=${data.slug}`} className="text-[#6B0F1A] font-semibold no-underline hover:underline">
+                  Começar grátis
+                </Link>
+              </p>
+            </div>
+          )}
+
           {/* CTA inline */}
           <div className="my-10 p-6 md:p-8 bg-[#6B0F1A] rounded-2xl text-center">
             <div className="text-[#C9A65A] text-xs font-semibold uppercase tracking-wider mb-2">Comece agora</div>
@@ -172,7 +245,7 @@ export default async function SegmentoPage({
             <p className="text-[rgba(255,255,255,0.7)] text-sm mb-5 max-w-md mx-auto">
               Configure palavras-chave e receba alertas por e-mail quando novos editais forem publicados. Teste grátis por 7 dias.
             </p>
-            <Link href="/cadastro" className="inline-block bg-[#C9A65A] text-[#6B0F1A] font-bold px-8 py-3 rounded-xl no-underline text-sm hover:bg-[#b8954f] transition-colors">
+            <Link href={`/cadastro?segmento=${data.slug}`} className="inline-block bg-[#C9A65A] text-[#6B0F1A] font-bold px-8 py-3 rounded-xl no-underline text-sm hover:bg-[#b8954f] transition-colors">
               Criar conta gratuita
             </Link>
           </div>
@@ -232,7 +305,7 @@ export default async function SegmentoPage({
               Monitore editais do PNCP, portais estaduais e municipais em uma única plataforma.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/cadastro" className="inline-block bg-[#6B0F1A] text-white font-bold px-7 py-3 rounded-xl no-underline text-sm hover:bg-[#5a0d17] transition-colors">
+              <Link href={`/cadastro?segmento=${data.slug}`} className="inline-block bg-[#6B0F1A] text-white font-bold px-7 py-3 rounded-xl no-underline text-sm hover:bg-[#5a0d17] transition-colors">
                 Começar gratuitamente
               </Link>
               <Link href="/como-monitorar-licitacoes" className="inline-block bg-white border border-[#E8E4DC] text-[#1A1A1C] font-semibold px-7 py-3 rounded-xl no-underline text-sm hover:border-[#6B0F1A] transition-colors">
