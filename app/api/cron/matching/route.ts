@@ -148,6 +148,7 @@ async function runMatching() {
   const alertasParaSalvar: {
     licitacao_id: string
     keyword_id: string
+    profile_id: string
     canais: string[]
     score: number
     score_keyword: number
@@ -180,6 +181,7 @@ async function runMatching() {
       alertasParaSalvar.push({
         licitacao_id:  m.licitacao_id,
         keyword_id:    kid,
+        profile_id:    kw.user_id,
         canais:        [],
         score:         s.score,
         score_keyword: s.score_keyword,
