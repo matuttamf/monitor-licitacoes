@@ -452,7 +452,7 @@ export default function PrecosPage() {
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
                             {(() => {
                               const old = r.data_resultado
-                                ? new Date(r.data_resultado) < new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+                                ? new Date(r.data_resultado) < new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000)
                                 : false
                               return old
                                 ? <strong style={{ color: '#dc2626' }}>{fmtData(r.data_resultado)}</strong>
