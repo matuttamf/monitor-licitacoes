@@ -14,15 +14,15 @@ export async function generateStaticParams() {
 
 type Edital = { id: string; orgao: string; objeto: string; valor_estimado: number | null; data_abertura: string | null; estado: string | null; url: string | null }
 
-async function buscarEditaisSegmento(keywords: string[]): Promise<Edital[]> {
+async function buscarEditaisSegmento(tiposContrato: { titulo: string }[]): Promise<Edital[]> {
   try {
     const supabase = createAdminClient()
-    const termo = keywords[0].replace('licitações ', '').replace('editais ', '')
     const hoje = new Date().toISOString().slice(0, 10)
+    const termos = tiposContrato.map(t => `objeto.ilike.%${t.titulo}%`).join(',')
     const { data } = await supabase
       .from('licitacoes')
       .select('id, orgao, objeto, valor_estimado, data_abertura, estado, url')
-      .ilike('objeto', `%${termo}%`)
+      .or(termos)
       .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
       .order('coletado_em', { ascending: false })
       .limit(3)
@@ -65,7 +65,7 @@ export default async function SegmentoPage({
   const data = SEGMENTOS_MAP[segmento]
   if (!data) notFound()
 
-  const editais = await buscarEditaisSegmento(data.keywords)
+  const editais = await buscarEditaisSegmento(data.tiposContrato)
 
   const ldJson = {
     '@context': 'https://schema.org',
