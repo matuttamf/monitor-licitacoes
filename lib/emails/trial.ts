@@ -44,8 +44,6 @@ function baseEmail(conteudo: string, email: string): string {
       Monitor de Licitações · Matutta<br>
       Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
       <a href="${url}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
-      &nbsp;·&nbsp;
-      <a href="${url}/descadastrar?email=${encodeURIComponent(email)}" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Descadastrar</a>
     </p>
   </td></tr>
 
