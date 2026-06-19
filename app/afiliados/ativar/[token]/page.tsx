@@ -95,7 +95,7 @@ export default function AtivarAfiliado() {
             <>
               <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Bem-vindo, {dados.nome}</div>
               <h2 style={{ color: '#1A1A1C', fontSize: 22, fontWeight: 400, fontFamily: 'Georgia, serif', marginBottom: 6 }}>Ative sua conta de parceiro</h2>
-              <p style={{ color: '#4a4a4d', fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>
+              <p style={{ color: '#6B7280', fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>
                 Defina uma senha para acessar seu painel e acompanhar indicações e comissões.
               </p>
               <p style={{ color: '#9AA0A6', fontSize: 13, marginBottom: 24, fontStyle: 'italic' }}>{dados.email}</p>
