@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLimites } from '@/lib/planos'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 300
 
 
 
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
       : Promise.resolve({ data: null }),
   ])
 
+  // Só desconta da cota se a query principal teve sucesso
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 })
   if (sErr) console.error('[stats_precos]', sErr.message)
 
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
       ? `Histórico completo · ${geralRow.total} resultado${Number(geralRow.total) !== 1 ? 's' : ''}`
       : null
 
+  // Incrementa cota apenas após query bem-sucedida
   await supabase.from('profiles').update({
     precos_buscas_mes: buscasUsadas + 1,
     precos_buscas_reset_em: primeiroDiaMes,
