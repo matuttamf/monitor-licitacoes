@@ -54,7 +54,7 @@ export async function generateMetadata({
       type: 'article',
       siteName: 'Monitor de Licitações',
       locale: 'pt_BR',
-    },
+      },
     twitter: {
       card: 'summary_large_image',
       title: data.titulo,
@@ -84,6 +84,8 @@ export default async function SegmentoPage({
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE}/licitacoes-para/${data.slug}` },
     inLanguage: 'pt-BR',
     keywords: data.keywords.join(', '),
+    datePublished: '2025-01-01T00:00:00-03:00',
+    dateModified: new Date().toISOString(),
   }
 
   const faqLd = {
@@ -105,8 +107,6 @@ export default async function SegmentoPage({
       { '@type': 'ListItem', position: 3, name: data.titulo, item: `${BASE}/licitacoes-para/${data.slug}` },
     ],
   }
-
-  const segmentoNome = data.titulo.replace('Licitações para ', '').replace('Licitações de ', '')
 
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">
