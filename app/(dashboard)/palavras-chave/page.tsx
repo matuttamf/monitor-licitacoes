@@ -205,7 +205,7 @@ export default function PalavrasChavePage() {
               </>
             )}
           </div>
-          <a href={statusConta === 'trial' ? '/checkout?plano=profissional' : '/assinar?from=painel'}
+          <a href="/assinar?from=painel"
             className="text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap"
             style={{ background: '#6B0F1A', color: 'white', textDecoration: 'none' }}>
             {statusConta === 'trial' ? 'Assinar agora →' : 'Ver planos →'}
