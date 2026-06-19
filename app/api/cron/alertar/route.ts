@@ -179,8 +179,8 @@ export async function GET(request: Request) {
 
       // Montar lista de licitações — deduplicar por licitacao_id, agrupando keywords
       const licitacoesMap = new Map<string, {
-        id: string; orgao: string; objeto: string; valor_estimado: number | undefined;
-        data_abertura: string | null; url: string; estado: string | null; cidade: string | null;
+        id: string; orgao: string; objeto: string; valor_estimado?: number;
+        data_abertura?: string; url: string; estado?: string; cidade?: string;
         keyword: string; reenvio: boolean; score: number;
       }>()
       for (const a of alertasParaEnviar) {
@@ -196,10 +196,10 @@ export async function GET(request: Request) {
             orgao:          (a.licitacoes as any).orgao,
             objeto:         (a.licitacoes as any).objeto,
             valor_estimado: (a.licitacoes as any).valor_estimado ?? undefined,
-            data_abertura:  (a.licitacoes as any).data_abertura,
+            data_abertura:  (a.licitacoes as any).data_abertura  ?? undefined,
             url:            (a.licitacoes as any).url,
-            estado:         (a.licitacoes as any).estado,
-            cidade:         (a.licitacoes as any).cidade,
+            estado:         (a.licitacoes as any).estado  ?? undefined,
+            cidade:         (a.licitacoes as any).cidade  ?? undefined,
             keyword:        termo,
             reenvio:        !!(a as any)._reenvio,
             score:          (a as any).score ?? 0,
