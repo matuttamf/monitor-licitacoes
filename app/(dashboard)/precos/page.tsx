@@ -287,7 +287,7 @@ export default function PrecosPage() {
           {/* Cards de preço */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             {[
-              { label: 'P25 (base)',      value: fmtBRL(stats.minimo),  sub: 'piso da faixa principal',  destaque: false, cor: '#15803d' },
+              { label: 'P10 (base)',      value: fmtBRL(stats.minimo),  sub: 'piso da faixa principal',  destaque: false, cor: '#15803d' },
               { label: 'Mediana',         value: fmtBRL(stats.mediana), sub: 'referência principal',      destaque: true,  cor: 'var(--vinho)' },
               { label: 'Média P25–P75',   value: fmtBRL(stats.media),   sub: 'sem extremos',              destaque: false, cor: 'var(--preto)' },
               { label: 'P75 (teto)',      value: fmtBRL(stats.maximo),  sub: 'teto da faixa principal',   destaque: false, cor: '#b91c1c' },
@@ -307,7 +307,7 @@ export default function PrecosPage() {
 
           {/* Nota metodológica */}
           <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
-            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor é dividido pela quantidade detectada. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P25</strong> e <strong>P75</strong> mostram o piso e o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
+            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P10</strong> é o piso e <strong>P75</strong> é o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
           </div>
 
           {/* Links verificar preço atual */}
