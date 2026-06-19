@@ -6,12 +6,22 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  // Busca todos os alertas do usuário via profile_id (acumulado histórico,
-  // independente de quais keywords existem hoje)
+  // Busca keywords do usuário para localizar todos os seus alertas históricos
+  const { data: keywords } = await supabase
+    .from('keywords')
+    .select('id')
+    .eq('user_id', user.id)
+
+  if (!keywords?.length) {
+    return NextResponse.json({ totalAlertas: 0, totalLicitacoes: 0, volumeMonitorado: 0 })
+  }
+
+  const keywordIds = keywords.map(k => k.id)
+
   const { data: alertas } = await supabase
     .from('alertas')
     .select('licitacao_id, licitacoes(valor_estimado)')
-    .eq('profile_id', user.id)
+    .in('keyword_id', keywordIds)
 
   if (!alertas?.length) {
     return NextResponse.json({ totalAlertas: 0, totalLicitacoes: 0, volumeMonitorado: 0 })
