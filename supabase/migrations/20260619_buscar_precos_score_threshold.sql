@@ -83,14 +83,14 @@ BEGIN
     FROM resultados_itens r
     WHERE (
       (v_query IS NOT NULL AND r.tsv @@ v_query)
-      OR similarity(upper(r.descricao_item), v_termo) > 0.22
+      OR similarity(upper(r.descricao_item), v_termo) > 0.20
     )
     AND (p_estado IS NULL OR r.estado = p_estado)
     AND r.data_resultado >= v_corte_36
     AND (p_inicio IS NULL OR r.data_resultado >= p_inicio)
     AND (p_fim    IS NULL OR r.data_resultado <= p_fim)
   ) sub
-  WHERE sub.score >= 0.20
+  WHERE sub.score > 0
   ORDER BY
     CASE WHEN sub.data_resultado >= CURRENT_DATE - INTERVAL '24 months' THEN 0 ELSE 1 END,
     sub.score DESC

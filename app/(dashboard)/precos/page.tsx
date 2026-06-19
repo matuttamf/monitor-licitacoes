@@ -441,17 +441,17 @@ export default function PrecosPage() {
 
                           {/* Órgão — mais largo */}
                           <td style={{ padding: '10px 14px', maxWidth: 220, minWidth: 160, verticalAlign: 'top' }}>
-                            <div style={{ color: 'var(--cinza)', wordBreak: 'break-word', lineHeight: 1.35, fontSize: 12 }}>
+                            <div style={{ color: 'var(--preto)', wordBreak: 'break-word', lineHeight: 1.35, fontSize: 12 }}>
                               {r.orgao ?? '—'}
                             </div>
                             {r.municipio && (
-                              <div style={{ fontSize: 10, color: 'var(--cinza)', marginTop: 2, opacity: 0.8 }}>
+                              <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>
                                 {r.municipio}
                               </div>
                             )}
                           </td>
 
-                          <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
+                          <td style={{ padding: '10px 14px', color: 'var(--preto)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
                             {r.estado ?? '—'}
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
@@ -461,7 +461,7 @@ export default function PrecosPage() {
                                 : false
                               return old
                                 ? <strong style={{ color: '#dc2626' }}>{fmtData(r.data_resultado)}</strong>
-                                : <span style={{ color: 'var(--cinza)' }}>{fmtData(r.data_resultado)}</span>
+                                : <span style={{ color: 'var(--preto)' }}>{fmtData(r.data_resultado)}</span>
                             })()}
                           </td>
                           <td style={{ padding: '10px 14px', verticalAlign: 'top', minWidth: 80 }}>
