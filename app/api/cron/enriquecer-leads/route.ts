@@ -112,13 +112,18 @@ export async function GET(req: NextRequest) {
 
     if (!ativa) {
       inativas++
-      await supabase.from('leads').update({
-        razao_social: dados.razao_social,
-        situacao:     situacaoDesc,
-        cnae, cnae_codigo,
-        porte:        dados.porte ?? null,
-        status:       'invalido',
-      }).eq('cnpj', cnpj)
+      // BAIXADA e INAPTA são irreversíveis — remove do banco
+      if (['BAIXADA', 'INAPTA'].includes(situacaoDesc.toUpperCase())) {
+        await supabase.from('leads').delete().eq('cnpj', cnpj)
+      } else {
+        await supabase.from('leads').update({
+          razao_social: dados.razao_social,
+          situacao:     situacaoDesc,
+          cnae, cnae_codigo,
+          porte:        dados.porte ?? null,
+          status:       'invalido',
+        }).eq('cnpj', cnpj)
+      }
       continue
     }
 

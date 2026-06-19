@@ -318,12 +318,18 @@ export async function GET(req: NextRequest) {
     const ativa = dados.situacao_cadastral === 2  // 2 = ATIVA
 
     if (!ativa) {
-      await supabase.from('leads').update({
-        razao_social: dados.razao_social,
-        situacao:     dados.descricao_situacao_cadastral ?? 'INATIVA',
-        cnae, porte:  dados.porte ?? null,
-        status: 'invalido',
-      }).eq('cnpj', cnpj).is('situacao', null)
+      const situacaoDesc = dados.descricao_situacao_cadastral ?? 'INATIVA'
+      // BAIXADA e INAPTA são irreversíveis — remove do banco
+      if (['BAIXADA', 'INAPTA'].includes(situacaoDesc.toUpperCase())) {
+        await supabase.from('leads').delete().eq('cnpj', cnpj)
+      } else {
+        await supabase.from('leads').update({
+          razao_social: dados.razao_social,
+          situacao:     situacaoDesc,
+          cnae, porte:  dados.porte ?? null,
+          status: 'invalido',
+        }).eq('cnpj', cnpj).is('situacao', null)
+      }
       continue
     }
 
