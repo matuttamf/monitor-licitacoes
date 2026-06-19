@@ -147,7 +147,7 @@ export default function TermosPage() {
               <Tabela colunas={['Tema', 'Condição']}>
                 <tr><Td>Periodicidade</Td><Td>Cobrança única correspondente a 12 meses de acesso, processada no ato da contratação</Td></tr>
                 <tr><Td>Preço</Td><Td>O valor exibido por mês é referencial — a cobrança é o equivalente anual em parcela única. O preço anual contratado é fixo durante todo o ciclo de 12 meses</Td></tr>
-                <tr><Td>Renovação</Td><Td>Automática após 12 meses, com cobrança do valor anual vigente na data da renovação. O usuário será notificado por e-mail com 30 dias de antecedência</Td></tr>
+                <tr><Td>Renovação</Td><Td>Automática após 12 meses, com cobrança do valor anual vigente na data da renovação. O usuário pode cancelar a qualquer momento antes da data de renovação pelo painel ou por e-mail para contato@monitordelicitacoes.com.br</Td></tr>
                 <tr><Td>Acesso</Td><Td>Permanece ativo durante todo o período de 12 meses, inclusive após eventual pedido de cancelamento antecipado</Td></tr>
                 <tr><Td>Upgrade de plano</Td><Td>Possível a qualquer momento. É cobrado imediatamente o valor proporcional aos dias restantes do ciclo anual em curso (diferença entre os planos). A partir do próximo ciclo anual, a cobrança passa a ser o valor integral do novo plano</Td></tr>
                 <tr><Td>Downgrade de plano</Td><Td>Possível a qualquer momento. O usuário mantém os benefícios do plano atual até o fim do ciclo anual já pago. O novo valor e os novos limites são aplicados no ciclo seguinte</Td></tr>
