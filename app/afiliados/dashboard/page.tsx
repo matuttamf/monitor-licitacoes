@@ -9,6 +9,7 @@ type Pagamento = {
   valor: number
   status: 'pendente' | 'pago'
   pago_em: string | null
+  tipo_gatilho: string | null
 }
 
 type Metricas = {
@@ -146,18 +147,30 @@ export default function AfiliadorDashboard() {
           )}
         </div>
 
-        {/* Cards de métricas */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 24 }}>
+        {/* Cards de métricas — linha 1: tráfego */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 14 }}>
           {[
             { label: 'Cliques', valor: dados.cliques.toLocaleString('pt-BR'), sub: 'no seu link' },
             { label: 'Conversões', valor: dados.conversoes.toLocaleString('pt-BR'), sub: 'assinantes via seu link' },
-            { label: 'Taxa', valor: `${taxaConversao}%`, sub: 'cliques → assinantes' },
-            { label: 'Comissão pendente', valor: fmtMoeda(dados.comissao_pendente), sub: descricaoComissao },
-            { label: 'Total recebido', valor: fmtMoeda(dados.total_pago), sub: 'comissões pagas' },
+            { label: 'Taxa de conversão', valor: taxaConversao === '—' ? '—' : `${taxaConversao}%`, sub: 'cliques que viraram assinantes' },
           ].map(c => (
             <div key={c.label} style={{ background: 'white', borderRadius: 14, border: '1px solid #E8E4DC', padding: '18px 20px' }}>
               <div style={{ fontSize: 12, color: '#9AA0A6', fontWeight: 600, marginBottom: 6 }}>{c.label}</div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1C', marginBottom: 3 }}>{c.valor}</div>
+              <div style={{ fontSize: 11, color: '#9AA0A6' }}>{c.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Cards de métricas — linha 2: financeiro */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 24 }}>
+          {[
+            { label: 'Comissão a receber', valor: fmtMoeda(dados.comissao_pendente), sub: descricaoComissao, destaque: dados.comissao_pendente > 0 },
+            { label: 'Total recebido', valor: fmtMoeda(dados.total_pago), sub: 'comissões já pagas' },
+          ].map(c => (
+            <div key={c.label} style={{ background: 'white', borderRadius: 14, border: `1px solid ${c.destaque ? 'rgba(107,15,26,0.2)' : '#E8E4DC'}`, padding: '18px 20px' }}>
+              <div style={{ fontSize: 12, color: '#9AA0A6', fontWeight: 600, marginBottom: 6 }}>{c.label}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, color: c.destaque ? '#6B0F1A' : '#1A1A1C', marginBottom: 3 }}>{c.valor}</div>
               <div style={{ fontSize: 11, color: '#9AA0A6' }}>{c.sub}</div>
             </div>
           ))}
@@ -177,7 +190,7 @@ export default function AfiliadorDashboard() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#FAF6F0' }}>
-                  {['Mês', 'Valor', 'Status', 'Pago em'].map(h => (
+                  {['Mês', 'Plano', 'Valor', 'Status', 'Pago em'].map(h => (
                     <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#9AA0A6' }}>{h}</th>
                   ))}
                 </tr>
@@ -186,6 +199,9 @@ export default function AfiliadorDashboard() {
                 {dados.pagamentos.map(p => (
                   <tr key={p.mes_ref} style={{ borderTop: '1px solid #E8E4DC' }}>
                     <td style={{ padding: '14px 20px', fontSize: 14, fontWeight: 600, color: '#1A1A1C' }}>{fmtMes(p.mes_ref)}</td>
+                    <td style={{ padding: '14px 20px', fontSize: 13, color: '#6B7280' }}>
+                      {p.tipo_gatilho ? p.tipo_gatilho.charAt(0).toUpperCase() + p.tipo_gatilho.slice(1) : '—'}
+                    </td>
                     <td style={{ padding: '14px 20px', fontSize: 14, color: '#1A1A1C' }}>{fmtMoeda(p.valor)}</td>
                     <td style={{ padding: '14px 20px' }}>
                       <span style={{
