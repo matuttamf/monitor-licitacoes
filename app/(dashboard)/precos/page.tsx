@@ -74,13 +74,13 @@ function pncpLink(r: ResultadoItem): string | null {
 
 function ScoreBar({ score }: { score: number }) {
   const pct = Math.min(100, Math.round(score * 100))
-  const color = pct >= 60 ? '#16a34a' : pct >= 35 ? '#ca8a04' : '#9ca3af'
+  const color = pct >= 60 ? '#15803d' : pct >= 35 ? '#b45309' : '#6b7280'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 70 }}>
-      <div style={{ flex: 1, height: 4, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ flex: 1, height: 6, background: '#d1d5db', borderRadius: 4, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4 }} />
       </div>
-      <span style={{ fontSize: 11, color: '#9ca3af', width: 28, textAlign: 'right' }}>{pct}%</span>
+      <span style={{ fontSize: 12, color, fontWeight: 700, width: 32, textAlign: 'right' }}>{pct}%</span>
     </div>
   )
 }
