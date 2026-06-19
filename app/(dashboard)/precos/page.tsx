@@ -307,7 +307,7 @@ export default function PrecosPage() {
 
           {/* Nota metodológica */}
           <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
-            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. Contratos com valor muito acima ou abaixo da faixa típica são excluídos automaticamente do cálculo. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P10</strong> é o piso e <strong>P75</strong> é o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
+            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. Quando a descrição indica quantidade (ex: &quot;aquisição de 50 notebooks&quot;), o valor é dividido pela quantidade detectada. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P10</strong> é o piso e <strong>P75</strong> é o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
           </div>
 
           {/* Links verificar preço atual */}
