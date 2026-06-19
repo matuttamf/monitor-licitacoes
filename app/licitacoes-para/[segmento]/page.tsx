@@ -46,12 +46,19 @@ export async function generateMetadata({
     description: data.descricaoMeta,
     keywords: data.keywords,
     alternates: { canonical: `${BASE}/licitacoes-para/${data.slug}` },
+    robots: { index: true, follow: true },
     openGraph: {
       title: data.titulo,
       description: data.descricaoMeta,
       url: `${BASE}/licitacoes-para/${data.slug}`,
       type: 'article',
       siteName: 'Monitor de Licitações',
+      locale: 'pt_BR',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: data.titulo,
+      description: data.descricaoMeta,
     },
   }
 }
@@ -89,10 +96,23 @@ export default async function SegmentoPage({
     })),
   }
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: BASE },
+      { '@type': 'ListItem', position: 2, name: 'Licitações por Segmento', item: `${BASE}/licitacoes-para` },
+      { '@type': 'ListItem', position: 3, name: data.titulo, item: `${BASE}/licitacoes-para/${data.slug}` },
+    ],
+  }
+
+  const segmentoNome = data.titulo.replace('Licitações para ', '').replace('Licitações de ', '')
+
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ldJson) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[60px] h-[64px] bg-[rgba(255,255,255,0.97)] backdrop-blur-xl border-b border-[#F0EDE8]">
@@ -229,6 +249,36 @@ export default async function SegmentoPage({
               </p>
             </div>
           )}
+
+          {/* Seção emocional — genérica, aparece em todos os segmentos */}
+          <div className="my-10 p-7 md:p-9 rounded-2xl border border-[#F0EDE8] bg-[#FAF6F0]">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B0F1A] mb-3">Por que isso importa</p>
+            <h2 className="text-[18px] md:text-[22px] font-black text-[#1A1A1C] leading-snug mb-4">
+              O governo gasta mais de R$ 700 bilhões por ano.<br className="hidden md:block" /> A maioria das empresas nem sabe que existe edital para o que vende.
+            </h2>
+            <p className="text-sm text-[#4a4a4d] leading-relaxed mb-4">
+              Diferente do mercado privado — onde contratos dependem de relacionamento, indicação ou sorte —
+              licitações são públicas, previsíveis e pagam em dia. Qualquer empresa com CNPJ pode participar.
+              O que falta, quase sempre, é saber que o edital foi publicado.
+            </p>
+            <p className="text-sm text-[#4a4a4d] leading-relaxed mb-6">
+              Empresas que monitoram ativamente licitações do seu segmento constroem uma carteira de clientes
+              estável, com contratos de 12 a 60 meses e pagamento garantido pelo erário público.
+              Não é um atalho — é um canal de vendas que seus concorrentes ainda subestimam.
+            </p>
+            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-[#E8E4DC]">
+              {[
+                { valor: 'R$ 700 bi', label: 'compras públicas/ano' },
+                { valor: '70%', label: 'editais sem disputa acirrada' },
+                { valor: '30 dias', label:'prazo médio de pagamento' },
+              ].map(item => (
+                <div key={item.label} className="text-center">
+                  <div className="text-lg md:text-xl font-black text-[#6B0F1A]">{item.valor}</div>
+                  <div className="text-[11px] text-[#9AA0A6] leading-tight mt-0.5">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* CTA inline */}
           <div className="my-10 p-6 md:p-8 bg-[#6B0F1A] rounded-2xl text-center">
