@@ -9,18 +9,19 @@ export default function AtivarAfiliado() {
   const router = useRouter()
 
   const [etapa, setEtapa] = useState<'verificando' | 'definir_senha' | 'erro' | 'sucesso'>('verificando')
-  const [dados, setDados] = useState<{ nome: string; email: string } | null>(null)
+  const [dados, setDados] = useState<{ nome: string; email: string; temConta?: boolean } | null>(null)
   const [senha, setSenha] = useState('')
   const [confirmar, setConfirmar] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const [contaExistente, setContaExistente] = useState(false)
 
   useEffect(() => {
     async function verificar() {
       const res = await fetch(`/api/afiliados/ativar?token=${token}`)
       const data = await res.json()
       if (!res.ok) { setEtapa('erro'); setErro(data.error ?? 'Link inválido ou expirado.'); return }
-      setDados({ nome: data.nome, email: data.email })
+      setDados({ nome: data.nome, email: data.email, temConta: data.temConta })
       setEtapa('definir_senha')
     }
     verificar()
@@ -28,8 +29,10 @@ export default function AtivarAfiliado() {
 
   async function handleAtivacao(e: React.FormEvent) {
     e.preventDefault()
-    if (senha.length < 8) { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
-    if (senha !== confirmar) { setErro('As senhas não conferem.'); return }
+    if (!dados?.temConta) {
+      if (senha.length < 8) { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
+      if (senha !== confirmar) { setErro('As senhas não conferem.'); return }
+    }
     setErro('')
     setCarregando(true)
 
@@ -43,11 +46,18 @@ export default function AtivarAfiliado() {
 
     if (!res.ok) { setErro(data.error ?? 'Erro ao ativar conta.'); setCarregando(false); return }
 
-    // Faz login automático
-    const supabase = createClient()
-    await supabase.auth.signInWithPassword({ email: dados!.email, password: senha })
+    setContaExistente(!!data.contaExistente)
     setEtapa('sucesso')
-    setTimeout(() => router.push('/afiliados/dashboard'), 1500)
+
+    if (data.contaExistente) {
+      // Usuário já tinha conta — só redireciona para login (senha não foi alterada)
+      setTimeout(() => router.push('/login'), 2000)
+    } else {
+      // Nova conta criada — faz login automático com a senha definida
+      const supabase = createClient()
+      await supabase.auth.signInWithPassword({ email: dados!.email, password: senha })
+      setTimeout(() => router.push('/afiliados/dashboard'), 1500)
+    }
   }
 
   return (
@@ -87,7 +97,11 @@ export default function AtivarAfiliado() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
               <h2 style={{ color: '#1A1A1C', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Conta ativada!</h2>
-              <p style={{ color: '#9AA0A6', fontSize: 14 }}>Redirecionando para o seu painel…</p>
+              <p style={{ color: '#9AA0A6', fontSize: 14 }}>
+                {contaExistente
+                  ? 'Sua conta existente foi vinculada ao programa de parceiros. Redirecionando para o login…'
+                  : 'Redirecionando para o seu painel…'}
+              </p>
             </div>
           )}
 
@@ -101,22 +115,30 @@ export default function AtivarAfiliado() {
               <p style={{ color: '#9AA0A6', fontSize: 13, marginBottom: 24, fontStyle: 'italic' }}>{dados.email}</p>
 
               <form onSubmit={handleAtivacao} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1C', display: 'block', marginBottom: 6 }}>Senha</label>
-                  <input
-                    type="password" value={senha} onChange={e => setSenha(e.target.value)}
-                    placeholder="Mínimo 8 caracteres" required minLength={8}
-                    style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1C', display: 'block', marginBottom: 6 }}>Confirmar senha</label>
-                  <input
-                    type="password" value={confirmar} onChange={e => setConfirmar(e.target.value)}
-                    placeholder="Repita a senha" required
-                    style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
-                  />
-                </div>
+                {dados.temConta ? (
+                  <div style={{ background: '#FAF6F0', border: '1px solid #E8E4DC', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#4a4a4d', lineHeight: 1.5 }}>
+                    Você já tem uma conta no Monitor de Licitações. Clique em confirmar para vincular seu acesso de parceiro à conta existente.
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1C', display: 'block', marginBottom: 6 }}>Senha</label>
+                      <input
+                        type="password" value={senha} onChange={e => setSenha(e.target.value)}
+                        placeholder="Mínimo 8 caracteres" required minLength={8}
+                        style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1C', display: 'block', marginBottom: 6 }}>Confirmar senha</label>
+                      <input
+                        type="password" value={confirmar} onChange={e => setConfirmar(e.target.value)}
+                        placeholder="Repita a senha" required
+                        style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E8E4DC', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {erro && <p style={{ fontSize: 13, color: '#dc2626', margin: 0 }}>{erro}</p>}
 
@@ -125,7 +147,7 @@ export default function AtivarAfiliado() {
                   padding: '13px', fontWeight: 700, fontSize: 15, cursor: carregando ? 'not-allowed' : 'pointer',
                   opacity: carregando ? 0.7 : 1, marginTop: 4,
                 }}>
-                  {carregando ? 'Ativando…' : 'Ativar minha conta →'}
+                  {carregando ? 'Ativando…' : dados.temConta ? 'Confirmar vinculação →' : 'Ativar minha conta →'}
                 </button>
               </form>
             </>

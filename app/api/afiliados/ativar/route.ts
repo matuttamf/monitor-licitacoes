@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Este link expirou. Solicite um novo convite.' }, { status: 410 })
   }
 
-  return NextResponse.json({ nome: afiliado.nome, email: afiliado.email })
+  // Verifica se o e-mail já tem conta Supabase (para adaptar o formulário no frontend)
+  const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+  const temConta = users.some(u => u.email === afiliado.email)
+
+  return NextResponse.json({ nome: afiliado.nome, email: afiliado.email, temConta })
 }
 
 // POST — cria conta Supabase e ativa o afiliado
@@ -59,24 +63,35 @@ export async function POST(request: NextRequest) {
     user_metadata:  { nome: afiliado.nome, tipo: 'afiliado' },
   })
 
+  let userId: string
+
   if (authError) {
     const jaExiste = authError.message.includes('already been registered')
-    if (jaExiste) return NextResponse.json({ error: 'Este e-mail já possui uma conta.' }, { status: 409 })
-    return NextResponse.json({ error: authError.message }, { status: 500 })
+    if (!jaExiste) return NextResponse.json({ error: authError.message }, { status: 500 })
+
+    // E-mail já tem conta — localiza o user_id existente e vincula ao afiliado
+    const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+    const existing = users.find(u => u.email === afiliado.email)
+    if (!existing) return NextResponse.json({ error: 'Conta existente não encontrada.' }, { status: 500 })
+    userId = existing.id
+  } else {
+    userId = authData.user.id
   }
 
   // Vincula user_id ao afiliado e ativa
   const { error: updateError } = await admin
     .from('afiliados')
     .update({
-      user_id:        authData.user.id,
-      status:         'ativo',
-      token_convite:  null,
+      user_id:         userId,
+      status:          'ativo',
+      token_convite:   null,
       token_expira_em: null,
     })
     .eq('id', afiliado.id)
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 
-  return NextResponse.json({ ok: true })
+  // Indica se era conta já existente (frontend não tenta login com senha nova)
+  const contaExistente = !!authError
+  return NextResponse.json({ ok: true, contaExistente })
 }
