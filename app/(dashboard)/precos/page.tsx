@@ -307,7 +307,7 @@ export default function PrecosPage() {
 
           {/* Nota metodológica */}
           <div style={{ marginTop: 10, fontSize: 11, color: 'var(--cinza)', lineHeight: 1.5 }}>
-            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. A <strong>Média P25–P75</strong> é a média dos contratos entre o 1º e 3º quartil (exclui os 25% mais baratos e 25% mais caros). <strong>P10</strong> é o piso e <strong>P75</strong> é o teto da faixa principal. A <strong>mediana</strong> é a referência principal.
+            Estatísticas calculadas sobre {stats.total} contrato{Number(stats.total) !== 1 ? 's' : ''} após remover outliers extremos. <strong>P10</strong> é o piso e <strong>P75</strong> é o teto da faixa principal. A <strong>mediana</strong> é a referência principal. Contratos com mais de 36 meses são excluídos automaticamente.
           </div>
 
           {/* Links verificar preço atual */}
@@ -449,8 +449,15 @@ export default function PrecosPage() {
                           <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
                             {r.estado ?? '—'}
                           </td>
-                          <td style={{ padding: '10px 14px', color: 'var(--cinza)', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
-                            {fmtData(r.data_resultado)}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', verticalAlign: 'top', fontSize: 12 }}>
+                            {(() => {
+                              const old = r.data_resultado
+                                ? new Date(r.data_resultado) < new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+                                : false
+                              return old
+                                ? <strong style={{ color: '#dc2626' }}>{fmtData(r.data_resultado)}</strong>
+                                : <span style={{ color: 'var(--cinza)' }}>{fmtData(r.data_resultado)}</span>
+                            })()}
                           </td>
                           <td style={{ padding: '10px 14px', verticalAlign: 'top', minWidth: 80 }}>
                             <ScoreBar score={r.score} />
