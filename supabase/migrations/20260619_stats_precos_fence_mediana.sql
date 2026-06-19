@@ -53,9 +53,14 @@ BEGIN
     AND (p_inicio IS NULL OR r.data_resultado >= p_inicio)
     AND (p_fim    IS NULL OR r.data_resultado <= p_fim)
   ),
-  -- 1ª camada: filtro por score mínimo
+  -- 1ª camada: top 100 por relevância (evita que resultados de baixo score
+  -- com preços muito díspares distorçam os percentis)
   filtrado AS (
-    SELECT valor_unitario FROM scored WHERE score >= 0.15
+    SELECT valor_unitario
+    FROM scored
+    WHERE score >= 0.15
+    ORDER BY score DESC
+    LIMIT 100
   ),
   -- mediana de referência para a cerca de outliers
   ref AS (
