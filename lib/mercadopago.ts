@@ -38,7 +38,7 @@ export async function criarPlanoMP(planoId: string): Promise<string> {
 export async function criarCheckoutAssinatura(
   planoId: string,
   userId: string,
-  email: string,
+  _email: string,
   precoFinal?: number,
   descontoPercentual?: number,
   descontoMeses?: number,
@@ -70,7 +70,7 @@ export async function criarCheckoutAssinatura(
     body: JSON.stringify({
       reason: `Monitor de Licitações - ${plano.nome}${razaoDesc}${razaoPeriodo}`,
       external_reference: extRef,
-      payer_email: email,
+
       auto_recurring: {
         frequency:          periodo === 'anual' ? 12 : 1,
         frequency_type:     'months',
