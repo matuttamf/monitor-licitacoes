@@ -8,7 +8,6 @@ export const metadata = {
 }
 
 const EMPRESA_NOME  = 'Matutta Soluções Digitais'
-const EMPRESA_CNPJ  = 'CNPJ em registro'
 const EMPRESA_SEDE  = 'Brasil'
 const CONTATO_EMAIL = 'privacidade@monitordelicitacoes.com.br'
 const CONTATO_SITE  = 'https://monitordelicitacoes.com.br'
@@ -73,7 +72,6 @@ export default function PrivacidadePage() {
             <Section titulo="1. Identificação do controlador de dados">
               <InfoBox>
                 <InfoRow label="Empresa">{EMPRESA_NOME}</InfoRow>
-                <InfoRow label="CNPJ">{EMPRESA_CNPJ}</InfoRow>
                 <InfoRow label="Sede">{EMPRESA_SEDE}</InfoRow>
                 <InfoRow label="Serviço">Monitor de Licitações (monitordelicitacoes.com.br)</InfoRow>
                 <InfoRow label="Contato DPO">{CONTATO_EMAIL}</InfoRow>
