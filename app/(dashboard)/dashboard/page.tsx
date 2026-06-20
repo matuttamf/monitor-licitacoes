@@ -643,10 +643,10 @@ export default function DashboardPage() {
                     {stat.label}
                   </span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-black leading-none tabular-nums" style={{ color: stat.destaque ? '#C9A65A' : '#f0e6d3' }}>
+                <p className="text-lg sm:text-2xl font-black leading-none tabular-nums break-all" style={{ color: stat.destaque ? '#C9A65A' : '#f0e6d3' }}>
                   {stat.valor}
                 </p>
-                <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{stat.sub}</p>
+                <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>{stat.sub}</p>
               </div>
             ))}
           </div>
