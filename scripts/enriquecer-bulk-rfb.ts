@@ -40,7 +40,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSessio
 const cliArgs  = process.argv.slice(2)
 const IDX_START  = Number(cliArgs[0] ?? 0)
 const IDX_END    = Number(cliArgs[1] ?? 9)
-const BATCH_SIZE = 5000
+const BATCH_SIZE = 1000
 const MAX_ROWS   = parseInt(process.env.MAX_ROWS ?? '0') || 0
 
 const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/rf-cnpj`
