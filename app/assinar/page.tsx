@@ -203,14 +203,25 @@ function AssinarConteudo() {
               ))}
             </div>
 
-            <button
-              onClick={() => handleAssinar(p.id)}
-              className={`w-full py-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer ${
-                p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
-              }`}
-            >
-              Assinar agora →
-            </button>
+            {p.id === 'empresarial' && periodo === 'anual' ? (
+              <a
+                href="mailto:contato@monitordelicitacoes.com.br?subject=Plano%20Empresarial%20Anual"
+                className={`w-full py-3.5 rounded-xl text-[15px] font-bold text-center block no-underline ${
+                  p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
+                }`}
+              >
+                Entre em contato →
+              </a>
+            ) : (
+              <button
+                onClick={() => handleAssinar(p.id)}
+                className={`w-full py-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer ${
+                  p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
+                }`}
+              >
+                Assinar agora →
+              </button>
+            )}
           </div>
         ))}
       </div>
