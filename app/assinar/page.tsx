@@ -86,6 +86,13 @@ function AssinarConteudo() {
   return (
     <div className="min-h-screen bg-[#FAF6F0] font-sans">
 
+      {erro && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-sm font-medium px-4 py-3 text-center shadow-lg">
+          {erro}
+          <button onClick={() => setErro('')} className="ml-3 underline text-white/80 text-xs">fechar</button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-10 py-4 bg-[rgba(250,246,240,0.95)] border-b border-[rgba(201,166,90,0.15)] backdrop-blur-xl">
         <Link href="/" className="flex items-center gap-2.5 no-underline">
