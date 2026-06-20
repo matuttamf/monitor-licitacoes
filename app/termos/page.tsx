@@ -8,7 +8,6 @@ export const metadata = {
 }
 
 const EMPRESA_NOME        = 'Matutta Soluções Digitais'
-const EMPRESA_CNPJ        = 'CNPJ em registro'
 const EMPRESA_SEDE_CIDADE = 'Belo Horizonte/MG'
 const CONTATO_EMAIL       = 'contato@monitordelicitacoes.com.br'
 
@@ -75,7 +74,6 @@ export default function TermosPage() {
             <Section titulo="1. Identificação das partes">
               <InfoBox>
                 <InfoRow label="Prestador">Monitor de Licitações — plataforma operada por {EMPRESA_NOME}</InfoRow>
-                <InfoRow label="CNPJ">{EMPRESA_CNPJ}</InfoRow>
                 <InfoRow label="Contato">{CONTATO_EMAIL}</InfoRow>
                 <InfoRow label="Usuário">Pessoa física ou jurídica que aceita estes termos ao criar uma conta</InfoRow>
               </InfoBox>
