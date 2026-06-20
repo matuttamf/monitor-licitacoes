@@ -226,12 +226,6 @@ function AssinarConteudo() {
         ))}
       </div>
 
-      {erro && (
-        <div className="max-w-[600px] mx-auto -mt-10 mb-10 px-6">
-          <div className="bg-[rgba(185,28,28,0.08)] border border-[rgba(185,28,28,0.2)] rounded-xl px-5 py-3.5 text-sm text-[#b91c1c] text-center">{erro}</div>
-        </div>
-      )}
-
       {/* Depoimentos */}
       <div className="bg-white border-t border-[#D5D2C8] px-6 md:px-10 py-16">
         <p className="text-center text-[11px] font-bold tracking-[0.08em] uppercase text-[#9AA0A6] mb-10">Por que empresas escolhem o Monitor</p>
