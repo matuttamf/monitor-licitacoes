@@ -104,6 +104,10 @@ export async function criarCheckoutAssinatura(
   })
 
   const data = await res.json()
+  if (!data.init_point) {
+    console.error('[MP] criarCheckoutAssinatura falhou:', JSON.stringify(data))
+    throw new Error(data.message ?? 'Erro ao criar checkout no MercadoPago')
+  }
   return data.init_point
 }
 
