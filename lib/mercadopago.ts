@@ -9,49 +9,6 @@ const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
   : process.env.MP_ACCESS_TOKEN_TEST!
 
-// IDs dos planos pré-criados no MP (sem restrição de payer_email)
-function getPlanId(planoId: string, periodo: 'mensal' | 'anual'): string | undefined {
-  const key = `MP_PLAN_${planoId.toUpperCase()}_${periodo.toUpperCase()}` as keyof NodeJS.ProcessEnv
-  return process.env[key] as string | undefined
-}
-
-async function criarPlanoMPInterno(planoId: string, periodo: 'mensal' | 'anual'): Promise<string> {
-  const plano = PLANOS[planoId as keyof typeof PLANOS]
-  const valor = periodo === 'anual' ? plano.preco_anual : plano.preco
-  const freq  = periodo === 'anual' ? 12 : 1
-
-  const res = await fetch('https://api.mercadopago.com/preapproval_plan', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ACCESS_TOKEN}` },
-    body: JSON.stringify({
-      reason: `Monitor de Licitações - ${plano.nome}${periodo === 'anual' ? ' Anual' : ''}`,
-      auto_recurring: { frequency: freq, frequency_type: 'months', transaction_amount: valor, currency_id: 'BRL' },
-      back_url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso`,
-      status: 'active',
-    }),
-  })
-  const data = await res.json()
-  if (!data.id) throw new Error(`MP plan error: ${JSON.stringify(data)}`)
-  return data.id
-}
-
-/** Cria todos os planos MP de uma vez (rodar uma única vez via /api/admin/criar-planos-mp)
- *  Planos acima de R$4000 (limite MP) são ignorados — usam payer_email como fallback */
-export async function criarTodosPlanosMP(): Promise<Record<string, string>> {
-  const planos = Object.keys(PLANOS) as (keyof typeof PLANOS)[]
-  const periodos: ('mensal' | 'anual')[] = ['mensal', 'anual']
-  const ids: Record<string, string> = {}
-
-  for (const p of planos) {
-    for (const periodo of periodos) {
-      const valor = periodo === 'anual' ? PLANOS[p].preco_anual : PLANOS[p].preco
-      if (valor > 4000) continue // limite MP por transação
-      const key = `MP_PLAN_${p.toUpperCase()}_${periodo.toUpperCase()}`
-      ids[key] = await criarPlanoMPInterno(p, periodo)
-    }
-  }
-  return ids
-}
 
 export async function criarCheckoutAssinatura(
   planoId: string,
