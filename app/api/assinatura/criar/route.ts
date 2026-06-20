@@ -134,10 +134,15 @@ export async function POST(request: Request) {
   }
 
   // ── Nova assinatura (trial, expirado, troca de período) ───────────────────────
-  const checkoutUrl = await criarCheckoutAssinatura(
-    plano, user.id, user.email!,
-    precoFinal, descontoPercentual, descontoMeses, periodoValido,
-  )
-
-  return NextResponse.json({ url: checkoutUrl })
+  try {
+    const checkoutUrl = await criarCheckoutAssinatura(
+      plano, user.id, user.email!,
+      precoFinal, descontoPercentual, descontoMeses, periodoValido,
+    )
+    return NextResponse.json({ url: checkoutUrl })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[assinatura/criar]', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }

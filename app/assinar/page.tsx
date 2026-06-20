@@ -62,15 +62,14 @@ function AssinarConteudo() {
         headers:     { 'Content-Type': 'application/json' },
         body:        JSON.stringify({ plano: planoId, periodo }),
       })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json()
-        if (data.error === 'Não autorizado') {
+        if (res.status === 401 || data.error === 'Não autorizado') {
           window.location.href = `/checkout?plano=${planoId}&periodo=${periodo}`
           return
         }
-        throw new Error(data.error || 'Erro ao criar assinatura')
+        throw new Error(data.error || `Erro ${res.status} ao criar assinatura`)
       }
-      const data = await res.json()
       if (data.cadastroIncompleto) {
         window.location.href = `/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${planoId}&periodo=${periodo}`)}`
         return
