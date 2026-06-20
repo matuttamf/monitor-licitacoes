@@ -48,49 +48,14 @@ const PLANOS = [
 function AssinarConteudo() {
   const searchParams = useSearchParams()
   const veioDoPainel = searchParams.get('from') === 'painel'
-  const [loadingPlano, setLoadingPlano] = useState<string | null>(null)
-  const [erro, setErro] = useState('')
   const [periodo, setPeriodo] = useState<'mensal' | 'anual'>('mensal')
 
-  async function handleAssinar(planoId: string) {
-    setLoadingPlano(planoId)
-    setErro('')
-    try {
-      const res = await fetch('/api/assinatura/criar', {
-        method:      'POST',
-        credentials: 'same-origin',
-        headers:     { 'Content-Type': 'application/json' },
-        body:        JSON.stringify({ plano: planoId, periodo }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        if (res.status === 401 || data.error === 'Não autorizado') {
-          window.location.href = `/checkout?plano=${planoId}&periodo=${periodo}`
-          return
-        }
-        throw new Error(data.error || `Erro ${res.status} ao criar assinatura`)
-      }
-      if (data.cadastroIncompleto) {
-        window.location.href = `/completar-cadastro?next=${encodeURIComponent(`/checkout?plano=${planoId}&periodo=${periodo}`)}`
-        return
-      }
-      window.location.href = data.url
-    } catch (e: unknown) {
-      setErro(e instanceof Error ? e.message : 'Erro ao processar. Tente novamente.')
-    } finally {
-      setLoadingPlano(null)
-    }
+  function handleAssinar(planoId: string) {
+    window.location.href = `/checkout?plano=${planoId}&periodo=${periodo}`
   }
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] font-sans">
-
-      {erro && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-sm font-medium px-4 py-3 text-center shadow-lg">
-          {erro}
-          <button onClick={() => setErro('')} className="ml-3 underline text-white/80 text-xs">fechar</button>
-        </div>
-      )}
 
       {/* Header */}
       <header className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-10 py-4 bg-[rgba(250,246,240,0.95)] border-b border-[rgba(201,166,90,0.15)] backdrop-blur-xl">
@@ -240,12 +205,11 @@ function AssinarConteudo() {
 
             <button
               onClick={() => handleAssinar(p.id)}
-              disabled={loadingPlano === p.id}
-              className={`w-full py-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer transition-opacity ${
+              className={`w-full py-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer ${
                 p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
-              } ${loadingPlano === p.id ? 'opacity-70 cursor-not-allowed' : 'opacity-100'}`}
+              }`}
             >
-              {loadingPlano === p.id ? 'Aguarde...' : 'Assinar agora →'}
+              Assinar agora →
             </button>
           </div>
         ))}
