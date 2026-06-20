@@ -1,9 +1,9 @@
-name: Pipeline Leads Cron 1 (arquivo 0, 12h)
+﻿name: Pipeline Leads Cron 1 (arquivo 0, 12h)
 
 # Horários BRT (UTC-3): 21h e 9h
 on:
   schedule:
-    - cron: '0 0,12 * * *'   # 0h e 12h UTC = 21h e 9h BRT
+    - cron: '0 2 1,4,7,10,13,16,19,22,25,28,31 * *'   # 23h BRT dias 1,4,7... (ciclo 3 dias)
   workflow_dispatch: {}
 
 jobs:

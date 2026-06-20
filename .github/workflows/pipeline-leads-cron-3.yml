@@ -1,9 +1,9 @@
-name: Pipeline Leads Cron 3 (arquivos 6-9, 12h)
+﻿name: Pipeline Leads Cron 3 (arquivos 6-9, 12h)
 
 # Horários BRT (UTC-3): 6h e 18h (offset 3h em relação ao cron 2)
 on:
   schedule:
-    - cron: '0 9,21 * * *'   # 9h e 21h UTC = 6h e 18h BRT (arquivos 6-9)
+    - cron: '0 2 3,6,9,12,15,18,21,24,27,30 * *'   # 23h BRT dias 3,6,9... (ciclo 3 dias)
   workflow_dispatch: {}
 
 jobs:
