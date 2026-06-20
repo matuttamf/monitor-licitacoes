@@ -35,7 +35,8 @@ async function criarPlanoMPInterno(planoId: string, periodo: 'mensal' | 'anual')
   return data.id
 }
 
-/** Cria todos os planos MP de uma vez (rodar uma única vez via /api/admin/criar-planos-mp) */
+/** Cria todos os planos MP de uma vez (rodar uma única vez via /api/admin/criar-planos-mp)
+ *  Planos acima de R$4000 (limite MP) são ignorados — usam payer_email como fallback */
 export async function criarTodosPlanosMP(): Promise<Record<string, string>> {
   const planos = Object.keys(PLANOS) as (keyof typeof PLANOS)[]
   const periodos: ('mensal' | 'anual')[] = ['mensal', 'anual']
@@ -43,6 +44,8 @@ export async function criarTodosPlanosMP(): Promise<Record<string, string>> {
 
   for (const p of planos) {
     for (const periodo of periodos) {
+      const valor = periodo === 'anual' ? PLANOS[p].preco_anual : PLANOS[p].preco
+      if (valor > 4000) continue // limite MP por transação
       const key = `MP_PLAN_${p.toUpperCase()}_${periodo.toUpperCase()}`
       ids[key] = await criarPlanoMPInterno(p, periodo)
     }
