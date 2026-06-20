@@ -683,7 +683,7 @@ async function inserirLeads(leads: Map<string, LeadRFB>, empresas: Map<string, {
 
   // Atualiza leads existentes via RPC com arrays — 7 queries totais em vez de 7×N
   // Lotes de 5000 para não estourar o limite de payload do Supabase
-  const LOTE = 5000
+  const LOTE = 1000
   let atualizados = 0
   for (let i = 0; i < rows.length; i += LOTE) {
     const lote = rows.slice(i, i + LOTE)
