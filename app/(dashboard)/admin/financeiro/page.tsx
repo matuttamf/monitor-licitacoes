@@ -152,6 +152,8 @@ export default function FinanceiroPage() {
   const [sincronizando, setSincronizando] = useState(false)
   const [syncId, setSyncId]           = useState<string | null>(null)
   const [syncResultado, setSyncResultado] = useState<SyncResultado[] | null>(null)
+  const [deletandoPlanos, setDeletandoPlanos] = useState(false)
+  const [deletePlanoMsg, setDeletePlanoMsg]   = useState('')
 
   // Despesas
   const agora = new Date()
@@ -473,6 +475,27 @@ ${blocoDespesas}
               PDF Ano
             </button>
           </>)}
+          <button
+            onClick={async () => {
+              if (!confirm('Cancelar todos os planos de assinatura no MercadoPago?')) return
+              setDeletandoPlanos(true)
+              setDeletePlanoMsg('')
+              try {
+                const res = await fetch('/api/admin/mp-planos', { method: 'DELETE' })
+                const d = await res.json()
+                setDeletePlanoMsg(`✓ ${d.deletados}/${d.total} planos cancelados`)
+              } catch { setDeletePlanoMsg('Erro ao cancelar planos') }
+              finally { setDeletandoPlanos(false) }
+            }}
+            disabled={deletandoPlanos}
+            style={{
+              fontSize: '13px', fontWeight: 600, padding: '9px 18px', borderRadius: '10px',
+              background: deletandoPlanos ? '#9AA0A6' : '#dc2626',
+              color: 'white', border: 'none', cursor: deletandoPlanos ? 'not-allowed' : 'pointer',
+            }}>
+            {deletandoPlanos ? '⏳ Cancelando…' : '🗑 Planos MP'}
+          </button>
+          {deletePlanoMsg && <span style={{ fontSize: '12px', color: '#6B7280' }}>{deletePlanoMsg}</span>}
           <button
             onClick={() => sincronizarMP()}
             disabled={sincronizando}
