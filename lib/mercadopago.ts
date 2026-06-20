@@ -77,7 +77,7 @@ export async function criarCheckoutAssinatura(
         transaction_amount: valor,
         currency_id:        'BRL',
       },
-      payer_email: email,
+      payer_email: 'assinante@monitordelicitacoes.com.br',
       back_url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso`,
       status: 'pending',
     }),
