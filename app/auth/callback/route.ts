@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { enviarEmailBoasVindas } from '@/lib/emails/trial'
+import { notificarAdminNovoCadastro } from '@/lib/alerts/whatsapp'
+import { notificarAdminNovoCadastro as notificarAdminEmail } from '@/lib/emails/admin'
 
 export async function GET(request: NextRequest) {
   const qs         = new URL(request.url).searchParams
@@ -45,6 +47,8 @@ export async function GET(request: NextRequest) {
           enviarEmailBoasVindas(userEmail, userName).catch(err =>
             console.error('[callback] Erro ao enviar e-mail boas-vindas:', err)
           )
+          notificarAdminNovoCadastro(userEmail, userName).catch(() => {})
+          notificarAdminEmail(userEmail, userName).catch(() => {})
 
           const adminClient = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -156,3 +156,23 @@ export async function enviarResumoSemanalWhatsApp(
 
   return enviarMensagemZApi(numero, texto)
 }
+
+/** Notifica o admin sobre novo cadastro */
+export async function notificarAdminNovoCadastro(
+  emailUsuario: string,
+  nomeUsuario?: string,
+): Promise<void> {
+  const adminPhone = process.env.ADMIN_WHATSAPP
+  if (!process.env.ZAPI_INSTANCE_ID || !adminPhone) return
+
+  const nome = nomeUsuario ? `*${nomeUsuario}*` : 'um usuário'
+  const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+
+  const texto =
+    `🆕 *Novo cadastro — Monitor de Licitações*\n\n` +
+    `👤 ${nome}\n` +
+    `📧 ${emailUsuario}\n` +
+    `🕐 ${agora}`
+
+  await enviarMensagemZApi(formatarNumero(adminPhone), texto).catch(() => {})
+}
