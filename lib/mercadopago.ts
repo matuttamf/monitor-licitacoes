@@ -38,7 +38,7 @@ export async function criarPlanoMP(planoId: string): Promise<string> {
 export async function criarCheckoutAssinatura(
   planoId: string,
   userId: string,
-  _email: string,
+  email: string,
   precoFinal?: number,
   descontoPercentual?: number,
   descontoMeses?: number,
@@ -77,6 +77,7 @@ export async function criarCheckoutAssinatura(
         transaction_amount: valor,
         currency_id:        'BRL',
       },
+      payer_email: email,
       back_url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso`,
       status: 'pending',
     }),
