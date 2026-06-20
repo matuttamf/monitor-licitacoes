@@ -88,16 +88,23 @@ export async function criarCheckoutAssinatura(
     body: JSON.stringify({
       reason: `Monitor de Licitações - ${plano.nome}${razaoDesc}${razaoPeriodo}`,
       external_reference: extRef,
-
-      auto_recurring: {
-        frequency:          periodo === 'anual' ? 12 : 1,
-        frequency_type:     'months',
-        transaction_amount: valor,
-        currency_id:        'BRL',
-      },
       ...(getPlanId(planoId, periodo)
-        ? { preapproval_plan_id: getPlanId(planoId, periodo) }
-        : { payer_email: email }),
+        ? {
+            preapproval_plan_id: getPlanId(planoId, periodo),
+            // override de valor só quando há desconto de campanha
+            ...(descontoPercentual && descontoPercentual > 0
+              ? { auto_recurring: { transaction_amount: valor, currency_id: 'BRL' } }
+              : {}),
+          }
+        : {
+            payer_email: email,
+            auto_recurring: {
+              frequency:          periodo === 'anual' ? 12 : 1,
+              frequency_type:     'months',
+              transaction_amount: valor,
+              currency_id:        'BRL',
+            },
+          }),
       back_url: `${process.env.NEXT_PUBLIC_APP_URL}/assinatura/sucesso`,
       status: 'pending',
     }),
