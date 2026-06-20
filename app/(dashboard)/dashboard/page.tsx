@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
@@ -372,9 +372,9 @@ function formatarValor(valor?: number) {
 }
 
 function formatarValorCurto(valor: number): string {
-  if (valor >= 1_000_000_000) return `R$ ${(valor / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
-  if (valor >= 1_000_000)     return `R$ ${(valor / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
-  if (valor >= 1_000)         return `R$ ${(valor / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+  if (valor >= 1_000_000_000) return `R${(valor / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
+  if (valor >= 1_000_000)     return `R${(valor / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+  if (valor >= 1_000)         return `R${(valor / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
   return formatarValor(valor) ?? '—'
 }
 
@@ -593,60 +593,60 @@ export default function DashboardPage() {
         <div className="rounded-2xl mb-6 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1A1A1C 0%, #2d1018 100%)', border: '1px solid rgba(201,166,90,0.25)' }}>
 
           {/* Cabeçalho */}
-          <div className="px-6 pt-5 pb-4 flex items-center gap-2">
-            <span className="text-xs font-black tracking-widest uppercase" style={{ color: '#C9A65A' }}>Monitoramento ativo</span>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(201,166,90,0.12)', color: '#C9A65A', border: '1px solid rgba(201,166,90,0.2)' }}>
+          <div className="px-4 pt-5 pb-3 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-black tracking-widest uppercase whitespace-nowrap" style={{ color: '#C9A65A' }}>Monitoramento ativo</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style={{ background: 'rgba(201,166,90,0.12)', color: '#C9A65A', border: '1px solid rgba(201,166,90,0.2)' }}>
               acumulado desde o início
             </span>
           </div>
 
           {/* Métricas */}
-          <div className="grid grid-cols-3 px-4 pb-5 gap-3">
+          <div className="grid grid-cols-3 px-3 pb-5 gap-2">
             {[
               {
-                label: 'Editais monitorados',
+                label: 'Editais\nmonitorados',
                 valor: roi.totalLicitacoes.toLocaleString('pt-BR'),
-                sub: 'licitações únicas',
+                sub: 'licitações',
                 icon: '📋',
                 destaque: false,
               },
               {
-                label: 'Volume monitorado',
+                label: 'Volume\nmonitorado',
                 valor: roi.volumeMonitorado >= 1_000_000_000
                   ? `R$ ${(roi.volumeMonitorado / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
                   : roi.volumeMonitorado >= 1_000_000
                     ? `R$ ${(roi.volumeMonitorado / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
                     : `R$ ${(roi.volumeMonitorado / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`,
-                sub: 'em contratos potenciais',
+                sub: 'em contratos',
                 icon: '💰',
                 destaque: true,
               },
               {
-                label: 'Alertas gerados',
+                label: 'Alertas\ngerados',
                 valor: roi.totalAlertas.toLocaleString('pt-BR'),
-                sub: 'notificações enviadas',
+                sub: 'notificações',
                 icon: '🔔',
                 destaque: false,
               },
             ].map(stat => (
               <div
                 key={stat.label}
-                className="rounded-xl px-4 py-4 flex flex-col gap-1"
+                className="rounded-xl px-2 py-3 flex flex-col gap-0.5 min-w-0 overflow-hidden"
                 style={{
                   background: stat.destaque ? 'rgba(201,166,90,0.1)' : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${stat.destaque ? 'rgba(201,166,90,0.25)' : 'rgba(255,255,255,0.07)'}`,
                 }}
               >
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-base leading-none">{stat.icon}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: stat.destaque ? '#C9A65A' : 'rgba(255,255,255,0.65)' }}>
+                <div className="flex items-start gap-1 mb-1">
+                  <span className="text-sm leading-none mt-0.5">{stat.icon}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wide leading-tight whitespace-pre-line" style={{ color: stat.destaque ? '#C9A65A' : 'rgba(255,255,255,0.65)' }}>
                     {stat.label}
                   </span>
                 </div>
-                <p className="text-lg sm:text-2xl font-black leading-none tabular-nums break-all" style={{ color: stat.destaque ? '#C9A65A' : '#f0e6d3' }}>
+                <p className="text-xl font-black leading-none tabular-nums truncate" style={{ color: stat.destaque ? '#C9A65A' : '#f0e6d3' }}>
                   {stat.valor}
                 </p>
-                <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>{stat.sub}</p>
+                <p className="text-[9px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>{stat.sub}</p>
               </div>
             ))}
           </div>
@@ -850,8 +850,8 @@ export default function DashboardPage() {
                   {e.valor_total > 0 && (
                     <p className="text-xs mt-1.5 truncate" style={{ color: ativo ? 'rgba(255,255,255,0.65)' : 'var(--text-3)' }}>
                       {e.valor_total >= 1_000_000
-                        ? `R$ ${(e.valor_total / 1_000_000).toFixed(1)}M`
-                        : `R$ ${(e.valor_total / 1_000).toFixed(0)}k`}
+                        ? `R${(e.valor_total / 1_000_000).toFixed(1)}M`
+                        : `R${(e.valor_total / 1_000).toFixed(0)}k`}
                     </p>
                   )}
                 </button>
