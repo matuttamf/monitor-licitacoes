@@ -13,7 +13,7 @@ const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABA
   .replace(/\/$/, '')
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const MINHARECEITA = 'https://minhareceita.org'
-const CONCORRENCIA = 25
+const CONCORRENCIA = 8
 const LOTE         = 20000
 const MAX_ROWS     = parseInt(process.env.MAX_ROWS ?? '0') || 0
 
