@@ -1,14 +1,14 @@
-name: Pipeline Leads Cron 2 (arquivos 1-5, 12h)
+name: Pipeline Leads Cron 3 (arquivos 6-9, 12h)
 
-# Horários BRT (UTC-3): 3h e 15h (offset 6h em relação ao cron 1)
+# Horários BRT (UTC-3): 6h e 18h (offset 3h em relação ao cron 2)
 on:
   schedule:
-    - cron: '0 6,18 * * *'   # 6h e 18h UTC = 3h e 15h BRT (arquivos 1-5)
+    - cron: '0 9,21 * * *'   # 9h e 21h UTC = 6h e 18h BRT (arquivos 6-9)
   workflow_dispatch: {}
 
 jobs:
   coletar:
-    name: Coletar leads arquivos 1-5
+    name: Coletar leads arquivos 6-9
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -16,13 +16,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '24', cache: 'npm' }
       - run: npm ci
-      - name: Coletar arquivos 1-9
+      - name: Coletar arquivos 6-9
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
           MAX_ROWS: '0'
-        run: npx tsx scripts/coletar-leads-rfb.ts 1 5
+        run: npx tsx scripts/coletar-leads-rfb.ts 6 9
       - name: Notificar conclusão
         if: always()
         env:
@@ -30,10 +30,10 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-coleta" "${{ job.status }}"
+        run: npx tsx scripts/notificar-cron.ts "pipeline-cron3-coleta" "${{ job.status }}"
 
   emails-rfb:
-    name: Enriquecer e-mails arquivos 1-5
+    name: Enriquecer e-mails arquivos 6-9
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: coletar
@@ -42,13 +42,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '24', cache: 'npm' }
       - run: npm ci
-      - name: Enriquecer e-mails arquivos 1-5
+      - name: Enriquecer e-mails arquivos 6-9
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
           MAX_ROWS: '0'
-        run: npx tsx scripts/enriquecer-emails-rfb.ts 1 5
+        run: npx tsx scripts/enriquecer-emails-rfb.ts 6 9
       - name: Notificar conclusão
         if: always()
         env:
@@ -56,7 +56,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-emails" "${{ job.status }}"
+        run: npx tsx scripts/notificar-cron.ts "pipeline-cron3-emails" "${{ job.status }}"
 
   receita:
     name: Enriquecer via Receita Federal
@@ -81,10 +81,10 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-receita" "${{ job.status }}"
+        run: npx tsx scripts/notificar-cron.ts "pipeline-cron3-receita" "${{ job.status }}"
 
   bulk-enrich-rfb:
-    name: Bulk enrichment RFB (arquivos 1-5)
+    name: Bulk enrichment RFB (arquivos 6-9)
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: emails-rfb
@@ -99,7 +99,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
           MAX_ROWS: '0'
-        run: npx tsx scripts/enriquecer-bulk-rfb.ts 1 5
+        run: npx tsx scripts/enriquecer-bulk-rfb.ts 6 9
       - name: Notificar conclusão
         if: always()
         env:
@@ -107,4 +107,4 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-        run: npx tsx scripts/notificar-cron.ts "pipeline-cron2-bulk" "${{ job.status }}"
+        run: npx tsx scripts/notificar-cron.ts "pipeline-cron3-bulk" "${{ job.status }}"
