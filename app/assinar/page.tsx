@@ -205,7 +205,9 @@ function AssinarConteudo() {
 
             {p.id === 'empresarial' && periodo === 'anual' ? (
               <a
-                href="mailto:contato@monitordelicitacoes.com.br?subject=Plano%20Empresarial%20Anual"
+                href="https://wa.me/5531998317066?text=Olá!%20Tenho%20interesse%20no%20Plano%20Empresarial%20Anual%20do%20Monitor%20de%20Licitações."
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`w-full py-3.5 rounded-xl text-[15px] font-bold text-center block no-underline ${
                   p.destaque ? 'bg-[#C9A65A] text-[#1A1A1C]' : 'bg-[#6B0F1A] text-white'
                 }`}
