@@ -88,7 +88,7 @@ export async function GET(request: Request) {
         sub = await res.json()
       } else if (profile.status === 'trial') {
         // Webhook pode ter falhado — testa todos os planos/períodos pois não sabemos qual o usuário escolheu
-        const PLANOS = ['basic', 'profissional', 'gestao', 'pro', 'empresarial']
+        const PLANOS = ['basic', 'profissional', 'gestao', 'empresarial']
         const candidatos = PLANOS.flatMap(p => [`${profile.id}|${p}`, `${profile.id}|${p}|periodo:anual`])
         for (const extRef of candidatos) {
           const r = await fetch(
