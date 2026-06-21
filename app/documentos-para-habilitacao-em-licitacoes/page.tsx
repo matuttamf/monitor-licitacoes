@@ -148,11 +148,21 @@ function TabelaDocumentos({ docs }: { docs: Documento[] }) {
   )
 }
 
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://monitordelicitacoes.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'Documentos para Habilitação em Licitações — Lista Completa', item: 'https://monitordelicitacoes.com.br/documentos-para-habilitacao-em-licitacoes' },
+  ],
+}
+
 export default function DocumentosHabilitacaoPagina() {
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[60px] h-[64px] bg-[rgba(255,255,255,0.97)] backdrop-blur-xl border-b border-[#F0EDE8]">
         <Link href="/" className="flex items-center gap-3 no-underline">
