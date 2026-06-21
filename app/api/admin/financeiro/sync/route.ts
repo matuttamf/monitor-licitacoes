@@ -2,6 +2,7 @@
  * POST /api/admin/financeiro/sync
  * Sincroniza status de assinatura(s) diretamente da API do MercadoPago.
  * Body: { userId?: string }  — sem userId sincroniza todos os assinantes ativos com mp_subscription_id.
+ * Também detecta trials que já pagaram mas não tiveram mp_subscription_id gravado (webhook perdido).
  */
 
 import { createClient, createAdminClient } from '@/lib/supabase/server'
@@ -48,6 +49,20 @@ async function buscarAssinaturaMP(subscriptionId: string): Promise<MpSubscriptio
   return res.json()
 }
 
+// Busca assinatura no MP pela external_reference (userId|planoId)
+// Útil quando o webhook não gravou o mp_subscription_id (ex: webhook perdido na primeira cobrança)
+async function buscarAssinaturaPorExternalRef(userId: string): Promise<MpSubscription | null> {
+  const res = await fetch(
+    `https://api.mercadopago.com/preapproval/search?external_reference=${userId}&limit=10&sort=date_created&criteria=desc`,
+    { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
+  )
+  if (!res.ok) return null
+  const json = await res.json()
+  const resultados: MpSubscription[] = json.results ?? []
+  // Pega a mais recente com status authorized
+  return resultados.find(s => s.status === 'authorized') ?? resultados[0] ?? null
+}
+
 export async function POST(request: Request) {
   const admin = await verificarAdmin()
   if (!admin) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
@@ -57,16 +72,14 @@ export async function POST(request: Request) {
 
   const supabase = createAdminClient()
 
-  // Busca profiles com mp_subscription_id definido
+  // Busca profiles: com mp_subscription_id definido OU trials sem ele (webhook pode ter falhado)
   let query = supabase
     .from('profiles')
     .select('id, status, plano, mp_subscription_id, acesso_ate, assinatura_inicio, valor_mensalidade')
-    .not('mp_subscription_id', 'is', null)
 
   if (userId) {
     query = query.eq('id', userId)
   } else {
-    // Sincroniza apenas ativos (ou cancelados ainda dentro do período pago)
     query = query.in('status', ['active', 'trial'])
   }
 
@@ -86,8 +99,21 @@ export async function POST(request: Request) {
   }> = []
 
   for (const profile of profiles) {
-    const sub = await buscarAssinaturaMP(profile.mp_subscription_id)
+    let sub: MpSubscription | null = null
+
+    if (profile.mp_subscription_id) {
+      sub = await buscarAssinaturaMP(profile.mp_subscription_id)
+    } else if (profile.status === 'trial') {
+      // Webhook pode ter falhado na primeira cobrança — busca pelo userId na external_reference
+      sub = await buscarAssinaturaPorExternalRef(profile.id)
+      if (sub) {
+        console.log(`[sync] Assinatura encontrada via external_ref para trial user=${profile.id} sub=${sub.id}`)
+      }
+    }
+
     if (!sub) {
+      // Trial sem assinatura no MP — pula sem erro
+      if (profile.status === 'trial' && !profile.mp_subscription_id) continue
       resultados.push({
         userId:         profile.id,
         subscriptionId: profile.mp_subscription_id,
@@ -101,15 +127,22 @@ export async function POST(request: Request) {
       continue
     }
 
+    // Se o mp_subscription_id foi descoberto via external_ref (webhook perdido), grava agora
+    const subscriptionIdFinal = profile.mp_subscription_id ?? sub.id
+
     const update: Record<string, unknown> = {
-      valor_mensalidade: sub.auto_recurring?.transaction_amount ?? profile.valor_mensalidade,
+      valor_mensalidade:  sub.auto_recurring?.transaction_amount ?? profile.valor_mensalidade,
+      mp_subscription_id: subscriptionIdFinal,
     }
 
     let statusDepois = profile.status
 
     if (sub.status === 'authorized') {
       // Pagamento ativo — garante acesso liberado e limpa acesso_ate de cancelamentos antigos
+      const extParts = (sub.external_reference ?? '').split('|')
+      const planoDetectado = extParts[1] ?? profile.plano
       update.status     = 'active'
+      update.plano      = planoDetectado
       update.acesso_ate = null
       if (!profile.assinatura_inicio) {
         update.assinatura_inicio = new Date().toISOString()
@@ -144,7 +177,7 @@ export async function POST(request: Request) {
 
     resultados.push({
       userId:         profile.id,
-      subscriptionId: profile.mp_subscription_id,
+      subscriptionId: subscriptionIdFinal,
       statusMP:       sub.status,
       statusAntes:    profile.status,
       statusDepois,
