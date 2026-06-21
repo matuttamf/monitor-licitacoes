@@ -85,7 +85,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: '/precos', label: 'Análise de Preços', icon: '💰', badge: 'Novo' },
     exibirEquipe
       ? { href: '/equipe',       label: 'Minha Equipe', icon: '◫' }
-      : { href: '/equipe',       label: 'Minha Equipe', icon: '◫', locked: true, planoNecessario: 'Pro' },
+      : { href: '/equipe',       label: 'Minha Equipe', icon: '◫', locked: true, planoNecessario: 'Gestão' },
     ...(isAfiliado ? [
       { href: '/afiliados/dashboard', label: 'Painel Parceiro', icon: '🤝' },
     ] : []),
