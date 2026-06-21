@@ -84,7 +84,10 @@ function calcularUpdate(
       acao = 'ativo_ok'
     }
   } else if (statusMP === 'pending') {
-    // Assinatura criada mas ainda não autorizada — mantém trial, só salva o ID
+    // Preapproval ainda não autorizada — limpa o ID para que a próxima rodada
+    // tente buscarPorExtRef novamente, podendo encontrar outra preapproval autorizada.
+    // (usuário pode ter iniciado checkout múltiplas vezes; a autorizada tem ID diferente)
+    update.mp_subscription_id = null
     acao = 'pendente'
   } else if (['cancelled', 'paused'].includes(statusMP)) {
     if (proximaCobranca && new Date(proximaCobranca) > new Date()) {
