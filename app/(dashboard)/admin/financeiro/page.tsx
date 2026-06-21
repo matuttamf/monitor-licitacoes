@@ -61,7 +61,8 @@ type Despesa = {
   mes: number | null
   ano: number | null
   numero_nf: string | null
-  criado_em: string
+  criado_em: string | null
+  auto?: boolean  // entrada automática — não editável/deletável
 }
 
 const CATEGORIAS: Record<string, { label: string; cor: string; bg: string }> = {
@@ -1023,16 +1024,20 @@ ${blocoDespesas}
                           <span style={{ fontSize: '14px', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace' }}>{moeda(d.valor)}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button onClick={() => abrirEdicaoDespesa(d)}
-                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
-                              Editar
-                            </button>
-                            <button onClick={() => excluirDespesa(d.id)}
-                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
-                              Excluir
-                            </button>
-                          </div>
+                          {d.auto ? (
+                            <span style={{ fontSize: '11px', color: 'var(--cinza)', fontStyle: 'italic' }}>automático</span>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button onClick={() => abrirEdicaoDespesa(d)}
+                                style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(107,15,26,0.08)', color: 'var(--vinho)', border: 'none', cursor: 'pointer' }}>
+                                Editar
+                              </button>
+                              <button onClick={() => excluirDespesa(d.id)}
+                                style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '7px', fontWeight: 600, background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
+                                Excluir
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     )

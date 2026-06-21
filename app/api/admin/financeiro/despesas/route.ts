@@ -34,7 +34,46 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ despesas: data ?? [] })
+  // ── Despesas automáticas: taxas MP + comissões de afiliados ────────────────
+  // Calculadas a partir dos assinantes ativos no mês solicitado.
+  // Aparecem como entradas virtuais (auto=true) — não podem ser editadas/deletadas.
+  const TAXA_MP = 0.0498
+
+  // MRR do mês: soma de valor_mensalidade dos pagantes ativos
+  const { data: pagantes } = await supabase
+    .from('profiles')
+    .select('valor_mensalidade, plano, periodo, campanha_id')
+    .eq('status', 'active')
+    .is('owner_id', null)
+
+  const PRECOS: Record<string, number> = { basic: 49.90, profissional: 97.90, gestao: 197.90, pro: 197.90, empresarial: 497.00 }
+  const mrrMes = (pagantes ?? []).reduce((s, p) => {
+    const val = p.valor_mensalidade ?? PRECOS[p.plano ?? ''] ?? 0
+    return s + (p.periodo === 'anual' ? Math.round(val / 12 * 100) / 100 : val)
+  }, 0)
+
+  const taxaMP    = Math.round(mrrMes * TAXA_MP * 100) / 100
+  const comissoes = (pagantes ?? []).filter(p => p.campanha_id).length > 0
+    ? await (async () => {
+        const { data: ap } = await supabase.from('afiliado_pagamentos').select('valor').eq('status', 'pago')
+        return (ap ?? []).reduce((s, a) => s + (a.valor ?? 0), 0)
+      })()
+    : 0
+
+  const virtuais = [
+    ...(taxaMP > 0 ? [{
+      id: '__taxa_mp__', descricao: 'Taxas MercadoPago (4,98%)', valor: taxaMP,
+      categoria: 'plataforma', recorrente: true, mes: null, ano: null,
+      numero_nf: null, criado_em: null, auto: true,
+    }] : []),
+    ...(comissoes > 0 ? [{
+      id: '__comissoes_afiliados__', descricao: 'Comissões de afiliados', valor: comissoes,
+      categoria: 'comissao', recorrente: false, mes: mes ?? null, ano: ano ?? null,
+      numero_nf: null, criado_em: null, auto: true,
+    }] : []),
+  ]
+
+  return NextResponse.json({ despesas: [...virtuais, ...(data ?? [])] })
 }
 
 export async function POST(req: Request) {
