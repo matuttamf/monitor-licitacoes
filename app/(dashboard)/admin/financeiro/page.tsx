@@ -466,7 +466,7 @@ ${blocoDespesas}
           <h1 className="text-2xl font-semibold" style={{ color: 'var(--preto)' }}>💰 Financeiro</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--cinza)' }}>Receita, assinaturas, pagamentos e dados fiscais</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {kpis && (<>
             <button onClick={() => exportarPDF('mes')}
               style={{ fontSize: '13px', fontWeight: 600, padding: '9px 16px', borderRadius: '10px', background: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}>
@@ -568,12 +568,12 @@ ${blocoDespesas}
 
       {/* KPI Cards */}
       {carregando ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: '12px', marginBottom: '24px' }}>
           {[1,2,3,4].map(i => <div key={i} className="animate-pulse rounded-2xl" style={{ background: 'white', border: '1px solid var(--cinza-light)', height: '88px' }} />)}
         </div>
       ) : kpis && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: '12px', marginBottom: '12px' }}>
             {[
               { label: 'MRR Bruto',    value: moeda(kpis.mrr),           sub: 'receita mensal recorrente', cor: '#10b981', destaque: true },
               { label: 'MRR Líquido',  value: moeda(kpis.mrrLiquido),    sub: `após comissões (${moeda(kpis.comissaoMensal)})`, cor: '#3b82f6' },
@@ -587,7 +587,7 @@ ${blocoDespesas}
               </div>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" style={{ gap: '12px', marginBottom: '24px' }}>
             {[
               { label: 'Pagantes',      value: kpis.totalPagantes,  sub: 'assinaturas ativas',  cor: '#10b981' },
               { label: 'Em trial',      value: kpis.totalTrials,    sub: 'período gratuito',    cor: '#C9A65A' },

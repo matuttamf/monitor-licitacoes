@@ -248,7 +248,7 @@ export default function FornecedoresPage() {
 
       {/* Banner CTA */}
       {!showForm && !jaCadastrado && (
-        <div className="rounded-2xl p-5 flex items-start gap-5 flex-wrap"
+        <div className="rounded-2xl p-5 flex flex-col sm:flex-row sm:items-start gap-4"
           style={{ background: 'rgba(107,15,26,0.04)', border: '1.5px dashed rgba(107,15,26,0.2)' }}>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold mb-1" style={{ color: 'var(--vinho)' }}>
@@ -260,7 +260,7 @@ export default function FornecedoresPage() {
           </div>
           <button
             onClick={abrirForm}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold w-full sm:w-auto"
             style={{ background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
             + Cadastrar minha empresa
           </button>

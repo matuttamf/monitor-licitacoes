@@ -244,6 +244,7 @@ export default function AdminAfiliados() {
         ) : afiliados.length === 0 ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--cinza)', fontSize: 14 }}>Nenhum afiliado cadastrado.</div>
         ) : (
+          <div className="overflow-x-auto">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--surface-2)' }}>
@@ -392,6 +393,7 @@ export default function AdminAfiliados() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

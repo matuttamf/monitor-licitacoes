@@ -165,7 +165,7 @@ export default function PrecosPage() {
             <label style={{ display: 'block', fontSize: 11, color: 'var(--cinza)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               Descrição do item
             </label>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <input
                 type="text"
                 value={termo}

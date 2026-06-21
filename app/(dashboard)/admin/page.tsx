@@ -270,7 +270,7 @@ export default function AdminPage() {
 
       {/* ── KPI Cards ── */}
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '10px', marginBottom: '24px' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8" style={{ gap: '10px', marginBottom: '24px' }}>
           {[
             { label: 'Usuários',         value: stats.totalAtivos + stats.totalTrial + stats.totalExpired + stats.totalMembros,   sub: `owners + membros`,               cor: '#6B0F1A' },
             { label: 'Ativos',           value: stats.totalAtivos,     sub: 'assinantes pagos',               cor: '#10b981' },

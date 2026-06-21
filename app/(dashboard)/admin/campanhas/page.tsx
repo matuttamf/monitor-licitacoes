@@ -326,7 +326,7 @@ export default function CampanhasPage() {
         <>
           {/* KPI Cards globais */}
           {!carregando && totais && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+            <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: '12px', marginBottom: '20px' }}>
               {[
                 { label: 'Cadastros via campanha', value: totalRegistrosCamp, sub: `de ${totais.total} total (${totais.semAtribuicao} orgânicos)`, cor: '#3b82f6' },
                 { label: 'Conversões', value: totalConversoesCamp, sub: `${totalRegistrosCamp ? Math.round(totalConversoesCamp/totalRegistrosCamp*100) : 0}% taxa geral`, cor: '#10b981' },

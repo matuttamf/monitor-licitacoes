@@ -555,7 +555,7 @@ export default function CaptacaoPage() {
       {/* ── Ações manuais ── */}
       <div className="rounded-2xl p-5 mb-6" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
         <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" style={{ gap: '8px' }}>
           {([
             { acao: 'coletar-leads',      label: '🎯 Coletar leads',    desc: 'Busca CNPJs/PNCP' },
             { acao: 'coletar-leads-cnae', label: '🏛️ Receita Federal',  desc: 'Coleta por CNAE (Storage)' },
