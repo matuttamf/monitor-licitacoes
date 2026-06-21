@@ -152,8 +152,10 @@ export default function FinanceiroPage() {
   const [sincronizando, setSincronizando] = useState(false)
   const [syncId, setSyncId]           = useState<string | null>(null)
   const [syncResultado, setSyncResultado] = useState<SyncResultado[] | null>(null)
-  const [deletandoPlanos, setDeletandoPlanos] = useState(false)
-  const [deletePlanoMsg, setDeletePlanoMsg]   = useState('')
+  const [deletandoPlanos, setDeletandoPlanos]           = useState(false)
+  const [deletePlanoMsg, setDeletePlanoMsg]             = useState('')
+  const [deletandoAssinaturas, setDeletandoAssinaturas] = useState(false)
+  const [deleteAssinaturaMsg, setDeleteAssinaturaMsg]   = useState('')
 
   // Despesas
   const agora = new Date()
@@ -496,6 +498,27 @@ ${blocoDespesas}
             {deletandoPlanos ? '⏳ Cancelando…' : '🗑 Planos MP'}
           </button>
           {deletePlanoMsg && <span style={{ fontSize: '12px', color: '#6B7280' }}>{deletePlanoMsg}</span>}
+          <button
+            onClick={async () => {
+              if (!confirm('Cancelar todas as assinaturas (preapprovals) no MercadoPago?')) return
+              setDeletandoAssinaturas(true)
+              setDeleteAssinaturaMsg('')
+              try {
+                const res = await fetch('/api/admin/mp-assinaturas', { method: 'DELETE' })
+                const d = await res.json()
+                setDeleteAssinaturaMsg(`✓ ${d.cancelados}/${d.total} assinaturas canceladas`)
+              } catch { setDeleteAssinaturaMsg('Erro ao cancelar') }
+              finally { setDeletandoAssinaturas(false) }
+            }}
+            disabled={deletandoAssinaturas}
+            style={{
+              fontSize: '13px', fontWeight: 600, padding: '9px 18px', borderRadius: '10px',
+              background: deletandoAssinaturas ? '#9AA0A6' : '#b45309',
+              color: 'white', border: 'none', cursor: deletandoAssinaturas ? 'not-allowed' : 'pointer',
+            }}>
+            {deletandoAssinaturas ? '⏳ Cancelando…' : '🗑 Assinaturas MP'}
+          </button>
+          {deleteAssinaturaMsg && <span style={{ fontSize: '12px', color: '#6B7280' }}>{deleteAssinaturaMsg}</span>}
           <button
             onClick={() => sincronizarMP()}
             disabled={sincronizando}
