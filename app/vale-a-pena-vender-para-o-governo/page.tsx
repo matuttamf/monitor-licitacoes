@@ -86,6 +86,15 @@ const faqLd = {
   ],
 }
 
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://monitordelicitacoes.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'Vale a Pena Vender para o Governo?', item: 'https://monitordelicitacoes.com.br/vale-a-pena-vender-para-o-governo' },
+  ],
+}
+
 export default function ValeAVenderPagina() {
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">

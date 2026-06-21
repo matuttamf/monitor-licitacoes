@@ -94,6 +94,15 @@ const faqLd = {
   ],
 }
 
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://monitordelicitacoes.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'ComprasNet vs PNCP vs BLL — Qual Portal Usar?', item: 'https://monitordelicitacoes.com.br/comprasnet-vs-pncp-vs-bll' },
+  ],
+}
+
 export default function PortaisComparativoPagina() {
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">

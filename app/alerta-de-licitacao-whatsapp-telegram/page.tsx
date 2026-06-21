@@ -94,6 +94,15 @@ const faqLd = {
   ],
 }
 
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://monitordelicitacoes.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'Alerta de Licitação por WhatsApp e Telegram', item: 'https://monitordelicitacoes.com.br/alerta-de-licitacao-whatsapp-telegram' },
+  ],
+}
+
 export default function AlertaWhatsappPagina() {
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">

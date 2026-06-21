@@ -108,6 +108,15 @@ const faqLd = {
   ],
 }
 
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://monitordelicitacoes.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'Vale a Pena Participar de Licitações Públicas?', item: 'https://monitordelicitacoes.com.br/vale-a-pena-participar-de-licitacoes-publicas' },
+  ],
+}
+
 export default function ValeApenaPagina() {
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">

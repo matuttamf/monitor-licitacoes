@@ -100,6 +100,15 @@ const faqLd = {
   ],
 }
 
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://monitordelicitacoes.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'Como Ganhar o Primeiro Contrato Público', item: 'https://monitordelicitacoes.com.br/como-ganhar-primeiro-contrato-publico' },
+  ],
+}
+
 export default function PrimeiroContratoPagina() {
   return (
     <div className="font-sans bg-white text-[#1A1A1C]">
