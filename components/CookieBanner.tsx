@@ -45,7 +45,7 @@ export default function CookieBanner({ onConsent }: { onConsent: (v: ConsentStat
         onClick={() => handle('accepted')}
         style={{
           padding: '10px 28px', border: 'none', borderRadius: '4px',
-          background: '#e65c00', color: '#fff', cursor: 'pointer',
+          background: '#6B0F1A', color: '#fff', cursor: 'pointer',
           fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px',
           textTransform: 'uppercase', flexShrink: 0,
         }}
