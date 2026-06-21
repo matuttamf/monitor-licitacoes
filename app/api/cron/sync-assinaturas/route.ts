@@ -64,9 +64,38 @@ async function buscarPorPagamentoAprovado(userId: string): Promise<Record<string
       if (!pay) continue
 
       console.log(`[sync/payment] user=${userId} extRef=${extRef} paymentId=${pay.id} status=${pay.status}`)
-      // Simula estrutura de preapproval para que calcularUpdate a processe normalmente
+
+      // Se o pagamento tem preapproval_id, busca a preapproval real para obter o ID correto
+      const preapprovalId = pay.preapproval_id as string | null
+      if (preapprovalId) {
+        const sub = await buscarPorId(preapprovalId)
+        if (sub) {
+          console.log(`[sync/payment→preapproval] user=${userId} preapprovalId=${preapprovalId}`)
+          return sub
+        }
+      }
+
+      // Fallback: busca preapproval autorizada pelo e-mail do pagador
+      const payerEmail = (pay.payer as Record<string, unknown> | null)?.email as string | null
+      if (payerEmail) {
+        const rp = await fetch(
+          `https://api.mercadopago.com/preapproval/search?payer_email=${encodeURIComponent(payerEmail)}&status=authorized&limit=5`,
+          { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
+        )
+        if (rp.ok) {
+          const jp = await rp.json()
+          const subs: Record<string, unknown>[] = jp.results ?? []
+          const sub = subs[0] ?? null
+          if (sub) {
+            console.log(`[sync/payment→payer_email] user=${userId} email=${payerEmail} preapprovalId=${sub.id}`)
+            return sub
+          }
+        }
+      }
+
+      // Último recurso: objeto sintético — ativa o usuário mas sem mp_subscription_id
       return {
-        id:                 (pay.preapproval_id as string | null) ?? null,
+        id:                 null,
         status:             'authorized',
         external_reference: extRef,
         auto_recurring:     { transaction_amount: pay.transaction_amount },
