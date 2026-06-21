@@ -225,11 +225,7 @@ export async function GET(request: Request) {
       try {
         const { update, acao, statusMP, subscriptionIdFinal } = calcularUpdate(profile, sub)
         const { error: updateError } = await supabase.from('profiles').update(update).eq('id', profile.id)
-        if (updateError) {
-          console.error(`[sync] supabase update error user=${profile.id} acao=${acao}:`, updateError.message, JSON.stringify(update))
-          erros++
-          return
-        }
+        if (updateError) throw new Error(updateError.message)
         sincronizados++
         detalhes.push({ userId: profile.id, subscriptionId: subscriptionIdFinal, statusMP, acao })
         if (acao !== 'sem_mudanca' && acao !== 'ativo_ok') {
