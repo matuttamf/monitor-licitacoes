@@ -112,8 +112,8 @@ export async function POST(request: Request) {
     }
 
     if (!sub) {
-      // Trial sem assinatura no MP — pula sem erro
-      if (profile.status === 'trial' && !profile.mp_subscription_id) continue
+      // Sem mp_subscription_id e sem assinatura no MP — conta manual/admin, pula silenciosamente
+      if (!profile.mp_subscription_id) continue
       resultados.push({
         userId:         profile.id,
         subscriptionId: profile.mp_subscription_id,
