@@ -135,10 +135,16 @@ export async function POST(request: Request) {
 
   // ── Nova assinatura (trial, expirado, troca de período) ───────────────────────
   try {
-    const checkoutUrl = await criarCheckoutAssinatura(
+    const { url: checkoutUrl, preapprovalId } = await criarCheckoutAssinatura(
       plano, user.id, user.email!,
       precoFinal, descontoPercentual, descontoMeses, periodoValido,
     )
+    // Salva o ID da assinatura MP imediatamente — o sync cron vai encontrá-la via GET direto
+    if (preapprovalId) {
+      const adminSupabase = (await import('@/lib/supabase/server')).createAdminClient()
+      await adminSupabase.from('profiles').update({ mp_subscription_id: preapprovalId }).eq('id', user.id)
+      console.log(`[assinatura/criar] preapproval salvo user=${user.id} sub=${preapprovalId}`)
+    }
     return NextResponse.json({ url: checkoutUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

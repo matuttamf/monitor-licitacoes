@@ -18,7 +18,7 @@ export async function criarCheckoutAssinatura(
   descontoPercentual?: number,
   descontoMeses?: number,
   periodo: 'mensal' | 'anual' = 'mensal',
-): Promise<string> {
+): Promise<{ url: string; preapprovalId: string }> {
   const plano = PLANOS[planoId as keyof typeof PLANOS]
   const precoBase = periodo === 'anual' ? plano.preco_anual : plano.preco
   const valor = precoFinal ?? precoBase
@@ -63,7 +63,7 @@ export async function criarCheckoutAssinatura(
     console.error('[MP] criarCheckoutAssinatura falhou:', motivo)
     throw new Error(`MP: ${motivo}`)
   }
-  return data.init_point
+  return { url: data.init_point, preapprovalId: data.id as string }
 }
 
 /** Atualiza o valor de cobrança (e opcionalmente o external_reference) de uma assinatura no MercadoPago */
