@@ -3,7 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
-  if (host.includes('.vercel.app')) {
+  const path = request.nextUrl.pathname
+  // Crons e webhooks chamam a URL de deploy (.vercel.app) — não redirecionar rotas de API
+  if (host.includes('.vercel.app') && !path.startsWith('/api/')) {
     const url = request.nextUrl.clone()
     url.host = 'monitordelicitacoes.com.br'
     url.protocol = 'https:'
