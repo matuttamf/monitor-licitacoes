@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { SEGMENTOS, SEGMENTOS_MAP } from '../data'
 import { createAdminClient } from '@/lib/supabase/server'
+import { NavArticlesDropdown } from '@/components/NavArticlesDropdown'
+import { MobileMenu } from '@/components/MobileMenu'
 
 const BASE = 'https://monitordelicitacoes.com.br'
 
@@ -120,9 +122,12 @@ export default async function SegmentoPage({
           <div className="w-8 h-8 rounded-[8px] bg-[#6B0F1A] flex items-center justify-center font-black text-[11px] text-[#C9A65A] shrink-0">ML</div>
           <span className="font-semibold text-sm text-[#1A1A1C] tracking-tight hidden sm:block">Monitor de Licitações</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <Link href="/login" className="px-3 py-2 text-sm text-[#6B7280] no-underline">Entrar</Link>
-          <Link href={`/cadastro?segmento=${data.slug}`} className="px-4 py-2 text-sm font-semibold bg-[#6B0F1A] text-white no-underline rounded-lg">Começar grátis</Link>
+        <div className="flex items-center gap-1">
+          <NavArticlesDropdown />
+          <Link href="/assinar" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Planos</Link>
+          <Link href="/login" className="hidden md:block px-3 py-2 text-sm text-[#6B7280] no-underline">Entrar</Link>
+          <Link href={`/cadastro?segmento=${data.slug}`} className="hidden md:block px-4 py-2 text-sm font-semibold bg-[#6B0F1A] text-white no-underline rounded-lg">Começar grátis</Link>
+          <MobileMenu />
         </div>
       </header>
 
