@@ -646,7 +646,7 @@ ${blocoDespesas}
 
       {/* Abas + Filtros */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
           {([
             ['assinantes', `Assinantes (${pagantes.length + trials.length})`],
             ['nf',         `Dados NF (${pagantes.length})`],
@@ -695,7 +695,8 @@ ${blocoDespesas}
           ) : abaLista.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--cinza)', fontSize: '14px' }}>Nenhum resultado.</div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+          <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
                   {['Assinante', 'Plano / Valor', 'Comissão', 'Status', 'Assinante desde', 'Acesso até', 'MercadoPago', 'Ações'].map(h => (
@@ -811,6 +812,7 @@ ${blocoDespesas}
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -827,6 +829,7 @@ ${blocoDespesas}
           ) : abaLista.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--cinza)', fontSize: '14px' }}>Nenhum assinante ativo.</div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
@@ -877,6 +880,7 @@ ${blocoDespesas}
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -889,6 +893,7 @@ ${blocoDespesas}
           ) : abaLista.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--cinza)', fontSize: '14px' }}>Nenhum expirado ou bloqueado.</div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
@@ -935,6 +940,7 @@ ${blocoDespesas}
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}

@@ -618,7 +618,7 @@ export default function AdminPage() {
         ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).map(({ grupo, itens }) => (
           <div key={grupo} style={{ marginBottom: '10px' }}>
             <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>{grupo}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${itens.length}, 1fr)`, gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
               {itens.map(({ acao, label, desc }) => (
                 <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
                   style={{
@@ -699,7 +699,8 @@ export default function AdminPage() {
               <p style={{ color: 'var(--cinza)' }}>Nenhum usuário encontrado.</p>
             </div>
           ) : (
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+            <div className="rounded-2xl" style={{ background: 'white', border: '1px solid var(--cinza-light)', overflow: 'hidden' }}>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--cinza-light)' }}>
@@ -848,6 +849,7 @@ export default function AdminPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </>
