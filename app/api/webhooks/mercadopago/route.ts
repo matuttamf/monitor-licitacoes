@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { getLimites } from '@/lib/planos'
@@ -71,7 +71,7 @@ async function logWebhook(params: {
   payload?: unknown
 }) {
   try {
-    const supabase = await createServiceClient()
+    const supabase = createAdminClient()
     await supabase.from('webhook_logs').insert({
       fonte:     'mercadopago',
       tipo:      params.tipo,
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
             : PLANOS[novoPlano as keyof typeof PLANOS]?.preco
 
           if (novoPreco && subscriptionId) {
-            const supabase = await createServiceClient()
+            const supabase = createAdminClient()
             const novoExtRef = novoPeriodo === 'anual'
               ? `${userId}|${novoPlano}|periodo:anual`
               : `${userId}|${novoPlano}`
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createAdminClient()
 
     if (subscription.status === 'authorized') {
       const limites = getLimites(planoId)
