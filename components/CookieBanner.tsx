@@ -29,37 +29,29 @@ export default function CookieBanner({ onConsent }: { onConsent: (v: ConsentStat
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
-      background: '#1a1a2e', color: '#fff', padding: '16px 24px',
+      background: '#f5f5f5', color: '#333', padding: '14px 24px',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       gap: '16px', flexWrap: 'wrap',
-      boxShadow: '0 -2px 12px rgba(0,0,0,0.3)',
+      borderTop: '1px solid #ddd',
     }}>
       <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', flex: 1, minWidth: '240px' }}>
-        🍪 <strong>Este site usa cookies de rastreamento do Facebook (Meta Pixel)</strong> para medir o desempenho de anúncios — ou seja, saber quantas pessoas viram um anúncio e depois se cadastraram. Nenhum dado sensível é compartilhado. Você pode recusar e continuar navegando normalmente.{' '}
-        <a href="/privacidade" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
-          Saiba mais
+        Nós usamos cookies e tecnologia semelhantes em nossos sites. Ao utilizar nossos serviços, você concorda com essa utilização. Saiba mais em{' '}
+        <a href="/privacidade" style={{ color: '#333', textDecoration: 'underline' }}>
+          Política de Privacidade
         </a>
+        .
       </p>
-      <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-        <button
-          onClick={() => handle('declined')}
-          style={{
-            padding: '8px 16px', borderRadius: '6px', border: '1px solid #555',
-            background: 'transparent', color: '#ccc', cursor: 'pointer', fontSize: '13px',
-          }}
-        >
-          Recusar
-        </button>
-        <button
-          onClick={() => handle('accepted')}
-          style={{
-            padding: '8px 16px', borderRadius: '6px', border: 'none',
-            background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
-          }}
-        >
-          Aceitar
-        </button>
-      </div>
+      <button
+        onClick={() => handle('accepted')}
+        style={{
+          padding: '10px 28px', border: 'none', borderRadius: '4px',
+          background: '#e65c00', color: '#fff', cursor: 'pointer',
+          fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px',
+          textTransform: 'uppercase', flexShrink: 0,
+        }}
+      >
+        Prosseguir
+      </button>
     </div>
   )
 }
