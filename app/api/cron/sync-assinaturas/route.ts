@@ -206,7 +206,7 @@ export async function GET(request: Request) {
     profiles.map(p =>
       p.mp_subscription_id
         ? buscarPorId(p.mp_subscription_id)
-        : p.status === 'trial' ? buscarPorExtRef(p.id) : Promise.resolve(null),
+        : buscarPorExtRef(p.id),  // trial E active-sem-ID buscam pelo external_reference
     ),
   )
 
