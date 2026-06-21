@@ -37,6 +37,7 @@ type Assinante = {
   bairro: string | null
   cidade: string | null
   estado_uf: string | null
+  status_nf: 'pendente' | 'emitida' | 'enviada' | 'cancelada'
 }
 
 type SyncResultado = {
@@ -731,7 +732,7 @@ ${blocoDespesas}
                           )}
                         </div>
                         <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--preto)', marginTop: '4px' }}>
-                          {a.valor_mensalidade ? moeda(a.valor_mensalidade) + '/mês' : '—'}
+                          {a.status === 'trial' ? <span style={{ color: 'var(--cinza)', fontWeight: 400, fontSize: '12px' }}>gratuito</span> : (a.valor_mensalidade ? moeda(a.valor_mensalidade) + '/mês' : '—')}
                         </div>
                         {a.periodo === 'anual' && a.valor_cobrado && (
                           <div style={{ fontSize: '11px', color: 'var(--cinza)' }}>
@@ -836,7 +837,7 @@ ${blocoDespesas}
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
-                  {['Assinante', 'Plano / Valor', 'CNPJ / CPF', 'Razão Social', 'Endereço'].map(h => (
+                  {['Assinante', 'Plano / Valor', 'CNPJ / CPF', 'Razão Social', 'Endereço', 'NF'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -877,6 +878,37 @@ ${blocoDespesas}
                         <div style={{ fontSize: '12px', color: 'var(--cinza)', maxWidth: '280px', lineHeight: '1.4' }}>
                           {endereco || <span style={{ color: '#ef4444' }}>⚠ Não informado</span>}
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const NF_CORES: Record<string, { bg: string; cor: string }> = {
+                            pendente:  { bg: '#fff7ed', cor: '#c2410c' },
+                            emitida:   { bg: '#eff6ff', cor: '#1d4ed8' },
+                            enviada:   { bg: '#f0fdf4', cor: '#15803d' },
+                            cancelada: { bg: '#fef2f2', cor: '#b91c1c' },
+                          }
+                          const c = NF_CORES[a.status_nf] ?? NF_CORES.pendente
+                          return (
+                            <select
+                              value={a.status_nf}
+                              onChange={async e => {
+                                const novo = e.target.value
+                                await fetch('/api/admin/financeiro', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: a.id, status_nf: novo }),
+                                })
+                                setAssinantes(prev => prev.map(x => x.id === a.id ? { ...x, status_nf: novo as typeof a.status_nf } : x))
+                              }}
+                              style={{ fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '8px', background: c.bg, color: c.cor, border: 'none', cursor: 'pointer', outline: 'none' }}
+                            >
+                              <option value="pendente">Pendente</option>
+                              <option value="emitida">Emitida</option>
+                              <option value="enviada">Enviada</option>
+                              <option value="cancelada">Cancelada</option>
+                            </select>
+                          )
+                        })()}
                       </td>
                     </tr>
                   )

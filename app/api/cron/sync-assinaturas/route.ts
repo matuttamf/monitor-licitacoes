@@ -65,35 +65,26 @@ async function buscarPorPagamentoAprovado(userId: string): Promise<Record<string
 
       console.log(`[sync/payment] user=${userId} extRef=${extRef} paymentId=${pay.id} status=${pay.status}`)
 
-      // Se o pagamento tem preapproval_id, busca a preapproval real para obter o ID correto
-      const preapprovalId = pay.preapproval_id as string | null
-      if (preapprovalId) {
-        const sub = await buscarPorId(preapprovalId)
-        if (sub) {
-          console.log(`[sync/payment→preapproval] user=${userId} preapprovalId=${preapprovalId}`)
-          return sub
-        }
-      }
-
-      // Fallback: busca preapproval autorizada pelo e-mail do pagador
-      const payerEmail = (pay.payer as Record<string, unknown> | null)?.email as string | null
-      if (payerEmail) {
-        const rp = await fetch(
-          `https://api.mercadopago.com/preapproval/search?payer_email=${encodeURIComponent(payerEmail)}&status=authorized&limit=5`,
-          { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
-        )
-        if (rp.ok) {
-          const jp = await rp.json()
-          const subs: Record<string, unknown>[] = jp.results ?? []
-          const sub = subs[0] ?? null
+      // Buscar pagamento completo: /v1/payments/search retorna campos truncados,
+      // preapproval_id só aparece no objeto completo via /v1/payments/{id}
+      const rf = await fetch(
+        `https://api.mercadopago.com/v1/payments/${pay.id}`,
+        { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
+      )
+      if (rf.ok) {
+        const fullPay = await rf.json()
+        const preapprovalId = fullPay.preapproval_id as string | null
+        if (preapprovalId) {
+          const sub = await buscarPorId(preapprovalId)
           if (sub) {
-            console.log(`[sync/payment→payer_email] user=${userId} email=${payerEmail} preapprovalId=${sub.id}`)
+            console.log(`[sync/payment→preapproval] user=${userId} preapprovalId=${preapprovalId}`)
             return sub
           }
         }
       }
 
-      // Último recurso: objeto sintético — ativa o usuário mas sem mp_subscription_id
+      // Último recurso: objeto sintético — ativa mas sem mp_subscription_id
+      // (na próxima renovação o webhook captura o ID corretamente)
       return {
         id:                 null,
         status:             'authorized',

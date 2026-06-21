@@ -110,16 +110,17 @@ export function scoreValor(
   minValorInteresse: number,
   maxValorInteresse: number = 0,
 ): number {
-  // Filtro hard de máximo — retorna -1 para sinalizar exclusão
-  if (maxValorInteresse > 0 && valorLicitacao != null && valorLicitacao > 0) {
-    if (valorLicitacao > maxValorInteresse) return -1
-  }
+  // Licitação sem valor informado → neutro (não dá para saber se atende o filtro)
+  if (!valorLicitacao || valorLicitacao <= 0) return 50
+
+  // Filtro hard de máximo
+  if (maxValorInteresse > 0 && valorLicitacao > maxValorInteresse) return -1
+
+  // Filtro hard de mínimo — igual ao máximo, exclui licitações abaixo do piso
+  if (minValorInteresse > 0 && valorLicitacao < minValorInteresse) return -1
 
   // Usuário não definiu mínimo → neutro positivo
   if (!minValorInteresse || minValorInteresse <= 0) return 75
-
-  // Licitação sem valor informado → neutro
-  if (!valorLicitacao || valorLicitacao <= 0) return 50
 
   const ratio = valorLicitacao / minValorInteresse
 

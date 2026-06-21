@@ -36,7 +36,8 @@ export async function GET() {
       mp_subscription_id, assinatura_inicio, valor_mensalidade, acesso_ate,
       campanha_id,
       cnpj, cpf, tipo_pessoa, razao_social, nome_fantasia, ie,
-      cep, logradouro, numero, complemento, bairro, cidade, estado_uf
+      cep, logradouro, numero, complemento, bairro, cidade, estado_uf,
+      status_nf
     `)
     .is('owner_id', null)
     .order('criado_em', { ascending: false })
@@ -129,6 +130,7 @@ export async function GET() {
       bairro:      p.bairro,
       cidade:      p.cidade,
       estado_uf:   p.estado_uf,
+      status_nf:   (p.status_nf ?? 'pendente') as 'pendente' | 'emitida' | 'enviada' | 'cancelada',
     }
   })
 
@@ -207,6 +209,7 @@ export async function PATCH(request: Request) {
   if (assinatura_inicio   !== undefined) update.assinatura_inicio   = assinatura_inicio
   if (acesso_ate          !== undefined) update.acesso_ate          = acesso_ate
   if (mp_subscription_id  !== undefined) update.mp_subscription_id  = mp_subscription_id
+  if (body.status_nf      !== undefined) update.status_nf           = body.status_nf
 
   const { error } = await supabase.from('profiles').update(update).eq('id', id)
   if (error) {
