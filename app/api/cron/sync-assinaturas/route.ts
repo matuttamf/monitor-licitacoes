@@ -50,11 +50,12 @@ export async function GET(request: Request) {
     }
   }
 
-  // Buscar todos os perfis com assinatura ativa no MP
+  // Buscar perfis ativos/trial — com ou sem mp_subscription_id
+  // (trials sem sub_id podem ter pago mas o webhook falhou)
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select('id, status, plano, mp_subscription_id, bloqueado_admin, assinatura_inicio')
-    .not('mp_subscription_id', 'is', null)
+    .in('status', ['active', 'trial'])
 
   if (error) {
     console.error('[cron/sync-assinaturas] Erro ao buscar profiles:', error.message)
@@ -72,24 +73,48 @@ export async function GET(request: Request) {
 
   for (const profile of profiles) {
     try {
-      const res = await fetch(`https://api.mercadopago.com/preapproval/${profile.mp_subscription_id}`, {
-        headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
-      })
+      let sub: Record<string, unknown> | null = null
 
-      if (!res.ok) {
-        console.warn(`[cron/sync-assinaturas] MP retornou ${res.status} para sub ${profile.mp_subscription_id}`)
-        erros++
-        continue
+      if (profile.mp_subscription_id) {
+        const res = await fetch(`https://api.mercadopago.com/preapproval/${profile.mp_subscription_id}`, {
+          headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
+        })
+        if (!res.ok) {
+          console.warn(`[cron/sync-assinaturas] MP retornou ${res.status} para sub ${profile.mp_subscription_id}`)
+          erros++
+          continue
+        }
+        sub = await res.json()
+      } else if (profile.status === 'trial') {
+        // Webhook pode ter falhado — busca pelo userId na external_reference
+        const searchRes = await fetch(
+          `https://api.mercadopago.com/preapproval/search?external_reference=${profile.id}&limit=5&sort=date_created&criteria=desc`,
+          { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
+        )
+        if (searchRes.ok) {
+          const json = await searchRes.json()
+          const resultados: Record<string, unknown>[] = json.results ?? []
+          sub = resultados.find(s => s.status === 'authorized') ?? resultados[0] ?? null
+          if (sub) console.log(`[cron/sync-assinaturas] Assinatura encontrada via external_ref: user=${profile.id} sub=${sub.id}`)
+        }
+        if (!sub) continue // trial sem assinatura no MP — pula
+      } else {
+        continue // active sem mp_subscription_id não deveria existir, pula
       }
-
-      const sub = await res.json()
-      const statusMP: string = sub.status
-      const planoId: string  = (sub.external_reference || '').split('|')[1] || profile.plano || 'basic'
-      const valorMensalidade = sub.auto_recurring?.transaction_amount ?? PRECOS[planoId] ?? null
-      const proximaCobranca: string | null = sub.next_payment_date ?? sub.date_of_next_payment ?? null
+      const statusMP: string = sub.status as string
+      const extParts = ((sub.external_reference as string) || '').split('|')
+      const planoId: string = extParts[1] || profile.plano || 'basic'
+      const periodoDetectado: 'mensal' | 'anual' = extParts.includes('periodo:anual') ? 'anual' : 'mensal'
+      const autoRecurring = sub.auto_recurring as Record<string, unknown> | undefined
+      const valorMensalidade = (autoRecurring?.transaction_amount as number | null) ?? PRECOS[planoId] ?? null
+      const proximaCobranca: string | null = (sub.next_payment_date as string | null) ?? (sub.date_of_next_payment as string | null) ?? null
+      const subscriptionIdFinal = (profile.mp_subscription_id ?? sub.id) as string
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const update: Record<string, any> = { valor_mensalidade: valorMensalidade }
+      const update: Record<string, any> = {
+        valor_mensalidade:  valorMensalidade,
+        mp_subscription_id: subscriptionIdFinal,
+      }
       let acao = 'sem_mudanca'
 
       if (statusMP === 'authorized') {
@@ -99,9 +124,10 @@ export async function GET(request: Request) {
           const limites = getLimites(planoId)
           update.status       = 'active'
           update.plano        = planoId
+          update.periodo      = periodoDetectado
           update.max_keywords = limites.maxKeywords
           update.max_usuarios = limites.maxUsers
-          update.acesso_ate   = null  // Limpa carência anterior em reativações
+          update.acesso_ate   = null
           if (!profile.assinatura_inicio) update.assinatura_inicio = new Date().toISOString()
           acao = 'reativado'
         } else {
@@ -127,7 +153,7 @@ export async function GET(request: Request) {
 
       await supabase.from('profiles').update(update).eq('id', profile.id)
       sincronizados++
-      detalhes.push({ userId: profile.id, subscriptionId: profile.mp_subscription_id!, statusMP, acao })
+      detalhes.push({ userId: profile.id, subscriptionId: subscriptionIdFinal, statusMP, acao })
     } catch (e) {
       console.error(`[cron/sync-assinaturas] Erro ao processar ${profile.id}:`, e)
       erros++

@@ -61,6 +61,32 @@ function verificarAssinatura(
   }
 }
 
+async function logWebhook(params: {
+  tipo: string | undefined
+  dataId: string
+  status: 'ok' | 'erro' | 'ignorado' | 'assinatura_invalida'
+  userId?: string
+  plano?: string
+  mensagem?: string
+  payload?: unknown
+}) {
+  try {
+    const supabase = await createServiceClient()
+    await supabase.from('webhook_logs').insert({
+      fonte:     'mercadopago',
+      tipo:      params.tipo,
+      data_id:   params.dataId,
+      status:    params.status,
+      user_id:   params.userId,
+      plano:     params.plano,
+      mensagem:  params.mensagem,
+      payload:   params.payload ?? null,
+    })
+  } catch (e) {
+    console.error('[webhook/mp] Erro ao gravar log:', e)
+  }
+}
+
 export async function POST(request: Request) {
   const rawSignature = request.headers.get('x-signature')
   const requestId    = request.headers.get('x-request-id')
@@ -78,6 +104,7 @@ export async function POST(request: Request) {
   // Verificar assinatura antes de qualquer processamento
   if (!verificarAssinatura(request, dataId, rawSignature, requestId)) {
     console.error('[webhook/mp] Assinatura inválida — requisição rejeitada', { dataId, requestId })
+    await logWebhook({ tipo: type, dataId, status: 'assinatura_invalida', mensagem: 'HMAC inválido' })
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
   }
 
@@ -102,7 +129,6 @@ export async function POST(request: Request) {
 
           if (novoPreco && subscriptionId) {
             const supabase = await createServiceClient()
-            // Atualiza preço E external_reference no MP para que o cron leia o plano correto
             const novoExtRef = novoPeriodo === 'anual'
               ? `${userId}|${novoPlano}|periodo:anual`
               : `${userId}|${novoPlano}`
@@ -116,6 +142,7 @@ export async function POST(request: Request) {
               max_usuarios:      limites.maxUsers,
               valor_mensalidade: novoPreco,
             }).eq('id', userId)
+            await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: novoPlano, mensagem: `upgrade ${novoPeriodo}` })
             console.log(`[webhook/mp] Upgrade pago: user=${userId} plano=${novoPlano} periodo=${novoPeriodo}`)
           }
         }
@@ -133,7 +160,8 @@ export async function POST(request: Request) {
 
     if (!res.ok) {
       console.error('[webhook/mp] Erro ao buscar assinatura no MP:', res.status)
-      return NextResponse.json({ ok: true }) // Retorna 200 para MP não retentar
+      await logWebhook({ tipo: type, dataId, status: 'erro', mensagem: `MP retornou ${res.status}` })
+      return NextResponse.json({ ok: true })
     }
 
     const subscription = await res.json()
@@ -197,7 +225,7 @@ export async function POST(request: Request) {
       }
 
       await supabase.from('profiles').update(updateData).eq('id', userId)
-
+      await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: planoId, mensagem: `ativado ${periodo}` })
       console.log(`[webhook/mp] Assinatura ativada: user=${userId} plano=${planoId} keywords=${limites.maxKeywords}`)
 
       // Auto-registrar comissão de afiliado na primeira ativação (one-time)
@@ -297,7 +325,7 @@ export async function POST(request: Request) {
         .maybeSingle()
 
       if (perfilPausa?.status === 'paused') {
-        // Pausa já registrada pelo nosso sistema — nada a fazer
+        await logWebhook({ tipo: type, dataId, status: 'ignorado', userId, mensagem: 'pausa já gerenciada pelo sistema' })
         console.log(`[webhook/mp] Pausa ignorada (já gerenciada pelo sistema): user=${userId}`)
       } else {
         // Pausa externa (pelo painel do MP) — tratar como cancelamento
@@ -311,6 +339,7 @@ export async function POST(request: Request) {
           updatePausaExt.status = 'expired'
         }
         await supabase.from('profiles').update(updatePausaExt).eq('id', userId)
+        await logWebhook({ tipo: type, dataId, status: 'ok', userId, mensagem: `pausa externa${proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado'}` })
         console.log(`[webhook/mp] Pausa externa MP: user=${userId}`)
       }
 
@@ -331,7 +360,7 @@ export async function POST(request: Request) {
       }
 
       await supabase.from('profiles').update(updateCancelado).eq('id', userId)
-
+      await logWebhook({ tipo: type, dataId, status: 'ok', userId, mensagem: `cancelado${proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado imediatamente'}` })
       console.log(
         `[webhook/mp] Cancelamento: user=${userId}` +
         (proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado imediatamente')
