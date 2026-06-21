@@ -589,13 +589,17 @@ export default function CaptacaoPage() {
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--cinza-light)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--cinza)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>Reset leads</span>
           {([
-            { scope: 'enviados' as const, label: '↺ Enviados → pendente', title: 'Volta leads "enviado" para pendente',       bg: 'transparent', color: '#92400e', border: '#f59e0b' },
-            { scope: 'todos'    as const, label: '↺ Incl. erros',         title: 'Inclui erro + inválido → pendente',        bg: 'transparent', color: '#991b1b', border: '#ef4444' },
-            { scope: 'completo' as const, label: '↺ Zerar contadores',    title: 'Zera tudo — descadastrados vão p/ inválido', bg: 'transparent', color: '#5b21b6', border: '#8b5cf6' },
-          ]).map(({ scope, label, title, bg, color, border }) => (
+            { scope: 'enviados' as const, label: '↺ Enviados → pendente', title: 'Volta leads "enviado" para pendente',       bg: 'transparent', color: '#92400e', border: '#f59e0b', confirmText: 'RESET ENVIADOS' },
+            { scope: 'todos'    as const, label: '↺ Incl. erros',         title: 'Inclui erro + inválido → pendente',        bg: 'transparent', color: '#991b1b', border: '#ef4444', confirmText: 'RESET ERROS'    },
+            { scope: 'completo' as const, label: '↺ Zerar contadores',    title: 'Zera tudo — descadastrados vão p/ inválido', bg: 'transparent', color: '#5b21b6', border: '#8b5cf6', confirmText: 'ZERAR TUDO'   },
+          ]).map(({ scope, label, title, bg, color, border, confirmText }) => (
             <div key={scope}>
               <button
-                onClick={() => resetLeads(scope)}
+                onClick={() => {
+                  const digitado = window.prompt(`Digite ${confirmText} para confirmar:`)
+                  if (digitado !== confirmText) return
+                  resetLeads(scope)
+                }}
                 disabled={resetando}
                 title={title}
                 style={{
