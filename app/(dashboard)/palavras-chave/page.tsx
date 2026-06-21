@@ -227,7 +227,7 @@ export default function PalavrasChavePage() {
           <p className="text-sm" style={{ color: 'var(--cinza)' }}>Adicione termos acima para começar a receber alertas.</p>
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
+        <div className="rounded-2xl" style={{ background: 'white', border: '1px solid var(--cinza-light)' }}>
           <div className="px-5 py-3 flex items-center justify-between"
             style={{ borderBottom: '1px solid var(--cinza-light)', background: 'var(--surface-2)' }}>
             <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cinza)' }}>

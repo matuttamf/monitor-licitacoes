@@ -84,7 +84,7 @@ export default async function SegmentoPage({
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE}/licitacoes-para/${data.slug}` },
     inLanguage: 'pt-BR',
     keywords: data.keywords.join(', '),
-    datePublished: '2025-01-01T00:00:00-03:00',
+    datePublished: `${new Date().getFullYear()}-01-01T00:00:00-03:00`,
     dateModified: new Date().toISOString(),
   }
 

@@ -372,9 +372,9 @@ function formatarValor(valor?: number) {
 }
 
 function formatarValorCurto(valor: number): string {
-  if (valor >= 1_000_000_000) return `R${(valor / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
-  if (valor >= 1_000_000)     return `R${(valor / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
-  if (valor >= 1_000)         return `R${(valor / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+  if (valor >= 1_000_000_000) return `R$${(valor / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
+  if (valor >= 1_000_000)     return `R$${(valor / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+  if (valor >= 1_000)         return `R$${(valor / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
   return formatarValor(valor) ?? '—'
 }
 
