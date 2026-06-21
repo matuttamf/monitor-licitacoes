@@ -141,8 +141,10 @@ export async function POST(request: Request) {
       // Pagamento ativo — garante acesso liberado e limpa acesso_ate de cancelamentos antigos
       const extParts = (sub.external_reference ?? '').split('|')
       const planoDetectado = extParts[1] ?? profile.plano
+      const periodoDetectado: 'mensal' | 'anual' = extParts.includes('periodo:anual') ? 'anual' : 'mensal'
       update.status     = 'active'
       update.plano      = planoDetectado
+      update.periodo    = periodoDetectado
       update.acesso_ate = null
       if (!profile.assinatura_inicio) {
         update.assinatura_inicio = new Date().toISOString()
