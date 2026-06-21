@@ -47,6 +47,16 @@ export async function GET() {
     .select('id, nome, codigo, comissao_tipo, comissao_valor')
     .neq('comissao_tipo', 'nenhum')
 
+  // Fallback NF: diretório de fornecedores tem cnpj/razao_social quando completar-cadastro não foi feito
+  const { data: fornecedores } = await supabase
+    .from('fornecedores')
+    .select('user_id, cnpj, razao_social')
+
+  const fornecedorMap: Record<string, { cnpj: string; razao_social: string }> = {}
+  for (const f of fornecedores ?? []) {
+    if (f.user_id) fornecedorMap[f.user_id] = { cnpj: f.cnpj, razao_social: f.razao_social }
+  }
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const { data: authData } = await supabase.auth.admin.listUsers()
@@ -105,11 +115,11 @@ export async function GET() {
       acesso_ate:          p.acesso_ate ?? null,
       campanha_nome:       campanhaNome,
       comissao_mensal:     comissaoMensal,
-      // Dados NF
-      cnpj:        p.cnpj,
+      // Dados NF (fallback: diretório de fornecedores quando completar-cadastro não foi feito)
+      cnpj:        p.cnpj || fornecedorMap[p.id]?.cnpj || null,
       cpf:         p.cpf,
       tipo_pessoa: p.tipo_pessoa,
-      razao_social:  p.razao_social,
+      razao_social:  p.razao_social || fornecedorMap[p.id]?.razao_social || null,
       nome_fantasia: p.nome_fantasia,
       ie:          p.ie,
       cep:         p.cep,
