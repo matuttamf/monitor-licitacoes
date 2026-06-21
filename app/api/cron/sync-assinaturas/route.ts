@@ -29,16 +29,50 @@ async function buscarPorExtRef(userId: string): Promise<Record<string, unknown> 
   const candidatos = PLANOS_IDS.flatMap(p => [`${userId}|${p}`, `${userId}|${p}|periodo:anual`])
   for (const extRef of candidatos) {
     const r = await fetch(
-      `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(extRef)}&limit=5`,
+      `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(extRef)}&limit=10`,
       { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
     )
     if (!r.ok) continue
     const j = await r.json()
     const results: Record<string, unknown>[] = j.results ?? []
-    const sub = results.find(s => s.status === 'authorized') ?? results.find(s => s.status === 'pending') ?? null
+    const sub = results.find(s => s.status === 'authorized') ?? null
     if (sub) {
       console.log(`[sync/ext_ref] user=${userId} extRef=${extRef} sub=${sub.id} status=${sub.status}`)
       return sub
+    }
+  }
+
+  // Última linha de defesa: busca pagamentos aprovados quando todas as preapprovals
+  // estão pending (usuário pode ter tentado múltiplas vezes; a aprovada usa mesmo extRef).
+  // Se encontrar pagamento aprovado, constrói um objeto sintético que simula preapproval.
+  return buscarPorPagamentoAprovado(userId)
+}
+
+// Busca no histórico de pagamentos um pagamento aprovado com external_reference do usuário.
+// Cobre o caso de Anne: múltiplas tentativas pendentes + 1 aprovada com mesmo extRef.
+async function buscarPorPagamentoAprovado(userId: string): Promise<Record<string, unknown> | null> {
+  for (const planoId of PLANOS_IDS) {
+    for (const extRef of [`${userId}|${planoId}`, `${userId}|${planoId}|periodo:anual`]) {
+      const r = await fetch(
+        `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(extRef)}&status=approved&sort=date_created&criteria=desc&limit=1`,
+        { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
+      )
+      if (!r.ok) continue
+      const j = await r.json()
+      const results: Record<string, unknown>[] = j.results ?? []
+      const pay = results[0]
+      if (!pay) continue
+
+      console.log(`[sync/payment] user=${userId} extRef=${extRef} paymentId=${pay.id} status=${pay.status}`)
+      // Simula estrutura de preapproval para que calcularUpdate a processe normalmente
+      return {
+        id:                 pay.metadata?.preapproval_id ?? null,
+        status:             'authorized',
+        external_reference: extRef,
+        auto_recurring:     { transaction_amount: pay.transaction_amount },
+        next_payment_date:  null,
+        _from_payment:      true,
+      }
     }
   }
   return null

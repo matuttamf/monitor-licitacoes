@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
   }
 
-  // ── Pagamento avulso (proporcional de upgrade) ──────────────────────────────
+  // ── Eventos de pagamento (upgrade proporcional + pagamento inicial/renovação de assinatura) ──
   if (type === 'payment') {
     const payRes = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
       headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` },
@@ -117,9 +117,11 @@ export async function POST(request: Request) {
       const payment = await payRes.json()
       if (payment.status === 'approved') {
         const parts = (payment.external_reference ?? '').split('|')
-        // format: userId|upgrade|novoPlano|periodo|subscriptionId
-        if (parts[1] === 'upgrade') {
-          const userId         = parts[0]
+        const userId  = parts[0]
+        const planoId = parts[1]
+
+        if (planoId === 'upgrade') {
+          // ── Cobrança proporcional de upgrade ──────────────────────────────────
           const novoPlano      = parts[2]
           const novoPeriodo: 'mensal' | 'anual' = parts[3] === 'anual' ? 'anual' : 'mensal'
           const subscriptionId = parts[4]
@@ -135,15 +137,53 @@ export async function POST(request: Request) {
             await atualizarValorAssinatura(subscriptionId, novoPreco, novoExtRef)
             const limites = getLimites(novoPlano)
             await supabase.from('profiles').update({
-              plano:             novoPlano,
-              periodo:           novoPeriodo,
+              plano:              novoPlano,
+              periodo:            novoPeriodo,
               mp_subscription_id: subscriptionId,
-              max_keywords:      limites.maxKeywords,
-              max_usuarios:      limites.maxUsers,
-              valor_mensalidade: novoPreco,
+              max_keywords:       limites.maxKeywords,
+              max_usuarios:       limites.maxUsers,
+              valor_mensalidade:  novoPreco,
             }).eq('id', userId)
             await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: novoPlano, mensagem: `upgrade ${novoPeriodo}` })
             console.log(`[webhook/mp] Upgrade pago: user=${userId} plano=${novoPlano} periodo=${novoPeriodo}`)
+          }
+
+        } else if (userId && planoId && (planoId in PLANOS)) {
+          // ── Pagamento inicial ou renovação de assinatura ──────────────────────
+          // Cobre o caso em que subscription_preapproval chega atrasado ou falhou:
+          // se o pagamento está aprovado, o usuário tem direito de acesso.
+          const periodo: 'mensal' | 'anual' = parts.includes('periodo:anual') ? 'anual' : 'mensal'
+          const supabase = createAdminClient()
+
+          const { data: perfil } = await supabase
+            .from('profiles')
+            .select('status, assinatura_inicio, bloqueado_admin, campanha_id')
+            .eq('id', userId)
+            .maybeSingle()
+
+          if (perfil && !perfil.bloqueado_admin && perfil.status !== 'active') {
+            const limites = getLimites(planoId)
+            const valorMensalidade: number = payment.transaction_amount ?? PRECOS_PLANO[planoId] ?? 0
+            // Busca mp_subscription_id do pagamento (preapproval_id no objeto payment)
+            const subscriptionId: string | null = payment.metadata?.preapproval_id ?? null
+
+            const updateData: Record<string, unknown> = {
+              status:            'active',
+              plano:             planoId,
+              periodo,
+              max_keywords:      limites.maxKeywords,
+              max_usuarios:      limites.maxUsers,
+              valor_mensalidade: valorMensalidade,
+              acesso_ate:        null,
+            }
+            if (subscriptionId) updateData.mp_subscription_id = subscriptionId
+            if (!perfil.assinatura_inicio) updateData.assinatura_inicio = new Date().toISOString()
+
+            await supabase.from('profiles').update(updateData).eq('id', userId)
+            await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: planoId, mensagem: `pagamento aprovado — ativado via payment event` })
+            console.log(`[webhook/mp] Pagamento aprovado — ativado: user=${userId} plano=${planoId} periodo=${periodo}`)
+          } else {
+            await logWebhook({ tipo: type, dataId, status: 'ignorado', userId, plano: planoId, mensagem: `já ativo ou bloqueado` })
           }
         }
       }
