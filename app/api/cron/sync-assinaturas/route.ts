@@ -95,7 +95,9 @@ export async function GET(request: Request) {
           const json = await searchRes.json()
           const resultados: Record<string, unknown>[] = json.results ?? []
           sub = resultados.find(s => s.status === 'authorized') ?? resultados[0] ?? null
-          if (sub) console.log(`[cron/sync-assinaturas] Assinatura encontrada via payer_email: user=${profile.id} sub=${sub.id}`)
+          console.log(`[sync/payer_email] user=${profile.id} email=${profile.email} total=${resultados.length} statuses=${resultados.map(r => r.status).join(',')} → sub=${sub?.id ?? 'nenhum'} status=${sub?.status ?? '-'}`)
+        } else {
+          console.warn(`[sync/payer_email] MP HTTP ${searchRes.status} para email=${profile.email}`)
         }
         if (!sub) continue // trial sem assinatura no MP — pula
       } else {
