@@ -57,60 +57,76 @@ async function runMatching() {
   const kwNovas      = keywords.filter(k => !k.matching_inicial_em)
   const kwExistentes = keywords.filter(k =>  k.matching_inicial_em)
 
-  const termosNovos      = [...new Set(kwNovas.map(k => k.termo.toLowerCase()))]
-  const termosExistentes = [...new Set(kwExistentes.map(k => k.termo.toLowerCase()))]
+  // ── VARREDURA INICIAL PAGINADA ────────────────────────────────────────────
+  // Para garantir cobertura total do banco, keywords novas são processadas em
+  // lotes de 1000 licitações por rodada. O cursor (matching_inicial_cursor) em
+  // configuracoes persiste o progresso entre rodadas do cron.
+  // Keywords só são marcadas como inicializadas quando o cursor chega ao fim.
 
-  // Ambas as buscas usam o mesmo padrão — sem filtro ilike.
-  // ilike.or() com milhares de keywords excede limites de URL do PostgREST e produz cobertura parcial.
-  // O Gemini faz a curadoria semântica; a pré-filtragem é apenas por data de abertura.
-  const [resNovos, resIncrementais] = await Promise.all([
-    // Keywords novas → todo o banco com abertura futura, mais recentes primeiro (limite 5000)
-    kwNovas.length > 0
-      ? supabase
-          .from('licitacoes')
-          .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
-          .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-          .order('coletado_em', { ascending: false })
-          .limit(5000)
-      : Promise.resolve({ data: [], error: null }),
+  let initialBatch:    { id: string; objeto: string; data_abertura: string | null; estado: string | null; valor_estimado: number | null; coletado_em: string }[] = []
+  let initialScanComplete = false
+  let cursorAtual: string | null = null
 
-    // Keywords existentes → licitações coletadas desde o último matching (limite 500)
-    termosExistentes.length > 0
-      ? (() => {
-          let q = supabase
-            .from('licitacoes')
-            .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
-            .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-            .limit(500)
-          if (ultimoMatching) q = q.gte('coletado_em', ultimoMatching) as typeof q
-          return q
-        })()
-      : Promise.resolve({ data: [], error: null }),
-  ])
+  if (kwNovas.length > 0) {
+    const { data: cfgCursor } = await supabase
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'matching_inicial_cursor')
+      .maybeSingle()
+    cursorAtual = cfgCursor?.valor ?? null
 
-  // Log erros de query para diagnóstico
-  if (resNovos.error)       console.error('Erro query novos:', resNovos.error)
-  if (resIncrementais.error) console.error('Erro query incrementais:', resIncrementais.error)
+    let q = supabase
+      .from('licitacoes')
+      .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+      .order('coletado_em', { ascending: true })
+      .limit(1000)
+    if (cursorAtual) q = q.gt('coletado_em', cursorAtual) as typeof q
+
+    const { data: batch, error: errBatch } = await q
+    if (errBatch) console.error('Erro query inicial:', errBatch)
+    initialBatch = batch ?? []
+    initialScanComplete = initialBatch.length < 1000
+  }
+
+  // ── VARREDURA INCREMENTAL ──────────────────────────────────────────────────
+  // Keywords existentes: apenas licitações novas desde o último matching.
+  let incrementalBatch: typeof initialBatch = []
+  if (kwExistentes.length > 0) {
+    let q = supabase
+      .from('licitacoes')
+      .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
+      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+      .limit(500)
+    if (ultimoMatching) q = q.gte('coletado_em', ultimoMatching) as typeof q
+    const { data: inc, error: errInc } = await q
+    if (errInc) console.error('Erro query incremental:', errInc)
+    incrementalBatch = inc ?? []
+  }
 
   // Mescla candidatos sem duplicatas
-  const candidatosMap = new Map<string, NonNullable<typeof resNovos.data>[0]>()
-  for (const l of [...(resNovos.data ?? []), ...(resIncrementais.data ?? [])]) {
+  const candidatosMap = new Map<string, typeof initialBatch[0]>()
+  for (const l of [...initialBatch, ...incrementalBatch]) {
     if (l && !candidatosMap.has(l.id)) candidatosMap.set(l.id, l)
   }
   const candidatos = [...candidatosMap.values()]
 
+  const paginaInfo = kwNovas.length > 0
+    ? ` | inicial: ${initialBatch.length} lics (cursor=${cursorAtual?.substring(0, 10) ?? 'início'}, completo=${initialScanComplete})`
+    : ''
+
   const debugBase = {
     kwNovas: kwNovas.length, kwExistentes: kwExistentes.length,
-    queryNovosCount: resNovos.data?.length ?? 0,
-    queryIncrementaisCount: resIncrementais.data?.length ?? 0,
-    erroNovos: resNovos.error ? String(resNovos.error) : null,
-    erroIncrementais: resIncrementais.error ? String(resIncrementais.error) : null,
+    queryNovosCount: initialBatch.length,
+    queryIncrementaisCount: incrementalBatch.length,
+    cursorAtual,
+    initialScanComplete,
     ultimoMatching,
   }
 
   if (!candidatos.length) {
     const resultado = { ok: true, matches: 0, candidatos: 0, ...debugBase }
-    await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `0 candidatos — ${resultado.erroNovos ?? 'sem erro'}`, detalhes: resultado })
+    await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `0 candidatos`, detalhes: resultado })
     await supabase.from('configuracoes').upsert(
       { chave: 'ultimo_matching_em', valor: agora },
       { onConflict: 'chave' }
@@ -118,7 +134,7 @@ async function runMatching() {
     return NextResponse.json(resultado)
   }
 
-  console.log(`Matching: ${candidatos.length} candidatos (${resNovos.data?.length ?? 0} banco total + ${resIncrementais.data?.length ?? 0} incrementais), ${keywords.length} keywords (${kwNovas.length} novas, ${kwExistentes.length} existentes)`)
+  console.log(`Matching: ${candidatos.length} candidatos (${initialBatch.length} inicial + ${incrementalBatch.length} incrementais)${paginaInfo}, ${keywords.length} keywords (${kwNovas.length} novas, ${kwExistentes.length} existentes)`)
 
   // Confirmar matches com Gemini
   const { resultados: matches, lotes, lotesComErro, erros } =
@@ -215,8 +231,19 @@ async function runMatching() {
     }).catch(console.error)
   }
 
-  // Marcar keywords novas como inicializadas
-  if (kwNovas.length > 0) {
+  // ── Avançar cursor de varredura inicial ──────────────────────────────────
+  if (kwNovas.length > 0 && initialBatch.length > 0) {
+    const ultimoColetadoEm = initialBatch[initialBatch.length - 1].coletado_em
+    await supabase.from('configuracoes').upsert(
+      { chave: 'matching_inicial_cursor', valor: ultimoColetadoEm },
+      { onConflict: 'chave' }
+    )
+  }
+
+  // Marcar keywords novas como inicializadas apenas quando varredura completa
+  if (kwNovas.length > 0 && initialScanComplete) {
+    // Limpa cursor — próxima keyword nova começa do início
+    await supabase.from('configuracoes').delete().eq('chave', 'matching_inicial_cursor')
     await supabase
       .from('keywords')
       .update({ matching_inicial_em: agora })
@@ -231,16 +258,21 @@ async function runMatching() {
 
   const resultado = {
     ok: true,
-    candidatos:       candidatos.length,
-    kwNovas:          kwNovas.length,
-    kwExistentes:     kwExistentes.length,
-    matchesBrutos:    matches.length,
-    alertasSalvos:    alertasParaSalvar.length,
+    candidatos:          candidatos.length,
+    kwNovas:             kwNovas.length,
+    kwExistentes:        kwExistentes.length,
+    matchesBrutos:       matches.length,
+    alertasSalvos:       alertasParaSalvar.length,
     alertasPorUsuario,
     gemini: { lotes, lotesComErro, primeiroErro: erros[0] ?? null },
+    varreduraInicial:    kwNovas.length > 0 ? { pagina: initialBatch.length, cursor: cursorAtual?.substring(0, 10) ?? 'início', completo: initialScanComplete } : null,
   }
 
-  await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `${resultado.alertasSalvos} alertas salvos (${resultado.candidatos} candidatos, ${resultado.kwNovas} kw novas)`, detalhes: resultado })
+  const msgScan = kwNovas.length > 0
+    ? ` | scan inicial: ${initialBatch.length} lics${initialScanComplete ? ' [COMPLETO]' : ' (paginando...)'}`
+    : ''
+
+  await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `${resultado.alertasSalvos} alertas salvos (${resultado.candidatos} candidatos, ${resultado.kwNovas} kw novas${msgScan})`, detalhes: resultado })
 
   return NextResponse.json(resultado)
 }
