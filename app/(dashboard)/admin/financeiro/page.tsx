@@ -479,7 +479,8 @@ ${blocoDespesas}
           </>)}
           <button
             onClick={async () => {
-              if (!confirm('Cancelar todos os planos de assinatura no MercadoPago?')) return
+              const confirmado = window.prompt('Digite CANCELAR para confirmar a exclusão de todos os planos MP:')
+              if (confirmado !== 'CANCELAR') return
               setDeletandoPlanos(true)
               setDeletePlanoMsg('')
               try {
@@ -500,7 +501,8 @@ ${blocoDespesas}
           {deletePlanoMsg && <span style={{ fontSize: '12px', color: '#6B7280' }}>{deletePlanoMsg}</span>}
           <button
             onClick={async () => {
-              if (!confirm('Cancelar todas as assinaturas (preapprovals) no MercadoPago?')) return
+              const confirmado = window.prompt('Digite CANCELAR para confirmar o cancelamento de todas as assinaturas MP:')
+              if (confirmado !== 'CANCELAR') return
               setDeletandoAssinaturas(true)
               setDeleteAssinaturaMsg('')
               try {
