@@ -66,7 +66,7 @@ async function buscarPorPagamentoAprovado(userId: string): Promise<Record<string
       console.log(`[sync/payment] user=${userId} extRef=${extRef} paymentId=${pay.id} status=${pay.status}`)
       // Simula estrutura de preapproval para que calcularUpdate a processe normalmente
       return {
-        id:                 pay.metadata?.preapproval_id ?? null,
+        id:                 (pay.preapproval_id as string | null) ?? null,
         status:             'authorized',
         external_reference: extRef,
         auto_recurring:     { transaction_amount: pay.transaction_amount },

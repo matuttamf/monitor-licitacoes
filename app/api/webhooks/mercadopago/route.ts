@@ -149,23 +149,25 @@ export async function POST(request: Request) {
           }
 
         } else if (userId && planoId && (planoId in PLANOS)) {
-          // ── Pagamento inicial ou renovação de assinatura ──────────────────────
-          // Cobre o caso em que subscription_preapproval chega atrasado ou falhou:
-          // se o pagamento está aprovado, o usuário tem direito de acesso.
+          // ── Pagamento inicial, renovação mensal/anual de assinatura ───────────
+          // Complementa subscription_preapproval: garante ativação mesmo se aquele
+          // evento chegar atrasado, falhar ou vier com status ainda pending.
           const periodo: 'mensal' | 'anual' = parts.includes('periodo:anual') ? 'anual' : 'mensal'
           const supabase = createAdminClient()
 
           const { data: perfil } = await supabase
             .from('profiles')
-            .select('status, assinatura_inicio, bloqueado_admin, campanha_id')
+            .select('status, assinatura_inicio, bloqueado_admin')
             .eq('id', userId)
             .maybeSingle()
 
-          if (perfil && !perfil.bloqueado_admin && perfil.status !== 'active') {
+          if (!perfil || perfil.bloqueado_admin) {
+            await logWebhook({ tipo: type, dataId, status: 'ignorado', userId, plano: planoId, mensagem: 'perfil não encontrado ou bloqueado' })
+          } else {
             const limites = getLimites(planoId)
             const valorMensalidade: number = payment.transaction_amount ?? PRECOS_PLANO[planoId] ?? 0
-            // Busca mp_subscription_id do pagamento (preapproval_id no objeto payment)
-            const subscriptionId: string | null = payment.metadata?.preapproval_id ?? null
+            // preapproval_id é o campo direto no objeto payment do MP (não em metadata)
+            const subscriptionId: string | null = (payment.preapproval_id as string | null) ?? null
 
             const updateData: Record<string, unknown> = {
               status:            'active',
@@ -180,10 +182,10 @@ export async function POST(request: Request) {
             if (!perfil.assinatura_inicio) updateData.assinatura_inicio = new Date().toISOString()
 
             await supabase.from('profiles').update(updateData).eq('id', userId)
-            await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: planoId, mensagem: `pagamento aprovado — ativado via payment event` })
-            console.log(`[webhook/mp] Pagamento aprovado — ativado: user=${userId} plano=${planoId} periodo=${periodo}`)
-          } else {
-            await logWebhook({ tipo: type, dataId, status: 'ignorado', userId, plano: planoId, mensagem: `já ativo ou bloqueado` })
+
+            const tipo_acao = perfil.status === 'active' ? 'renovacao' : 'ativacao'
+            await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: planoId, mensagem: `${tipo_acao} — payment approved` })
+            console.log(`[webhook/mp] ${tipo_acao}: user=${userId} plano=${planoId} periodo=${periodo} sub=${subscriptionId}`)
           }
         }
       }
