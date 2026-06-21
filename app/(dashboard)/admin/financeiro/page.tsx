@@ -777,7 +777,7 @@ ${blocoDespesas}
                       <td className="px-4 py-3">
                         {a.mp_subscription_id ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <a href={`https://www.mercadopago.com.br/subscriptions/${a.mp_subscription_id}`}
+                            <a href={`https://www.mercadopago.com.br/subscription-plans/subscriptor-details?id=${a.mp_subscription_id}`}
                               target="_blank" rel="noopener noreferrer"
                               style={{ fontSize: '11px', color: '#009ee3', textDecoration: 'none', fontWeight: 600 }}>
                               🔗 Ver no MP
