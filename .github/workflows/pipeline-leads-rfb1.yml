@@ -1,21 +1,21 @@
-name: Pipeline Leads RFB (Completo)
+﻿name: Pipeline Leads RFB (Completo)
 
 on:
   workflow_dispatch:
     inputs:
       ano:
-        description: 'Ano dos dados (ex: 2026). Vazio = mês anterior'
+        description: 'Ano dos dados (ex: 2026). Vazio = mÃªs anterior'
         default: ''
       mes:
-        description: 'Mês dos dados (ex: 5). Vazio = mês anterior'
+        description: 'MÃªs dos dados (ex: 5). Vazio = mÃªs anterior'
         default: ''
       fase_inicio:
-        description: 'Fase inicial (1–22). 1=coleta arq0 … 10=coleta arq9 | 11=preparar cache | 12=emails arq0 … 21=emails arq9 | 22=enriquecer Receita'
+        description: 'Fase inicial (1â€“22). 1=coleta arq0 â€¦ 10=coleta arq9 | 11=preparar cache | 12=emails arq0 â€¦ 21=emails arq9 | 22=enriquecer Receita'
         default: '1'
 
 jobs:
   arquivo-0:
-    name: 'Fase 1/22 — Coleta arquivo 0'
+    name: 'Fase 1/22 â€” Coleta arquivo 0'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     if: fromJSON(github.event.inputs.fase_inicio || '1') <= 1
@@ -29,7 +29,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -40,7 +40,7 @@ jobs:
           fi
 
   arquivo-1:
-    name: 'Fase 2/22 — Coleta arquivo 1'
+    name: 'Fase 2/22 â€” Coleta arquivo 1'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-0
@@ -55,7 +55,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -66,7 +66,7 @@ jobs:
           fi
 
   arquivo-2:
-    name: 'Fase 3/22 — Coleta arquivo 2'
+    name: 'Fase 3/22 â€” Coleta arquivo 2'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-1
@@ -81,7 +81,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -92,7 +92,7 @@ jobs:
           fi
 
   arquivo-3:
-    name: 'Fase 4/22 — Coleta arquivo 3'
+    name: 'Fase 4/22 â€” Coleta arquivo 3'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-2
@@ -107,7 +107,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -118,7 +118,7 @@ jobs:
           fi
 
   arquivo-4:
-    name: 'Fase 5/22 — Coleta arquivo 4'
+    name: 'Fase 5/22 â€” Coleta arquivo 4'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-3
@@ -133,7 +133,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -144,7 +144,7 @@ jobs:
           fi
 
   arquivo-5:
-    name: 'Fase 6/22 — Coleta arquivo 5'
+    name: 'Fase 6/22 â€” Coleta arquivo 5'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-4
@@ -159,7 +159,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -170,7 +170,7 @@ jobs:
           fi
 
   arquivo-6:
-    name: 'Fase 7/22 — Coleta arquivo 6'
+    name: 'Fase 7/22 â€” Coleta arquivo 6'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-5
@@ -185,7 +185,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -196,7 +196,7 @@ jobs:
           fi
 
   arquivo-7:
-    name: 'Fase 8/22 — Coleta arquivo 7'
+    name: 'Fase 8/22 â€” Coleta arquivo 7'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-6
@@ -211,7 +211,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -222,7 +222,7 @@ jobs:
           fi
 
   arquivo-8:
-    name: 'Fase 9/22 — Coleta arquivo 8'
+    name: 'Fase 9/22 â€” Coleta arquivo 8'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-7
@@ -237,7 +237,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -248,7 +248,7 @@ jobs:
           fi
 
   arquivo-9:
-    name: 'Fase 10/22 — Coleta arquivo 9'
+    name: 'Fase 10/22 â€” Coleta arquivo 9'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: arquivo-8
@@ -263,7 +263,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: |
           ANO="${{ github.event.inputs.ano }}"
           MES="${{ github.event.inputs.mes }}"
@@ -274,7 +274,7 @@ jobs:
           fi
 
   preparar-cnpjs:
-    name: 'Fase 11/22 — Preparar cache de CNPJs sem e-mail'
+    name: 'Fase 11/22 â€” Preparar cache de CNPJs sem e-mail'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: arquivo-9
@@ -289,12 +289,12 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=4096
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
           MAX_CACHE: '500000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --prepare
 
   email-0:
-    name: 'Fase 12/22 — E-mails arquivo 0'
+    name: 'Fase 12/22 â€” E-mails arquivo 0'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: preparar-cnpjs
@@ -313,7 +313,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 0 0
 
   email-1:
-    name: 'Fase 13/22 — E-mails arquivo 1'
+    name: 'Fase 13/22 â€” E-mails arquivo 1'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-0
@@ -332,7 +332,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 1 1
 
   email-2:
-    name: 'Fase 14/22 — E-mails arquivo 2'
+    name: 'Fase 14/22 â€” E-mails arquivo 2'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-1
@@ -351,7 +351,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 2 2
 
   email-3:
-    name: 'Fase 15/22 — E-mails arquivo 3'
+    name: 'Fase 15/22 â€” E-mails arquivo 3'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-2
@@ -370,7 +370,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 3 3
 
   email-4:
-    name: 'Fase 16/22 — E-mails arquivo 4'
+    name: 'Fase 16/22 â€” E-mails arquivo 4'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-3
@@ -389,7 +389,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 4 4
 
   email-5:
-    name: 'Fase 17/22 — E-mails arquivo 5'
+    name: 'Fase 17/22 â€” E-mails arquivo 5'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-4
@@ -408,7 +408,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 5 5
 
   email-6:
-    name: 'Fase 18/22 — E-mails arquivo 6'
+    name: 'Fase 18/22 â€” E-mails arquivo 6'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-5
@@ -427,7 +427,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 6 6
 
   email-7:
-    name: 'Fase 19/22 — E-mails arquivo 7'
+    name: 'Fase 19/22 â€” E-mails arquivo 7'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-6
@@ -446,7 +446,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 7 7
 
   email-8:
-    name: 'Fase 20/22 — E-mails arquivo 8'
+    name: 'Fase 20/22 â€” E-mails arquivo 8'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-7
@@ -465,7 +465,7 @@ jobs:
         run: npx tsx scripts/enriquecer-emails-rfb.ts --from-cache 8 8
 
   email-9:
-    name: 'Fase 21/22 — E-mails arquivo 9'
+    name: 'Fase 21/22 â€” E-mails arquivo 9'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-8
@@ -494,7 +494,7 @@ jobs:
           await sb.storage.from('rf-cnpj').remove(['cnpjs-sem-email.json'])
           console.log('Cache removido.')
           "
-      - name: Notificar conclusão e-mails
+      - name: Notificar conclusÃ£o e-mails
         if: always()
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -504,7 +504,7 @@ jobs:
         run: npx tsx scripts/notificar-cron.ts "pipeline-emails-rfb" "${{ job.status }}"
 
   enriquecer-receita:
-    name: 'Fase 22/22 — Enriquecer via Receita Federal'
+    name: 'Fase 22/22 â€” Enriquecer via Receita Federal'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: email-9
@@ -518,9 +518,9 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MAX_ROWS: '100000'
+          MAX_ROWS: '200000'
         run: npx tsx scripts/enriquecer-receita.ts
-      - name: Notificar conclusão
+      - name: Notificar conclusÃ£o
         if: always()
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -528,3 +528,4 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "pipeline-receita" "${{ job.status }}"
+

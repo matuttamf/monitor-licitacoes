@@ -1,19 +1,19 @@
-name: Coleta Leads RFB
+﻿name: Coleta Leads RFB
 
 on:
   workflow_dispatch:
     inputs:
       idx_start:
-        description: 'Índice inicial (0-9)'
+        description: 'Ãndice inicial (0-9)'
         default: '0'
       idx_end:
-        description: 'Índice final (0-9)'
+        description: 'Ãndice final (0-9)'
         default: '9'
       ano:
-        description: 'Ano dos dados (ex: 2026). Vazio = mês anterior'
+        description: 'Ano dos dados (ex: 2026). Vazio = mÃªs anterior'
         default: ''
       mes:
-        description: 'Mês dos dados (ex: 5). Vazio = mês anterior'
+        description: 'MÃªs dos dados (ex: 5). Vazio = mÃªs anterior'
         default: ''
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Instalar dependências
+      - name: Instalar dependÃªncias
         run: npm ci
 
       - name: Coletar leads via arquivos RFB
@@ -55,9 +55,10 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MAX_ROWS: '200000'
         run: npx tsx scripts/enriquecer-receita.ts
 
-      - name: Notificar conclusão
+      - name: Notificar conclusÃ£o
         if: always()
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -65,3 +66,4 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "coleta-leads-rfb" "${{ job.status }}"
+

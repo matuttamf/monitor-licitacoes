@@ -1,13 +1,13 @@
-name: Enriquecer Leads
+﻿name: Enriquecer Leads
 
 on:
   workflow_dispatch:
     inputs:
       idx_start:
-        description: 'Índice inicial arquivos RFB (0-9)'
+        description: 'Ãndice inicial arquivos RFB (0-9)'
         default: '0'
       idx_end:
-        description: 'Índice final arquivos RFB (0-9)'
+        description: 'Ãndice final arquivos RFB (0-9)'
         default: '9'
       run_bulk:
         description: 'Rodar bulk enrichment RFB (true/false)'
@@ -29,7 +29,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Instalar dependências
+      - name: Instalar dependÃªncias
         run: npm ci
 
       - name: Enriquecer e-mails via arquivos RFB
@@ -37,13 +37,13 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '0'
+          MAX_ROWS: '200000'
         run: |
           IDX_START="${{ github.event.inputs.idx_start || '0' }}"
           IDX_END="${{ github.event.inputs.idx_end || '9' }}"
           npx tsx scripts/enriquecer-emails-rfb.ts "$IDX_START" "$IDX_END"
 
-      - name: Notificar conclusão
+      - name: Notificar conclusÃ£o
         if: always()
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -53,7 +53,7 @@ jobs:
         run: npx tsx scripts/notificar-cron.ts "enriquecer-emails-rfb" "${{ job.status }}"
 
   dados-receita:
-    name: Enriquecer razão social e situação via Receita
+    name: Enriquecer razÃ£o social e situaÃ§Ã£o via Receita
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: emails-rfb
@@ -68,17 +68,17 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Instalar dependências
+      - name: Instalar dependÃªncias
         run: npm ci
 
       - name: Enriquecer CNPJs via Receita Federal
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MAX_ROWS: '0'
+          MAX_ROWS: '200000'
         run: npx tsx scripts/enriquecer-receita.ts
 
-      - name: Notificar conclusão
+      - name: Notificar conclusÃ£o
         if: always()
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     needs: emails-rfb
-    # Só roda via dispatch manual com run_bulk=true, após emails-rfb ter sucesso
+    # SÃ³ roda via dispatch manual com run_bulk=true, apÃ³s emails-rfb ter sucesso
     if: needs.emails-rfb.result == 'success' && github.event.inputs.run_bulk == 'true'
 
     steps:
@@ -105,7 +105,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Instalar dependências
+      - name: Instalar dependÃªncias
         run: npm ci
 
       - name: Bulk enrichment via arquivos RFB
@@ -113,13 +113,13 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '0'
+          MAX_ROWS: '200000'
         run: |
           IDX_START="${{ github.event.inputs.idx_start || '0' }}"
           IDX_END="${{ github.event.inputs.idx_end || '9' }}"
           npx tsx scripts/enriquecer-bulk-rfb.ts "$IDX_START" "$IDX_END"
 
-      - name: Notificar conclusão
+      - name: Notificar conclusÃ£o
         if: always()
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -127,3 +127,4 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "enriquecer-bulk-rfb" "${{ job.status }}"
+

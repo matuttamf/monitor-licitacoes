@@ -29,7 +29,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '0'
+          MAX_ROWS: '200000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts 0 0
 
       - name: Notificar conclusão
@@ -64,7 +64,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MAX_ROWS: '0'
+          MAX_ROWS: '200000'
         run: npx tsx scripts/enriquecer-receita.ts
 
       - name: Notificar conclusão
@@ -100,7 +100,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=6144
-          MAX_ROWS: '0'
+          MAX_ROWS: '200000'
         run: npx tsx scripts/enriquecer-bulk-rfb.ts 0 0
 
       - name: Notificar conclusão
@@ -111,3 +111,4 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/notificar-cron.ts "enriquecer-bulk-rfb-cron1" "${{ job.status }}"
+
