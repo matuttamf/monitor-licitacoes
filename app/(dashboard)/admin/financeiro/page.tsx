@@ -77,6 +77,7 @@ const CATEGORIAS: Record<string, { label: string; cor: string; bg: string }> = {
 type Kpis = {
   mrr: number
   mrrLiquido: number
+  taxasMpMensal: number
   comissaoMensal: number
   arr: number
   totalPagantes: number
@@ -528,7 +529,7 @@ ${blocoDespesas}
           <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: '12px', marginBottom: '12px' }}>
             {[
               { label: 'MRR Bruto',    value: moeda(kpis.mrr),           sub: 'receita mensal recorrente', cor: '#10b981', destaque: true },
-              { label: 'MRR Líquido',  value: moeda(kpis.mrrLiquido),    sub: `após comissões (${moeda(kpis.comissaoMensal)})`, cor: '#3b82f6' },
+              { label: 'MRR Líquido',  value: moeda(kpis.mrrLiquido),    sub: `após MP (${moeda(kpis.taxasMpMensal)}) + comissões (${moeda(kpis.comissaoMensal)})`, cor: '#3b82f6' },
               { label: 'Ticket médio', value: moeda(kpis.ticketMedio),   sub: `${kpis.totalPagantes} pagantes`, cor: '#8b5cf6' },
               { label: 'Conversão',    value: `${kpis.taxaConversao}%`,  sub: 'trials → assinantes',       cor: '#C9A65A' },
             ].map(({ label, value, sub, cor, destaque }) => (

@@ -145,12 +145,16 @@ export async function GET() {
   const novas7d = pagantes.filter(a => a.assinatura_inicio && new Date(a.assinatura_inicio) >= h7)
   const receita7d = novas7d.reduce((s, a) => s + (a.valor_mensalidade ?? 0), 0)
 
+  // Taxa MP para assinaturas via cartão de crédito à vista (Checkout — Planos de assinatura)
+  const TAXA_MP = 0.0498
+  const taxasMpMensal = Math.round(mrr * TAXA_MP * 100) / 100
   const comissaoMensal = pagantes.reduce((s, a) => s + (a.comissao_mensal ?? 0), 0)
-  const mrrLiquido = mrr - comissaoMensal
+  const mrrLiquido = Math.round((mrr - taxasMpMensal - comissaoMensal) * 100) / 100
 
   const kpis = {
     mrr,
     mrrLiquido,
+    taxasMpMensal,
     comissaoMensal,
     arr:                  mrr * 12,
     totalPagantes:        pagantes.length,
