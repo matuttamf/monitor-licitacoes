@@ -48,3 +48,14 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--cinza-light); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--cinza); }
+
+/* Texto justificado — artigos e landing */
+article p,
+article li,
+section p,
+.justify-prose p {
+  text-align: justify;
+  hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
+  -webkit-hyphens: auto;
+}
