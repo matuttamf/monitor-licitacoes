@@ -41,7 +41,7 @@ export function MobileMenu() {
           />
 
           {/* Painel */}
-          <div className="fixed top-0 right-0 z-50 h-full w-[280px] bg-white shadow-2xl flex flex-col overflow-y-auto">
+          <div className="fixed top-0 right-0 z-50 h-screen w-[280px] bg-white shadow-2xl flex flex-col overflow-y-auto">
             {/* Topo */}
             <div className="flex items-center justify-between px-5 h-[64px] border-b border-[#F0EDE8] shrink-0">
               <Link href="/" onClick={close} className="flex items-center gap-2 no-underline">
