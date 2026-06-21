@@ -238,6 +238,7 @@ export default function LandingPage() {
         </div>
         <nav className="flex items-center gap-1 md:gap-2">
           <Link href="#como-funciona" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Como funciona</Link>
+          <Link href="/licitacoes-para" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Por segmento</Link>
           <NavArticlesDropdown />
           <Link href="/assinar" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Planos</Link>
           <Link href="/contato" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Contato</Link>
