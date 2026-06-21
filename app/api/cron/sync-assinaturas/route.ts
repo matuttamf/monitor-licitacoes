@@ -50,12 +50,16 @@ export async function GET(request: Request) {
     }
   }
 
-  // Buscar perfis ativos/trial — com ou sem mp_subscription_id
-  // (trials sem sub_id podem ter pago mas o webhook falhou)
+  // Paginação por mp_synced_at: processa 50 usuários por rodada, priorizando
+  // quem está há mais tempo sem sync (NULLS FIRST = nunca sincronizados vão primeiro).
+  // O cron roda a cada 2 min → cobre ~36k usuários/dia como fallback; webhook é o caminho principal.
+  const BATCH = 50
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select('id, email, status, plano, mp_subscription_id, bloqueado_admin, assinatura_inicio')
     .in('status', ['active', 'trial'])
+    .order('mp_synced_at', { ascending: true, nullsFirst: true })
+    .limit(BATCH)
 
   if (error) {
     console.error('[cron/sync-assinaturas] Erro ao buscar profiles:', error.message)
@@ -63,10 +67,8 @@ export async function GET(request: Request) {
   }
 
   if (!profiles?.length) {
-    console.log('[cron/sync-assinaturas] Nenhum perfil com mp_subscription_id')
     return NextResponse.json({ ok: true, sincronizados: 0 })
   }
-
 
   let sincronizados = 0
   let erros = 0
@@ -159,6 +161,7 @@ export async function GET(request: Request) {
         acao = 'expirado'
       }
 
+      update.mp_synced_at = new Date().toISOString()
       await supabase.from('profiles').update(update).eq('id', profile.id)
       sincronizados++
       detalhes.push({ userId: profile.id, subscriptionId: subscriptionIdFinal, statusMP, acao })
