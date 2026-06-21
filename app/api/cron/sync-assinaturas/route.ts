@@ -67,23 +67,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, sincronizados: 0 })
   }
 
-  // Busca todas as assinaturas autorizadas no MP uma única vez
-  // Usado para detectar trials que pagaram mas o webhook não chegou (external_reference = userId|planoId)
-  let subsAutorizadasMP: Record<string, unknown>[] = []
-  const temTrialSemSub = profiles.some(p => p.status === 'trial' && !p.mp_subscription_id)
-  if (temTrialSemSub) {
-    const mpRes = await fetch(
-      'https://api.mercadopago.com/preapproval/search?status=authorized&limit=50&sort=date_created&criteria=desc',
-      { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
-    )
-    if (mpRes.ok) {
-      const mpJson = await mpRes.json()
-      subsAutorizadasMP = mpJson.results ?? []
-      console.log(`[sync/mp_reverse] ${subsAutorizadasMP.length} assinaturas autorizadas no MP`)
-    } else {
-      console.warn(`[sync/mp_reverse] MP HTTP ${mpRes.status} ao buscar assinaturas autorizadas`)
-    }
-  }
 
   let sincronizados = 0
   let erros = 0
@@ -104,13 +87,26 @@ export async function GET(request: Request) {
         }
         sub = await res.json()
       } else if (profile.status === 'trial') {
-        // Webhook pode ter falhado — procura nos resultados do MP já carregados
-        sub = subsAutorizadasMP.find(s => {
-          const extRef = (s.external_reference as string) ?? ''
-          return extRef.startsWith(profile.id)
-        }) ?? null
-        if (sub) {
-          console.log(`[sync/mp_reverse] Assinatura encontrada para trial user=${profile.id} sub=${sub.id}`)
+        // Webhook pode ter falhado — busca por external_reference exato (userId|plano e userId|plano|periodo:anual)
+        const plano = profile.plano || 'basic'
+        const candidatos = [
+          `${profile.id}|${plano}`,
+          `${profile.id}|${plano}|periodo:anual`,
+        ]
+        for (const extRef of candidatos) {
+          const r = await fetch(
+            `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(extRef)}&limit=5`,
+            { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
+          )
+          if (r.ok) {
+            const j = await r.json()
+            const results: Record<string, unknown>[] = j.results ?? []
+            sub = results.find(s => s.status === 'authorized') ?? results[0] ?? null
+            if (sub) {
+              console.log(`[sync/ext_ref] Encontrado user=${profile.id} extRef=${extRef} sub=${sub.id} status=${sub.status}`)
+              break
+            }
+          }
         }
         if (!sub) continue
       } else {
