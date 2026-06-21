@@ -35,9 +35,9 @@ export default function CookieBanner({ onConsent }: { onConsent: (v: ConsentStat
       boxShadow: '0 -2px 12px rgba(0,0,0,0.3)',
     }}>
       <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', flex: 1, minWidth: '240px' }}>
-        Usamos cookies para melhorar sua experiência e medir o desempenho das nossas campanhas.{' '}
+        🍪 <strong>Este site usa cookies de rastreamento do Facebook (Meta Pixel)</strong> para medir o desempenho de anúncios — ou seja, saber quantas pessoas viram um anúncio e depois se cadastraram. Nenhum dado sensível é compartilhado. Você pode recusar e continuar navegando normalmente.{' '}
         <a href="/privacidade" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
-          Política de Privacidade
+          Saiba mais
         </a>
       </p>
       <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
