@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import ContadorAoVivo from '@/app/components/ContadorAoVivo'
 import TogglePeriodo from '@/app/components/TogglePeriodo'
 import { NavArticlesDropdown } from '@/components/NavArticlesDropdown'
+import { MobileMenu } from '@/components/MobileMenu'
 
 // ─── SEO ─────────────────────────────────────────────────────────────────────
 
@@ -238,12 +239,13 @@ export default function LandingPage() {
         </div>
         <nav className="flex items-center gap-1 md:gap-2">
           <Link href="#como-funciona" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Como funciona</Link>
-          <Link href="/licitacoes-para" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Por segmento</Link>
+          <Link href="/licitacoes-para" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Licitações por Segmento</Link>
           <NavArticlesDropdown />
           <Link href="/assinar" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Planos</Link>
           <Link href="/contato" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Contato</Link>
-          <Link href="/login" className="px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Entrar</Link>
-          <Link href="/cadastro" className="px-4 md:px-[22px] py-2.5 text-sm font-bold bg-[#6B0F1A] text-white no-underline rounded-[10px]">Começar grátis</Link>
+          <Link href="/login" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Entrar</Link>
+          <Link href="/cadastro" className="hidden md:block px-4 md:px-[22px] py-2.5 text-sm font-bold bg-[#6B0F1A] text-white no-underline rounded-[10px]">Começar grátis</Link>
+          <MobileMenu />
         </nav>
       </header>
 
