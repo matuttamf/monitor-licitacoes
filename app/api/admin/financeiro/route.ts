@@ -195,17 +195,18 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json()
-  const { id, status, plano, valor_mensalidade, assinatura_inicio, acesso_ate } = body
+  const { id, status, plano, valor_mensalidade, assinatura_inicio, acesso_ate, mp_subscription_id } = body
   if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 })
 
   const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const update: Record<string, any> = {}
-  if (status             !== undefined) update.status             = status
-  if (plano              !== undefined) update.plano              = plano
-  if (valor_mensalidade  !== undefined) update.valor_mensalidade  = valor_mensalidade
-  if (assinatura_inicio  !== undefined) update.assinatura_inicio  = assinatura_inicio
-  if (acesso_ate         !== undefined) update.acesso_ate         = acesso_ate
+  if (status              !== undefined) update.status              = status
+  if (plano               !== undefined) update.plano               = plano
+  if (valor_mensalidade   !== undefined) update.valor_mensalidade   = valor_mensalidade
+  if (assinatura_inicio   !== undefined) update.assinatura_inicio   = assinatura_inicio
+  if (acesso_ate          !== undefined) update.acesso_ate          = acesso_ate
+  if (mp_subscription_id  !== undefined) update.mp_subscription_id  = mp_subscription_id
 
   const { error } = await supabase.from('profiles').update(update).eq('id', id)
   if (error) {

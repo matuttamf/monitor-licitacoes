@@ -243,11 +243,12 @@ export default function FinanceiroPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id:                editando.id,
-        plano:             editando.plano,
-        status:            editando.status,
-        valor_mensalidade: editando.valor_mensalidade,
-        assinatura_inicio: editando.assinatura_inicio,
+        id:                 editando.id,
+        plano:              editando.plano,
+        status:             editando.status,
+        valor_mensalidade:  editando.valor_mensalidade,
+        assinatura_inicio:  editando.assinatura_inicio,
+        mp_subscription_id: editando.mp_subscription_id,
       }),
     })
     setSalvando(false)
@@ -1113,6 +1114,16 @@ ${blocoDespesas}
                       value={editando.acesso_ate ? editando.acesso_ate.substring(0, 10) : ''}
                       onChange={e => setEditando({ ...editando, acesso_ate: e.target.value ? e.target.value + 'T23:59:59Z' : null })}
                       style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
+                  ),
+                },
+                {
+                  label: 'ID Assinatura MercadoPago',
+                  content: (
+                    <input type="text"
+                      value={editando.mp_subscription_id ?? ''}
+                      onChange={e => setEditando({ ...editando, mp_subscription_id: e.target.value.trim() || null })}
+                      placeholder="Ex: 2c9380847f..."
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none', fontFamily: 'monospace' }} />
                   ),
                 },
               ].map(({ label, content }) => (
