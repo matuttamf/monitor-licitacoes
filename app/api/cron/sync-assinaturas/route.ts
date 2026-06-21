@@ -101,6 +101,7 @@ export async function GET(request: Request) {
       } else {
         continue // active sem mp_subscription_id não deveria existir, pula
       }
+      if (!sub) continue
       const statusMP: string = sub.status as string
       const extParts = ((sub.external_reference as string) || '').split('|')
       const planoId: string = extParts[1] || profile.plano || 'basic'
