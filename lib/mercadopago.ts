@@ -45,7 +45,6 @@ export async function criarCheckoutAssinatura(
     body: JSON.stringify({
       reason: `Monitor de Licitações - ${plano.nome}${razaoDesc}${razaoPeriodo}`,
       external_reference: extRef,
-      payer_email: email,
       auto_recurring: {
         frequency:          periodo === 'anual' ? 12 : 1,
         frequency_type:     'months',
