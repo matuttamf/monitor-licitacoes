@@ -6,23 +6,22 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  // Busca todos os alertas do usuário via profile_id (acumulado histórico,
-  // independente de quais keywords existem hoje)
+  // Busca todos os alertas do usuário — usa licitacao_id_str (nunca é nulado)
+  // para deduplicação mesmo depois que licitações expiradas são removidas do banco
   const { data: alertas } = await supabase
     .from('alertas')
-    .select('licitacao_id, licitacoes(valor_estimado)')
+    .select('licitacao_id_str, valor_estimado')
     .eq('profile_id', user.id)
 
   if (!alertas?.length) {
     return NextResponse.json({ totalAlertas: 0, totalLicitacoes: 0, volumeMonitorado: 0 })
   }
 
-  // Deduplica por licitacao_id para não somar o mesmo valor múltiplas vezes
   const porLicitacao = new Map<string, number>()
   for (const a of alertas) {
-    if (porLicitacao.has(a.licitacao_id)) continue
-    const val = (a.licitacoes as { valor_estimado?: number } | null)?.valor_estimado ?? 0
-    porLicitacao.set(a.licitacao_id, val)
+    if (!a.licitacao_id_str) continue
+    if (porLicitacao.has(a.licitacao_id_str)) continue
+    porLicitacao.set(a.licitacao_id_str, a.valor_estimado ?? 0)
   }
 
   const volumeMonitorado = [...porLicitacao.values()].reduce((acc, v) => acc + v, 0)

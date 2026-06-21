@@ -147,6 +147,7 @@ async function runMatching() {
 
   const alertasParaSalvar: {
     licitacao_id: string
+    licitacao_id_str: string
     keyword_id: string
     profile_id: string
     canais: string[]
@@ -154,6 +155,7 @@ async function runMatching() {
     score_keyword: number
     score_local: number
     score_valor: number
+    valor_estimado: number | null
   }[] = []
 
   for (const m of matches) {
@@ -179,14 +181,16 @@ async function runMatching() {
       if (!s) continue
 
       alertasParaSalvar.push({
-        licitacao_id:  m.licitacao_id,
-        keyword_id:    kid,
-        profile_id:    kw.user_id,
-        canais:        [],
-        score:         s.score,
-        score_keyword: s.score_keyword,
-        score_local:   s.score_local,
-        score_valor:   s.score_valor,
+        licitacao_id:     m.licitacao_id,
+        licitacao_id_str: m.licitacao_id,
+        keyword_id:       kid,
+        profile_id:       kw.user_id,
+        canais:           [],
+        score:            s.score,
+        score_keyword:    s.score_keyword,
+        score_local:      s.score_local,
+        score_valor:      s.score_valor,
+        valor_estimado:   lic.valor_estimado ?? null,
       })
     }
   }
