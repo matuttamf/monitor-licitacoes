@@ -40,8 +40,8 @@ export async function GET(req: NextRequest) {
   const TAXA_MP = 0.0498
 
   // MRR do mês: soma de valor_mensalidade dos pagantes ativos (excluindo admin)
-  const { data: adminProfile } = await supabase.auth.admin.getUserByEmail(ADMIN_EMAIL)
-  const adminId = adminProfile?.user?.id ?? null
+  const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+  const adminId = (authData?.users ?? []).find(u => u.email === ADMIN_EMAIL)?.id ?? null
 
   let pagantesQuery = supabase
     .from('profiles')
