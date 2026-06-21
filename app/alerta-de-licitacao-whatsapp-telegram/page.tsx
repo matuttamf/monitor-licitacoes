@@ -1,5 +1,6 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import type { Metadata } from 'next'
+import { NavArticlesDropdown } from '@/components/NavArticlesDropdown'
 
 const BASE = 'https://monitordelicitacoes.com.br'
 const URL  = `${BASE}/alerta-de-licitacao-whatsapp-telegram`
@@ -103,7 +104,9 @@ export default function AlertaWhatsappPagina() {
           <div className="w-8 h-8 rounded-[8px] bg-[#6B0F1A] flex items-center justify-center font-black text-[11px] text-[#C9A65A] shrink-0">ML</div>
           <span className="font-semibold text-sm text-[#1A1A1C] tracking-tight hidden sm:block">Monitor de Licitações</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <NavArticlesDropdown />
+          <Link href="/assinar" className="hidden md:block px-4 py-2 text-sm text-[#4a4a4d] no-underline font-medium">Planos</Link>
           <Link href="/login" className="px-3 py-2 text-sm text-[#6B7280] no-underline">Entrar</Link>
           <Link href="/cadastro" className="px-4 py-2 text-sm font-semibold bg-[#6B0F1A] text-white no-underline rounded-lg">Começar grátis</Link>
         </div>
