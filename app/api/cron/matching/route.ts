@@ -64,13 +64,14 @@ async function runMatching() {
   // ilike.or() com milhares de keywords excede limites de URL do PostgREST e produz cobertura parcial.
   // O Gemini faz a curadoria semântica; a pré-filtragem é apenas por data de abertura.
   const [resNovos, resIncrementais] = await Promise.all([
-    // Keywords novas → todo o banco com abertura futura (limite 1000)
+    // Keywords novas → todo o banco com abertura futura, mais recentes primeiro (limite 5000)
     kwNovas.length > 0
       ? supabase
           .from('licitacoes')
           .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
           .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-          .limit(1000)
+          .order('coletado_em', { ascending: false })
+          .limit(5000)
       : Promise.resolve({ data: [], error: null }),
 
     // Keywords existentes → licitações coletadas desde o último matching (limite 500)
