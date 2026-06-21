@@ -65,8 +65,8 @@ async function buscarPorPagamentoAprovado(userId: string): Promise<Record<string
 
       console.log(`[sync/payment] user=${userId} extRef=${extRef} paymentId=${pay.id} status=${pay.status}`)
 
-      // Buscar pagamento completo: /v1/payments/search retorna campos truncados,
-      // preapproval_id só aparece no objeto completo via /v1/payments/{id}
+      // /v1/payments/search retorna campos truncados — buscar pagamento completo
+      // para obter preapproval_id (ausente no resultado de busca paginada)
       const rf = await fetch(
         `https://api.mercadopago.com/v1/payments/${pay.id}`,
         { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
@@ -83,8 +83,8 @@ async function buscarPorPagamentoAprovado(userId: string): Promise<Record<string
         }
       }
 
-      // Último recurso: objeto sintético — ativa mas sem mp_subscription_id
-      // (na próxima renovação o webhook captura o ID corretamente)
+      // Objeto sintético: ativa o usuário sem mp_subscription_id.
+      // Na próxima renovação o webhook captura o ID pelo campo preapproval_id do payment.
       return {
         id:                 null,
         status:             'authorized',

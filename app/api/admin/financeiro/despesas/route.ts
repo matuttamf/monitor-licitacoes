@@ -39,12 +39,17 @@ export async function GET(req: NextRequest) {
   // Aparecem como entradas virtuais (auto=true) — não podem ser editadas/deletadas.
   const TAXA_MP = 0.0498
 
-  // MRR do mês: soma de valor_mensalidade dos pagantes ativos
-  const { data: pagantes } = await supabase
+  // MRR do mês: soma de valor_mensalidade dos pagantes ativos (excluindo admin)
+  const { data: adminProfile } = await supabase.auth.admin.getUserByEmail(ADMIN_EMAIL)
+  const adminId = adminProfile?.user?.id ?? null
+
+  let pagantesQuery = supabase
     .from('profiles')
     .select('valor_mensalidade, plano, periodo, campanha_id')
     .eq('status', 'active')
     .is('owner_id', null)
+  if (adminId) pagantesQuery = pagantesQuery.neq('id', adminId)
+  const { data: pagantes } = await pagantesQuery
 
   const PRECOS: Record<string, number> = { basic: 49.90, profissional: 97.90, gestao: 197.90, pro: 197.90, empresarial: 497.00 }
   const mrrMes = (pagantes ?? []).reduce((s, p) => {
