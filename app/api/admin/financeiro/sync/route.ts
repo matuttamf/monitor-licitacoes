@@ -49,17 +49,16 @@ async function buscarAssinaturaMP(subscriptionId: string): Promise<MpSubscriptio
   return res.json()
 }
 
-// Busca assinatura no MP pela external_reference (userId|planoId)
+// Busca assinatura no MP pelo e-mail do pagador
 // Útil quando o webhook não gravou o mp_subscription_id (ex: webhook perdido na primeira cobrança)
-async function buscarAssinaturaPorExternalRef(userId: string): Promise<MpSubscription | null> {
+async function buscarAssinaturaPorEmail(email: string): Promise<MpSubscription | null> {
   const res = await fetch(
-    `https://api.mercadopago.com/preapproval/search?external_reference=${userId}&limit=10&sort=date_created&criteria=desc`,
+    `https://api.mercadopago.com/preapproval/search?payer_email=${encodeURIComponent(email)}&limit=10&sort=date_created&criteria=desc`,
     { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
   )
   if (!res.ok) return null
   const json = await res.json()
   const resultados: MpSubscription[] = json.results ?? []
-  // Pega a mais recente com status authorized
   return resultados.find(s => s.status === 'authorized') ?? resultados[0] ?? null
 }
 
@@ -75,7 +74,7 @@ export async function POST(request: Request) {
   // Busca profiles: com mp_subscription_id definido OU trials sem ele (webhook pode ter falhado)
   let query = supabase
     .from('profiles')
-    .select('id, status, plano, mp_subscription_id, acesso_ate, assinatura_inicio, valor_mensalidade')
+    .select('id, email, status, plano, mp_subscription_id, acesso_ate, assinatura_inicio, valor_mensalidade')
 
   if (userId) {
     query = query.eq('id', userId)
@@ -103,11 +102,11 @@ export async function POST(request: Request) {
 
     if (profile.mp_subscription_id) {
       sub = await buscarAssinaturaMP(profile.mp_subscription_id)
-    } else if (profile.status === 'trial') {
-      // Webhook pode ter falhado na primeira cobrança — busca pelo userId na external_reference
-      sub = await buscarAssinaturaPorExternalRef(profile.id)
+    } else if (profile.status === 'trial' && profile.email) {
+      // Webhook pode ter falhado — busca pelo e-mail do pagador no MP
+      sub = await buscarAssinaturaPorEmail(profile.email)
       if (sub) {
-        console.log(`[sync] Assinatura encontrada via external_ref para trial user=${profile.id} sub=${sub.id}`)
+        console.log(`[sync] Assinatura encontrada via payer_email para trial user=${profile.id} sub=${sub.id}`)
       }
     }
 

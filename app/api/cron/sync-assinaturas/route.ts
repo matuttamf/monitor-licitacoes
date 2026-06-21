@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   // (trials sem sub_id podem ter pago mas o webhook falhou)
   const { data: profiles, error } = await supabase
     .from('profiles')
-    .select('id, status, plano, mp_subscription_id, bloqueado_admin, assinatura_inicio')
+    .select('id, email, status, plano, mp_subscription_id, bloqueado_admin, assinatura_inicio')
     .in('status', ['active', 'trial'])
 
   if (error) {
@@ -85,17 +85,17 @@ export async function GET(request: Request) {
           continue
         }
         sub = await res.json()
-      } else if (profile.status === 'trial') {
-        // Webhook pode ter falhado — busca pelo userId na external_reference
+      } else if (profile.status === 'trial' && profile.email) {
+        // Webhook pode ter falhado — busca pelo e-mail do pagador no MP
         const searchRes = await fetch(
-          `https://api.mercadopago.com/preapproval/search?external_reference=${profile.id}&limit=5&sort=date_created&criteria=desc`,
+          `https://api.mercadopago.com/preapproval/search?payer_email=${encodeURIComponent(profile.email)}&limit=5&sort=date_created&criteria=desc`,
           { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
         )
         if (searchRes.ok) {
           const json = await searchRes.json()
           const resultados: Record<string, unknown>[] = json.results ?? []
           sub = resultados.find(s => s.status === 'authorized') ?? resultados[0] ?? null
-          if (sub) console.log(`[cron/sync-assinaturas] Assinatura encontrada via external_ref: user=${profile.id} sub=${sub.id}`)
+          if (sub) console.log(`[cron/sync-assinaturas] Assinatura encontrada via payer_email: user=${profile.id} sub=${sub.id}`)
         }
         if (!sub) continue // trial sem assinatura no MP — pula
       } else {
