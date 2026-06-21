@@ -67,6 +67,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, sincronizados: 0 })
   }
 
+  // Busca todas as assinaturas autorizadas no MP uma única vez
+  // Usado para detectar trials que pagaram mas o webhook não chegou (external_reference = userId|planoId)
+  let subsAutorizadasMP: Record<string, unknown>[] = []
+  const temTrialSemSub = profiles.some(p => p.status === 'trial' && !p.mp_subscription_id)
+  if (temTrialSemSub) {
+    const mpRes = await fetch(
+      'https://api.mercadopago.com/preapproval/search?status=authorized&limit=50&sort=date_created&criteria=desc',
+      { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
+    )
+    if (mpRes.ok) {
+      const mpJson = await mpRes.json()
+      subsAutorizadasMP = mpJson.results ?? []
+      console.log(`[sync/mp_reverse] ${subsAutorizadasMP.length} assinaturas autorizadas no MP`)
+    } else {
+      console.warn(`[sync/mp_reverse] MP HTTP ${mpRes.status} ao buscar assinaturas autorizadas`)
+    }
+  }
+
   let sincronizados = 0
   let erros = 0
   const detalhes: { userId: string; subscriptionId: string; statusMP: string; acao: string }[] = []
@@ -85,21 +103,16 @@ export async function GET(request: Request) {
           continue
         }
         sub = await res.json()
-      } else if (profile.status === 'trial' && profile.email) {
-        // Webhook pode ter falhado — busca pelo e-mail do pagador no MP
-        const searchRes = await fetch(
-          `https://api.mercadopago.com/preapproval/search?payer_email=${encodeURIComponent(profile.email)}&limit=5&sort=date_created&criteria=desc`,
-          { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
-        )
-        if (searchRes.ok) {
-          const json = await searchRes.json()
-          const resultados: Record<string, unknown>[] = json.results ?? []
-          sub = resultados.find(s => s.status === 'authorized') ?? resultados[0] ?? null
-          console.log(`[sync/payer_email] user=${profile.id} email=${profile.email} total=${resultados.length} statuses=${resultados.map(r => r.status).join(',')} → sub=${sub?.id ?? 'nenhum'} status=${sub?.status ?? '-'}`)
-        } else {
-          console.warn(`[sync/payer_email] MP HTTP ${searchRes.status} para email=${profile.email}`)
+      } else if (profile.status === 'trial') {
+        // Webhook pode ter falhado — procura nos resultados do MP já carregados
+        sub = subsAutorizadasMP.find(s => {
+          const extRef = (s.external_reference as string) ?? ''
+          return extRef.startsWith(profile.id)
+        }) ?? null
+        if (sub) {
+          console.log(`[sync/mp_reverse] Assinatura encontrada para trial user=${profile.id} sub=${sub.id}`)
         }
-        if (!sub) continue // trial sem assinatura no MP — pula
+        if (!sub) continue
       } else {
         continue // active sem mp_subscription_id não deveria existir, pula
       }
