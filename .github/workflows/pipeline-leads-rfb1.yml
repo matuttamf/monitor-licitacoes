@@ -289,8 +289,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_OPTIONS: --max-old-space-size=4096
-          MAX_ROWS: '200000'
-          MAX_CACHE: '500000'
+          MAX_CACHE: '8000000'
         run: npx tsx scripts/enriquecer-emails-rfb.ts --prepare
 
   email-0:

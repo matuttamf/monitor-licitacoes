@@ -1,0 +1,67 @@
+<svg viewBox="0 0 960 1200" xmlns="http://www.w3.org/2000/svg" width="960" height="1200">
+  <rect width="960" height="1200" fill="#1A1A1C"/>
+  <rect x="0" y="0" width="8" height="1200" fill="#6B0F1A"/>
+  <text x="60" y="100" font-family="Georgia,serif" font-size="14" fill="#C9A65A" letter-spacing="3">MONITOR DE LICITAÇÕES</text>
+  <text x="60" y="220" font-family="Georgia,serif" font-size="80" fill="#FFFFFF" font-weight="700">Monitore</text>
+  <text x="60" y="310" font-family="Georgia,serif" font-size="80" fill="#C9A65A" font-weight="700">10+ portais.</text>
+  <text x="60" y="390" font-family="Arial,sans-serif" font-size="24" fill="#9AA0A6">PNCP, ComprasNet, BLL e mais.</text>
+  <text x="60" y="426" font-family="Arial,sans-serif" font-size="24" fill="#9AA0A6">Tudo em um só lugar.</text>
+  <line x1="60" y1="470" x2="400" y2="470" stroke="#2A2A2C" stroke-width="1"/>
+  <!-- Portais grid -->
+  <g transform="translate(60,500)">
+    <rect width="400" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="80" rx="2" fill="#C9A65A"/>
+    <text x="20" y="32" font-family="Arial,sans-serif" font-size="14" fill="#FFFFFF" font-weight="700">PNCP</text>
+    <text x="20" y="60" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Portal Nacional de Contratações</text>
+  </g>
+  <g transform="translate(480,500)">
+    <rect width="420" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="80" rx="2" fill="#60a5fa"/>
+    <text x="20" y="32" font-family="Arial,sans-serif" font-size="14" fill="#FFFFFF" font-weight="700">ComprasNet</text>
+    <text x="20" y="60" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Portal de Compras do Governo</text>
+  </g>
+  <g transform="translate(60,600)">
+    <rect width="400" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="80" rx="2" fill="#4CAF50"/>
+    <text x="20" y="32" font-family="Arial,sans-serif" font-size="14" fill="#FFFFFF" font-weight="700">BLL</text>
+    <text x="20" y="60" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Bolsa de Licitações e Leilões</text>
+  </g>
+  <g transform="translate(480,600)">
+    <rect width="420" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="80" rx="2" fill="#6B0F1A"/>
+    <text x="20" y="32" font-family="Arial,sans-serif" font-size="14" fill="#FFFFFF" font-weight="700">Licitanet</text>
+    <text x="20" y="60" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Sistema de Licitações</text>
+  </g>
+  <g transform="translate(60,700)">
+    <rect width="840" height="56" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="420" y="34" font-family="Arial,sans-serif" font-size="14" fill="#9AA0A6" text-anchor="middle">e mais 6 portais: Comprasnet SP · Licon · BBMnet · e-Licitações · TCE · ...</text>
+  </g>
+  <!-- Alertas -->
+  <g transform="translate(60,790)">
+    <rect width="840" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="80" rx="2" fill="#25D366"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">Receba alertas por</text>
+    <text x="20" y="62" font-family="Arial,sans-serif" font-size="22" fill="#FFFFFF" font-weight="700">E-mail  ·  WhatsApp  ·  Telegram</text>
+  </g>
+  <!-- Planos -->
+  <g transform="translate(60,896)">
+    <rect width="250" height="80" rx="8" fill="#232325" stroke="#6B0F1A" stroke-width="1"/>
+    <text x="125" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6" text-anchor="middle">Basic</text>
+    <text x="125" y="62" font-family="Georgia,serif" font-size="26" fill="#C9A65A" font-weight="700" text-anchor="middle">R$ 49,90</text>
+  </g>
+  <g transform="translate(328,896)">
+    <rect width="250" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="125" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6" text-anchor="middle">Profissional</text>
+    <text x="125" y="62" font-family="Georgia,serif" font-size="26" fill="#FFFFFF" font-weight="700" text-anchor="middle">R$ 97,90</text>
+  </g>
+  <g transform="translate(596,896)">
+    <rect width="304" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="152" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6" text-anchor="middle">Gestão</text>
+    <text x="152" y="62" font-family="Georgia,serif" font-size="26" fill="#FFFFFF" font-weight="700" text-anchor="middle">R$ 197,90</text>
+  </g>
+  <!-- CTA -->
+  <rect x="60" y="1010" width="840" height="70" rx="10" fill="#6B0F1A"/>
+  <text x="480" y="1052" font-family="Arial,sans-serif" font-size="22" fill="#FFFFFF" font-weight="700" text-anchor="middle">Teste grátis por 7 dias — sem cartão</text>
+  <text x="60" y="1140" font-family="Arial,sans-serif" font-size="16" fill="#555555">monitordelicitacoes.com.br</text>
+  <text x="920" y="1150" font-family="Arial,sans-serif" font-size="38" fill="#6B0F1A" font-weight="900" text-anchor="end">ML</text>
+</svg>

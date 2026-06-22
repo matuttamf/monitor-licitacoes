@@ -11,7 +11,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { createReadStream, existsSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createInflateRaw } from 'node:zlib'
@@ -155,10 +155,25 @@ async function downloadStorage(fileIdx: number, tmpPath: string): Promise<boolea
     return true
   }
   console.log(`  Baixando Estabelecimentos${fileIdx}.zip do Storage...`)
-  const { data, error } = await supabase.storage.from(BUCKET).download(`Estabelecimentos${fileIdx}.zip`)
-  if (error || !data) { console.error(`  ✗ ${error?.message ?? 'não encontrado'}`); return false }
-  writeFileSync(tmpPath, Buffer.from(await data.arrayBuffer()))
-  return true
+  // Usa URL pública para download via stream (evita OOM com arquivos de 1-2 GB)
+  const { data: urlData } = await supabase.storage.from(BUCKET).createSignedUrl(`Estabelecimentos${fileIdx}.zip`, 3600)
+  const downloadUrl = urlData?.signedUrl
+    ?? `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/Estabelecimentos${fileIdx}.zip`
+  try {
+    const res = await fetch(downloadUrl, { signal: AbortSignal.timeout(120_000) })
+    if (!res.ok || !res.body) {
+      console.error(`  ✗ HTTP ${res.status}`)
+      return false
+    }
+    const { createWriteStream } = await import('node:fs')
+    const { pipeline: streamPipeline } = await import('node:stream/promises')
+    const writer = createWriteStream(tmpPath)
+    await streamPipeline(res.body as unknown as NodeJS.ReadableStream, writer)
+    return true
+  } catch (e) {
+    console.error(`  ✗ ${e instanceof Error ? e.message : e}`)
+    return false
+  }
 }
 
 async function extrairEmailsDoArquivo(
@@ -249,6 +264,7 @@ async function atualizarEmails(emailMap: Map<string, string>): Promise<number> {
       .update({ email, status: 'pendente', email_tentativas: 0 })
       .eq('cnpj', cnpj)
       .or('email.is.null,email.eq.')
+      .not('status', 'in', '("descadastrado","usuario")')
       .not('razao_social', 'is', null)
       .not('razao_social', 'match', '^\\d+$')
       .not('municipio', 'is', null)

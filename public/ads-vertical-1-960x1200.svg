@@ -1,0 +1,45 @@
+<svg viewBox="0 0 960 1200" xmlns="http://www.w3.org/2000/svg" width="960" height="1200">
+  <rect width="960" height="1200" fill="#1A1A1C"/>
+  <rect x="0" y="0" width="8" height="1200" fill="#6B0F1A"/>
+  <text x="60" y="100" font-family="Georgia,serif" font-size="14" fill="#C9A65A" letter-spacing="3">MONITOR DE LICITAÇÕES</text>
+  <text x="60" y="220" font-family="Georgia,serif" font-size="86" fill="#FFFFFF" font-weight="700">Nunca</text>
+  <text x="60" y="310" font-family="Georgia,serif" font-size="86" fill="#FFFFFF" font-weight="700">perca</text>
+  <text x="60" y="400" font-family="Georgia,serif" font-size="86" fill="#C9A65A" font-weight="700">um edital.</text>
+  <text x="60" y="470" font-family="Arial,sans-serif" font-size="24" fill="#9AA0A6">Alertas automáticos do seu setor</text>
+  <text x="60" y="502" font-family="Arial,sans-serif" font-size="24" fill="#9AA0A6">por e-mail e WhatsApp.</text>
+  <line x1="60" y1="540" x2="400" y2="540" stroke="#2A2A2C" stroke-width="1"/>
+  <!-- Cards -->
+  <g transform="translate(60,564)">
+    <rect width="840" height="100" rx="10" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="100" rx="2" fill="#60a5fa"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="12" fill="#60a5fa" font-weight="700">TI &amp; SOFTWARE</text>
+    <text x="20" y="56" font-family="Arial,sans-serif" font-size="15" fill="#FFFFFF" font-weight="700">Fornecimento de licenças Microsoft 365</text>
+    <text x="20" y="78" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">TRT 3ª Região</text>
+    <text x="580" y="56" font-family="Arial,sans-serif" font-size="15" fill="#C9A65A" font-weight="700">R$ 342.000</text>
+    <text x="580" y="78" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">25/06/2026</text>
+  </g>
+  <g transform="translate(60,680)">
+    <rect width="840" height="100" rx="10" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="100" rx="2" fill="#C9A65A"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="12" fill="#C9A65A" font-weight="700">CONSTRUÇÃO CIVIL</text>
+    <text x="20" y="56" font-family="Arial,sans-serif" font-size="15" fill="#FFFFFF" font-weight="700">Reforma e ampliação de unidade escolar</text>
+    <text x="20" y="78" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Sec. Educação · SP</text>
+    <text x="580" y="56" font-family="Arial,sans-serif" font-size="15" fill="#C9A65A" font-weight="700">R$ 1.850.000</text>
+    <text x="580" y="78" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">28/06/2026</text>
+  </g>
+  <g transform="translate(60,796)">
+    <rect width="840" height="100" rx="10" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="100" rx="2" fill="#4CAF50"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="12" fill="#4CAF50" font-weight="700">SAÚDE</text>
+    <text x="20" y="56" font-family="Arial,sans-serif" font-size="15" fill="#FFFFFF" font-weight="700">Equipamentos odontológicos e insumos</text>
+    <text x="20" y="78" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Pref. Campinas · SP</text>
+    <text x="580" y="56" font-family="Arial,sans-serif" font-size="15" fill="#C9A65A" font-weight="700">R$ 620.000</text>
+    <text x="580" y="78" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">30/06/2026</text>
+  </g>
+  <!-- CTA -->
+  <rect x="60" y="940" width="840" height="70" rx="10" fill="#6B0F1A"/>
+  <text x="480" y="982" font-family="Arial,sans-serif" font-size="22" fill="#FFFFFF" font-weight="700" text-anchor="middle">Teste grátis por 7 dias — sem cartão</text>
+  <text x="60" y="1080" font-family="Arial,sans-serif" font-size="16" fill="#555555">PNCP · ComprasNet · BLL · Licitanet</text>
+  <text x="60" y="1150" font-family="Arial,sans-serif" font-size="16" fill="#555555">monitordelicitacoes.com.br</text>
+  <text x="920" y="1160" font-family="Arial,sans-serif" font-size="38" fill="#6B0F1A" font-weight="900" text-anchor="end">ML</text>
+</svg>

@@ -1,25 +1,25 @@
-﻿/**
+/**
  * Cron: disparar-leads
- * Horário: seg-sex às 8h, 9h, 12h, 14h, 16h (horário de Brasília = UTC-3)
+ * Horário: a cada hora, seg-sáb 8h-22h (horário de Brasília = UTC-3)
  *
  * Fluxo:
  *  0. Reset leads 'erro' há >4h → 'pendente' (retry automático)
- *  1. Enviar primeiro e-mail para leads 'pendente'
- *  2. Enviar follow-up D+4 e D+8 para leads 'enviado' que não abriram
+ *  1. Enviar primeiro e-mail para leads 'pendente' (lote grande, paralelo)
+ *  2. Enviar follow-up para leads 'enviado' que não abriram
  *
  * Sequência por lead:
  *  - D+0: primeiro e-mail (copy PAS por setor + contrato real como gancho)
  *  - D+4: follow-up 1 se abriu_em IS NULL e emails_enviados < 2
- *  - D+8: follow-up 2 (último) se abriu_em IS NULL e emails_enviados < 3
+ *  - D+8 → D+17 → D+32 → D+62 → D+92 → D+152: follow-ups crescentes
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
 import { emailCaptacao, type LicitacaoResumida } from '@/lib/emails/captacao'
-import { trackResend } from '@/lib/uso-apis'
+import { sendEmailSes } from '@/lib/ses'
+import { trackSes } from '@/lib/uso-apis'
 
 // ─── Palavras-chave por segmento ──────────────────────────────────────────────
 const KEYWORDS_SEGMENTO: Record<string, string[]> = {
@@ -38,67 +38,79 @@ const KEYWORDS_SEGMENTO: Record<string, string[]> = {
   outros:       [],
 }
 
-async function buscarLicitacoesSegmento(
+// Cache de licitações por chave segmento+uf — evita N queries ao banco
+async function construirCacheLicitacoes(
   supabase: SupabaseClient,
-  segmento: string | null,
-  uf: string | null,
-): Promise<LicitacaoResumida[]> {
-  try {
-    const keywords = KEYWORDS_SEGMENTO[segmento ?? 'outros'] ?? []
+  chaves: Set<string>,
+): Promise<Map<string, LicitacaoResumida[]>> {
+  const cache = new Map<string, LicitacaoResumida[]>()
 
-    let query = supabase
-      .from('licitacoes')
-      .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
-      .not('objeto', 'is', null)
-      .order('data_abertura', { ascending: false })
-      .limit(3)
-
-    if (keywords.length > 0) {
-      query = query.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
-    }
-    if (uf) query = query.eq('estado', uf)
-
-    const { data } = await query
-    if (data && data.length >= 1) return data as LicitacaoResumida[]
-
-    // Fallback sem UF
-    if (uf && keywords.length > 0) {
-      let q2 = supabase
+  await Promise.all([...chaves].map(async chave => {
+    const [segmento, uf] = chave.split('|')
+    try {
+      const keywords = KEYWORDS_SEGMENTO[segmento ?? 'outros'] ?? []
+      let query = supabase
         .from('licitacoes')
         .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
         .not('objeto', 'is', null)
         .order('data_abertura', { ascending: false })
         .limit(3)
-      q2 = q2.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
-      const { data: d2 } = await q2
-      if (d2 && d2.length >= 1) return d2 as LicitacaoResumida[]
+      if (keywords.length > 0) query = query.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
+      if (uf) query = query.eq('estado', uf)
+      const { data } = await query
+      if (data?.length) { cache.set(chave, data as LicitacaoResumida[]); return }
+
+      // Fallback sem UF
+      if (uf && keywords.length > 0) {
+        let q2 = supabase
+          .from('licitacoes')
+          .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
+          .not('objeto', 'is', null)
+          .order('data_abertura', { ascending: false })
+          .limit(3)
+        q2 = q2.or(keywords.map(k => `objeto.ilike.%${k}%`).join(','))
+        const { data: d2 } = await q2
+        if (d2?.length) { cache.set(chave, d2 as LicitacaoResumida[]); return }
+      }
+
+      // Último fallback: 3 recentes sem filtro
+      const { data: recentes } = await supabase
+        .from('licitacoes')
+        .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
+        .not('objeto', 'is', null)
+        .order('data_abertura', { ascending: false })
+        .limit(3)
+      cache.set(chave, (recentes ?? []) as LicitacaoResumida[])
+    } catch {
+      cache.set(chave, [])
     }
+  }))
 
-    // Último fallback: 3 recentes sem filtro
-    const { data: recentes } = await supabase
-      .from('licitacoes')
-      .select('objeto, orgao, valor_estimado, estado, data_abertura, link')
-      .not('objeto', 'is', null)
-      .order('data_abertura', { ascending: false })
-      .limit(3)
-
-    return (recentes ?? []) as LicitacaoResumida[]
-  } catch {
-    return []
-  }
+  return cache
 }
 
-// Pro/Empresarial: até 300s. Com ~1s por lead (DB + Resend + 200ms pausa):
-//  75 novos + 25 followup = 100 leads → ~100s, bem dentro do limite.
 export const maxDuration = 300
 
-const MAX_LOTE_NOVOS    = 75
-const MAX_LOTE_FOLLOWUP = 25
-const MAX_EMAILS        = 8  // após 8 e-mails sem abertura → invalido (sunset)
+// Sandbox SES: 200/dia → ~3/exec (60 exec/dia)
+// Produção SES: 50k/dia → ~800/exec (60 exec/dia)
+// Troque SES_PRODUCAO=true na Vercel ao receber Production Access
+const EM_PRODUCAO       = process.env.SES_PRODUCAO === 'true'
+const MAX_LOTE_NOVOS    = EM_PRODUCAO ? 800  : 3
+const MAX_LOTE_FOLLOWUP = EM_PRODUCAO ? 100  : 1
+const CONCORRENCIA_SES  = EM_PRODUCAO ? 50   : 3
+const MAX_EMAILS        = 8    // sunset após 8 e-mails sem abertura
 
-// Dias de espera após cada e-mail (index 0 = após o e-mail 1)
 // D+0 → D+4 → D+8 → D+17 → D+32 → D+62 → D+92 → D+152 (sunset)
 const PROXIMOS_DIAS = [4, 4, 9, 15, 30, 30, 60]
+
+function prioridadeLead(l: { fonte: string | null; origem: string | null }): number {
+  if (l.origem === 'cnae')                 return 5
+  if (l.fonte  === 'pncp_contrato')        return 1
+  if (l.fonte  === 'pncp_proposta')        return 2
+  if (l.fonte  === 'portal_transparencia') return 3
+  if (l.fonte  === 'busca_manual')         return 4
+  return 6
+}
 
 export async function GET(req: NextRequest) {
   if (!verificarCronAuth(req)) {
@@ -114,7 +126,6 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Verificar se captação e disparo estão ativos
   const [cfgCaptacao, cfgDisparo] = await Promise.all([
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_ativa').maybeSingle(),
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_disparo_ativo').maybeSingle(),
@@ -122,90 +133,87 @@ export async function GET(req: NextRequest) {
   if (cfgCaptacao.data && (cfgCaptacao.data.valor === false || cfgCaptacao.data.valor === 'false')) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'sistema pausado' })
   }
-  // Opt-in: só envia se explicitamente true — null/inexistente = pausado (consistente com a UI)
   const disparoAtivo = cfgDisparo.data?.valor === true || cfgDisparo.data?.valor === 'true'
   if (!disparoAtivo) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'disparo pausado pelo admin' })
   }
 
-  // ── Step 0a: Sunset — marcar como 'invalido' leads sem engajamento após a sequência completa
-  await supabase
-    .from('leads')
-    .update({ status: 'invalido', erro_msg: 'sem_engajamento' })
-    .eq('status', 'enviado')
-    .gte('emails_enviados', MAX_EMAILS)
-    .is('abriu_em', null)
-    .is('proximo_email_em', null)
-
-  // ── Step 0b: Reset leads 'erro' há >4h para 'pendente' ───────────────────
+  // ── Steps 0a/0b em paralelo ──────────────────────────────────────────────
   const h4ago = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-  await supabase
-    .from('leads')
-    .update({ status: 'pendente', erro_msg: null })
-    .eq('status', 'erro')
-    .lt('enviado_em', h4ago)
+  await Promise.all([
+    supabase.from('leads')
+      .update({ status: 'invalido', erro_msg: 'sem_engajamento' })
+      .eq('status', 'enviado')
+      .gte('emails_enviados', MAX_EMAILS)
+      .is('abriu_em', null)
+      .is('proximo_email_em', null),
+    supabase.from('leads')
+      .update({ status: 'pendente', erro_msg: null })
+      .eq('status', 'erro')
+      .lt('enviado_em', h4ago),
+  ])
 
-  // ── Step 1: Fila de disparo ordenada por prioridade ─────────────────────────
-  // Prioridade: contrato(1) → proponente(2) → transparência(3) → manual(4) → CNAE/RF(5) → outros(6)
-  // Leads com origem='cnae' têm prioridade 5 independente do fonte (podem ter fonte='pncp_contrato').
-  // Busca o dobro do lote e ordena em JS para não depender da coluna gerada no banco.
-  const { data: leadsPendentesRaw } = await supabase
-    .from('leads')
-    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados, fonte, origem')
-    .eq('status', 'pendente')
-    .not('email', 'is', null)
-    .neq('email', '')
-    .not('segmento', 'is', null)   // sem setor → não consegue buscar licitações de isca relevantes
-    .not('municipio', 'is', null)  // sem cidade → e-mail genérico e sem personalização
-    .not('uf', 'is', null)         // sem UF → não filtra licitações do estado
-    .order('created_at', { ascending: true })
-    .limit(MAX_LOTE_NOVOS * 4)
-
-  function prioridadeLead(l: { fonte: string | null; origem: string | null }): number {
-    if (l.origem === 'cnae')                return 5
-    if (l.fonte  === 'pncp_contrato')       return 1
-    if (l.fonte  === 'pncp_proposta')       return 2
-    if (l.fonte  === 'portal_transparencia') return 3
-    if (l.fonte  === 'busca_manual')        return 4
-    return 6
-  }
+  // ── Buscar leads pendentes + followups em paralelo ────────────────────────
+  const agora = new Date().toISOString()
+  const [{ data: leadsPendentesRaw }, { data: leadsFollowup }] = await Promise.all([
+    supabase
+      .from('leads')
+      .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados, fonte, origem')
+      .eq('status', 'pendente')
+      .not('email', 'is', null)
+      .neq('email', '')
+      .not('segmento', 'is', null)
+      .not('municipio', 'is', null)
+      .not('uf', 'is', null)
+      .order('created_at', { ascending: true })
+      .limit(MAX_LOTE_NOVOS * 2),
+    supabase
+      .from('leads')
+      .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
+      .eq('status', 'enviado')
+      .lte('proximo_email_em', agora)
+      .lt('emails_enviados', MAX_EMAILS)
+      .is('abriu_em', null)
+      .not('email', 'is', null)
+      .neq('email', '')
+      .order('proximo_email_em', { ascending: true })
+      .limit(MAX_LOTE_FOLLOWUP),
+  ])
 
   const leadsPendentes = (leadsPendentesRaw ?? [])
     .sort((a, b) => prioridadeLead(a) - prioridadeLead(b))
     .slice(0, MAX_LOTE_NOVOS)
 
-  // ── Step 2: Follow-up (D+4 e D+8 para quem não abriu) ────────────────────
-  const agora = new Date().toISOString()
-  const { data: leadsFollowup } = await supabase
-    .from('leads')
-    .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
-    .eq('status', 'enviado')
-    .lte('proximo_email_em', agora)
-    .lt('emails_enviados', MAX_EMAILS)
-    .is('abriu_em', null)
-    .not('email', 'is', null)
-    .neq('email', '')
-    .order('proximo_email_em', { ascending: true })
-    .limit(MAX_LOTE_FOLLOWUP)
-
   const todos = [
-    ...(leadsPendentes ?? []).map(l => ({ ...l, isFollowup: false })),
-    ...(leadsFollowup  ?? []).map(l => ({ ...l, isFollowup: true  })),
+    ...(leadsPendentes).map(l => ({ ...l, isFollowup: false })),
+    ...(leadsFollowup ?? []).map(l => ({ ...l, isFollowup: true })),
   ]
 
   if (!todos.length) {
     return NextResponse.json({ ok: true, enviados: 0, followups: 0, mensagem: 'Nenhum lead pendente ou follow-up agendado' })
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  let enviados = 0
-  let followups = 0
-  let erros = 0
+  // ── Pré-carregar cache de licitações por segmento+uf (1 query por par único) ─
+  const chaves = new Set(todos.map(l => `${l.segmento ?? 'outros'}|${l.uf ?? ''}`))
+  const cacheLicitacoes = await construirCacheLicitacoes(supabase, chaves)
 
-  for (const lead of todos) {
-    const licitacoes = await buscarLicitacoesSegmento(supabase, lead.segmento, lead.uf)
+  // ── Preparar todos os e-mails ─────────────────────────────────────────────
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+
+  interface LeadPreparado {
+    id: string
+    email: string
+    isFollowup: boolean
+    numeroEmail: number
+    subject: string
+    htmlFinal: string
+    textFinal: string
+  }
+
+  const leadsPreparados: LeadPreparado[] = todos.map(lead => {
+    const chave = `${lead.segmento ?? 'outros'}|${lead.uf ?? ''}`
+    const licitacoes = cacheLicitacoes.get(chave) ?? []
     const numeroEmail = (lead.emails_enviados ?? 0) + 1
-
     const { subject, html, text } = emailCaptacao({
       id:           lead.id,
       razaoSocial:  lead.razao_social,
@@ -217,65 +225,69 @@ export async function GET(req: NextRequest) {
       objeto:       lead.objeto ?? undefined,
       numeroEmail,
     })
-
-    const htmlFinal = html
-      .replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id)
-      .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
-    const textFinal = text
-      .replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id)
-      .replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email))
-
-    try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
-      trackResend()
-      const { error: sendError } = await resend.emails.send({
-        from: 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
-        to:   lead.email,
-        subject,
-        html: htmlFinal,
-        text: textFinal,
-        headers: {
-          'List-Unsubscribe': `<${appUrl}/descadastrar?token=${lead.id}>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        },
-      })
-
-      if (sendError) throw new Error(sendError.message)
-
-      const novosEnviados = numeroEmail
-      // Intervalos crescentes: D+4, D+4, D+9, D+15, D+30, D+30, D+60, sunset
-      const diasProximo = PROXIMOS_DIAS[novosEnviados - 1] ?? null
-      const proximoEmail = diasProximo
-        ? new Date(Date.now() + diasProximo * 24 * 60 * 60 * 1000).toISOString()
-        : null
-
-      await supabase
-        .from('leads')
-        .update({
-          status:          'enviado',
-          enviado_em:      new Date().toISOString(),
-          erro_msg:        null,
-          emails_enviados: novosEnviados,
-          proximo_email_em: proximoEmail,
-        })
-        .eq('id', lead.id)
-
-      if (lead.isFollowup) followups++
-      else enviados++
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Erro desconhecido'
-      console.error(`[disparar-leads] erro ao enviar para ${lead.email}:`, msg)
-
-      await supabase
-        .from('leads')
-        .update({ status: 'erro', erro_msg: msg.slice(0, 200) })
-        .eq('id', lead.id)
-
-      erros++
+    return {
+      id:          lead.id,
+      email:       lead.email,
+      isFollowup:  lead.isFollowup,
+      numeroEmail,
+      subject,
+      htmlFinal:   html.replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id).replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email)),
+      textFinal:   text.replace(/\{\{UNSUB_TOKEN\}\}/g, lead.id).replace(/\{\{EMAIL\}\}/g, encodeURIComponent(lead.email)),
     }
+  })
+
+  // ── Enviar em paralelo com concorrência controlada ────────────────────────
+  let enviados = 0
+  let followups = 0
+  let erros = 0
+
+  for (let i = 0; i < leadsPreparados.length; i += CONCORRENCIA_SES) {
+    const lote = leadsPreparados.slice(i, i + CONCORRENCIA_SES)
+    const resultados = await Promise.allSettled(
+      lote.map(async lead => {
+        trackSes()
+        await sendEmailSes({
+          from:    'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
+          to:      lead.email,
+          subject: lead.subject,
+          html:    lead.htmlFinal,
+          text:    lead.textFinal,
+          headers: {
+            'List-Unsubscribe':      `<${appUrl}/descadastrar?token=${lead.id}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+        return lead
+      })
+    )
+
+    // Atualizar banco em paralelo para cada resultado do lote
+    await Promise.all(resultados.map(async (resultado, idx) => {
+      const lead = lote[idx]
+      if (resultado.status === 'fulfilled') {
+        const diasProximo = PROXIMOS_DIAS[lead.numeroEmail - 1] ?? null
+        const proximoEmail = diasProximo
+          ? new Date(Date.now() + diasProximo * 24 * 60 * 60 * 1000).toISOString()
+          : null
+        await supabase.from('leads').update({
+          status:           'enviado',
+          enviado_em:       new Date().toISOString(),
+          erro_msg:         null,
+          emails_enviados:  lead.numeroEmail,
+          proximo_email_em: proximoEmail,
+        }).eq('id', lead.id)
+        if (lead.isFollowup) followups++
+        else enviados++
+      } else {
+        const msg = resultado.reason instanceof Error ? resultado.reason.message : 'Erro desconhecido'
+        console.error(`[disparar-leads] erro ${lead.email}:`, msg)
+        await supabase.from('leads').update({ status: 'erro', erro_msg: msg.slice(0, 200) }).eq('id', lead.id)
+        erros++
+      }
+    }))
   }
 
-  console.log(`[disparar-leads] enviados=${enviados} followups=${followups} erros=${erros}`)
+  console.log(`[disparar-leads] enviados=${enviados} followups=${followups} erros=${erros} total=${todos.length}`)
   const resultado = { ok: true, enviados, followups, erros }
   await registrarCronLog({ job: 'disparar-leads', status: 'ok', mensagem: `${enviados} novos + ${followups} follow-ups`, detalhes: resultado })
   return NextResponse.json(resultado)

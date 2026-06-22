@@ -1,0 +1,55 @@
+<svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" width="1200" height="1200">
+  <rect width="1200" height="1200" fill="#1A1A1C"/>
+  <rect x="0" y="0" width="8" height="1200" fill="#6B0F1A"/>
+  <text x="80" y="120" font-family="Georgia,serif" font-size="16" fill="#C9A65A" letter-spacing="3">MONITOR DE LICITAÇÕES</text>
+  <text x="80" y="240" font-family="Georgia,serif" font-size="80" fill="#FFFFFF" font-weight="700">Alerta no</text>
+  <text x="80" y="330" font-family="Georgia,serif" font-size="80" fill="#C9A65A" font-weight="700">WhatsApp.</text>
+  <text x="80" y="405" font-family="Arial,sans-serif" font-size="26" fill="#9AA0A6">Editais do seu setor assim que publicados.</text>
+  <line x1="80" y1="450" x2="500" y2="450" stroke="#2A2A2C" stroke-width="1"/>
+  <!-- WhatsApp mockup -->
+  <g transform="translate(80,480)">
+    <rect width="1040" height="620" rx="16" fill="#111B21"/>
+    <!-- Header -->
+    <rect width="1040" height="70" rx="0" fill="#202C33"/>
+    <rect x="0" y="0" width="1040" height="5" fill="#111B21"/>
+    <circle cx="42" cy="35" r="22" fill="#6B0F1A"/>
+    <text x="42" y="42" font-family="Arial,sans-serif" font-size="16" fill="#FFFFFF" font-weight="900" text-anchor="middle">ML</text>
+    <text x="76" y="26" font-family="Arial,sans-serif" font-size="16" fill="#FFFFFF" font-weight="700">Monitor de Licitações</text>
+    <text x="76" y="50" font-family="Arial,sans-serif" font-size="13" fill="#8696A0">online agora · alertas automáticos</text>
+    <!-- Msg 1 -->
+    <g transform="translate(16,90)">
+      <rect width="800" height="120" rx="8" fill="#202C33"/>
+      <rect x="0" y="0" width="5" height="120" rx="2" fill="#25D366"/>
+      <text x="18" y="30" font-family="Arial,sans-serif" font-size="13" fill="#25D366" font-weight="700">🔔 NOVO EDITAL — TI &amp; SOFTWARE</text>
+      <text x="18" y="56" font-family="Arial,sans-serif" font-size="15" fill="#FFFFFF">Fornecimento de licenças Microsoft 365</text>
+      <text x="18" y="78" font-family="Arial,sans-serif" font-size="13" fill="#8696A0">Tribunal Regional do Trabalho · SP</text>
+      <text x="18" y="102" font-family="Arial,sans-serif" font-size="14" fill="#C9A65A" font-weight="700">R$ 342.000 · Abertura 25/06/2026 · Ver edital →</text>
+    </g>
+    <!-- Msg 2 -->
+    <g transform="translate(16,230)">
+      <rect width="800" height="120" rx="8" fill="#202C33"/>
+      <rect x="0" y="0" width="5" height="120" rx="2" fill="#C9A65A"/>
+      <text x="18" y="30" font-family="Arial,sans-serif" font-size="13" fill="#C9A65A" font-weight="700">🔔 NOVO EDITAL — CONSTRUÇÃO CIVIL</text>
+      <text x="18" y="56" font-family="Arial,sans-serif" font-size="15" fill="#FFFFFF">Reforma e ampliação de unidade escolar</text>
+      <text x="18" y="78" font-family="Arial,sans-serif" font-size="13" fill="#8696A0">Secretaria de Educação · SP</text>
+      <text x="18" y="102" font-family="Arial,sans-serif" font-size="14" fill="#C9A65A" font-weight="700">R$ 1.850.000 · Abertura 28/06/2026 · Ver edital →</text>
+    </g>
+    <!-- Msg 3 -->
+    <g transform="translate(16,370)">
+      <rect width="800" height="120" rx="8" fill="#202C33"/>
+      <rect x="0" y="0" width="5" height="120" rx="2" fill="#60a5fa"/>
+      <text x="18" y="30" font-family="Arial,sans-serif" font-size="13" fill="#60a5fa" font-weight="700">🔔 NOVO EDITAL — SAÚDE</text>
+      <text x="18" y="56" font-family="Arial,sans-serif" font-size="15" fill="#FFFFFF">Equipamentos odontológicos e insumos</text>
+      <text x="18" y="78" font-family="Arial,sans-serif" font-size="13" fill="#8696A0">Prefeitura de Campinas · SP</text>
+      <text x="18" y="102" font-family="Arial,sans-serif" font-size="14" fill="#C9A65A" font-weight="700">R$ 620.000 · Abertura 30/06/2026 · Ver edital →</text>
+    </g>
+    <!-- Input -->
+    <g transform="translate(16,510)">
+      <rect width="950" height="44" rx="22" fill="#2A3942"/>
+      <text x="28" y="28" font-family="Arial,sans-serif" font-size="14" fill="#8696A0">Mensagem</text>
+    </g>
+  </g>
+  <text x="80" y="1160" font-family="Arial,sans-serif" font-size="16" fill="#555555">monitordelicitacoes.com.br</text>
+  <rect x="880" y="1115" width="240" height="56" rx="8" fill="#6B0F1A"/>
+  <text x="1000" y="1149" font-family="Arial,sans-serif" font-size="18" fill="#FFFFFF" font-weight="700" text-anchor="middle">7 dias grátis</text>
+</svg>

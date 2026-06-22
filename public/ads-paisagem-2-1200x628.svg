@@ -1,0 +1,43 @@
+<svg viewBox="0 0 1200 628" xmlns="http://www.w3.org/2000/svg" width="1200" height="628">
+  <rect width="1200" height="628" fill="#1A1A1C"/>
+  <rect x="0" y="0" width="6" height="628" fill="#6B0F1A"/>
+  <text x="80" y="90" font-family="Georgia,serif" font-size="13" fill="#C9A65A" letter-spacing="3">MONITOR DE LICITAÇÕES</text>
+  <text x="80" y="190" font-family="Georgia,serif" font-size="62" fill="#FFFFFF" font-weight="700">R$ 2 trilhões</text>
+  <text x="80" y="258" font-family="Georgia,serif" font-size="62" fill="#C9A65A" font-weight="700">em licitações/ano.</text>
+  <text x="80" y="322" font-family="Arial,sans-serif" font-size="22" fill="#9AA0A6">Sua empresa está participando?</text>
+  <text x="80" y="354" font-family="Arial,sans-serif" font-size="22" fill="#9AA0A6">Receba os editais do seu setor em tempo real.</text>
+  <rect x="80" y="410" width="260" height="56" rx="8" fill="#6B0F1A"/>
+  <text x="210" y="444" font-family="Arial,sans-serif" font-size="18" fill="#FFFFFF" font-weight="700" text-anchor="middle">Teste grátis por 7 dias</text>
+  <line x1="700" y1="40" x2="700" y2="588" stroke="#2A2A2C" stroke-width="1"/>
+  <g transform="translate(730,50)">
+    <rect width="440" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">Portais monitorados</text>
+    <text x="20" y="60" font-family="Georgia,serif" font-size="30" fill="#FFFFFF" font-weight="700">10+</text>
+    <text x="160" y="60" font-family="Arial,sans-serif" font-size="13" fill="#C9A65A">PNCP · ComprasNet · BLL · Licitanet...</text>
+  </g>
+  <g transform="translate(730,150)">
+    <rect width="440" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">Editais coletados hoje</text>
+    <text x="20" y="60" font-family="Georgia,serif" font-size="30" fill="#C9A65A" font-weight="700">847</text>
+    <text x="110" y="60" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">novos editais nas últimas 24h</text>
+  </g>
+  <g transform="translate(730,250)">
+    <rect width="440" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">Segmentos atendidos</text>
+    <text x="20" y="58" font-family="Arial,sans-serif" font-size="13" fill="#FFFFFF">TI · Construção · Saúde · Limpeza · Segurança</text>
+    <text x="20" y="75" font-family="Arial,sans-serif" font-size="12" fill="#9AA0A6">Transporte · Alimentação · e muito mais</text>
+  </g>
+  <g transform="translate(730,350)">
+    <rect width="440" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">Alertas por</text>
+    <text x="20" y="60" font-family="Arial,sans-serif" font-size="20" fill="#FFFFFF" font-weight="700">E-mail  ·  WhatsApp  ·  Telegram</text>
+  </g>
+  <g transform="translate(730,450)">
+    <rect width="440" height="80" rx="8" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial,sans-serif" font-size="13" fill="#9AA0A6">Planos a partir de</text>
+    <text x="20" y="62" font-family="Georgia,serif" font-size="30" fill="#C9A65A" font-weight="700">R$ 49,90</text>
+    <text x="170" y="62" font-family="Arial,sans-serif" font-size="14" fill="#9AA0A6">/mês · Cancele quando quiser</text>
+  </g>
+  <text x="80" y="580" font-family="Arial,sans-serif" font-size="14" fill="#555555">monitordelicitacoes.com.br</text>
+  <text x="1150" y="590" font-family="Arial,sans-serif" font-size="32" fill="#6B0F1A" font-weight="900" text-anchor="end">ML</text>
+</svg>

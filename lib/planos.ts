@@ -46,16 +46,16 @@ export function temPrecosFiltros(plano: string): boolean {
   return ['profissional', 'gestao', 'pro', 'empresarial'].includes(plano)
 }
 
-/** Horários BRT por quantidade de e-mails/dia (sem 7 e 9) */
+/** Horários BRT por quantidade de e-mails/dia — devem bater com o cron alertar: 8h,10h,12h,14h,16h */
 export const HORARIOS_POR_QTD: Record<number, number[]> = {
   1:  [8],
-  2:  [8, 10],
-  3:  [8, 10, 15],
-  4:  [8, 10, 13, 15],
-  5:  [8, 9, 10, 13, 15],
-  6:  [7, 8, 9, 10, 13, 15],
-  8:  [7, 8, 9, 10, 11, 13, 14, 15],
-  10: [7, 8, 9, 10, 11, 13, 14, 15, 16, 17],
+  2:  [8, 14],
+  3:  [8, 12, 16],
+  4:  [8, 10, 14, 16],
+  5:  [8, 10, 12, 14, 16],
+  6:  [8, 10, 12, 14, 16],
+  8:  [8, 10, 12, 14, 16],
+  10: [8, 10, 12, 14, 16],
 }
 
 /** Opções válidas de emails/dia (sem 7 e 9) */
