@@ -3,6 +3,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { enviarEmailSegunda } from '@/lib/emails/trial'
+import { enviarTextoTelegram } from '@/lib/alerts/telegram'
+import { enviarSegundaWhatsApp } from '@/lib/alerts/whatsapp'
+import { temWhatsApp } from '@/lib/planos'
 
 export const maxDuration = 300
 
@@ -16,35 +19,41 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createServiceClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
 
-  // Todos os usuários ativos (trial + active) que não pausaram e-mail
   const { data: usuarios } = await supabase
     .from('profiles')
-    .select('id, status')
+    .select('id, status, plano, telegram_chat_id, whatsapp, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
     .in('status', ['trial', 'active'])
 
   if (!usuarios?.length) return NextResponse.json({ ok: true, enviados: 0 })
 
+  // Mapear emails em lote
+  const uids = usuarios.map(u => u.id)
+  const allAuthUsers: { id: string; email?: string }[] = []
+  for (let page = 1; ; page++) {
+    const { data: pg } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+    if (!pg?.users?.length) break
+    allAuthUsers.push(...pg.users.filter(u => uids.includes(u.id)))
+    if (pg.users.length < 1000) break
+  }
+  const emailMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u.email!]))
+
   let enviados = 0
   let erros = 0
   const hoje = new Date().toISOString().substring(0, 10)
+  const agora = new Date()
 
   for (const usuario of usuarios) {
     try {
-      // Buscar e-mail do usuário
-      const { data: authUser } = await supabase.auth.admin.getUserById(usuario.id)
-      const email = authUser?.user?.email
+      const email = emailMap[usuario.id]
       if (!email) continue
 
-      // Verificar se e-mail está pausado
-      const { data: perfil } = await supabase
-        .from('profiles')
-        .select('email_pausado_ate')
-        .eq('id', usuario.id)
-        .single()
-      if (perfil?.email_pausado_ate && new Date(perfil.email_pausado_ate) > new Date()) continue
+      const emailPausado = usuario.email_pausado_ate && new Date(usuario.email_pausado_ate) > agora
+      const telegramPausado = usuario.telegram_pausado_ate && new Date(usuario.telegram_pausado_ate) > agora
+      const whatsappPausado = usuario.whatsapp_pausado_ate && new Date(usuario.whatsapp_pausado_ate) > agora
 
-      // Keywords ativas do usuário
+      // Keywords ativas
       const { data: keywords } = await supabase
         .from('keywords')
         .select('termo')
@@ -53,7 +62,7 @@ export async function GET(request: Request) {
 
       const termos = keywords?.map(k => k.termo as string) ?? []
 
-      // Contagem nacional: licitações abertas que batem com os termos (sem filtro de UF)
+      // Contagem nacional
       let totalNacional = 0
       if (termos.length > 0) {
         const { count } = await supabase
@@ -64,19 +73,46 @@ export async function GET(request: Request) {
         totalNacional = count ?? 0
       }
 
-      await enviarEmailSegunda(email, totalNacional, termos, usuario.status === 'trial')
-      enviados++
+      const canaisEnviados: string[] = []
+
+      // E-mail
+      if (!emailPausado) {
+        await enviarEmailSegunda(email, totalNacional, termos, usuario.status === 'trial')
+        canaisEnviados.push('email')
+      }
+
+      // Telegram — todos os planos
+      if (usuario.telegram_chat_id && !telegramPausado) {
+        const termosStr = termos.slice(0, 3).join(', ') + (termos.length > 3 ? '...' : '')
+        const texto =
+          `📅 *Bom começo de semana!*\n\n` +
+          `🔍 Esta semana há *${totalNacional.toLocaleString('pt-BR')} licitaç${totalNacional !== 1 ? 'ões' : 'ão'}* abertas` +
+          (termosStr ? ` para "${termosStr}"` : '') +
+          ` em todo o Brasil.\n\n` +
+          `_Acompanhe no painel: ${appUrl}/alertas_`
+        const ok = await enviarTextoTelegram(usuario.telegram_chat_id, texto)
+        if (ok) canaisEnviados.push('telegram')
+      }
+
+      // WhatsApp — Profissional+
+      const plano = usuario.plano ?? 'basic'
+      if (temWhatsApp(plano) && usuario.whatsapp && !whatsappPausado) {
+        const ok = await enviarSegundaWhatsApp(usuario.whatsapp, totalNacional, termos)
+        if (ok) canaisEnviados.push('whatsapp')
+      }
+
+      if (canaisEnviados.length > 0) enviados++
     } catch (error) {
-      console.error(`Erro ao enviar email-segunda para user=${usuario.id}:`, error)
+      console.error(`Erro email-segunda user=${usuario.id}:`, error)
       erros++
     }
   }
 
   const resultado = { ok: true, enviados, erros }
   await registrarCronLog({
-    job: 'email-segunda',
-    status: erros > 0 && enviados === 0 ? 'erro' : 'ok',
-    mensagem: `${enviados} e-mail(s) enviados${erros > 0 ? `, ${erros} erro(s)` : ''}`,
+    job:      'email-segunda',
+    status:   erros > 0 && enviados === 0 ? 'erro' : 'ok',
+    mensagem: `${enviados} usuário(s) notificado(s)${erros > 0 ? `, ${erros} erro(s)` : ''}`,
     detalhes: resultado,
   })
   return NextResponse.json(resultado)

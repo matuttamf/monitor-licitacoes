@@ -157,6 +157,28 @@ export async function enviarResumoSemanalWhatsApp(
   return enviarMensagemZApi(numero, texto)
 }
 
+/** Mensagem de segunda-feira com contagem nacional */
+export async function enviarSegundaWhatsApp(
+  telefone: string,
+  totalNacional: number,
+  termos: string[],
+): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const numero = formatarNumero(telefone)
+  const termosStr = termos.slice(0, 3).join(', ') + (termos.length > 3 ? '...' : '')
+
+  const texto =
+    `📅 *Bom começo de semana!*\n\n` +
+    `🔍 Esta semana há *${totalNacional.toLocaleString('pt-BR')} licitaç${totalNacional !== 1 ? 'ões' : 'ão'}* abertas` +
+    (termosStr ? ` para "${termosStr}"` : '') +
+    ` em todo o Brasil.\n\n` +
+    `_Acompanhe no painel: ${appUrl}/alertas_`
+
+  return enviarMensagemZApi(numero, texto)
+}
+
 /** Notifica o admin sobre novo cadastro */
 export async function notificarAdminNovoCadastro(
   emailUsuario: string,
