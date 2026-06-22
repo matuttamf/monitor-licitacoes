@@ -107,6 +107,7 @@ export default function PalavrasChavePage() {
       return
     }
     setEditando(null)
+    setMostrarBuscaIniciada(true)
     carregar()
   }
 

@@ -27,7 +27,7 @@ export async function GET() {
   const volumeMonitorado = [...porLicitacao.values()].reduce((acc, v) => acc + v, 0)
 
   return NextResponse.json({
-    totalAlertas:    alertas.length,
+    totalAlertas:    porLicitacao.size,
     totalLicitacoes: porLicitacao.size,
     volumeMonitorado,
   })
