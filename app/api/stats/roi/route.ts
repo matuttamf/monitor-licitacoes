@@ -6,12 +6,12 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  // Busca todos os alertas do usuário — usa licitacao_id_str (nunca é nulado)
-  // para deduplicação mesmo depois que licitações expiradas são removidas do banco
+  // Busca todos os alertas do usuário via keyword_id (alertas não têm profile_id)
+  // usa licitacao_id_str para deduplicação mesmo após licitações removidas do banco
   const { data: alertas } = await supabase
     .from('alertas')
-    .select('licitacao_id_str, valor_estimado')
-    .eq('profile_id', user.id)
+    .select('licitacao_id_str, valor_estimado, keywords!inner(user_id)')
+    .eq('keywords.user_id', user.id)
 
   if (!alertas?.length) {
     return NextResponse.json({ totalAlertas: 0, totalLicitacoes: 0, volumeMonitorado: 0 })
