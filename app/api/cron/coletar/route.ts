@@ -230,7 +230,12 @@ export async function GET(request: Request) {
   const ontemDate = new Date(); ontemDate.setDate(ontemDate.getDate() - 1)
   const { count: removidas } = await supabase.from('licitacoes').delete({ count: 'exact' })
     .lt('data_abertura', ontemDate.toISOString().substring(0, 10)).not('data_abertura', 'is', null)
-  console.log(`${removidas ?? 0} licitações expiradas removidas`)
+  // Licitações sem data_abertura acumulam para sempre — limpar as coletadas há +30 dias
+  const trintaDiasAtras = new Date(); trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30)
+  const { count: removidasSemData } = await supabase.from('licitacoes').delete({ count: 'exact' })
+    .is('data_abertura', null)
+    .lt('coletado_em', trintaDiasAtras.toISOString())
+  console.log(`${removidas ?? 0} licitações expiradas + ${removidasSemData ?? 0} sem data removidas`)
 
   // Keywords para Google e Querido Diário
   const { data: kwData } = await supabase.from('keywords').select('termo').eq('ativo', true)
@@ -740,10 +745,13 @@ export async function GET(request: Request) {
   detalhes.salvas          = salvas
   detalhes.candidatos      = candidatos ?? 0
 
+  const fontesFalhando = TOTAL_FONTES - totalOk
   await registrarCronLog({
     job: 'coletar',
-    status: 'ok',
-    mensagem: `${salvas} salvas de ${todasLicitacoes.length} coletadas (${totalOk}/${TOTAL_FONTES} fontes) — ${candidatos ?? 0} recentes`,
+    status: fontesFalhando > 20 ? 'aviso' : 'ok',
+    mensagem: fontesFalhando > 20
+      ? `⚠️ ${fontesFalhando} fontes falhando — ${salvas} salvas de ${todasLicitacoes.length} coletadas (${totalOk}/${TOTAL_FONTES})`
+      : `${salvas} salvas de ${todasLicitacoes.length} coletadas (${totalOk}/${TOTAL_FONTES} fontes) — ${candidatos ?? 0} recentes`,
     detalhes,
   })
 

@@ -54,6 +54,7 @@ export async function GET(request: Request) {
     : process.env.MP_ACCESS_TOKEN_TEST!
 
   const pausasReativadasIds: string[] = []
+  const pausasFalhadasIds: string[] = []
   for (const p of pausasParaReativar ?? []) {
     if (p.mp_subscription_id) {
       const res = await fetch(`https://api.mercadopago.com/preapproval/${p.mp_subscription_id}`, {
@@ -62,7 +63,9 @@ export async function GET(request: Request) {
         body: JSON.stringify({ status: 'authorized' }),
       })
       if (!res.ok) {
-        console.error(`Erro ao reativar MP para profile ${p.id}:`, await res.text())
+        const erroTexto = await res.text()
+        console.error(`Erro ao reativar MP para profile ${p.id}:`, erroTexto)
+        pausasFalhadasIds.push(p.id)
         continue
       }
     }
@@ -83,8 +86,11 @@ export async function GET(request: Request) {
 
   await registrarCronLog({
     job: 'expirar-trials',
-    status: 'ok',
-    mensagem: `${expirados} trial(s) + ${assinaturasExp} cancelada(s) + ${pausasReativ} pausa(s) reativada(s)`,
+    status: pausasFalhadasIds.length > 0 ? 'aviso' : 'ok',
+    mensagem: pausasFalhadasIds.length > 0
+      ? `${expirados} trial(s) + ${assinaturasExp} cancelada(s) + ${pausasReativ} pausa(s) reativada(s) — ⚠️ ${pausasFalhadasIds.length} reativação(ões) MP falharam`
+      : `${expirados} trial(s) + ${assinaturasExp} cancelada(s) + ${pausasReativ} pausa(s) reativada(s)`,
+    detalhes: pausasFalhadasIds.length > 0 ? { pausas_falhadas: pausasFalhadasIds } : undefined,
   })
-  return NextResponse.json({ ok: true, expirados })
+  return NextResponse.json({ ok: true, expirados, pausas_falhadas: pausasFalhadasIds })
 }

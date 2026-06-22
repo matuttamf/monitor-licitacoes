@@ -40,7 +40,7 @@ export async function registrarCronLog({
   detalhes,
 }: {
   job: string
-  status: 'ok' | 'erro' | 'ignorado'
+  status: 'ok' | 'erro' | 'aviso' | 'ignorado'
   mensagem?: string
   detalhes?: Record<string, unknown>
 }) {
@@ -49,7 +49,7 @@ export async function registrarCronLog({
     await supabase.from('cron_logs').insert({ job, status, mensagem, detalhes })
   } catch { /* não deixa falha de log derrubar o cron */ }
 
-  if (status === 'erro') {
+  if (status === 'erro' || status === 'aviso') {
     await notificarErro(job, mensagem ?? 'Erro sem detalhes')
   }
 }
