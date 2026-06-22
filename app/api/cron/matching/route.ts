@@ -202,6 +202,7 @@ async function runMatching() {
         licitacao_id_str: m.licitacao_id,
         keyword_id:       kid,
         profile_id:       kw.user_id,
+        user_id:          kw.user_id,
         canais:           [],
         score:            s.score,
         score_keyword:    s.score_keyword,
