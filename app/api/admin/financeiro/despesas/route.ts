@@ -66,11 +66,7 @@ export async function GET(req: NextRequest) {
     : 0
 
   const virtuais = [
-    ...(taxaMP > 0 ? [{
-      id: '__taxa_mp__', descricao: 'Taxas MercadoPago (4,98%)', valor: taxaMP,
-      categoria: 'plataforma', recorrente: true, mes: null, ano: null,
-      numero_nf: null, criado_em: null, auto: true,
-    }] : []),
+    // Nota: Taxas MP já estão descontadas em mrrLiquido na API, não são despesa operacional
     ...(comissoes > 0 ? [{
       id: '__comissoes_afiliados__', descricao: 'Comissões de afiliados', valor: comissoes,
       categoria: 'comissao', recorrente: false, mes: mes ?? null, ano: ano ?? null,
