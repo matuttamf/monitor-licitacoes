@@ -58,10 +58,12 @@ export async function GET(request: Request) {
 
         let count = 0
         if (keywordIds.length > 0) {
+          const hoje = new Date().toISOString().substring(0, 10)
           const { count: licitacaoCount } = await supabase
             .from('alertas')
             .select('id', { count: 'exact' })
             .in('keyword_id', keywordIds)
+            .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
 
           count = licitacaoCount ?? 0
         }
