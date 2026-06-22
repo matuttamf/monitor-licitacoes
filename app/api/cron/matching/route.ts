@@ -176,7 +176,7 @@ async function runMatching() {
   if (alertasParaSalvar.length > 0) {
     await supabase.from('alertas').upsert(
       alertasParaSalvar,
-      { onConflict: 'licitacao_id,keyword_id', ignoreDuplicates: false }
+      { onConflict: 'licitacao_id,keyword_id', ignoreDuplicates: true }
     )
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL

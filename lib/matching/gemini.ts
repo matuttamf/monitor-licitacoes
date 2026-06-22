@@ -88,7 +88,8 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
     }
 
     try {
-      const jsonMatch = texto.match(/\[[\s\S]*\]/)
+      const textoLimpo = texto.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+      const jsonMatch = textoLimpo.match(/\[[\s\S]*\]/)
       if (!jsonMatch) continue
 
       const matches: { index: number; keywords: string[] }[] = JSON.parse(jsonMatch[0])
