@@ -413,7 +413,7 @@ ${blocoDespesas}
   const bloqueados = assinantes.filter(a => a.status === 'bloqueado' || a.status === 'expired')
 
   const totalDespesasMes = despesas.reduce((s, d) => s + d.valor, 0)
-  const resultadoLiquido = (kpis?.mrrLiquido ?? 0) - totalDespesasMes
+  const resultadoLiquido = (kpis?.mrrLiquido ?? 0) - (kpis?.comissaoMensal ?? 0) - totalDespesasMes
 
   function filtrar(lista: Assinante[]) {
     let resultado = lista.filter(a => {
@@ -532,7 +532,7 @@ ${blocoDespesas}
           <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: '12px', marginBottom: '12px' }}>
             {[
               { label: 'MRR Bruto',    value: moeda(kpis.mrr),           sub: 'receita mensal recorrente', cor: '#10b981', destaque: true },
-              { label: 'MRR Líquido',  value: moeda(kpis.mrrLiquido),    sub: `após MP (${moeda(kpis.taxasMpMensal)}) + comissões (${moeda(kpis.comissaoMensal)})`, cor: '#3b82f6' },
+              { label: 'MRR Líquido',  value: moeda(kpis.mrrLiquido),    sub: `após descontar taxas MP (${moeda(kpis.taxasMpMensal)})`, cor: '#3b82f6' },
               { label: 'Ticket médio', value: moeda(kpis.ticketMedio),   sub: `${kpis.totalPagantes} pagantes`, cor: '#8b5cf6' },
               { label: 'Conversão',    value: `${kpis.taxaConversao}%`,  sub: 'trials → assinantes',       cor: '#C9A65A' },
             ].map(({ label, value, sub, cor, destaque }) => (
@@ -1000,8 +1000,8 @@ ${blocoDespesas}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               {[
                 { label: 'Total despesas',    value: moeda(totalDespesasMes),               cor: '#ef4444', sub: `${despesas.length} lançamento${despesas.length !== 1 ? 's' : ''}` },
-                { label: 'MRR Líquido',       value: moeda(kpis?.mrrLiquido ?? 0),          cor: '#3b82f6', sub: 'após comissões' },
-                { label: 'Resultado líquido', value: moeda(resultadoLiquido),               cor: resultadoLiquido >= 0 ? '#10b981' : '#ef4444', sub: 'MRR líq. − despesas' },
+                { label: 'MRR Líquido',       value: moeda(kpis?.mrrLiquido ?? 0),          cor: '#3b82f6', sub: 'após taxas MP' },
+                { label: 'Resultado líquido', value: moeda(resultadoLiquido),               cor: resultadoLiquido >= 0 ? '#10b981' : '#ef4444', sub: 'MRR líq. − comissões − despesas' },
                 { label: 'Fixas/mês',         value: moeda(despesas.filter(d => d.recorrente).reduce((s, d) => s + d.valor, 0)), cor: '#f59e0b', sub: 'custos recorrentes' },
               ].map(({ label, value, cor, sub }) => (
                 <div key={label} style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>

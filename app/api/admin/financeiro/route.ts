@@ -161,7 +161,7 @@ export async function GET() {
   const TAXA_MP = 0.0498
   const taxasMpMensal = Math.round(mrr * TAXA_MP * 100) / 100
   const comissaoMensal = pagantes.reduce((s, a) => s + (a.comissao_mensal ?? 0), 0)
-  const mrrLiquido = Math.round((mrr - taxasMpMensal - comissaoMensal) * 100) / 100
+  const mrrLiquido = Math.round((mrr - taxasMpMensal) * 100) / 100
 
   const kpis = {
     mrr,

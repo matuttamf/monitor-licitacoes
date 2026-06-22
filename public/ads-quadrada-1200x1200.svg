@@ -1,0 +1,36 @@
+<svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" width="1200" height="1200">
+  <rect width="1200" height="1200" fill="#1A1A1C"/>
+  <rect x="0" y="0" width="6" height="1200" fill="#6B0F1A"/>
+  <text x="80" y="90" font-family="Georgia,serif" font-size="14" fill="#C9A65A" letter-spacing="3">MONITOR DE LICITAÇÕES</text>
+  <text x="80" y="210" font-family="Georgia,serif" font-size="80" fill="#FFFFFF" font-weight="700">Alertas</text>
+  <text x="80" y="300" font-family="Georgia,serif" font-size="80" fill="#FFFFFF" font-weight="700">automáticos</text>
+  <text x="80" y="390" font-family="Georgia,serif" font-size="80" fill="#C9A65A" font-weight="700">de editais.</text>
+  <text x="80" y="458" font-family="Arial,sans-serif" font-size="24" fill="#9AA0A6">Todo dia útil, antes de todos os concorrentes.</text>
+  <line x1="80" y1="500" x2="1120" y2="500" stroke="#2A2A2C" stroke-width="1"/>
+  <g transform="translate(80,528)">
+    <rect width="1040" height="118" rx="10" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="118" rx="2" fill="#f97316"/>
+    <text x="28" y="38" font-family="Arial,sans-serif" font-size="13" fill="#f97316" font-weight="700">SEGURANÇA E VIGILÂNCIA</text>
+    <text x="28" y="66" font-family="Arial,sans-serif" font-size="19" fill="#FFFFFF" font-weight="700">Vigilância armada — Ministério da Educação</text>
+    <text x="28" y="92" font-family="Arial,sans-serif" font-size="14" fill="#9AA0A6">Brasília–DF · R$ 2.400.000 · Abertura 27/06/2026 · PNCP</text>
+  </g>
+  <g transform="translate(80,664)">
+    <rect width="1040" height="118" rx="10" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="118" rx="2" fill="#60a5fa"/>
+    <text x="28" y="38" font-family="Arial,sans-serif" font-size="13" fill="#60a5fa" font-weight="700">TECNOLOGIA DA INFORMAÇÃO</text>
+    <text x="28" y="66" font-family="Arial,sans-serif" font-size="19" fill="#FFFFFF" font-weight="700">Sistema de gestão municipal integrado</text>
+    <text x="28" y="92" font-family="Arial,sans-serif" font-size="14" fill="#9AA0A6">Prefeitura de Belo Horizonte–MG · R$ 870.000 · Abertura 29/06/2026</text>
+  </g>
+  <g transform="translate(80,800)">
+    <rect width="1040" height="118" rx="10" fill="#232325" stroke="#2A2A2C" stroke-width="1"/>
+    <rect x="0" y="0" width="5" height="118" rx="2" fill="#C9A65A"/>
+    <text x="28" y="38" font-family="Arial,sans-serif" font-size="13" fill="#C9A65A" font-weight="700">ENGENHARIA E CONSTRUÇÃO</text>
+    <text x="28" y="66" font-family="Arial,sans-serif" font-size="19" fill="#FFFFFF" font-weight="700">Pavimentação asfáltica de vias urbanas — lote 3</text>
+    <text x="28" y="92" font-family="Arial,sans-serif" font-size="14" fill="#9AA0A6">Prefeitura de Manaus–AM · R$ 4.100.000 · Abertura 01/07/2026</text>
+  </g>
+  <rect x="80" y="972" width="310" height="68" rx="10" fill="#6B0F1A"/>
+  <text x="235" y="1013" font-family="Arial,sans-serif" font-size="22" fill="#FFFFFF" font-weight="700" text-anchor="middle">7 dias grátis</text>
+  <text x="420" y="1013" font-family="Arial,sans-serif" font-size="15" fill="#555555">Sem cartão de crédito · Cancele quando quiser</text>
+  <text x="80" y="1140" font-family="Arial,sans-serif" font-size="18" fill="#555555">monitordelicitacoes.com.br</text>
+  <text x="1120" y="1140" font-family="Arial,sans-serif" font-size="40" fill="#6B0F1A" font-weight="900" text-anchor="end">ML</text>
+</svg>

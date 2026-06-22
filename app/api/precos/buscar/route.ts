@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
   const dozeRow   = stats12m?.[0]    ?? null
 
   // Usa stats dos últimos 12 meses se tiver >= 5 resultados nesse período
-  const MIN_RESULTADOS_12M = 15
+  const MIN_RESULTADOS_12M = 5
   const usarDozeM = !inicio && !fim && dozeRow && Number(dozeRow.total) >= MIN_RESULTADOS_12M
   const stats     = usarDozeM ? dozeRow : geralRow
   const statsLabel = usarDozeM
