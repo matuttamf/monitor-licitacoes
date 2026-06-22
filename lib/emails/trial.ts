@@ -201,6 +201,89 @@ export async function enviarEmailDia3(
   })
 }
 
+// E-mail Segunda-feira: resumo semanal para todos os usuários (trial + active)
+export async function enviarEmailSegunda(
+  email: string,
+  totalNacional: number,
+  termos: string[] = [],
+  isTrial = false,
+): Promise<void> {
+  const resend = getResend()
+  trackResend()
+
+  const termosLabel = termos.length > 0
+    ? termos.slice(0, 3).join(', ') + (termos.length > 3 ? ` +${termos.length - 3}` : '')
+    : 'suas palavras-chave'
+
+  const subject = totalNacional > 0
+    ? `${totalNacional} licitações abertas para "${termosLabel}" esta semana`
+    : `Seu monitoramento está ativo — novas oportunidades chegando`
+
+  const termosChips = termos.length > 0
+    ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
+        ${termos.slice(0, 6).map(t => `
+        <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;">
+          ${t}
+        </span>`).join('')}
+        ${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;">+${termos.length - 6} mais</span>` : ''}
+      </div>`
+    : ''
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject,
+    html: baseEmail(`
+  <!-- Hero -->
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Panorama da semana</div>
+    ${totalNacional > 0 ? `
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      <span style="color:#6B0F1A;font-style:italic;">${totalNacional} licitações</span><br>abertas no Brasil agora.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      São editais publicados em todo o território nacional que correspondem ao que sua empresa vende. Acesse o painel para ver os detalhes e os valores envolvidos.
+    </p>
+    ` : `
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Seu monitor está <span style="color:#6B0F1A;font-style:italic;">ativo e rastreando.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      Não encontramos editais abertos para suas palavras-chave neste momento, mas o monitoramento está rodando. Editais são publicados diariamente — seu alerta chega assim que um aparecer.
+    </p>
+    `}
+    ${termosChips}
+  </td></tr>
+
+  <!-- Contador destaque -->
+  ${totalNacional > 0 ? `
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
+      <tr>
+        <td style="padding:28px;text-align:center;">
+          <div style="color:#C9A65A;font-size:44px;font-weight:700;line-height:1;">${totalNacional}</div>
+          <div style="color:rgba(255,255,255,0.7);font-size:14px;margin-top:8px;">licitações abertas em território nacional</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:4px;">que combinam com suas palavras-chave</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  ` : ''}
+
+  <!-- CTA -->
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${APP_URL}/dashboard"
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Ver licitações no painel →
+    </a>
+    ${isTrial ? `<p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
+      Ainda no período de teste. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora →</a>
+    </p>` : ''}
+  </td></tr>
+    `, email),
+  })
+}
+
 // E-mail Dia 6: Urgência (trial expira amanhã)
 export async function enviarEmailUrgencia(email: string): Promise<void> {
   const resend = getResend()
