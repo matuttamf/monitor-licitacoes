@@ -3,7 +3,7 @@
 # Horários BRT (UTC-3): 6h e 18h (offset 3h em relação ao cron 2)
 on:
   schedule:
-    - cron: '0 2 3,6,9,12,15,18,21,24,27,30 * *'   # 23h BRT dias 3,6,9... (ciclo 3 dias)
+    - cron: '0 1 3,6,9,12,15,18,21,24,27,30 * *'   # 22h BRT dias 3,6,9... (ciclo 3 dias)
   workflow_dispatch: {}
 
 jobs:
