@@ -46,8 +46,8 @@ export async function GET() {
     supabase.auth.admin.listUsers(),
     // Uma única query para keywords — id + user_id + ativo
     supabase.from('keywords').select('id, user_id, ativo'),
-    // Alertas sem join, sem o limite padrão de 1000 rows
-    supabase.from('alertas').select('keyword_id, enviado_em').order('enviado_em', { ascending: false }).range(0, 49999),
+    // Alertas por user_id direto (coluna adicionada em 20260622_alertas_user_id.sql)
+    supabase.from('alertas').select('user_id, criado_em').order('criado_em', { ascending: false }).range(0, 49999),
     supabase.from('campanhas').select('id, nome'),
   ])
 
@@ -61,16 +61,15 @@ export async function GET() {
     if (kw.ativo) kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
   }
 
-  // Contagem + último alerta por usuário (via keyword_id, sem join)
-  // Rows vêm ORDER BY enviado_em DESC — NULLs ficam no topo no Postgres,
-  // então inicializamos ultimo=null e atualizamos só ao encontrar um valor não-nulo.
+  // Contagem + último alerta por usuário via user_id direto
+  // Rows vêm ORDER BY criado_em DESC — primeiro registro de cada user é o mais recente
   const alertaPorUser: Record<string, { count: number; ultimo: string | null }> = {}
   for (const a of alertaRows ?? []) {
-    const uid = kwToUser[a.keyword_id]
+    const uid = (a as any).user_id
     if (!uid) continue
     if (!alertaPorUser[uid]) alertaPorUser[uid] = { count: 0, ultimo: null }
     alertaPorUser[uid].count++
-    if (a.enviado_em && !alertaPorUser[uid].ultimo) alertaPorUser[uid].ultimo = a.enviado_em
+    if (!alertaPorUser[uid].ultimo) alertaPorUser[uid].ultimo = (a as any).criado_em
   }
 
   const emailMap = Object.fromEntries(
