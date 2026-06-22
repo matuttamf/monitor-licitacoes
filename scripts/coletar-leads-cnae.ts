@@ -403,6 +403,11 @@ async function main() {
     await processarArquivo(i, targetCnaes, contatados)
   }
 
+  console.log('\nAtualizando cnae_rank...')
+  const { error: rankErr } = await supabase.rpc('atualizar_cnae_rank')
+  if (rankErr) console.error('  Erro ao atualizar cnae_rank:', rankErr.message)
+  else console.log('  cnae_rank atualizado.')
+
   console.log('\n✓ Concluído.')
 }
 

@@ -103,10 +103,11 @@ const MAX_EMAILS        = 8    // sunset após 8 e-mails sem abertura
 // D+0 → D+4 → D+8 → D+17 → D+32 → D+62 → D+92 → D+152 (sunset)
 const PROXIMOS_DIAS = [4, 4, 9, 15, 30, 30, 60]
 
+// Fallback JS para quando a query DB não usa prioridade_disparo
 function prioridadeLead(l: { fonte: string | null; origem: string | null }): number {
   if (l.origem === 'cnae')                 return 5
-  if (l.fonte  === 'pncp_contrato')        return 1
-  if (l.fonte  === 'pncp_proposta')        return 2
+  if (l.fonte  === 'pncp_proposta')        return 1  // Licitações (participantes)
+  if (l.fonte  === 'pncp_contrato')        return 2  // Contratos firmados
   if (l.fonte  === 'portal_transparencia') return 3
   if (l.fonte  === 'busca_manual')         return 4
   return 6
@@ -158,15 +159,17 @@ export async function GET(req: NextRequest) {
   const [{ data: leadsPendentesRaw }, { data: leadsFollowup }] = await Promise.all([
     supabase
       .from('leads')
-      .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados, fonte, origem')
+      .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados, fonte, origem, cnae_rank')
       .eq('status', 'pendente')
       .not('email', 'is', null)
       .neq('email', '')
       .not('segmento', 'is', null)
       .not('municipio', 'is', null)
       .not('uf', 'is', null)
+      .order('prioridade_disparo', { ascending: true })
+      .order('cnae_rank', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
-      .limit(MAX_LOTE_NOVOS * 2),
+      .limit(MAX_LOTE_NOVOS),
     supabase
       .from('leads')
       .select('id, cnpj, razao_social, nome_fantasia, email, municipio, uf, cnae, segmento, objeto, emails_enviados')
@@ -180,9 +183,16 @@ export async function GET(req: NextRequest) {
       .limit(MAX_LOTE_FOLLOWUP),
   ])
 
+  // Query já ordenada pelo banco (prioridade_disparo → cnae_rank → created_at)
+  // Sort JS é fallback de segurança para casos sem coluna prioridade_disparo
   const leadsPendentes = (leadsPendentesRaw ?? [])
-    .sort((a, b) => prioridadeLead(a) - prioridadeLead(b))
-    .slice(0, MAX_LOTE_NOVOS)
+    .sort((a, b) => {
+      const pa = prioridadeLead(a), pb = prioridadeLead(b)
+      if (pa !== pb) return pa - pb
+      const ra = (a as { cnae_rank?: number | null }).cnae_rank ?? 999
+      const rb = (b as { cnae_rank?: number | null }).cnae_rank ?? 999
+      return ra - rb
+    })
 
   const todos = [
     ...(leadsPendentes).map(l => ({ ...l, isFollowup: false })),
