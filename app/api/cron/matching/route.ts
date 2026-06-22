@@ -82,7 +82,7 @@ async function runMatching() {
   if (!candidatos.length) {
     // Fim de ciclo sem candidatos — reinicia cursor
     await supabase.from('configuracoes').delete().eq('chave', 'matching_scan_cursor')
-    const resultado = { ok: true, matches: 0, candidatos: 0, cicloCompleto: true, ...debugBase }
+    const resultado = { ok: true, matches: 0, cicloCompleto: true, ...debugBase }
     await registrarCronLog({ job: 'matching', status: 'ok', mensagem: `0 candidatos — ciclo reiniciado`, detalhes: resultado })
     return NextResponse.json(resultado)
   }
