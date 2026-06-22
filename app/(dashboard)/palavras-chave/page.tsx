@@ -27,6 +27,7 @@ export default function PalavrasChavePage() {
   const [termoEdit, setTermoEdit]       = useState('')
   const [regiaoEdit, setRegiaoEdit]     = useState<string[]>([])
   const [erroEdit, setErroEdit]         = useState('')
+  const [mostrarBuscaIniciada, setMostrarBuscaIniciada] = useState(false)
 
   async function carregar() {
     setCarregando(true)
@@ -69,6 +70,7 @@ export default function PalavrasChavePage() {
     }
     setNovoTermo('')
     setNovasRegioes([])
+    setMostrarBuscaIniciada(true)
     carregar()
   }
 
@@ -179,6 +181,30 @@ export default function PalavrasChavePage() {
           </div>
         )}
       </form>
+
+      {/* Banner busca iniciada — aparece após adicionar keyword */}
+      {mostrarBuscaIniciada && (
+        <div className="rounded-2xl px-5 py-4 mb-5 flex items-start justify-between gap-4"
+          style={{ background: '#f0fdf4', border: '1.5px solid #86efac' }}>
+          <div className="flex items-start gap-3">
+            <span style={{ fontSize: 20, lineHeight: 1.4 }}>🔍</span>
+            <div>
+              <p className="text-sm font-semibold mb-0.5" style={{ color: '#166534' }}>
+                Busca em andamento
+              </p>
+              <p className="text-sm" style={{ color: '#15803d' }}>
+                Uma varredura completa nas 346 fontes de licitações foi iniciada. Em até 4 horas, todos os editais abertos correspondentes às suas palavras-chave estarão disponíveis no painel.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setMostrarBuscaIniciada(false)}
+            style={{ color: '#86efac', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, flexShrink: 0 }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Banner upsell — aparece ao atingir o limite */}
       {maxKeywords < 99999 && keywords.length >= maxKeywords && (
