@@ -786,7 +786,7 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span style={{ fontSize: '15px', fontWeight: 700, color: u.alerta_count > 0 ? '#10b981' : 'var(--cinza)' }}>
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: u.alerta_count > 0 ? '#10b981' : 'var(--cinza)', whiteSpace: 'nowrap' }}>
                             {u.alerta_count} / {u.alerta_total}
                           </span>
                         </td>
