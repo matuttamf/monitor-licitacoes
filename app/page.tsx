@@ -70,7 +70,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   { label: 'Palavras-chave',             trial: 'Até 20 palavras-chave', basic: 'Até 20 palavras-chave', profissional: 'Ilimitadas palavras-chave', gestao: 'Ilimitadas palavras-chave', empresarial: 'Ilimitadas palavras-chave' },
   { label: 'Usuários',                   trial: '1 usuário',      basic: '1 usuário',      profissional: '1 usuário',      gestao: 'Até 5 usuários', empresarial: 'Até 15 usuários'},
   { label: 'Alertas por e-mail + Telegram', trial: true,          basic: true,             profissional: true,             gestao: true,             empresarial: true             },
-  { label: 'Alertas por WhatsApp',       trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Alertas por WhatsApp',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: 'Busca manual de editais no painel', trial: true,      basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
