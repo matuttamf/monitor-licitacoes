@@ -224,21 +224,28 @@ export async function GET(request: Request) {
   // ── Lookup paralelo no MP ─────────────────────────────────────────────────────
   const lookups = await Promise.allSettled(
     profiles.map(p =>
-      p.mp_subscription_id
+      (p.mp_subscription_id
         ? buscarPorId(p.mp_subscription_id)
-        : buscarPorExtRef(p.id),  // trial E active-sem-ID buscam pelo external_reference
+        : buscarPorExtRef(p.id)  // trial E active-sem-ID buscam pelo external_reference
+      ).catch((e: unknown) => { console.error(`[sync/lookup] user=${p.id}:`, e); return null }),
     ),
   )
 
   // ── Aplicar updates no Supabase ───────────────────────────────────────────────
   let sincronizados = 0
   let erros = 0
-  const detalhes: { userId: string; subscriptionId: string; statusMP: string; acao: string }[] = []
+  const detalhes: { userId: string; subscriptionId: string; statusMP: string; acao: string; erro?: string }[] = []
 
   await Promise.allSettled(
     profiles.map(async (profile, i) => {
       const result = lookups[i]
-      if (result.status === 'rejected') { erros++; return }
+      if (result.status === 'rejected') {
+        const msg = String((result as PromiseRejectedResult).reason)
+        console.error(`[sync] lookup rejeitado user=${profile.id}:`, msg)
+        detalhes.push({ userId: profile.id, subscriptionId: '', statusMP: 'lookup_rejected', acao: 'erro', erro: msg })
+        erros++
+        return
+      }
       const sub = result.value
       if (!sub) return
 
@@ -252,7 +259,9 @@ export async function GET(request: Request) {
           console.log(`[sync] user=${profile.id} acao=${acao} statusMP=${statusMP}`)
         }
       } catch (e) {
-        console.error(`[sync] erro ao atualizar user=${profile.id}:`, e)
+        const msg = e instanceof Error ? e.message : String(e)
+        console.error(`[sync] erro ao atualizar user=${profile.id}:`, msg)
+        detalhes.push({ userId: profile.id, subscriptionId: '', statusMP: 'update_error', acao: 'erro', erro: msg })
         erros++
       }
     }),
