@@ -32,9 +32,9 @@ interface TrialInfo {
   appUrl: string
 }
 
-function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: TrialInfo): string {
+function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: TrialInfo, totalNacional?: number): string {
   const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-  const total = licitacoes.length
+  const total = totalNacional ?? licitacoes.length
 
   const temReenvios = licitacoes.some(l => l.reenvio)
   const temNovos = licitacoes.some(l => !l.reenvio)
@@ -135,7 +135,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       <!-- Contador -->
       <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 28px">
         <span style="color:#C9A65A;font-size:32px;font-weight:800">${total}</span>
-        <span style="display:block;color:rgba(255,255,255,0.65);font-size:12px;font-weight:600;letter-spacing:0.5px;margin-top:2px">${total === 1 ? 'licitação encontrada' : 'licitações encontradas'}</span>
+        <span style="display:block;color:rgba(255,255,255,0.65);font-size:12px;font-weight:600;letter-spacing:0.5px;margin-top:2px">${total === 1 ? 'licitação aberta no Brasil' : 'licitações abertas no Brasil'}</span>
       </div>
     </div>
 
@@ -191,19 +191,21 @@ export async function enviarAlertaEmailUsuario(
   licitacoes: LicitacaoAlerta[],
   restantes = 0,
   trial?: TrialInfo,
+  totalNacional?: number,
 ): Promise<boolean> {
   if (licitacoes.length === 0) return false
 
   const resend = new Resend(process.env.RESEND_API_KEY!)
 
-  const total = licitacoes.length
-  const subject = `🔔 ${total} nova${total !== 1 ? 's' : ''} licitaç${total !== 1 ? 'ões' : 'ão'} para você — ${new Date().toLocaleDateString('pt-BR')}`
+  const nLote = licitacoes.length
+  const nSubject = totalNacional ?? nLote
+  const subject = `🔔 ${nSubject} licitaç${nSubject !== 1 ? 'ões' : 'ão'} abertas para você — ${new Date().toLocaleDateString('pt-BR')}`
 
   const { error } = await resend.emails.send({
     from: process.env.EMAIL_REMETENTE!,
     to: emailDestino,
     subject,
-    html: gerarHtmlAlerta(licitacoes, restantes, trial),
+    html: gerarHtmlAlerta(licitacoes, restantes, trial, totalNacional),
   })
 
   if (error) {

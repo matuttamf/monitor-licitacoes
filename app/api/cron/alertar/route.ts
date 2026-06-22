@@ -94,12 +94,17 @@ export async function GET(request: Request) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const alertasPorUsuario = new Map<string, any[]>()
+  const alertasPorUsuario    = new Map<string, any[]>()
+  const totalNacionalPorUid  = new Map<string, number>()
   const todosUids = new Set([...novosPorUsuario.keys(), ...reenviosPorUsuario.keys()])
 
   for (const uid of todosUids) {
     const novosUid    = novosPorUsuario.get(uid)    ?? []
     const reenviosUid = reenviosPorUsuario.get(uid) ?? []
+
+    // Total nacional = licitações únicas abertas que combinam com as keywords do usuário
+    const licitacaoIdsUnicas = new Set([...novosUid, ...reenviosUid].map(a => a.licitacao_id))
+    totalNacionalPorUid.set(uid, licitacaoIdsUnicas.size)
 
     if (novosUid.length) {
       // Há novos: envia novos + reenvios com >7 dias para complementar
@@ -216,7 +221,8 @@ export async function GET(request: Request) {
 
       // E-mail: todos (com info de trial se aplicável)
       // Telegram/WA urgentes são gerenciados pelo /api/cron/alertar-urgente (a cada 5 min)
-      const emailOk = await enviarAlertaEmailUsuario(email, licitacoesDoUsuario, totalRestante, trialInfo)
+      const totalNacional = totalNacionalPorUid.get(userId)
+      const emailOk = await enviarAlertaEmailUsuario(email, licitacoesDoUsuario, totalRestante, trialInfo, totalNacional)
       if (emailOk) canaisEnviados.push('email')
 
       if (canaisEnviados.length > 0) {
