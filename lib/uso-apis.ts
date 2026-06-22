@@ -21,7 +21,7 @@ function getClient() {
 const hoje = () => new Date().toISOString().slice(0, 10)
 const mes  = () => new Date().toISOString().slice(0, 7)
 
-type Servico = 'google_cse' | 'resend' | 'gemini' | 'enrichment'
+type Servico = 'google_cse' | 'resend' | 'ses' | 'gemini' | 'enrichment'
 type Periodo = 'dia' | 'mes'
 
 export async function incrementarUso(servico: Servico, periodo: Periodo = 'dia'): Promise<void> {
@@ -48,5 +48,6 @@ export async function lerUso(servico: string, periodo: string): Promise<number> 
 // Atalhos prontos para usar nas rotas
 export const trackGoogleCSE   = () => incrementarUso('google_cse', 'dia')
 export const trackResend      = () => incrementarUso('resend', 'dia')
+export const trackSes         = () => incrementarUso('ses', 'dia')
 export const trackGemini      = () => incrementarUso('gemini', 'dia')
 export const trackEnrichment  = () => incrementarUso('enrichment', 'dia')
