@@ -43,7 +43,9 @@ export async function GET(request: Request) {
   const { hora: horaBRT } = horasBrasilia()
   const supabase  = await createServiceClient()
   const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
-  const umaSemanAAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const h24atras       = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const umaSemanAAtras = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000).toISOString()
+  const hoje           = new Date().toISOString().substring(0, 10)
 
   const SELECT_ALERTAS = `
     id, licitacao_id, keyword_id, canais, criado_em, enviado_em, score,
@@ -51,7 +53,7 @@ export async function GET(request: Request) {
     keywords (id, termo, user_id)
   `
 
-  // 1. Pendentes (nunca enviados) — mais recentes primeiro para o usuário receber o que acabou de surgir
+  // 1. Pendentes (nunca enviados via e-mail)
   const { data: novos, error } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
@@ -64,15 +66,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 2. Reenvios sem filtro de data — o controle por usuário ocorre abaixo
+  // 2. Reenvios já enviados — usados como reciclagem quando não há novos
   const { data: reenvios } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .neq('canais', '{}')
+    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
     .order('score', { ascending: false })
     .limit(2000)
 
-  // Agrupar por usuário (novos + reenvios separados para decidir por fila individual)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const novosPorUsuario    = new Map<string, any[]>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,14 +100,16 @@ export async function GET(request: Request) {
   for (const uid of todosUids) {
     const novosUid    = novosPorUsuario.get(uid)    ?? []
     const reenviosUid = reenviosPorUsuario.get(uid) ?? []
-    // Só envia alertas genuinamente novos (nunca enviados via e-mail).
-    // Reenvios com >7 dias são incluídos apenas se houver novos também —
-    // nunca reciclagem pura para evitar repetição de licitações.
-    const reenviosFiltrados = reenviosUid.filter(a => a.enviado_em && new Date(a.enviado_em) <= new Date(umaSemanAAtras))
-    const combinados = novosUid.length
-      ? [...novosUid, ...reenviosFiltrados.map(a => ({ ...a, _reenvio: true }))]
-      : []
-    if (combinados.length) alertasPorUsuario.set(uid, combinados)
+
+    if (novosUid.length) {
+      // Há novos: envia novos + reenvios com >7 dias para complementar
+      const reenviosFiltrados = reenviosUid.filter(a => a.enviado_em && new Date(a.enviado_em) <= new Date(umaSemanAAtras))
+      alertasPorUsuario.set(uid, [...novosUid, ...reenviosFiltrados.map(a => ({ ...a, _reenvio: true }))])
+    } else {
+      // Sem novos: recicla alertas enviados há >24h com licitação ainda aberta
+      const reciclaveis = reenviosUid.filter(a => a.enviado_em && new Date(a.enviado_em) <= new Date(h24atras))
+      if (reciclaveis.length) alertasPorUsuario.set(uid, reciclaveis.map(a => ({ ...a, _reenvio: true })))
+    }
   }
 
   if (!alertasPorUsuario.size) {
