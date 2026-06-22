@@ -48,7 +48,7 @@ export async function GET() {
     supabase.from('keywords').select('id, user_id, ativo'),
     // Alertas por user_id direto (coluna adicionada em 20260622_alertas_user_id.sql)
     // enviado_em não-nulo = alerta efetivamente disparado; filtra pendentes
-    supabase.from('alertas').select('user_id, criado_em, enviado_em').not('enviado_em', 'is', null).order('enviado_em', { ascending: false }).range(0, 49999),
+    supabase.from('alertas').select('user_id, licitacao_id_str, enviado_em').not('enviado_em', 'is', null).order('enviado_em', { ascending: false }).range(0, 49999),
     supabase.from('campanhas').select('id, nome'),
   ])
 
@@ -62,14 +62,13 @@ export async function GET() {
     if (kw.ativo) kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
   }
 
-  // Contagem + último alerta disparado por usuário via user_id direto
-  // Rows vêm ORDER BY enviado_em DESC, apenas não-nulos — primeiro de cada user é o mais recente disparado
-  const alertaPorUser: Record<string, { count: number; ultimo: string | null }> = {}
+  // Licitações distintas disparadas + último envio por usuário
+  const alertaPorUser: Record<string, { lics: Set<string>; ultimo: string | null }> = {}
   for (const a of alertaRows ?? []) {
     const uid = (a as any).user_id
     if (!uid) continue
-    if (!alertaPorUser[uid]) alertaPorUser[uid] = { count: 0, ultimo: null }
-    alertaPorUser[uid].count++
+    if (!alertaPorUser[uid]) alertaPorUser[uid] = { lics: new Set(), ultimo: null }
+    if ((a as any).licitacao_id_str) alertaPorUser[uid].lics.add((a as any).licitacao_id_str)
     if (!alertaPorUser[uid].ultimo) alertaPorUser[uid].ultimo = (a as any).enviado_em
   }
 
@@ -90,7 +89,7 @@ export async function GET() {
       trial_expirado: p.status === 'trial' && new Date(p.trial_fim) < new Date(),
       bloqueado_admin: p.bloqueado_admin ?? false,
       keyword_count:  kwPorUser[p.id] ?? 0,
-      alerta_count:   alertaPorUser[p.id]?.count ?? 0,
+      alerta_count:   alertaPorUser[p.id]?.lics.size ?? 0,
       ultimo_alerta:  alertaPorUser[p.id]?.ultimo ?? null,
       periodo:        p.periodo ?? 'mensal',
       fonte:          computarFonte(p, campanhaMap),
