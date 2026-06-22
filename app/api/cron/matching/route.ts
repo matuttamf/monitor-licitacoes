@@ -70,7 +70,7 @@ async function runMatching() {
   if (errBatch) console.error('Erro query scan:', errBatch)
   const candidatos = batch ?? []
 
-  const cicloCompleto = candidatos.length < 1000
+  const cicloCompleto = candidatos.length < 500
 
   const debugBase = {
     totalKeywords: keywords.length,
