@@ -57,13 +57,13 @@ export async function GET(request: Request) {
         const termos     = keywordsResult.data?.map(k => k.termo as string) ?? []
 
         let count = 0
-        if (keywordIds.length > 0) {
+        if (termos.length > 0) {
           const hoje = new Date().toISOString().substring(0, 10)
           const { count: licitacaoCount } = await supabase
-            .from('alertas')
+            .from('licitacoes')
             .select('id', { count: 'exact' })
-            .in('keyword_id', keywordIds)
-            .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
+            .or(termos.map(t => `objeto.ilike.%${t}%`).join(','))
+            .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
 
           count = licitacaoCount ?? 0
         }
