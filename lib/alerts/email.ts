@@ -32,9 +32,9 @@ interface TrialInfo {
   appUrl: string
 }
 
-function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: TrialInfo, totalNacional?: number): string {
+function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: TrialInfo): string {
   const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-  const total = totalNacional ?? licitacoes.length
+  const total = licitacoes.length
 
   const temReenvios = licitacoes.some(l => l.reenvio)
   const temNovos = licitacoes.some(l => !l.reenvio)
@@ -191,21 +191,19 @@ export async function enviarAlertaEmailUsuario(
   licitacoes: LicitacaoAlerta[],
   restantes = 0,
   trial?: TrialInfo,
-  totalNacional?: number,
 ): Promise<boolean> {
   if (licitacoes.length === 0) return false
 
   const resend = new Resend(process.env.RESEND_API_KEY!)
 
-  const nLote = licitacoes.length
-  const nSubject = totalNacional ?? nLote
-  const subject = `🔔 ${nSubject} licitaç${nSubject !== 1 ? 'ões' : 'ão'} abertas para você — ${new Date().toLocaleDateString('pt-BR')}`
+  const n = licitacoes.length
+  const subject = `🔔 ${n} licitaç${n !== 1 ? 'ões' : 'ão'} abertas para você — ${new Date().toLocaleDateString('pt-BR')}`
 
   const { error } = await resend.emails.send({
     from: process.env.EMAIL_REMETENTE!,
     to: emailDestino,
     subject,
-    html: gerarHtmlAlerta(licitacoes, restantes, trial, totalNacional),
+    html: gerarHtmlAlerta(licitacoes, restantes, trial),
   })
 
   if (error) {
