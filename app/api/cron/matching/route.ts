@@ -63,7 +63,7 @@ async function runMatching() {
     .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
     .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
     .order('coletado_em', { ascending: true })
-    .limit(1000)
+    .limit(500)
   if (cursorAtual) q = q.gt('coletado_em', cursorAtual) as typeof q
 
   const { data: batch, error: errBatch } = await q
