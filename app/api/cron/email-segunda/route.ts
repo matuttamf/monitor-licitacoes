@@ -5,7 +5,6 @@ import { registrarCronLog } from '@/lib/cron-log'
 import { enviarEmailSegunda } from '@/lib/emails/trial'
 import { enviarTextoTelegram } from '@/lib/alerts/telegram'
 import { enviarSegundaWhatsApp } from '@/lib/alerts/whatsapp'
-import { temWhatsApp } from '@/lib/planos'
 
 export const maxDuration = 300
 
@@ -94,9 +93,8 @@ export async function GET(request: Request) {
         if (ok) canaisEnviados.push('telegram')
       }
 
-      // WhatsApp — Profissional+
-      const plano = usuario.plano ?? 'basic'
-      if (temWhatsApp(plano) && usuario.whatsapp && !whatsappPausado) {
+      // WhatsApp — todos os planos
+      if (usuario.whatsapp && !whatsappPausado) {
         const ok = await enviarSegundaWhatsApp(usuario.whatsapp, totalNacional, termos)
         if (ok) canaisEnviados.push('whatsapp')
       }

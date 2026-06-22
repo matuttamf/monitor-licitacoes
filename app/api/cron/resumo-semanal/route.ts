@@ -5,7 +5,7 @@
  * - Total de licitações encontradas
  * - Volume financeiro estimado
  * - Top 5 palavras-chave com mais matches
- * - Canais: e-mail (todos), Telegram (se configurado), WhatsApp (Profissional+)
+ * - Canais: e-mail (todos), Telegram (se configurado), WhatsApp (todos os planos)
  */
 
 import { NextResponse } from 'next/server'
@@ -271,9 +271,8 @@ export async function GET(request: Request) {
       }
     }
 
-    // WhatsApp — Profissional+
-    const plano = perfil?.plano ?? 'basic'
-    if (temWhatsApp(plano) && perfil?.whatsapp) {
+    // WhatsApp — todos os planos
+    if (perfil?.whatsapp) {
       const ok = await enviarResumoSemanalWhatsApp(
         perfil.whatsapp,
         dados.totalAlertas,
