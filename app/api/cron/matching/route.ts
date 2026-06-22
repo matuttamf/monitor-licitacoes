@@ -97,7 +97,7 @@ async function runMatching() {
       .from('licitacoes')
       .select('id, objeto, data_abertura, estado, valor_estimado, coletado_em')
       .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-      .limit(500)
+      .limit(2000)
     if (ultimoMatching) q = q.gte('coletado_em', ultimoMatching) as typeof q
     const { data: inc, error: errInc } = await q
     if (errInc) console.error('Erro query incremental:', errInc)
