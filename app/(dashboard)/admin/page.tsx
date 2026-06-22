@@ -22,6 +22,7 @@ type Usuario = {
   empresa?: string
   keyword_count: number
   alerta_count: number
+  alerta_total: number
   ultimo_alerta: string | null
   owner_id?: string | null
   bloqueado_admin?: boolean
@@ -786,7 +787,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span style={{ fontSize: '15px', fontWeight: 700, color: u.alerta_count > 0 ? '#10b981' : 'var(--cinza)' }}>
-                            {u.alerta_count}
+                            {u.alerta_count} / {u.alerta_total}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs" style={{ color: 'var(--cinza)', whiteSpace: 'nowrap' }}>
@@ -1038,7 +1039,7 @@ export default function AdminPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '14px' }}>
                 {[
                   { label: 'Keywords', value: contaAberta.keyword_count, cor: 'var(--vinho)' },
-                  { label: 'Alertas',  value: contaAberta.alerta_count,  cor: '#10b981'      },
+                  { label: 'Alertas',  value: `${contaAberta.alerta_count} / ${contaAberta.alerta_total}`,  cor: '#10b981'      },
                   { label: 'Cadastro', value: fmt(contaAberta.criado_em), cor: 'var(--cinza)' },
                 ].map(({ label, value, cor }) => (
                   <div key={label} style={{ background: 'var(--surface-2)', borderRadius: '10px', padding: '10px 12px', textAlign: 'center' }}>

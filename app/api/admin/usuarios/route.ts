@@ -32,24 +32,27 @@ export async function GET() {
 
   const supabase = createAdminClient()
 
+  const hoje = new Date().toISOString().substring(0, 10)
+
   const [
     { data, error },
     { data: authData },
     { data: kwList },
     { data: alertaRows },
     { data: campanhas },
+    { data: licsAtivasRows },
   ] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, periodo, owner_id, bloqueado_admin, utm_source, utm_medium, utm_campaign, campanha_id')
       .order('criado_em', { ascending: false }),
     supabase.auth.admin.listUsers(),
-    // Uma única query para keywords — id + user_id + ativo
     supabase.from('keywords').select('id, user_id, ativo'),
-    // Alertas por user_id direto (coluna adicionada em 20260622_alertas_user_id.sql)
-    // enviado_em não-nulo = alerta efetivamente disparado; filtra pendentes
-    supabase.from('alertas').select('user_id, licitacao_id_str, enviado_em').not('enviado_em', 'is', null).order('enviado_em', { ascending: false }).range(0, 49999),
+    // Todos os alertas (incluindo pendentes) — para contar total encontrado
+    supabase.from('alertas').select('user_id, licitacao_id_str, enviado_em').order('enviado_em', { ascending: false }).range(0, 49999),
     supabase.from('campanhas').select('id, nome'),
+    // IDs das licitações ainda abertas hoje
+    supabase.from('licitacoes').select('id').or(`data_abertura.is.null,data_abertura.gte.${hoje}`),
   ])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -62,14 +65,21 @@ export async function GET() {
     if (kw.ativo) kwPorUser[kw.user_id] = (kwPorUser[kw.user_id] ?? 0) + 1
   }
 
-  // Licitações distintas disparadas + último envio por usuário
-  const alertaPorUser: Record<string, { lics: Set<string>; ultimo: string | null }> = {}
+  // Set de IDs de licitações abertas hoje
+  const licsAtivasSet = new Set((licsAtivasRows ?? []).map(l => l.id as string))
+
+  // Licitações distintas (total + ativas) + último envio por usuário
+  const alertaPorUser: Record<string, { lics: Set<string>; licsAtivas: Set<string>; ultimo: string | null }> = {}
   for (const a of alertaRows ?? []) {
     const uid = (a as any).user_id
+    const lid = (a as any).licitacao_id_str as string | null
     if (!uid) continue
-    if (!alertaPorUser[uid]) alertaPorUser[uid] = { lics: new Set(), ultimo: null }
-    if ((a as any).licitacao_id_str) alertaPorUser[uid].lics.add((a as any).licitacao_id_str)
-    if (!alertaPorUser[uid].ultimo) alertaPorUser[uid].ultimo = (a as any).enviado_em
+    if (!alertaPorUser[uid]) alertaPorUser[uid] = { lics: new Set(), licsAtivas: new Set(), ultimo: null }
+    if (lid) {
+      alertaPorUser[uid].lics.add(lid)
+      if (licsAtivasSet.has(lid)) alertaPorUser[uid].licsAtivas.add(lid)
+    }
+    if ((a as any).enviado_em && !alertaPorUser[uid].ultimo) alertaPorUser[uid].ultimo = (a as any).enviado_em
   }
 
   const emailMap = Object.fromEntries(
@@ -89,7 +99,8 @@ export async function GET() {
       trial_expirado: p.status === 'trial' && new Date(p.trial_fim) < new Date(),
       bloqueado_admin: p.bloqueado_admin ?? false,
       keyword_count:  kwPorUser[p.id] ?? 0,
-      alerta_count:   alertaPorUser[p.id]?.lics.size ?? 0,
+      alerta_count:   alertaPorUser[p.id]?.licsAtivas.size ?? 0,
+      alerta_total:   alertaPorUser[p.id]?.lics.size ?? 0,
       ultimo_alerta:  alertaPorUser[p.id]?.ultimo ?? null,
       periodo:        p.periodo ?? 'mensal',
       fonte:          computarFonte(p, campanhaMap),
