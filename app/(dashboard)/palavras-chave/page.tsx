@@ -194,7 +194,7 @@ export default function PalavrasChavePage() {
                 Busca em andamento
               </p>
               <p className="text-sm" style={{ color: '#15803d' }}>
-                Uma varredura completa nas 346 fontes de licitações foi iniciada. Em até 4 horas, todos os editais abertos correspondentes às suas palavras-chave estarão disponíveis no painel.
+                Uma varredura completa nas 346 fontes de licitações foi iniciada. Em breve todos os editais abertos correspondentes às suas palavras-chave estarão disponíveis no painel.
               </p>
             </div>
           </div>
