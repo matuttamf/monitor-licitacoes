@@ -8,6 +8,13 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)
 }
 
+function fmtValor(v: number): string {
+  if (v >= 1_000_000_000) return `R$ ${(v / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
+  if (v >= 1_000_000)     return `R$ ${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+  if (v >= 1_000)         return `R$ ${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+  return `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`
+}
+
 function baseEmail(conteudo: string, email: string): string {
   const url = APP_URL.replace(/\/$/, '')
   return `<!DOCTYPE html>
@@ -56,37 +63,63 @@ function baseEmail(conteudo: string, email: string): string {
 </html>`
 }
 
-// E-mail Dia 1: Boas-vindas
+// ── Dia 0: Boas-vindas ────────────────────────────────────────────────────────
 export async function enviarEmailBoasVindas(email: string, nome: string): Promise<void> {
   const resend = getResend()
   trackResend()
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: 'Bem-vindo ao Monitor de Licitações — seus 7 dias começam agora',
+    subject: 'Conta criada — veja o que o monitor vai encontrar para você',
     html: baseEmail(`
   <!-- Hero -->
   <tr><td style="padding:32px 28px 0;">
-    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Conta ativada com sucesso</div>
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Conta ativada · 7 dias grátis</div>
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      O governo compra o que você vende.<br>
-      <span style="color:#6B0F1A;font-style:italic;">Agora você vai saber quando.</span>
+      O governo publica contratos todos os dias.<br>
+      <span style="color:#6B0F1A;font-style:italic;">Agora você vai saber quais são para você.</span>
     </h1>
-    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 28px;">
-      Sua conta foi criada com sucesso. Você tem <strong>7 dias grátis</strong> para testar o monitoramento completo — sem precisar de cartão de crédito.
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Prefeituras, estados, hospitais públicos e órgãos federais compram o que sua empresa vende — e publicam os editais toda semana. O Monitor rastreia tudo isso automaticamente e envia os alertas direto para você.
     </p>
+  </td></tr>
+
+  <!-- O que você pode encontrar -->
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">O que empresas encontram no primeiro mês</div>
+      </td></tr>
+      ${[
+        ['Construção & Obras', 'Reformas prediais, pavimentação, instalações — R$ 80k a R$ 4M', '#fef3c7', '#92400e'],
+        ['Limpeza & Conservação', 'Contratos de 24 a 36 meses com prefeituras e hospitais', '#f0fdf4', '#166534'],
+        ['TI & Software', 'Pregões de suporte, sistemas, infraestrutura — prazos de 5 dias', '#eff6ff', '#1e40af'],
+        ['Qualquer segmento', 'Mais de 18.000 editais publicados por semana no Brasil', '#faf5ff', '#6b21a8'],
+      ].map(([seg, desc, bg, cor]) => `
+      <tr><td style="padding:0 24px 14px;">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="width:8px;height:8px;background:${cor};border-radius:50%;vertical-align:top;padding-top:5px;"></td>
+            <td style="padding-left:10px;">
+              <div style="color:#1A1A1C;font-size:14px;font-weight:600;">${seg}</div>
+              <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">${desc}</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>`).join('')}
+    </table>
   </td></tr>
 
   <!-- Passos -->
   <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
-      <tr><td style="padding:20px 24px 12px;">
-        <div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">3 passos para seu primeiro alerta</div>
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Para o primeiro alerta chegar</div>
       </td></tr>
       ${[
-        ['1', 'Cadastre suas palavras-chave', 'Informe os produtos que sua empresa vende — a plataforma identifica automaticamente os editais compatíveis.'],
-        ['2', 'Aguarde o próximo dia útil', 'Coletamos novos editais toda madrugada. Seu primeiro alerta chega pela manhã.'],
-        ['3', 'Receba e responda', 'Alertas por e-mail e Telegram com as oportunidades filtradas para o seu negócio.'],
+        ['1', 'Cadastre suas palavras-chave', 'O que sua empresa vende — "reforma elétrica", "limpeza hospitalar", "suporte TI". O sistema busca os editais que correspondem.'],
+        ['2', 'O sistema faz uma busca completa', 'Assim que você configurar, rastreamos todos os editais abertos no Brasil para as suas palavras. Em breve seu banco de dados estará completo.'],
+        ['3', 'Receba alertas por e-mail e WhatsApp', 'Cada edital novo chega direto para você. Também temos canal no WhatsApp para oportunidades em tempo real.'],
       ].map(([n, t, d]) => `
       <tr><td style="padding:0 24px 16px;">
         <table cellpadding="0" cellspacing="0">
@@ -106,19 +139,21 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/palavras-chave"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
-      Configurar palavras-chave agora →
+      Configurar e receber alertas →
     </a>
-    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">Leva menos de 2 minutos</p>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">Leva menos de 2 minutos · 7 dias grátis · sem cartão de crédito</p>
   </td></tr>
     `, email),
   })
 }
 
-// E-mail Dia 3: Engajamento
+// ── Dia 3: Engajamento ────────────────────────────────────────────────────────
 export async function enviarEmailDia3(
   email: string,
   totalLicitacoes: number,
   termos: string[] = [],
+  valorTotal?: number,
+  maiorOportunidade?: { objeto: string; valor: number },
 ): Promise<void> {
   const resend = getResend()
   trackResend()
@@ -127,8 +162,14 @@ export async function enviarEmailDia3(
     ? termos.slice(0, 3).join(', ') + (termos.length > 3 ? ` +${termos.length - 3}` : '')
     : 'suas palavras-chave'
 
-  const subject = totalLicitacoes > 0
-    ? `${totalLicitacoes} licitações encontradas para "${termosLabel}" — veja agora`
+  const temDados   = totalLicitacoes > 0
+  const temValor   = valorTotal && valorTotal > 0
+  const valorLabel = temValor ? fmtValor(valorTotal!) : null
+
+  const subject = temDados
+    ? valorLabel
+      ? `${valorLabel} em oportunidades encontradas nos seus primeiros 3 dias`
+      : `${totalLicitacoes} oportunidades encontradas para "${termosLabel}" — veja agora`
     : `Seu monitor está rastreando "${termosLabel}" — 4 dias restantes`
 
   const termosChips = termos.length > 0
@@ -149,23 +190,39 @@ export async function enviarEmailDia3(
   <!-- Hero -->
   <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Atualização do seu monitoramento</div>
-    ${totalLicitacoes > 0 ? `
+    ${temDados ? `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      <span style="color:#6B0F1A;font-style:italic;">${totalLicitacoes} licitações</span><br>cruzadas com seu perfil.
+      ${valorLabel
+        ? `<span style="color:#6B0F1A;font-style:italic;">${valorLabel}</span><br>em oportunidades rastreadas nos seus primeiros 3 dias.`
+        : `<span style="color:#6B0F1A;font-style:italic;">${totalLicitacoes} oportunidades</span><br>encontradas enquanto você estava focado na sua empresa.`
+      }
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      Identificamos editais publicados nos últimos dias que correspondem ao que sua empresa vende. Acesse o painel para ver os detalhes e os valores envolvidos.
+      ${totalLicitacoes} editais publicados nos últimos dias correspondem ao que sua empresa vende. Acesse o painel para ver os detalhes, valores e prazos de cada um.
     </p>
     ` : `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       Seu monitor está <span style="color:#6B0F1A;font-style:italic;">ativo e rastreando.</span>
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      Ainda não encontramos editais publicados para suas palavras-chave nos últimos 3 dias — mas o monitoramento está rodando. Editais são publicados diariamente; seu alerta chega assim que um aparecer.
+      Ainda não encontramos editais publicados para suas palavras-chave nos últimos 3 dias — mas o monitoramento está rodando 24h. Editais são publicados diariamente; seu alerta chega assim que um aparecer.
     </p>
     `}
     ${termosChips}
   </td></tr>
+
+  ${temDados && maiorOportunidade ? `
+  <!-- Maior oportunidade -->
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Maior oportunidade encontrada</div>
+        <div style="color:#1A1A1C;font-size:14px;line-height:1.5;margin-bottom:8px;">${maiorOportunidade.objeto}</div>
+        <span style="display:inline-block;background:#6B0F1A;color:#C9A65A;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px;">${fmtValor(maiorOportunidade.valor)}</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  ` : ''}
 
   <!-- Estatísticas -->
   <tr><td style="padding:0 28px 28px;">
@@ -191,22 +248,24 @@ export async function enviarEmailDia3(
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/dashboard"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
-      Ver licitações no painel →
+      Ver oportunidades no painel →
     </a>
     <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
-      Seu trial termina em 4 dias. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora →</a>
+      Seu trial termina em 4 dias. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora — trial termina em 4 dias →</a>
     </p>
   </td></tr>
     `, email),
   })
 }
 
-// E-mail Segunda-feira: resumo semanal para todos os usuários (trial + active)
+// ── Segunda-feira: panorama semanal ───────────────────────────────────────────
 export async function enviarEmailSegunda(
   email: string,
   totalNacional: number,
   termos: string[] = [],
   isTrial = false,
+  valorTotal?: number,
+  maiorOportunidade?: { objeto: string; valor: number; orgao?: string },
 ): Promise<void> {
   const resend = getResend()
   trackResend()
@@ -215,9 +274,15 @@ export async function enviarEmailSegunda(
     ? termos.slice(0, 3).join(', ') + (termos.length > 3 ? ` +${termos.length - 3}` : '')
     : 'suas palavras-chave'
 
-  const subject = totalNacional > 0
-    ? `${totalNacional} licitações abertas para "${termosLabel}" esta semana`
-    : `Seu monitoramento está ativo — novas oportunidades chegando`
+  const temDados   = totalNacional > 0
+  const temValor   = valorTotal && valorTotal > 0
+  const valorLabel = temValor ? fmtValor(valorTotal!) : null
+
+  const subject = temDados
+    ? valorLabel
+      ? `${valorLabel} em oportunidades monitoradas nesta semana`
+      : `${totalNacional} licitações abertas com suas palavras-chave — panorama desta semana`
+    : `Monitoramento ativo — panorama desta semana`
 
   const termosChips = termos.length > 0
     ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
@@ -237,33 +302,55 @@ export async function enviarEmailSegunda(
   <!-- Hero -->
   <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Panorama da semana</div>
-    ${totalNacional > 0 ? `
+    ${temDados ? `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      <span style="color:#6B0F1A;font-style:italic;">${totalNacional} licitações</span><br>abertas no Brasil agora.
+      ${valorLabel
+        ? `<span style="color:#6B0F1A;font-style:italic;">${valorLabel}</span><br>em oportunidades monitoradas nesta semana.`
+        : `<span style="color:#6B0F1A;font-style:italic;">${totalNacional} licitações abertas</span><br>com suas palavras-chave no Brasil agora.`
+      }
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      São editais publicados em todo o território nacional que correspondem ao que sua empresa vende. Acesse o painel para ver os detalhes e os valores envolvidos.
+      São editais publicados em todo o território nacional que correspondem ao que sua empresa vende. Alguns fecham esta semana — acesse o painel para ver prazos e valores.
     </p>
     ` : `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       Seu monitor está <span style="color:#6B0F1A;font-style:italic;">ativo e rastreando.</span>
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      Não encontramos editais abertos para suas palavras-chave neste momento, mas o monitoramento está rodando. Editais são publicados diariamente — seu alerta chega assim que um aparecer.
+      Não encontramos editais abertos para suas palavras-chave nesta semana — mas o monitoramento está rodando 24h. Editais são publicados diariamente; seu alerta chega assim que um aparecer.
     </p>
     `}
     ${termosChips}
   </td></tr>
 
+  ${temDados && maiorOportunidade ? `
+  <!-- Destaque da semana -->
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Maior oportunidade da semana</div>
+        <div style="color:#1A1A1C;font-size:14px;line-height:1.5;margin-bottom:6px;">${maiorOportunidade.objeto}</div>
+        ${maiorOportunidade.orgao ? `<div style="color:#9AA0A6;font-size:12px;margin-bottom:8px;">${maiorOportunidade.orgao}</div>` : ''}
+        <span style="display:inline-block;background:#6B0F1A;color:#C9A65A;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px;">${fmtValor(maiorOportunidade.valor)}</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  ` : ''}
+
   <!-- Contador destaque -->
-  ${totalNacional > 0 ? `
+  ${temDados ? `
   <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
       <tr>
         <td style="padding:28px;text-align:center;">
-          <div style="color:#C9A65A;font-size:44px;font-weight:700;line-height:1;">${totalNacional}</div>
-          <div style="color:rgba(255,255,255,0.7);font-size:14px;margin-top:8px;">licitações abertas em território nacional</div>
-          <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:4px;">que combinam com suas palavras-chave</div>
+          ${valorLabel
+            ? `<div style="color:#C9A65A;font-size:40px;font-weight:700;line-height:1;">${valorLabel}</div>
+               <div style="color:rgba(255,255,255,0.7);font-size:14px;margin-top:8px;">em licitações abertas no Brasil com suas palavras-chave</div>
+               <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:4px;">${totalNacional} editais · alguns com prazo esta semana</div>`
+            : `<div style="color:#C9A65A;font-size:44px;font-weight:700;line-height:1;">${totalNacional}</div>
+               <div style="color:rgba(255,255,255,0.7);font-size:14px;margin-top:8px;">licitações abertas com suas palavras-chave</div>
+               <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:4px;">em todo o território nacional</div>`
+          }
         </td>
       </tr>
     </table>
@@ -274,38 +361,93 @@ export async function enviarEmailSegunda(
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/dashboard"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
-      Ver licitações no painel →
+      Ver oportunidades no painel →
     </a>
     ${isTrial ? `<p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
-      Ainda no período de teste. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora →</a>
+      Ainda no período de teste. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar e continuar recebendo alertas →</a>
     </p>` : ''}
   </td></tr>
     `, email),
   })
 }
 
-// E-mail Dia 6: Urgência (trial expira amanhã)
-export async function enviarEmailUrgencia(email: string): Promise<void> {
+// ── Dia 6: Urgência (trial expira amanhã) ─────────────────────────────────────
+export async function enviarEmailUrgencia(
+  email: string,
+  totalLicitacoes = 0,
+  totalAlertas = 0,
+  valorTotal = 0,
+): Promise<void> {
   const resend = getResend()
   trackResend()
+
+  const temDados   = totalLicitacoes > 0 || totalAlertas > 0
+  const temValor   = valorTotal > 0
+  const valorLabel = temValor ? fmtValor(valorTotal) : null
+
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: 'Seu acesso expira amanhã — não perca as próximas oportunidades',
+    subject: 'Amanhã os alertas serão interrompidos — o que o monitor encontrou nos seus 7 dias',
     html: baseEmail(`
   <!-- Urgência header -->
   <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Aviso importante</div>
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      Seu período de teste<br>
-      <span style="color:#6B0F1A;font-style:italic;">expira amanhã.</span>
+      Amanhã os alertas<br>
+      <span style="color:#6B0F1A;font-style:italic;">serão interrompidos.</span>
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Após o vencimento, os alertas diários serão pausados e você deixará de ser notificado sobre novos editais. Cada edital perdido pode ser uma oportunidade que vai para o concorrente.
+      A partir de amanhã, novos editais deixarão de chegar automaticamente para você. Cada edital não recebido é uma oportunidade que vai para o concorrente — sem que você saiba que ela existiu.
     </p>
   </td></tr>
 
-  <!-- Planos -->
+  ${temDados ? `
+  <!-- O que foi encontrado nos 7 dias -->
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:16px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">O que o monitor encontrou nos seus 7 dias</div>
+      </td></tr>
+      <tr><td style="padding:0 24px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          ${totalLicitacoes > 0 ? `
+          <tr>
+            <td style="padding:8px 0;border-bottom:1px solid #E8E4DC;">
+              <span style="color:#4a4a4d;font-size:14px;">${totalLicitacoes} licitações encontradas para você</span>
+            </td>
+            <td align="right" style="padding:8px 0;border-bottom:1px solid #E8E4DC;">
+              <span style="color:#1A1A1C;font-size:14px;font-weight:700;">${totalLicitacoes}</span>
+            </td>
+          </tr>` : ''}
+          ${totalAlertas > 0 ? `
+          <tr>
+            <td style="padding:8px 0;border-bottom:1px solid #E8E4DC;">
+              <span style="color:#4a4a4d;font-size:14px;">Alertas enviados durante o trial</span>
+            </td>
+            <td align="right" style="padding:8px 0;border-bottom:1px solid #E8E4DC;">
+              <span style="color:#1A1A1C;font-size:14px;font-weight:700;">${totalAlertas}</span>
+            </td>
+          </tr>` : ''}
+          ${valorLabel ? `
+          <tr>
+            <td style="padding:8px 0;">
+              <span style="color:#4a4a4d;font-size:14px;">Volume financeiro monitorado</span>
+            </td>
+            <td align="right" style="padding:8px 0;">
+              <span style="color:#6B0F1A;font-size:15px;font-weight:700;">${valorLabel}</span>
+            </td>
+          </tr>` : ''}
+        </table>
+        <p style="color:#9AA0A6;font-size:12px;margin:12px 0 0;line-height:1.6;">
+          Amanhã esses alertas param. A partir de então, novos editais publicados não chegarão até você.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+  ` : ''}
+
+  <!-- Plano -->
   <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #6B0F1A;border-radius:14px;overflow:hidden;">
       <tr><td style="background:#6B0F1A;padding:16px 24px;">
@@ -346,7 +488,7 @@ export async function enviarEmailUrgencia(email: string): Promise<void> {
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/assinar"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;margin-bottom:12px;">
-      Assinar e continuar monitorando →
+      Continuar recebendo alertas →
     </a>
     <br>
     <a href="${APP_URL}/assinar"

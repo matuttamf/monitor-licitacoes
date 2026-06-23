@@ -8,7 +8,16 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)
 }
 
+function fmtValor(v?: number): string {
+  if (!v) return '—'
+  if (v >= 1_000_000_000) return `R$ ${(v / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
+  if (v >= 1_000_000)     return `R$ ${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+  if (v >= 1_000)         return `R$ ${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+  return `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`
+}
+
 function baseEmail(conteudo: string): string {
+  const url = APP_URL.replace(/\/$/, '')
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -30,6 +39,8 @@ function baseEmail(conteudo: string): string {
       </tr>
     </table>
   </td></tr>
+
+  <!-- Linha dourada decorativa -->
   <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
 
   ${conteudo}
@@ -39,9 +50,11 @@ function baseEmail(conteudo: string): string {
     <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
       Monitor de Licitações · Matutta<br>
       Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
-      <a href="${APP_URL}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
+      <a href="${url}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
     </p>
   </td></tr>
+
+  <!-- Barra final -->
   <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
 
 </table>
@@ -51,128 +64,179 @@ function baseEmail(conteudo: string): string {
 </html>`
 }
 
-// ── Dia 1: configurar palavras-chave ─────────────────────────────────────────
-export async function enviarEmailPosAssinaturaDia1(
-  email: string,
-  plano: string,
-): Promise<void> {
+// ── Pós-assinatura Dia 1: Configuração ────────────────────────────────────────
+export async function enviarEmailPosAssinaturaDia1(email: string, plano: string): Promise<void> {
   const resend = getResend()
   trackResend()
 
-  const nomePlano = plano.charAt(0).toUpperCase() + plano.slice(1)
+  const nomePlano = plano === 'basico' ? 'Básico'
+    : plano === 'profissional' ? 'Profissional'
+    : plano === 'empresarial' ? 'Empresarial'
+    : plano
 
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: `Plano ${nomePlano} ativo — configure suas palavras-chave agora`,
+    subject: `Plano ${nomePlano} ativo — o primeiro alerta chega assim que você configurar`,
     html: baseEmail(`
+  <!-- Hero -->
   <tr><td style="padding:32px 28px 0;">
-    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Assinatura confirmada</div>
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Plano ${nomePlano} · Ativo</div>
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      Agora falta uma coisa:<br>
-      <span style="color:#6B0F1A;font-style:italic;">dizer o que sua empresa vende.</span>
+      Seu plano está ativo.<br>
+      <span style="color:#6B0F1A;font-style:italic;">O que falta agora é dizer o que monitorar.</span>
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Seu plano <strong>${nomePlano}</strong> está ativo. Para começar a receber alertas, cadastre as palavras-chave que descrevem os produtos ou serviços da sua empresa — o monitor rastreia automaticamente todos os editais publicados no Brasil que se encaixam no seu perfil.
+      Assim que você cadastrar suas palavras-chave, o monitor começa a rastrear editais e envia o primeiro alerta assim que aparecer algo relevante. Todo o sistema já está pronto — falta só a sua instrução.
     </p>
   </td></tr>
 
-  <!-- Exemplos de palavras-chave -->
-  <tr><td style="padding:0 28px 28px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;padding:20px 24px;">
-      <tr><td>
-        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Exemplos de palavras-chave</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${['reforma predial', 'material de escritório', 'serviços de TI', 'uniformes', 'limpeza', 'equipamentos médicos'].map(t =>
-            `<span style="display:inline-block;background:rgba(107,15,26,0.07);border:1px solid rgba(107,15,26,0.12);border-radius:99px;padding:5px 14px;font-size:13px;color:#6B0F1A;font-weight:600;">${t}</span>`
-          ).join('')}
-        </div>
-        <p style="color:#9AA0A6;font-size:12px;margin:12px 0 0;line-height:1.6;">
-          Use termos simples que apareçam no objeto dos editais. Quanto mais específico, mais relevantes serão os alertas.
+  <!-- O que cadastrar -->
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Exemplos do que você pode monitorar</div>
+      </td></tr>
+      ${[
+        ['Construção & Obras', 'reforma predial, pavimentação, elétrica, hidráulica, alvenaria'],
+        ['Limpeza & Conservação', 'limpeza predial, zeladoria, jardinagem, dedetização'],
+        ['Tecnologia & Software', 'suporte técnico, licença software, infraestrutura TI, cabeamento'],
+        ['Vigilância & Segurança', 'vigilância armada, monitoramento eletrônico, controle de acesso'],
+        ['Saúde & Hospitalar', 'material hospitalar, medicamentos, equipamentos médicos, EPIs'],
+        ['Transporte & Logística', 'frete, transporte escolar, locação veículos, manutenção frota'],
+        ['Alimentação', 'merenda escolar, refeição coletiva, gêneros alimentícios, copa'],
+        ['Serviços Administrativos', 'impressão, gráfica, material de escritório, limpeza de documentos'],
+      ].map(([seg, exemplos]) => `
+      <tr><td style="padding:0 24px 14px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">${seg}</div>
+        <div style="color:#9AA0A6;font-size:12px;line-height:1.5;">${exemplos}</div>
+      </td></tr>`).join('')}
+      <tr><td style="padding:0 24px 18px;">
+        <p style="color:#4a4a4d;font-size:13px;margin:0;line-height:1.6;border-top:1px solid #E8E4DC;padding-top:14px;">
+          Use os termos exatos que os órgãos usam nos editais — não nomes de produtos ou marcas. Você pode adicionar, editar ou remover palavras-chave a qualquer momento.
         </p>
       </td></tr>
     </table>
   </td></tr>
 
+  <!-- CTA -->
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/palavras-chave"
-       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Cadastrar palavras-chave →
     </a>
-    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">Leva menos de 2 minutos. Seu primeiro alerta chega no próximo dia útil.</p>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">Leva menos de 2 minutos · Pode editar quando quiser</p>
   </td></tr>
     `),
   })
 }
 
-// ── Dia 7: primeira semana ────────────────────────────────────────────────────
+// ── Pós-assinatura Dia 7: Primeira semana ─────────────────────────────────────
 export async function enviarEmailPosAssinaturaDia7(
   email: string,
   totalAlertas: number,
   totalLicitacoes: number,
+  valorTotal?: number,
+  maiorOportunidade?: { objeto: string; valor: number; orgao?: string },
 ): Promise<void> {
   const resend = getResend()
   trackResend()
 
-  const temDados = totalAlertas > 0
+  const temDados   = totalAlertas > 0 || totalLicitacoes > 0
+  const temValor   = valorTotal && valorTotal > 0
+  const valorLabel = temValor ? fmtValor(valorTotal) : null
+
+  const subject = temDados
+    ? valorLabel
+      ? `Primeira semana — ${valorLabel} em oportunidades rastreadas para você`
+      : `Primeira semana — ${totalAlertas} alertas, ${totalLicitacoes} licitações monitoradas`
+    : 'Primeira semana ativa — seu monitoramento em ritmo pleno'
 
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: temDados
-      ? `Sua primeira semana: ${totalAlertas} alertas, ${totalLicitacoes} licitações monitoradas`
-      : 'Sua primeira semana de monitoramento — o que vem pela frente',
+    subject,
     html: baseEmail(`
+  <!-- Hero -->
   <tr><td style="padding:32px 28px 0;">
-    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Sua primeira semana</div>
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Resumo da primeira semana</div>
     ${temDados ? `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      <span style="color:#6B0F1A;font-style:italic;">${totalAlertas} alertas</span><br>na sua primeira semana.
+      ${valorLabel
+        ? `<span style="color:#6B0F1A;font-style:italic;">${valorLabel}</span><br>rastreados enquanto você cuidava da empresa.`
+        : `<span style="color:#6B0F1A;font-style:italic;">${totalLicitacoes} licitações</span><br>monitoradas na primeira semana.`
+      }
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Em 7 dias, o Monitor identificou <strong>${totalLicitacoes} licitações</strong> que correspondem ao perfil da sua empresa. Cada uma delas foi uma oportunidade que você não deixou passar.
+      Esses ${totalLicitacoes} editais foram publicados por municípios, estados e órgãos federais em todo o país. Você recebeu ${totalAlertas} alertas com as oportunidades mais relevantes para o seu perfil — sem precisar abrir nenhum portal manualmente.
     </p>
     ` : `
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      O monitoramento está <span style="color:#6B0F1A;font-style:italic;">ativo e rodando.</span>
+      Primeira semana ativa.<br>
+      <span style="color:#6B0F1A;font-style:italic;">Seu monitoramento está em ritmo pleno.</span>
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Ainda não encontramos editais abertos para suas palavras-chave nesta semana — mas o rastreamento está funcionando. Editais são publicados diariamente; seu alerta chega assim que um aparecer.
+      O sistema já rastreou centenas de editais publicados no Brasil nesta semana. Configure mais palavras-chave para ampliar sua cobertura e aumentar as chances de encontrar novas oportunidades.
     </p>
     `}
   </td></tr>
 
-  <!-- Métricas da semana -->
   ${temDados ? `
-  <tr><td style="padding:0 28px 28px;">
+  <!-- Métricas da semana -->
+  <tr><td style="padding:0 28px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
       <tr>
-        <td style="padding:24px;text-align:center;width:50%;">
-          <div style="color:#C9A65A;font-size:32px;font-weight:700;">${totalAlertas}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:6px;">alertas recebidos</div>
+        <td style="padding:24px;text-align:center;width:50%;border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:30px;font-weight:700;">${totalAlertas}</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:6px;">alertas enviados<br>na primeira semana</div>
         </td>
-        <td style="padding:24px;text-align:center;width:50%;border-left:1px solid rgba(255,255,255,0.1);">
-          <div style="color:#C9A65A;font-size:32px;font-weight:700;">${totalLicitacoes}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:6px;">licitações monitoradas</div>
+        <td style="padding:24px;text-align:center;width:50%;">
+          <div style="color:#C9A65A;font-size:30px;font-weight:700;">${totalLicitacoes}</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:6px;">licitações<br>monitoradas para você</div>
         </td>
       </tr>
+      ${valorLabel ? `
+      <tr>
+        <td colspan="2" style="padding:16px 24px 20px;text-align:center;border-top:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:26px;font-weight:700;">${valorLabel}</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">volume financeiro total monitorado</div>
+        </td>
+      </tr>` : ''}
     </table>
   </td></tr>
   ` : ''}
 
-  <!-- Dica -->
-  <tr><td style="padding:0 28px 28px;">
+  ${maiorOportunidade ? `
+  <!-- Maior oportunidade -->
+  <tr><td style="padding:0 28px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
-      <tr><td style="padding:20px 24px;">
-        <div style="color:#1A1A1C;font-size:13px;font-weight:700;margin-bottom:8px;">💡 Dica: ative o Telegram para alertas instantâneos</div>
-        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0;">
-          Além dos e-mails diários, você pode receber alertas urgentes no Telegram assim que um edital é publicado — sem esperar o próximo ciclo de envio.
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Maior oportunidade da semana</div>
+        <div style="color:#1A1A1C;font-size:14px;line-height:1.5;margin-bottom:6px;">${maiorOportunidade.objeto}</div>
+        ${maiorOportunidade.orgao ? `<div style="color:#9AA0A6;font-size:12px;margin-bottom:8px;">${maiorOportunidade.orgao}</div>` : ''}
+        <span style="display:inline-block;background:#6B0F1A;color:#C9A65A;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px;">${fmtValor(maiorOportunidade.valor)}</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  ` : ''}
+
+  <!-- Próximo passo: Telegram -->
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#1A1A1C;font-size:14px;font-weight:700;margin-bottom:8px;">Receba alertas em tempo real no Telegram</div>
+        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 14px;">
+          Além do e-mail, você pode ativar o canal de alertas no Telegram e receber oportunidades assim que são publicadas — direto no celular, sem precisar abrir o painel.
         </p>
-        <a href="${APP_URL}/perfil" style="display:inline-block;margin-top:12px;color:#6B0F1A;font-size:13px;font-weight:700;text-decoration:none;">Configurar Telegram →</a>
+        <a href="${APP_URL}/alertas"
+           style="display:inline-block;background:white;border:1.5px solid #6B0F1A;color:#6B0F1A;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:700;font-size:13px;">
+          Ativar alertas Telegram →
+        </a>
       </td></tr>
     </table>
   </td></tr>
 
+  <!-- CTA -->
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/alertas"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
@@ -183,7 +247,7 @@ export async function enviarEmailPosAssinaturaDia7(
   })
 }
 
-// ── Dia 30: resumo do mês + upsell se Basic ───────────────────────────────────
+// ── Pós-assinatura Dia 30: Um mês ─────────────────────────────────────────────
 export async function enviarEmailPosAssinaturaDia30(
   email: string,
   plano: string,
@@ -194,87 +258,111 @@ export async function enviarEmailPosAssinaturaDia30(
   const resend = getResend()
   trackResend()
 
-  const isBasic = plano === 'basic'
+  const nomePlano = plano === 'basico' ? 'Básico'
+    : plano === 'profissional' ? 'Profissional'
+    : plano === 'empresarial' ? 'Empresarial'
+    : plano
 
-  function formatarVolume(v: number): string {
-    if (v >= 1_000_000_000) return `R$ ${(v / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
-    if (v >= 1_000_000)     return `R$ ${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
-    if (v >= 1_000)         return `R$ ${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
-    return `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`
-  }
+  const isBasico = plano === 'basico'
+  const volumeLabel = fmtValor(volumeMonitorado)
+  const temDados = totalLicitacoes > 0
+
+  const subject = temDados
+    ? `30 dias de Monitor — ${fmtValor(volumeMonitorado)} em oportunidades rastreadas para você`
+    : `Monitor completa 30 dias ativo — seu histórico de monitoramento`
 
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: `1 mês de Monitor — ${totalLicitacoes} licitações rastreadas para você`,
+    subject,
     html: baseEmail(`
+  <!-- Hero -->
   <tr><td style="padding:32px 28px 0;">
-    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Seu primeiro mês</div>
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">30 dias · Plano ${nomePlano}</div>
     <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
-      30 dias monitorando<br>
-      <span style="color:#6B0F1A;font-style:italic;">o mercado público para você.</span>
+      Um mês de monitoramento.<br>
+      <span style="color:#6B0F1A;font-style:italic;">Veja o que foi feito por você.</span>
     </h1>
     <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Em um mês, o Monitor trabalhou todos os dias para garantir que nenhuma oportunidade relevante passasse despercebida. Veja o que foi rastreado:
+      Enquanto você tocava a empresa, o Monitor rastreou ${temDados ? `${totalLicitacoes} editais publicados em portais de compras públicas em todo o Brasil` : 'editais publicados em centenas de portais públicos em todo o Brasil'}. ${totalAlertas > 0 ? `Você recebeu ${totalAlertas} alertas com as oportunidades mais relevantes para o seu perfil — sem abrir nenhum portal manualmente.` : 'Seu rastreamento está ativo e cobrindo centenas de fontes automaticamente.'}
     </p>
   </td></tr>
 
-  <!-- Métricas do mês -->
-  <tr><td style="padding:0 28px 28px;">
+  <!-- Métricas dos 30 dias -->
+  ${temDados ? `
+  <tr><td style="padding:0 28px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
       <tr>
-        <td style="padding:20px 12px;text-align:center;width:33%;">
-          <div style="color:#C9A65A;font-size:26px;font-weight:700;">${totalAlertas}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:4px;line-height:1.4;">alertas<br>gerados</div>
+        <td style="padding:20px 16px;text-align:center;width:33%;border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">${totalAlertas}</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:4px;">alertas<br>enviados</div>
         </td>
-        <td style="padding:20px 12px;text-align:center;width:33%;border-left:1px solid rgba(255,255,255,0.1);border-right:1px solid rgba(255,255,255,0.1);">
-          <div style="color:#C9A65A;font-size:26px;font-weight:700;">${totalLicitacoes}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:4px;line-height:1.4;">licitações<br>monitoradas</div>
+        <td style="padding:20px 16px;text-align:center;width:33%;border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">${totalLicitacoes}</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:4px;">licitações<br>monitoradas</div>
         </td>
-        <td style="padding:20px 12px;text-align:center;width:33%;">
-          <div style="color:#C9A65A;font-size:26px;font-weight:700;">${volumeMonitorado > 0 ? formatarVolume(volumeMonitorado) : '—'}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:4px;line-height:1.4;">volume<br>monitorado</div>
+        <td style="padding:20px 16px;text-align:center;width:33%;">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">${volumeLabel}</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:4px;">volume<br>monitorado</div>
         </td>
       </tr>
     </table>
   </td></tr>
+  ` : ''}
 
-  ${isBasic ? `
-  <!-- Upsell Basic → Profissional -->
-  <tr><td style="padding:0 28px 28px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #6B0F1A;border-radius:14px;overflow:hidden;">
-      <tr><td style="background:#6B0F1A;padding:14px 20px;">
-        <span style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Desbloqueie o potencial completo</span>
+  <!-- Trabalho invisível -->
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">O que rodou por baixo dos panos</div>
       </td></tr>
-      <tr><td style="padding:20px 24px;">
-        <p style="color:#4a4a4d;font-size:14px;line-height:1.6;margin:0 0 16px;">
-          No plano <strong>Basic</strong> você tem 20 palavras-chave. No <strong>Profissional</strong>, são ilimitadas — além de buscas de preços vencedores ilimitadas, Radar de Contratos (veja contratos públicos vencendo antes da concorrência) e Diretório de Parceiros (forme consórcios para ganhar editais maiores).
-        </p>
-        <table width="100%" cellpadding="0" cellspacing="0">
+      ${[
+        ['346+ portais monitorados', 'Prefeituras, estados, hospitais, autarquias e órgãos federais — sem precisar checar um por um'],
+        ['Coleta automática diária', 'O sistema busca novos editais todo dia, de segunda a sábado, automaticamente'],
+        ['Matching com suas palavras', 'Cada edital encontrado é comparado ao que você definiu — só os relevantes chegam até você'],
+        ['Alertas com contexto', 'Objeto, órgão, valor estimado, prazo e link direto para o edital — tudo em um só lugar'],
+      ].map(([t, d]) => `
+      <tr><td style="padding:0 24px 14px;">
+        <table cellpadding="0" cellspacing="0">
           <tr>
-            <td>
-              <div style="color:#1A1A1C;font-size:16px;font-weight:700;">Profissional</div>
-              <div style="color:#9AA0A6;font-size:12px;margin-top:2px;">palavras-chave ilimitadas · 1 usuário</div>
-            </td>
-            <td align="right">
-              <div style="color:#6B0F1A;font-size:22px;font-weight:700;">R$97,90<span style="font-size:13px;color:#9AA0A6;">/mês</span></div>
+            <td style="width:8px;height:8px;background:#C9A65A;border-radius:50%;vertical-align:top;padding-top:5px;"></td>
+            <td style="padding-left:10px;">
+              <div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">${t}</div>
+              <div style="color:#9AA0A6;font-size:12px;line-height:1.5;">${d}</div>
             </td>
           </tr>
         </table>
-        <a href="${APP_URL}/precos"
-           style="display:inline-block;margin-top:16px;background:#6B0F1A;color:white;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;">
-          Fazer upgrade →
+      </td></tr>`).join('')}
+    </table>
+  </td></tr>
+
+  ${isBasico ? `
+  <!-- Upgrade para Profissional -->
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #C9A65A;border-radius:14px;overflow:hidden;">
+      <tr><td style="background:#FAF6F0;padding:20px 24px;">
+        <div style="color:#1A1A1C;font-size:14px;font-weight:700;margin-bottom:6px;">Ampliar seu monitoramento</div>
+        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 12px;">
+          No Plano Profissional você tem palavras-chave ilimitadas — o que significa rastrear mais segmentos, mais especificidades, e pegar oportunidades que o plano atual não cobre.
+        </p>
+        <a href="${APP_URL}/assinar"
+           style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:10px 24px;border-radius:10px;font-weight:700;font-size:13px;">
+          Ver Plano Profissional →
         </a>
       </td></tr>
     </table>
   </td></tr>
   ` : ''}
 
+  <!-- CTA -->
   <tr><td style="padding:0 28px 40px;" align="center">
     <a href="${APP_URL}/dashboard"
-       style="display:inline-block;background:${isBasic ? '#F5F0EB' : '#6B0F1A'};color:${isBasic ? '#6B0F1A' : 'white'};text-decoration:none;padding:14px 36px;border-radius:12px;font-weight:700;font-size:14px;border:${isBasic ? '1px solid #D9CFC4' : 'none'};">
-      Ver painel completo →
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Acessar o painel →
     </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Fale no WhatsApp</a>
+    </p>
   </td></tr>
     `),
   })

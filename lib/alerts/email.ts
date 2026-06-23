@@ -36,6 +36,17 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
   const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const total = licitacoes.length
 
+  // Valor financeiro total e maior oportunidade
+  const valorTotal = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
+  const maiorValor = Math.max(...licitacoes.map(l => l.valor_estimado || 0))
+  const maiorOport = maiorValor > 0 ? licitacoes.find(l => (l.valor_estimado || 0) === maiorValor) : null
+  function fmtCompact(v: number): string {
+    if (v >= 1_000_000_000) return `R$ ${(v / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}B`
+    if (v >= 1_000_000)     return `R$ ${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+    if (v >= 1_000)         return `R$ ${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+    return `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`
+  }
+
   const temReenvios = licitacoes.some(l => l.reenvio)
   const temNovos = licitacoes.some(l => !l.reenvio)
 
@@ -132,11 +143,15 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       </div>
       <h1 style="margin:0 0 10px;color:#FFFFFF;font-size:28px;font-weight:800;letter-spacing:-0.5px">🔔 Novas Licitações</h1>
       <p style="margin:0 0 24px;color:rgba(255,255,255,0.7);font-size:14px">${dataHoje}</p>
-      <!-- Contador -->
-      <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 28px">
+      <!-- Contador + valor total -->
+      <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 28px;margin-bottom:${valorTotal > 0 ? '12px' : '0'}">
         <span style="color:#C9A65A;font-size:32px;font-weight:800">${total}</span>
         <span style="display:block;color:rgba(255,255,255,0.65);font-size:12px;font-weight:600;letter-spacing:0.5px;margin-top:2px">${total === 1 ? 'oportunidade identificada para você' : 'oportunidades identificadas para você'}</span>
       </div>
+      ${valorTotal > 0 ? `
+      <div style="display:block;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;margin-top:2px">
+        ${fmtCompact(valorTotal)} em volume monitorado hoje
+      </div>` : ''}
     </div>
 
     <!-- Corpo -->
@@ -145,6 +160,14 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       <p style="margin:0 0 20px;font-size:14px;color:#5C5C5C;line-height:1.6">
         Encontramos oportunidades que correspondem às suas palavras-chave monitoradas. Analise cada edital com cuidado antes de participar.
       </p>
+
+      ${maiorOport && maiorValor > 0 ? `
+      <!-- Destaque: maior oportunidade do dia -->
+      <div style="margin-bottom:20px;padding:16px 20px;background:linear-gradient(135deg,#FAF6F0,#FFF8F0);border:1px solid #E8D5A0;border-radius:12px">
+        <p style="margin:0 0 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#8B6914">⭐ MAIOR OPORTUNIDADE DO DIA</p>
+        <p style="margin:0 0 6px;font-size:13px;color:#2C2C2C;line-height:1.5">${maiorOport.objeto.length > 120 ? maiorOport.objeto.substring(0, 120) + '…' : maiorOport.objeto}</p>
+        <p style="margin:0;font-size:15px;font-weight:800;color:#6B0F1A">${fmtCompact(maiorValor)}</p>
+      </div>` : ''}
 
       ${trial ? `<!-- Banner período de teste -->
       <div style="margin-bottom:20px;padding:16px 20px;background:linear-gradient(135deg,#FFF7ED,#FFFBF5);border:1px solid #FDBA74;border-radius:12px;text-align:center">
@@ -197,7 +220,17 @@ export async function enviarAlertaEmailUsuario(
   const resend = new Resend(process.env.RESEND_API_KEY!)
 
   const n = licitacoes.length
-  const subject = `🔔 ${n} licitaç${n !== 1 ? 'ões' : 'ão'} abertas para você — ${new Date().toLocaleDateString('pt-BR')}`
+  const volTotal = licitacoes.reduce((acc, l) => acc + (l.valor_estimado || 0), 0)
+  function fmtS(v: number): string {
+    if (v >= 1_000_000_000) return `R$ ${(v / 1_000_000_000).toFixed(1)}B`
+    if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`
+    if (v >= 1_000) return `R$ ${Math.round(v / 1_000)}k`
+    return ''
+  }
+  const volStr = fmtS(volTotal)
+  const subject = volStr
+    ? `🔔 ${n} licitaç${n !== 1 ? 'ões' : 'ão'} — ${volStr} em oportunidades para você hoje`
+    : `🔔 ${n} licitaç${n !== 1 ? 'ões' : 'ão'} abertas para você — ${new Date().toLocaleDateString('pt-BR')}`
 
   const { error } = await resend.emails.send({
     from: process.env.EMAIL_REMETENTE!,
