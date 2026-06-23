@@ -22,103 +22,31 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const pagina   = Math.max(1, Number(searchParams.get('pagina') ?? '1'))
-  const ordenar  = searchParams.get('ordenar') ?? 'valor'
-  const from   = (pagina - 1) * POR_PAGINA
-  const to     = from + POR_PAGINA - 1
+  const pagina  = Math.max(1, Number(searchParams.get('pagina') ?? '1'))
+  const ordenar = searchParams.get('ordenar') ?? 'valor'
 
-  // Buscar alertas diretamente por user_id (evita .in() com centenas de keyword IDs)
-  // Filtra licitacao_id não-nulo (SET NULL on delete via migration alertas_acumulado)
-  const { data: alertas } = await supabase
-    .from('alertas')
-    .select('licitacao_id, keywords(termo, ativo)')
-    .eq('user_id', user.id)
-    .not('licitacao_id', 'is', null)
-    .limit(10000)
-
-  if (!alertas?.length) return NextResponse.json({ data: [], total: 0, pagina: 1, paginas: 1 })
-
-  // Agrupar keywords por licitacao_id (só keywords ativas)
-  const keywordsPorLicitacao = new Map<string, string[]>()
-  for (const a of alertas) {
-    const kw = a.keywords as unknown as { termo: string; ativo: boolean } | null
-    if (!kw?.termo || kw.ativo === false) continue
-    const id = a.licitacao_id as string
-    const lista = keywordsPorLicitacao.get(id) ?? []
-    if (!lista.includes(kw.termo)) lista.push(kw.termo)
-    keywordsPorLicitacao.set(id, lista)
-  }
-
-  const licitacaoIds = [...keywordsPorLicitacao.keys()]
-
-  // Buscar licitações com filtros opcionais + paginação
-  let query = supabase
-    .from('licitacoes')
-    .select('id, fonte, orgao, objeto, valor_estimado, data_abertura, url, estado, cidade, coletado_em', { count: 'exact' })
-    .in('id', licitacaoIds)
-
-  if (ordenar === 'recente')      query = query.order('coletado_em', { ascending: false }) as typeof query
-  else if (ordenar === 'abertura') {
-    const hoje = new Date().toISOString().slice(0, 10)
-    query = query
-      .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
-      .order('data_abertura', { ascending: true, nullsFirst: false }) as typeof query
-  }
-  else if (ordenar === 'menor')    query = query.order('valor_estimado', { ascending: true, nullsFirst: false }) as typeof query
-  else /* valor (padrão) */        query = query.order('valor_estimado', { ascending: false, nullsFirst: false }).order('coletado_em', { ascending: false }) as typeof query
-
-  query = query.range(from, to) as typeof query
-
-  // Região — aceita ?regioes=sul,RJ  e legado ?estado=SP
   const regioes = searchParams.get('regioes')?.split(',').filter(Boolean) ?? []
   const estadoLeg = searchParams.get('estado') ?? ''
   if (estadoLeg && regioes.length === 0) regioes.push(estadoLeg)
   const ufs = expandirParaUFs(regioes)
-  if (ufs) query = query.in('estado', ufs) as typeof query
 
-  if (searchParams.get('data_inicio')) {
-    query = query.gte('data_abertura', searchParams.get('data_inicio')!)
-  }
-  if (searchParams.get('valor_min')) {
-    query = query.gte('valor_estimado', Number(searchParams.get('valor_min')))
-  }
-  if (searchParams.get('valor_max')) {
-    query = query.lte('valor_estimado', Number(searchParams.get('valor_max')))
-  }
-  if (searchParams.get('fonte')) {
-    query = query.eq('fonte', searchParams.get('fonte')!)
-  }
+  const valorMin = searchParams.get('valor_min') ? Number(searchParams.get('valor_min')) : null
+  const valorMax = searchParams.get('valor_max') ? Number(searchParams.get('valor_max')) : null
+  const fonte    = searchParams.get('fonte') ?? null
 
-  const { data: licitacoes, count, error } = await query
+  // RPC faz o JOIN alertas→licitacoes no banco — evita .in() com centenas de IDs
+  const { data, error } = await supabase.rpc('buscar_licitacoes_usuario', {
+    p_user_id:    user.id,
+    p_pagina:     pagina,
+    p_por_pagina: POR_PAGINA,
+    p_ordenar:    ordenar,
+    p_ufs:        ufs ?? null,
+    p_valor_min:  valorMin,
+    p_valor_max:  valorMax,
+    p_fonte:      fonte,
+  })
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const total   = count ?? 0
-  const paginas = Math.max(1, Math.ceil(total / POR_PAGINA))
-
-  // Volume total de TODAS as licitações do usuário (não só da página)
-  // Faz query leve buscando só valor_estimado de todos os IDs
-  let volumeTotal = 0
-  if (licitacaoIds.length > 0) {
-    let volQuery = supabase
-      .from('licitacoes')
-      .select('valor_estimado')
-      .in('id', licitacaoIds)
-      .not('valor_estimado', 'is', null)
-    const ufsVol = expandirParaUFs(regioes)
-    if (ufsVol) volQuery = volQuery.in('estado', ufsVol) as typeof volQuery
-    if (searchParams.get('valor_min')) volQuery = volQuery.gte('valor_estimado', Number(searchParams.get('valor_min')))
-    if (searchParams.get('valor_max')) volQuery = volQuery.lte('valor_estimado', Number(searchParams.get('valor_max')))
-
-    const { data: volRows } = await volQuery
-    volumeTotal = (volRows ?? []).reduce((acc, r) => acc + (r.valor_estimado || 0), 0)
-  }
-
-  const resultado = (licitacoes ?? []).map(l => ({
-    ...l,
-    alertas: (keywordsPorLicitacao.get(l.id) ?? []).map(termo => ({
-      keywords: { termo }
-    }))
-  }))
-
-  return NextResponse.json({ data: resultado, total, pagina, paginas, volumeTotal })
+  return NextResponse.json(data)
 }
