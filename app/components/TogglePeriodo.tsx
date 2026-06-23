@@ -99,9 +99,16 @@ export default function TogglePeriodo({ planos, featureRows }: { planos: Plano[]
                 </div>
               )}
 
-              <div className={`text-[11px] font-semibold mb-5 px-2 py-1 rounded text-center ${
-                isDark ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
-              }`}>{porDiaExibido}</div>
+              <div className="flex flex-col items-center gap-1.5 mb-5">
+                <div className={`text-[11px] font-semibold px-2 py-1 rounded text-center ${
+                  isDark ? 'text-[rgba(201,166,90,0.8)] bg-[rgba(201,166,90,0.1)]' : 'text-[#6B0F1A] bg-[rgba(107,15,26,0.06)]'
+                }`}>{porDiaExibido}</div>
+                {periodo === 'anual' && p.id !== 'trial' && (
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full" style={{ background: isDark ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', color: isDark ? '#C9A65A' : '#6B0F1A' }}>
+                    2 MESES GRÁTIS
+                  </span>
+                )}
+              </div>
 
               <div className="flex-1 mb-5 space-y-2">
                 {featureRows.filter(row => row[p.id] !== false).map(row => {

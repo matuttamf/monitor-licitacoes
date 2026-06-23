@@ -208,11 +208,11 @@ function AssinarConteudo() {
               </span>
             </div>
             {periodo === 'anual' && (
-              <div className="text-center mb-6">
+              <div className="flex flex-col items-center gap-1.5 mb-6">
                 <span className="text-xs" style={{ color: p.destaque ? 'rgba(201,166,90,0.8)' : '#6B0F1A' }}>
                   R${(p as { preco_mensal_no_anual: string }).preco_mensal_no_anual}/mês
                 </span>
-                <span className="ml-2 text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', color: p.destaque ? '#C9A65A' : '#6B0F1A' }}>
+                <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full" style={{ background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', color: p.destaque ? '#C9A65A' : '#6B0F1A' }}>
                   2 MESES GRÁTIS
                 </span>
               </div>

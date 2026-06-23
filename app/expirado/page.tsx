@@ -156,12 +156,17 @@ export default function ExpiradoPage() {
               </span>
             </div>
             {periodo === 'anual' && (
-              <div className="text-center text-xs mb-6" style={{ color: p.destaque ? 'rgba(201,166,90,0.8)' : '#6B0F1A' }}>
-                equivale a R${
-                  p.id === 'basic' ? '41,58' :
-                  p.id === 'profissional' ? '81,58' :
-                  p.id === 'gestao' ? '164,92' : '414,17'
-                }/mês
+              <div className="flex flex-col items-center gap-1.5 mb-6">
+                <span className="text-xs" style={{ color: p.destaque ? 'rgba(201,166,90,0.8)' : '#6B0F1A' }}>
+                  R${
+                    p.id === 'basic' ? '41,58' :
+                    p.id === 'profissional' ? '81,58' :
+                    p.id === 'gestao' ? '164,92' : '414,17'
+                  }/mês
+                </span>
+                <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full" style={{ background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', color: p.destaque ? '#C9A65A' : '#6B0F1A' }}>
+                  2 MESES GRÁTIS
+                </span>
               </div>
             )}
             {periodo === 'mensal' && <div className="mb-6" />}
