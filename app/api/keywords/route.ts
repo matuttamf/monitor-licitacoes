@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   // --- Verificar limite de keywords pelo plano ---
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plano, owner_id')
+    .select('plano, owner_id, status')
     .eq('id', user.id)
     .single()
 
