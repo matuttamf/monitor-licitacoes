@@ -18,6 +18,7 @@ function expandirParaUFs(regioes: string[]): string[] | null {
 
 type AlertaDedup = {
   id: string
+  licitacao_id_str: string | null
   criado_em: string
   enviado_em: string | null
   canais: string[]
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('alertas')
     .select(
-      `id, criado_em, enviado_em, canais,
+      `id, licitacao_id_str, criado_em, enviado_em, canais,
        ${licJoin}(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura),
        ${kwJoin}(termo)`
     )
@@ -87,22 +88,27 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // Deduplicar por licitação
+  // Deduplicar por licitação — usa licitacao_id_str como chave primária;
+  // cai no orgao::objeto apenas se ambos os campos estiverem presentes.
   const licitacaoMap = new Map<string, AlertaDedup>()
   for (const a of resultado) {
     const lic = a.licitacoes as { orgao?: string; objeto?: string } | null
     const kw  = a.keywords  as { termo?: string } | null
-    const licKey = `${lic?.orgao ?? ''}::${lic?.objeto ?? ''}`.slice(0, 100)
+    const licIdStr = (a as { licitacao_id_str?: string | null }).licitacao_id_str
+    const licKey = licIdStr
+      ?? (lic?.orgao && lic?.objeto ? `${lic.orgao}::${lic.objeto}`.slice(0, 100) : null)
+      ?? a.id
     const termo = kw?.termo ?? null
 
     if (!licitacaoMap.has(licKey)) {
       licitacaoMap.set(licKey, {
-        id:         a.id,
-        criado_em:  a.criado_em,
-        enviado_em: a.enviado_em,
-        canais:     [...(a.canais ?? [])],
-        licitacoes: a.licitacoes,
-        keywords:   termo ? [termo] : [],
+        id:               a.id,
+        licitacao_id_str: licIdStr ?? null,
+        criado_em:        a.criado_em,
+        enviado_em:       a.enviado_em,
+        canais:           [...(a.canais ?? [])],
+        licitacoes:       a.licitacoes,
+        keywords:         termo ? [termo] : [],
       })
     } else {
       const existing = licitacaoMap.get(licKey)!
