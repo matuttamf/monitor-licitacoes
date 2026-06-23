@@ -150,7 +150,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       </div>
       ${valorTotal > 0 ? `
       <div style="display:block;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;margin-top:2px">
-        ${fmtCompact(valorTotal)} em volume monitorado hoje
+        ${fmtCompact(valorTotal)} em volume neste e-mail
       </div>` : ''}
     </div>
 
@@ -164,7 +164,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       ${maiorOport && maiorValor > 0 ? `
       <!-- Destaque: maior oportunidade do dia -->
       <div style="margin-bottom:20px;padding:16px 20px;background:linear-gradient(135deg,#FAF6F0,#FFF8F0);border:1px solid #E8D5A0;border-radius:12px">
-        <p style="margin:0 0 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#8B6914">⭐ MAIOR OPORTUNIDADE DO DIA</p>
+        <p style="margin:0 0 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#8B6914">⭐ MAIOR OPORTUNIDADE DESTE E-MAIL</p>
         <p style="margin:0 0 6px;font-size:13px;color:#2C2C2C;line-height:1.5">${maiorOport.objeto.length > 120 ? maiorOport.objeto.substring(0, 120) + '…' : maiorOport.objeto}</p>
         <p style="margin:0;font-size:15px;font-weight:800;color:#6B0F1A">${fmtCompact(maiorValor)}</p>
       </div>` : ''}
