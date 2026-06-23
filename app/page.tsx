@@ -67,15 +67,15 @@ type PlanId = 'trial' | 'basic' | 'profissional' | 'gestao' | 'empresarial'
 type FeatureRow = { label: string } & Record<PlanId, string | boolean>
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { label: 'Palavras-chave',             trial: 'Até 7 palavras-chave', basic: 'Até 20 palavras-chave', profissional: 'Ilimitadas palavras-chave', gestao: 'Ilimitadas palavras-chave', empresarial: 'Ilimitadas palavras-chave' },
-  { label: 'Usuários',                   trial: '1 usuário',      basic: '1 usuário',      profissional: '1 usuário',      gestao: 'Até 5 usuários', empresarial: 'Até 15 usuários'},
-  { label: 'Alertas por e-mail + Telegram', trial: true,          basic: true,             profissional: true,             gestao: true,             empresarial: true             },
-  { label: 'Alertas por WhatsApp',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
-  { label: 'Busca manual de editais no painel', trial: true,      basic: true,             profissional: true,             gestao: true,             empresarial: true             },
-  { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: '💰 Análise de Preços Vencedores', trial: '5 buscas de preços', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
-  { label: '📊 Relatório semanal',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Palavras-chave monitoradas',  trial: '7 palavras-chave monitoradas', basic: '20 palavras-chave monitoradas', profissional: 'Palavras-chave ilimitadas', gestao: 'Palavras-chave ilimitadas', empresarial: 'Palavras-chave ilimitadas' },
+  { label: 'Usuários',                    trial: '1 usuário',      basic: '1 usuário',      profissional: '1 usuário',      gestao: 'Até 5 usuários', empresarial: 'Até 15 usuários'},
+  { label: 'Alertas por e-mail + Telegram', trial: true,           basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Alertas por WhatsApp',        trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: 'Busca manual de editais no painel', trial: true,       basic: true,             profissional: true,             gestao: true,             empresarial: true             },
+  { label: '💰 Busca de Preços Homologados', trial: '5 buscas no período', basic: '20 buscas/mês', profissional: '💰 Busca de Preços Homologados ilimitada', gestao: '💰 Busca de Preços Homologados ilimitada', empresarial: '💰 Busca de Preços Homologados ilimitada' },
+  { label: '🎯 Radar de Contratos',       trial: false,            basic: false,            profissional: '🎯 Radar de Contratos — veja contratos públicos vencendo e entre na disputa antes da concorrência', gestao: '🎯 Radar de Contratos — veja contratos públicos vencendo e entre na disputa antes da concorrência', empresarial: '🎯 Radar de Contratos — veja contratos públicos vencendo e entre na disputa antes da concorrência' },
+  { label: '🤝 Diretório de Parceiros',   trial: false,            basic: false,            profissional: '🤝 Diretório de Parceiros — encontre fornecedores e parceiros para compor propostas e ganhar editais maiores', gestao: '🤝 Diretório de Parceiros — encontre fornecedores e parceiros para compor propostas e ganhar editais maiores', empresarial: '🤝 Diretório de Parceiros — encontre fornecedores e parceiros para compor propostas e ganhar editais maiores' },
+  { label: '📊 Relatório semanal',        trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
 ]
 
 const PLANOS = [
