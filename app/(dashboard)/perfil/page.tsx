@@ -261,14 +261,14 @@ export default function PerfilPage() {
   }
 
   const OPCOES_PAUSA = [
-    { label: '1 hora',        ms: 1 * 60 * 60 * 1000 },
-    { label: '4 horas',       ms: 4 * 60 * 60 * 1000 },
-    { label: '8 horas',       ms: 8 * 60 * 60 * 1000 },
-    { label: '12 horas',      ms: 12 * 60 * 60 * 1000 },
-    { label: '24 horas',      ms: 24 * 60 * 60 * 1000 },
-    { label: '2 dias',        ms: 2 * 24 * 60 * 60 * 1000 },
-    { label: '7 dias',        ms: 7 * 24 * 60 * 60 * 1000 },
-    { label: 'Até reativar',  ms: 10 * 365 * 24 * 60 * 60 * 1000 },
+    { label: '1h',           ms: 1 * 60 * 60 * 1000 },
+    { label: '4h',           ms: 4 * 60 * 60 * 1000 },
+    { label: '8h',           ms: 8 * 60 * 60 * 1000 },
+    { label: '12h',          ms: 12 * 60 * 60 * 1000 },
+    { label: '24h',          ms: 24 * 60 * 60 * 1000 },
+    { label: '2d',           ms: 2 * 24 * 60 * 60 * 1000 },
+    { label: '7d',           ms: 7 * 24 * 60 * 60 * 1000 },
+    { label: 'Até reativar', ms: 10 * 365 * 24 * 60 * 60 * 1000 },
   ]
 
   async function pausarCanal(canal: 'email' | 'telegram' | 'whatsapp', ms: number | null) {
