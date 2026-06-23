@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
 
   // Busca todos os alertas do usuário (sem paginação no banco) para que a
   // ordenação + dedup sejam aplicadas ao conjunto completo, não só à página atual.
-  // Volume por usuário é pequeno — limitamos a 2000 como proteção.
   let query = supabase
     .from('alertas')
     .select(
@@ -60,6 +59,7 @@ export async function GET(request: NextRequest) {
        ${licJoin}(orgao, objeto, url, estado, cidade, valor_estimado, data_abertura),
        ${kwJoin}(termo)`
     )
+    .eq('user_id', user.id)
     .limit(10000)
     .order('enviado_em', { ascending: false, nullsFirst: false })
 
