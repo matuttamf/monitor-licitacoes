@@ -79,9 +79,19 @@ async function coletarModalidade(
           ? `https://pncp.gov.br/app/editais/${cnpj}/${ano}/${seq}`
           : `https://pncp.gov.br/app/editais`
 
-        const url_edital = item.linkSistemaOrigem
-          || item.linkProcessoEletronico
-          || urlPncp
+        // Usa link do sistema de origem só se for deep link válido (evita homepages como /Default.aspx)
+        const isDeepLink = (url: string | undefined): boolean => {
+          if (!url) return false
+          try {
+            const path = new URL(url).pathname.replace(/\/$/, '').toLowerCase()
+            if (path.length <= 1) return false
+            const shallow = ['default.aspx', 'index.aspx', 'index.html', 'home', 'inicio', 'login']
+            return !shallow.some(s => path === `/${s}` || path === `/${s.replace('.aspx', '')}`)
+          } catch { return false }
+        }
+        const url_edital = (isDeepLink(item.linkSistemaOrigem) ? item.linkSistemaOrigem : null)
+          ?? (isDeepLink(item.linkProcessoEletronico) ? item.linkProcessoEletronico : null)
+          ?? urlPncp
 
         licitacoes.push({
           fonte: 'PNCP',
