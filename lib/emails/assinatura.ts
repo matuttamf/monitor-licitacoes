@@ -125,7 +125,7 @@ export async function enviarEmailPosAssinaturaDia1(email: string, plano: string)
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Cadastrar palavras-chave →
     </a>
-    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">Leva menos de 2 minutos · Pode editar quando quiser</p>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;text-align:center;">Leva menos de 2 minutos · Pode editar quando quiser</p>
   </td></tr>
     `),
   })
@@ -360,7 +360,7 @@ export async function enviarEmailPosAssinaturaDia30(
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Acessar o painel →
     </a>
-    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;text-align:center;">
       Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Fale no WhatsApp</a>
     </p>
   </td></tr>

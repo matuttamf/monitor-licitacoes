@@ -141,7 +141,7 @@ export async function enviarEmailBoasVindas(email: string, nome: string): Promis
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
       Configurar e receber alertas →
     </a>
-    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">Leva menos de 2 minutos · 7 dias grátis · sem cartão de crédito</p>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;text-align:center;">Leva menos de 2 minutos · 7 dias grátis · sem cartão de crédito</p>
   </td></tr>
     `, email),
   })
@@ -173,12 +173,8 @@ export async function enviarEmailDia3(
     : `Seu monitor está rastreando "${termosLabel}" — 4 dias restantes`
 
   const termosChips = termos.length > 0
-    ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
-        ${termos.slice(0, 6).map(t => `
-        <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;">
-          ${t}
-        </span>`).join('')}
-        ${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;">+${termos.length - 6} mais</span>` : ''}
+    ? `<div style="margin-bottom:24px;line-height:2.2;">
+        ${termos.slice(0, 6).map(t => `<span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">${t}</span>`).join('')}${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;margin-right:6px;margin-bottom:4px;">+${termos.length - 6} mais</span>` : ''}
       </div>`
     : ''
 
@@ -250,7 +246,7 @@ export async function enviarEmailDia3(
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Ver oportunidades no painel →
     </a>
-    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;text-align:center;">
       Seu trial termina em 4 dias. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora — trial termina em 4 dias →</a>
     </p>
   </td></tr>
@@ -285,12 +281,8 @@ export async function enviarEmailSegunda(
     : `Monitoramento ativo — panorama desta semana`
 
   const termosChips = termos.length > 0
-    ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
-        ${termos.slice(0, 6).map(t => `
-        <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;">
-          ${t}
-        </span>`).join('')}
-        ${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;">+${termos.length - 6} mais</span>` : ''}
+    ? `<div style="margin-bottom:24px;line-height:2.2;">
+        ${termos.slice(0, 6).map(t => `<span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">${t}</span>`).join('')}${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;margin-right:6px;margin-bottom:4px;">+${termos.length - 6} mais</span>` : ''}
       </div>`
     : ''
 
@@ -363,7 +355,7 @@ export async function enviarEmailSegunda(
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Ver oportunidades no painel →
     </a>
-    ${isTrial ? `<p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;">
+    ${isTrial ? `<p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;text-align:center;">
       Ainda no período de teste. <a href="${APP_URL}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar e continuar recebendo alertas →</a>
     </p>` : ''}
   </td></tr>
@@ -477,9 +469,12 @@ export async function enviarEmailUrgencia(
           'Resumo semanal de oportunidades',
           'Cancele quando quiser',
         ].map(item => `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;color:#4a4a4d;font-size:14px;">
-          <span style="color:#6B0F1A;font-weight:700;font-size:16px;">✓</span> ${item}
-        </div>`).join('')}
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;">
+          <tr>
+            <td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td>
+            <td style="color:#4a4a4d;font-size:14px;line-height:1.5;">${item}</td>
+          </tr>
+        </table>`).join('')}
       </td></tr>
     </table>
   </td></tr>
