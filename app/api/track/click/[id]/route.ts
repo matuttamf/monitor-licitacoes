@@ -11,7 +11,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const destino = req.nextUrl.searchParams.get('url') ?? 'https://monitordelicitacoes.com.br'
+  const rawUrl  = req.nextUrl.searchParams.get('url') ?? ''
+  const base    = 'https://monitordelicitacoes.com.br'
+  let destino   = base
+  try {
+    const parsed = new URL(rawUrl)
+    if (parsed.origin === base || parsed.origin === 'https://www.monitordelicitacoes.com.br') {
+      destino = rawUrl
+    }
+  } catch { /* URL inválida — usa fallback */ }
 
   if (id) {
     try {

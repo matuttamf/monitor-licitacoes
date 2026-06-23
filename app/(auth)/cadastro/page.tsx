@@ -38,6 +38,7 @@ function CadastroConteudo() {
   const [convite, setConvite]                       = useState<ConviteInfo>(null)
   const [conviteErro, setConviteErro]               = useState('')
   const [carregandoConvite, setCarregandoConvite]   = useState(!!conviteToken)
+  const [emailJaCadastrado, setEmailJaCadastrado]   = useState(false)
 
   useEffect(() => {
     if (!conviteToken) return
@@ -59,6 +60,7 @@ function CadastroConteudo() {
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
+    if (emailJaCadastrado)         { setErro('Este e-mail já está cadastrado. Use "Entrar" para acessar sua conta.'); return }
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
     if (senha.length < 8)         { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     if (conviteToken) {
@@ -298,11 +300,26 @@ function CadastroConteudo() {
                 <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">E-mail</label>
                 <input
                   type="email" value={email}
-                  onChange={e => { !convite && setEmail(e.target.value); e.target.setCustomValidity('') }}
+                  onChange={e => { !convite && setEmail(e.target.value); setEmailJaCadastrado(false); e.target.setCustomValidity('') }}
+                  onBlur={async () => {
+                    if (convite || !email) return
+                    const res = await fetch('/api/auth/verificar-email', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email }),
+                    }).then(r => r.json()).catch(() => ({ exists: false }))
+                    setEmailJaCadastrado(!!res.exists)
+                  }}
                   onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('Digite um e-mail válido')}
                   placeholder="seu@email.com" required readOnly={!!convite}
-                  className={`w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)] ${convite ? 'bg-[#F5F2EE] cursor-default' : 'bg-white'}`}
+                  className={`w-full px-4 py-3 rounded-xl border-[1.5px] text-sm text-[#1A1A1C] outline-none focus:ring-2 ${emailJaCadastrado ? 'border-[#b91c1c] focus:border-[#b91c1c] focus:ring-[rgba(185,28,28,0.1)]' : 'border-[#D5D2C8] focus:border-[#6B0F1A] focus:ring-[rgba(107,15,26,0.1)]'} ${convite ? 'bg-[#F5F2EE] cursor-default' : 'bg-white'}`}
                 />
+                {emailJaCadastrado && (
+                  <p className="text-xs text-[#b91c1c] mt-1.5">
+                    Este e-mail já está cadastrado.{' '}
+                    <a href="/login" className="font-semibold underline">Entrar →</a>
+                  </p>
+                )}
               </div>
 
               <div>
