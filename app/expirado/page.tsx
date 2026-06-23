@@ -114,10 +114,10 @@ export default function ExpiradoPage() {
             <button
               type="button"
               onClick={() => setPeriodo('anual')}
-              className="px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+              className="px-5 py-2 rounded-lg text-sm font-semibold flex flex-col items-center gap-1"
               style={{ background: periodo === 'anual' ? 'white' : 'transparent', color: periodo === 'anual' ? '#1A1A1C' : 'rgba(255,255,255,0.55)', border: 'none', cursor: 'pointer' }}>
               Anual
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: '#C9A65A', color: '#1A1A1C' }}>2 meses grátis</span>
+              <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full" style={{ background: '#C9A65A', color: '#1A1A1C' }}>2 MESES GRÁTIS</span>
             </button>
           </div>
         </div>
