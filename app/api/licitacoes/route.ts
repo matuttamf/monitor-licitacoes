@@ -27,35 +27,26 @@ export async function GET(request: NextRequest) {
   const from   = (pagina - 1) * POR_PAGINA
   const to     = from + POR_PAGINA - 1
 
-  // Buscar IDs das keywords do usuário
-  const { data: keywords } = await supabase
-    .from('keywords')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('ativo', true)
-
-  if (!keywords?.length) return NextResponse.json({ data: [], total: 0, pagina: 1, paginas: 1 })
-
-  const keywordIds = keywords.map(k => k.id)
-
-  // Buscar alertas para obter licitacao_ids e keywords associadas
-  // Supabase retorna 1000 linhas por padrão — com muitas keywords pode cortar; usamos limit alto
+  // Buscar alertas diretamente por user_id (evita .in() com centenas de keyword IDs)
+  // Filtra licitacao_id não-nulo (SET NULL on delete via migration alertas_acumulado)
   const { data: alertas } = await supabase
     .from('alertas')
-    .select('licitacao_id, keywords(termo)')
-    .in('keyword_id', keywordIds)
+    .select('licitacao_id, keywords(termo, ativo)')
+    .eq('user_id', user.id)
+    .not('licitacao_id', 'is', null)
     .limit(10000)
 
   if (!alertas?.length) return NextResponse.json({ data: [], total: 0, pagina: 1, paginas: 1 })
 
-  // Agrupar keywords por licitacao_id
+  // Agrupar keywords por licitacao_id (só keywords ativas)
   const keywordsPorLicitacao = new Map<string, string[]>()
   for (const a of alertas) {
-    const termo = (a.keywords as unknown as { termo: string } | null)?.termo
-    if (!termo) continue
-    const lista = keywordsPorLicitacao.get(a.licitacao_id) ?? []
-    if (!lista.includes(termo)) lista.push(termo)
-    keywordsPorLicitacao.set(a.licitacao_id, lista)
+    const kw = a.keywords as unknown as { termo: string; ativo: boolean } | null
+    if (!kw?.termo || kw.ativo === false) continue
+    const id = a.licitacao_id as string
+    const lista = keywordsPorLicitacao.get(id) ?? []
+    if (!lista.includes(kw.termo)) lista.push(kw.termo)
+    keywordsPorLicitacao.set(id, lista)
   }
 
   const licitacaoIds = [...keywordsPorLicitacao.keys()]
