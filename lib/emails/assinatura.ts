@@ -340,9 +340,9 @@ export async function enviarEmailPosAssinaturaDia30(
   <!-- Upgrade para Profissional -->
   <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #C9A65A;border-radius:14px;overflow:hidden;">
-      <tr><td style="background:#FAF6F0;padding:20px 24px;">
+      <tr><td style="background:#FAF6F0;padding:20px 24px;text-align:center;">
         <div style="color:#1A1A1C;font-size:14px;font-weight:700;margin-bottom:6px;">Ampliar seu monitoramento</div>
-        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 12px;">
+        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 12px;text-align:center;">
           No Plano Profissional você tem palavras-chave ilimitadas — o que significa rastrear mais segmentos, mais especificidades, e pegar oportunidades que o plano atual não cobre.
         </p>
         <a href="${APP_URL}/assinar"
@@ -355,7 +355,7 @@ export async function enviarEmailPosAssinaturaDia30(
   ` : ''}
 
   <!-- CTA -->
-  <tr><td style="padding:0 28px 40px;" align="center">
+  <tr><td style="padding:0 28px 40px;text-align:center;" align="center">
     <a href="${APP_URL}/dashboard"
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
       Acessar o painel →
