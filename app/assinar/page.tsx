@@ -10,6 +10,7 @@ const PLANOS = [
     nome: 'Basic',
     preco: '49,90',
     preco_anual: '499',
+    preco_mensal_no_anual: '41,58',
     destaque: false,
     descricao: 'Ideal para começar',
     itens: ['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados (20 buscas/mês)', 'Suporte via WhatsApp', '📊 Relatório semanal'],
@@ -19,29 +20,61 @@ const PLANOS = [
     nome: 'Profissional',
     preco: '97,90',
     preco_anual: '979',
-    destaque: false,
-    popular: true,
+    preco_mensal_no_anual: '81,58',
+    destaque: true,
+    recomendado: true,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Contratos (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte via WhatsApp', '📊 Relatório semanal'],
+    itens: [
+      'Palavras-chave ilimitadas',
+      '1 usuário',
+      'Alertas por e-mail + Telegram + WhatsApp',
+      'Busca manual no painel',
+      '💰 Busca de Preços Homologados ilimitada',
+      '🎯 Radar de Contratos — veja contratos públicos vencendo e entre na disputa antes da concorrência',
+      '🤝 Diretório de Parceiros — encontre fornecedores e parceiros para compor propostas e ganhar editais maiores',
+      'Suporte via WhatsApp',
+      '📊 Relatório semanal',
+    ],
   },
   {
     id: 'gestao',
     nome: 'Gestão',
     preco: '197,90',
     preco_anual: '1.979',
-    destaque: true,
-    popular: false,
+    preco_mensal_no_anual: '164,92',
+    destaque: false,
     descricao: 'Para equipes comerciais que querem crescer',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Contratos (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte prioritário via WhatsApp', '📊 Relatório semanal'],
+    itens: [
+      'Palavras-chave ilimitadas',
+      'Até 5 usuários',
+      'Alertas por e-mail + Telegram + WhatsApp',
+      'Busca manual no painel',
+      '💰 Busca de Preços Homologados ilimitada',
+      '🎯 Radar de Contratos — veja contratos públicos vencendo e entre na disputa antes da concorrência',
+      '🤝 Diretório de Parceiros — encontre fornecedores e parceiros para compor propostas e ganhar editais maiores',
+      'Suporte prioritário via WhatsApp',
+      '📊 Relatório semanal',
+    ],
   },
   {
     id: 'empresarial',
     nome: 'Empresarial',
     preco: '497',
     preco_anual: '4.970',
+    preco_mensal_no_anual: '414,17',
     destaque: false,
     descricao: 'Para operações que dependem do setor público',
-    itens: ['Palavras-chave ilimitadas', 'Até 15 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Contratos (contratos vencendo)', '🤝 Diretório de Parceiros', 'Suporte dedicado', '📊 Relatório semanal detalhado'],
+    itens: [
+      'Palavras-chave ilimitadas',
+      'Até 15 usuários',
+      'Alertas por e-mail + Telegram + WhatsApp',
+      'Busca manual no painel',
+      '💰 Busca de Preços Homologados ilimitada',
+      '🎯 Radar de Contratos — veja contratos públicos vencendo e entre na disputa antes da concorrência',
+      '🤝 Diretório de Parceiros — encontre fornecedores e parceiros para compor propostas e ganhar editais maiores',
+      'Suporte dedicado',
+      '📊 Relatório semanal detalhado',
+    ],
   },
 ]
 
@@ -129,7 +162,7 @@ function AssinarConteudo() {
           <div className="text-sm text-[#9AA0A6] mb-7 text-center">grátis · sem cartão de crédito</div>
           <div className="h-px bg-[#F0EDE8] mb-6" />
           <div className="flex-1 mb-7">
-            {['20 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados (20 buscas/mês)', 'Suporte via WhatsApp', '📊 Relatório semanal'].map(item => (
+            {['7 palavras-chave monitoradas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados (5 buscas/mês)', 'Suporte via WhatsApp', '📊 Relatório semanal'].map(item => (
               <div key={item} className="flex items-center gap-2.5 mb-2.5">
                 <div className="w-[18px] h-[18px] rounded-full bg-[rgba(201,166,90,0.12)] flex items-center justify-center shrink-0">
                   <span className="text-[10px] text-[#C9A65A] font-bold">✓</span>
@@ -153,12 +186,7 @@ function AssinarConteudo() {
                 : 'bg-white border border-[#D5D2C8] shadow-[0_4px_20px_rgba(0,0,0,0.06)]'
             }`}
           >
-            {p.popular && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#6B0F1A] text-[#C9A65A] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap border border-[#C9A65A]">
-                🔥 MAIS POPULAR
-              </div>
-            )}
-            {p.destaque && (
+            {(p as { recomendado?: boolean }).recomendado && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
                 ⭐ RECOMENDADO
               </div>
@@ -180,12 +208,13 @@ function AssinarConteudo() {
               </span>
             </div>
             {periodo === 'anual' && (
-              <div className="text-center text-xs mb-6" style={{ color: p.destaque ? 'rgba(201,166,90,0.8)' : '#6B0F1A' }}>
-                equivale a R${
-                  p.id === 'basic' ? '41,58' :
-                  p.id === 'profissional' ? '81,58' :
-                  p.id === 'gestao' ? '164,92' : '414,17'
-                }/mês
+              <div className="text-center mb-6">
+                <span className="text-xs" style={{ color: p.destaque ? 'rgba(201,166,90,0.8)' : '#6B0F1A' }}>
+                  R${(p as { preco_mensal_no_anual: string }).preco_mensal_no_anual}/mês
+                </span>
+                <span className="ml-2 text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: p.destaque ? 'rgba(201,166,90,0.2)' : 'rgba(107,15,26,0.08)', color: p.destaque ? '#C9A65A' : '#6B0F1A' }}>
+                  2 MESES GRÁTIS
+                </span>
               </div>
             )}
             {periodo === 'mensal' && <div className="mb-6" />}

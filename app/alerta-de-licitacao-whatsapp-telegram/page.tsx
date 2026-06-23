@@ -80,7 +80,7 @@ const faqLd = {
       name: 'Quantas palavras-chave posso monitorar?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Depende do plano. No Monitor de Licitações, o plano Basic permite até 20 palavras-chave e planos avançados têm limites maiores. Para a maioria das pequenas empresas, 5 a 10 palavras-chave bem escolhidas já são suficientes para capturar todas as oportunidades relevantes do segmento.',
+        text: 'Depende do plano. No Monitor de Licitações, o período de teste inclui 7 palavras-chave, o plano Basic permite até 20 e planos Profissional em diante são ilimitados. Para a maioria das pequenas empresas, 5 a 10 palavras-chave bem escolhidas já são suficientes para capturar todas as oportunidades relevantes do segmento.',
       },
     },
     {

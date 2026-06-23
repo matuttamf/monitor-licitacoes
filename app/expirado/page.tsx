@@ -17,9 +17,9 @@ const PLANOS = [
     id: 'profissional',
     nome: 'Profissional',
     preco: '97,90',
-    destaque: false,
+    destaque: true,
     descricao: 'Para quem fornece ativamente ao governo',
-    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Suporte via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', '1 usuário', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Contratos — contratos vencendo para disputar', '🤝 Diretório de Parceiros — forme consórcios para editais maiores', 'Suporte via WhatsApp'],
     preco_anual: '979',
   },
   {
@@ -27,9 +27,9 @@ const PLANOS = [
     nome: 'Gestão',
     preco: '197,90',
     preco_anual: '1.979',
-    destaque: true,
+    destaque: false,
     descricao: 'Para equipes comerciais',
-    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail', 'Alertas por Telegram', 'Alertas por WhatsApp', 'Busca manual no painel', '🏭 Diretório de Fornecedores', 'Suporte prioritário via WhatsApp'],
+    itens: ['Palavras-chave ilimitadas', 'Até 5 usuários', 'Alertas por e-mail + Telegram + WhatsApp', 'Busca manual no painel', '💰 Busca de Preços Homologados ilimitada', '🎯 Radar de Contratos', '🤝 Diretório de Parceiros', 'Suporte prioritário via WhatsApp'],
   },
   {
     id: 'empresarial',
@@ -136,7 +136,7 @@ export default function ExpiradoPage() {
           >
             {p.destaque && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A65A] text-[#1A1A1C] text-[11px] font-black px-4 py-1 rounded-full tracking-wider whitespace-nowrap">
-                ⭐ MAIS POPULAR
+                ⭐ RECOMENDADO
               </div>
             )}
 

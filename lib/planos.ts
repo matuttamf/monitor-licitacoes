@@ -9,15 +9,14 @@ export interface LimitesPlano {
 }
 
 export const LIMITES_PLANO: Record<string, LimitesPlano> = {
+  trial:        { maxKeywords: 7,     maxUsers: 1,  maxKeywordsPerSeat: 7,     nome: 'Trial',        maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 5     },
   basic:        { maxKeywords: 20,    maxUsers: 1,  maxKeywordsPerSeat: 20,    nome: 'Basic',        maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 20    },
   profissional: { maxKeywords: 99999, maxUsers: 1,  maxKeywordsPerSeat: 99999, nome: 'Profissional', maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 99999 },
   gestao:       { maxKeywords: 99999, maxUsers: 5,  maxKeywordsPerSeat: 99999, nome: 'Gestão',       maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 99999 },
   empresarial:  { maxKeywords: 99999, maxUsers: 15, maxKeywordsPerSeat: 99999, nome: 'Empresarial',  maxEmailsPorDia: 5,  maxItensPorEmail: 10, maxPriceBuscas: 99999 },
 }
 
-/** trial = acesso completo por 7 dias (mesmo limite do basic) */
 export function getLimites(plano: string): LimitesPlano {
-  if (plano === 'trial') return { ...LIMITES_PLANO.basic }
   if (plano === 'pro') return { ...LIMITES_PLANO.gestao }  // retrocompatibilidade
   return LIMITES_PLANO[plano] ?? LIMITES_PLANO.basic
 }

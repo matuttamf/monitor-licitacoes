@@ -287,7 +287,7 @@ export default function ComoMonitorarLicitacoes() {
             </ul>
 
             <div className="bg-[#FFF7ED] border-l-[3px] border-[#F59E0B] pl-4 pr-5 py-4 text-sm text-[#92400E] leading-relaxed rounded-r-lg">
-              O Monitor de Licitações permite cadastrar até 20 palavras-chave por conta, com filtro de região por estado ou macrorregião. O sistema cruza os termos com o objeto dos editais em tempo real.
+              O Monitor de Licitações permite cadastrar palavras-chave por conta, com filtro de região por estado ou macrorregião. O sistema cruza os termos com o objeto dos editais em tempo real. O período de teste inclui 7 palavras-chave; planos pagos oferecem 20 (Basic) ou ilimitadas (Profissional em diante).
             </div>
 
             {/* Link para páginas de segmento */}

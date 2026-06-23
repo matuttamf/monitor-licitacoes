@@ -248,7 +248,7 @@ export async function enviarEmailPosAssinaturaDia30(
       </td></tr>
       <tr><td style="padding:20px 24px;">
         <p style="color:#4a4a4d;font-size:14px;line-height:1.6;margin:0 0 16px;">
-          No plano <strong>Basic</strong> você tem 20 palavras-chave. No <strong>Profissional</strong>, são ilimitadas — mais buscas de preços vencedores, WhatsApp e radar de fornecedores.
+          No plano <strong>Basic</strong> você tem 20 palavras-chave. No <strong>Profissional</strong>, são ilimitadas — além de buscas de preços vencedores ilimitadas, Radar de Contratos (veja contratos públicos vencendo antes da concorrência) e Diretório de Parceiros (forme consórcios para ganhar editais maiores).
         </p>
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>

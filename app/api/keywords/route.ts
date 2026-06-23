@@ -21,8 +21,10 @@ export async function GET() {
     plano = ownerProfile?.plano ?? 'basic'
   }
 
-  const { maxKeywords } = getLimites(plano)
-  return NextResponse.json({ keywords: data, maxKeywords, plano, status: profile?.status ?? 'trial' })
+  const status = profile?.status ?? 'trial'
+  const planoEfetivo = status === 'trial' ? 'trial' : plano
+  const { maxKeywords } = getLimites(planoEfetivo)
+  return NextResponse.json({ keywords: data, maxKeywords, plano, status })
 }
 
 function normalizarRegiao(r: unknown): string[] {
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
     .eq('id', user.id)
     .single()
 
-  // Sub-usuário herda o plano do owner — usa service client para bypassa RLS
+  // Sub-usuário herda o plano do owner — usa service client para bypassar RLS
   let plano = profile?.plano ?? 'basic'
   if (profile?.owner_id) {
     const service = await createServiceClient()
@@ -62,7 +64,8 @@ export async function POST(request: Request) {
     plano = ownerProfile?.plano ?? 'basic'
   }
 
-  const { maxKeywords } = getLimites(plano)
+  const planoEfetivo = (profile?.status ?? 'trial') === 'trial' ? 'trial' : plano
+  const { maxKeywords } = getLimites(planoEfetivo)
   if (maxKeywords < 99999) {
     // Conta keywords de toda a conta (owner + sub-usuários) para evitar burlar o limite
     const ownerId = profile?.owner_id ?? user.id

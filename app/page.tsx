@@ -67,14 +67,14 @@ type PlanId = 'trial' | 'basic' | 'profissional' | 'gestao' | 'empresarial'
 type FeatureRow = { label: string } & Record<PlanId, string | boolean>
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { label: 'Palavras-chave',             trial: 'Até 20 palavras-chave', basic: 'Até 20 palavras-chave', profissional: 'Ilimitadas palavras-chave', gestao: 'Ilimitadas palavras-chave', empresarial: 'Ilimitadas palavras-chave' },
+  { label: 'Palavras-chave',             trial: 'Até 7 palavras-chave', basic: 'Até 20 palavras-chave', profissional: 'Ilimitadas palavras-chave', gestao: 'Ilimitadas palavras-chave', empresarial: 'Ilimitadas palavras-chave' },
   { label: 'Usuários',                   trial: '1 usuário',      basic: '1 usuário',      profissional: '1 usuário',      gestao: 'Até 5 usuários', empresarial: 'Até 15 usuários'},
   { label: 'Alertas por e-mail + Telegram', trial: true,          basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: 'Alertas por WhatsApp',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: 'Busca manual de editais no painel', trial: true,      basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: '💰 Análise de Preços Vencedores', trial: '20 buscas de preços/mês', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
+  { label: '💰 Análise de Preços Vencedores', trial: '5 buscas de preços/mês', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
   { label: '📊 Relatório semanal',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
 ]
 
@@ -113,8 +113,8 @@ const PLANOS = [
     porDia: 'R$3,26/dia',
     porDia_anual: 'R$2,68/dia',
     desc: 'Para quem fornece ativamente para o governo',
-    destaque: false,
-    tag: '🔥 MAIS POPULAR',
+    destaque: true,
+    tag: '⭐ RECOMENDADO',
     href: '/checkout?plano=profissional',
     btnText: 'Assinar agora →',
     note: '',
@@ -127,8 +127,8 @@ const PLANOS = [
     porDia: 'R$6,60/dia',
     porDia_anual: 'R$5,42/dia',
     desc: 'Para equipes comerciais que querem crescer',
-    destaque: true,
-    tag: '⭐ RECOMENDADO',
+    destaque: false,
+    tag: null,
     href: '/checkout?plano=gestao',
     btnText: 'Assinar agora →',
     note: '',
