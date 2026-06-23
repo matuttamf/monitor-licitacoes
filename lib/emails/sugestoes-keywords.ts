@@ -27,7 +27,6 @@ function baseEmail(conteudo: string, email: string): string {
         </td>
         <td style="padding-left:12px;">
           <span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br>
-          <span style="color:rgba(255,255,255,0.45);font-size:12px;">Matutta</span>
         </td>
       </tr>
     </table>
@@ -40,7 +39,7 @@ function baseEmail(conteudo: string, email: string): string {
   <!-- Footer -->
   <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
     <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
-      Monitor de Licitações · Matutta<br>
+      Monitor de Licitações<br>
       Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
       <a href="${url}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
       &nbsp;·&nbsp;
