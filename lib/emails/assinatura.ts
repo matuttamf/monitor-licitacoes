@@ -223,9 +223,9 @@ export async function enviarEmailPosAssinaturaDia7(
   <!-- Próximo passo: Telegram -->
   <tr><td style="padding:0 28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
-      <tr><td style="padding:18px 24px;">
+      <tr><td style="padding:18px 24px;text-align:center;">
         <div style="color:#1A1A1C;font-size:14px;font-weight:700;margin-bottom:8px;">Receba alertas em tempo real no Telegram</div>
-        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 14px;">
+        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 14px;text-align:center;">
           Além do e-mail, você pode ativar o canal de alertas no Telegram e receber oportunidades assim que são publicadas — direto no celular, sem precisar abrir o painel.
         </p>
         <a href="${APP_URL}/alertas"
