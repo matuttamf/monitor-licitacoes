@@ -25,6 +25,14 @@ export async function GET() {
   return NextResponse.json({ keywords: data, maxKeywords, plano, status: profile?.status ?? 'trial' })
 }
 
+function normalizarRegiao(r: unknown): string[] {
+  if (!r) return ['brasil']
+  if (typeof r === 'string') return r ? [r] : ['brasil']
+  if (!Array.isArray(r)) return ['brasil']
+  const flat = (r as unknown[]).flat(10).filter((x): x is string => typeof x === 'string' && x.length > 0)
+  return flat.length === 0 ? ['brasil'] : flat
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -93,7 +101,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from('keywords')
-    .insert({ termo: termoNormalizado, user_id: user.id, regiao: regiao ?? ['brasil'] })
+    .insert({ termo: termoNormalizado, user_id: user.id, regiao: normalizarRegiao(regiao) })
     .select()
     .single()
 
@@ -110,7 +118,7 @@ export async function PATCH(request: Request) {
 
   const updates: Record<string, unknown> = {}
   if (ativo  !== undefined) updates.ativo  = ativo
-  if (regiao !== undefined) updates.regiao = regiao
+  if (regiao !== undefined) updates.regiao = normalizarRegiao(regiao)
   if (termo !== undefined) {
     const termoLimpo = termo.trim().toLowerCase()
     if (!termoLimpo) return NextResponse.json({ error: 'Termo não pode ser vazio' }, { status: 400 })
