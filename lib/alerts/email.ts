@@ -135,7 +135,7 @@ function gerarHtmlAlerta(licitacoes: LicitacaoAlerta[], restantes = 0, trial?: T
       <!-- Contador -->
       <div style="display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:12px 28px">
         <span style="color:#C9A65A;font-size:32px;font-weight:800">${total}</span>
-        <span style="display:block;color:rgba(255,255,255,0.65);font-size:12px;font-weight:600;letter-spacing:0.5px;margin-top:2px">${total === 1 ? 'licitação aberta no Brasil' : 'licitações abertas no Brasil'}</span>
+        <span style="display:block;color:rgba(255,255,255,0.65);font-size:12px;font-weight:600;letter-spacing:0.5px;margin-top:2px">${total === 1 ? 'oportunidade identificada para você' : 'oportunidades identificadas para você'}</span>
       </div>
     </div>
 

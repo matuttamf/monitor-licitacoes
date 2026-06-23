@@ -261,13 +261,14 @@ export default function PerfilPage() {
   }
 
   const OPCOES_PAUSA = [
-    { label: '1 hora',   ms: 1 * 60 * 60 * 1000 },
-    { label: '4 horas',  ms: 4 * 60 * 60 * 1000 },
-    { label: '8 horas',  ms: 8 * 60 * 60 * 1000 },
-    { label: '12 horas', ms: 12 * 60 * 60 * 1000 },
-    { label: '24 horas', ms: 24 * 60 * 60 * 1000 },
-    { label: '2 dias',   ms: 2 * 24 * 60 * 60 * 1000 },
-    { label: '7 dias',   ms: 7 * 24 * 60 * 60 * 1000 },
+    { label: '1 hora',        ms: 1 * 60 * 60 * 1000 },
+    { label: '4 horas',       ms: 4 * 60 * 60 * 1000 },
+    { label: '8 horas',       ms: 8 * 60 * 60 * 1000 },
+    { label: '12 horas',      ms: 12 * 60 * 60 * 1000 },
+    { label: '24 horas',      ms: 24 * 60 * 60 * 1000 },
+    { label: '2 dias',        ms: 2 * 24 * 60 * 60 * 1000 },
+    { label: '7 dias',        ms: 7 * 24 * 60 * 60 * 1000 },
+    { label: 'Até reativar',  ms: 10 * 365 * 24 * 60 * 60 * 1000 },
   ]
 
   async function pausarCanal(canal: 'email' | 'telegram' | 'whatsapp', ms: number | null) {
@@ -288,9 +289,11 @@ export default function PerfilPage() {
     const fim = new Date(ate)
     if (fim <= new Date()) return ''
     const diff = fim.getTime() - Date.now()
+    const dias = diff / 86400000
+    if (dias > 365) return 'indefinido'
     const h = Math.floor(diff / 3600000)
     const m = Math.floor((diff % 3600000) / 60000)
-    if (h >= 24) return `${Math.ceil(diff / 86400000)}d`
+    if (h >= 24) return `${Math.ceil(dias)}d`
     if (h > 0)   return `${h}h${m > 0 ? `${m}m` : ''}`
     return `${m}m`
   }
