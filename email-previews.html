@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -6,85 +6,1052 @@
   <title>E-mail Previews — Monitor de Licitações</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system; background: #f5f5f5; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
     .container { display: flex; height: 100vh; }
-    .sidebar { width: 280px; background: #1a1a1c; color: white; overflow-y: auto; padding: 20px; }
-    .sidebar h2 { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #c9a65a; margin: 20px 0 16px; }
+    .sidebar { width: 280px; background: #1a1a1c; color: white; overflow-y: auto; padding: 20px; flex-shrink: 0; }
+    .sidebar h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #c9a65a; margin: 20px 0 10px; letter-spacing: 0.08em; }
     .sidebar h2:first-child { margin-top: 0; }
-    .email-item { padding: 10px; margin-bottom: 6px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    .email-item:hover { background: rgba(201, 166, 90, 0.15); }
+    .email-item { padding: 9px 12px; margin-bottom: 4px; border-radius: 6px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.75); transition: background 0.15s; }
+    .email-item:hover { background: rgba(201,166,90,0.15); color: white; }
     .email-item.active { background: #6b0f1a; color: #c9a65a; font-weight: 600; }
-    .preview { flex: 1; overflow: auto; background: white; padding: 20px; }
-    .preview-frame { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; }
-    .preview-frame iframe { width: 100%; height: 800px; border: 1px solid #ddd; }
-    .preview-info { margin-bottom: 16px; padding: 12px; background: #f0f0f0; border-radius: 6px; font-size: 12px; }
+    .preview { flex: 1; overflow: auto; background: #e8e4dc; }
+    .preview-info { padding: 12px 20px; background: #1a1a1c; color: rgba(255,255,255,0.6); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+    .preview-info strong { color: #c9a65a; }
+    .preview-frame { max-width: 640px; margin: 24px auto; }
+    .preview-frame iframe { width: 100%; height: 900px; border: none; border-radius: 8px; box-shadow: 0 4px 32px rgba(0,0,0,0.18); }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="sidebar">
       <h2>Trial (7 dias)</h2>
-      <div class="email-item active" onclick="showEmail('boas-vindas')">Boas-vindas (Dia 0)</div>
-      <div class="email-item" onclick="showEmail('dia3')">Engajamento (Dia 3)</div>
-      <div class="email-item" onclick="showEmail('segunda')">Panorama Semanal</div>
-      <div class="email-item" onclick="showEmail('urgencia')">Urgência (Dia 6)</div>
+      <div class="email-item active" onclick="show('boas-vindas',this)">Boas-vindas (Dia 0)</div>
+      <div class="email-item" onclick="show('dia3',this)">Engajamento (Dia 3)</div>
+      <div class="email-item" onclick="show('segunda',this)">Panorama Semanal</div>
+      <div class="email-item" onclick="show('urgencia',this)">Urgência (Dia 6)</div>
       <h2>Pós-Assinatura</h2>
-      <div class="email-item" onclick="showEmail('pos-dia1')">Dia 1: Configuração</div>
-      <div class="email-item" onclick="showEmail('pos-dia7')">Dia 7: Primeira semana</div>
-      <div class="email-item" onclick="showEmail('pos-dia30')">Dia 30: Um mês</div>
-      <h2>Confirmação</h2>
-      <div class="email-item" onclick="showEmail('confirmacao')">Assinatura Ativa</div>
-      <div class="email-item" onclick="showEmail('reconversao')">Reconversão</div>
-      <h2>Sugestões e Onboarding</h2>
-      <div class="email-item" onclick="showEmail('keywords')">Sugestões Keywords</div>
-      <div class="email-item" onclick="showEmail('fornecedor')">Guia Fornecedor</div>
-      <div class="email-item" onclick="showEmail('afiliado')">Convite Afiliado</div>
+      <div class="email-item" onclick="show('pos-dia1',this)">Dia 1: Configuração</div>
+      <div class="email-item" onclick="show('pos-dia7',this)">Dia 7: Primeira semana</div>
+      <div class="email-item" onclick="show('pos-dia30',this)">Dia 30: Um mês</div>
+      <h2>Confirmação &amp; Reconversão</h2>
+      <div class="email-item" onclick="show('confirmacao',this)">Assinatura Ativa</div>
+      <div class="email-item" onclick="show('reconversao',this)">Reconversão (Trial expirado)</div>
+      <h2>Sugestões &amp; Onboarding</h2>
+      <div class="email-item" onclick="show('keywords',this)">Sugestões de Keywords</div>
+      <div class="email-item" onclick="show('fornecedor',this)">Guia do Fornecedor</div>
+      <div class="email-item" onclick="show('afiliado',this)">Convite de Afiliado</div>
+      <h2>Captação Outbound</h2>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);padding:0 12px 8px;line-height:1.4;">Setor: Construção (exemplo)</div>
+      <div class="email-item" onclick="show('cap1',this)">E1 · D+0: Vi no PNCP</div>
+      <div class="email-item" onclick="show('cap2',this)">E2 · D+4: Concorrente</div>
+      <div class="email-item" onclick="show('cap3',this)">E3 · D+8: Caso real</div>
+      <div class="email-item" onclick="show('cap4',this)">E4 · D+17: Objeções</div>
+      <div class="email-item" onclick="show('cap5',this)">E5 · D+32: Nova prova</div>
+      <div class="email-item" onclick="show('cap6',this)">E6 · D+62: Urgência</div>
+      <div class="email-item" onclick="show('cap7',this)">E7 · D+92: Pergunta direta</div>
+      <div class="email-item" onclick="show('cap8',this)">E8 · D+152: Sunset</div>
     </div>
     <div class="preview">
-      <div class="preview-info"><strong>E-mail:</strong> <span id="email-name">Boas-vindas (Dia 0)</span></div>
+      <div class="preview-info">
+        <strong id="email-name">Boas-vindas (Dia 0)</strong>
+        <span>— visualização fiel ao e-mail real</span>
+      </div>
       <div class="preview-frame">
-        <iframe id="preview-iframe" src="about:blank"></iframe>
+        <iframe id="preview-iframe"></iframe>
       </div>
     </div>
   </div>
-  <script>
-    const emails = {
-      'boas-vindas': {
-        name: 'Boas-vindas (Dia 0)',
-        html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:white;border-radius:20px;border:1px solid #E8E4DC;"><tr><td style="background:#6B0F1A;padding:24px 28px;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:38px;height:38px;background:rgba(255,255,255,0.08);border-radius:10px;text-align:center;"><span style="color:#C9A65A;font-weight:700;">ML</span></td><td style="padding-left:12px;"><span style="color:white;font-weight:600;">Monitor de Licitações</span></td></tr></table></td></tr><tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr><tr><td style="padding:32px 28px 0;"><div style="color:#C9A65A;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:12px;">Conta ativada · 7 dias grátis</div><h1 style="color:#1A1A1C;font-size:26px;font-family:Georgia,serif;line-height:1.3;">O governo publica contratos todos os dias.<br><span style="color:#6B0F1A;font-style:italic;">Agora você vai saber quais são para você.</span></h1><p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:12px 0;">Prefeituras, estados, hospitais públicos e órgãos federais compram o que sua empresa vende.</p></td></tr><tr><td style="padding:0 28px 40px;" align="center"><a href="https://monitordelicitacoes.com.br/palavras-chave" style="display:inline-block;background:#6B0F1A;color:white;padding:15px 40px;border-radius:12px;font-weight:700;text-decoration:none;">Configurar e receber alertas →</a></td></tr></table></td></tr></table></body></html>`
-      },
-      'dia3': {
-        name: 'Engajamento (Dia 3)',
-        html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui;"><table width="100%" style="background:#FAF6F0;padding:40px 20px;"><tr><td align="center"><table style="max-width:560px;background:white;border-radius:20px;border:1px solid #E8E4DC;"><tr><td style="background:#6B0F1A;padding:24px 28px;"><span style="color:white;font-weight:600;">Monitor de Licitações</span></td></tr><tr><td style="padding:32px 28px;"><h1 style="color:#1A1A1C;font-size:26px;font-family:Georgia;">R$ 1,2M em oportunidades</h1><p style="color:#4a4a4d;font-size:15px;">Engajamento: 24 editais publicados e monitorados para você.</p><a href="https://monitordelicitacoes.com.br/dashboard" style="display:inline-block;background:#6B0F1A;color:white;padding:15px 40px;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px;">Ver oportunidades →</a></td></tr></table></td></tr></table></body></html>`
-      },
-      'segunda': {
-        name: 'Panorama Semanal',
-        html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#FAF6F0;"><table width="100%" style="background:#FAF6F0;padding:40px 20px;"><tr><td align="center"><table style="max-width:560px;background:white;border-radius:20px;border:1px solid #E8E4DC;"><tr><td style="background:#6B0F1A;padding:24px 28px;color:white;font-weight:600;">Monitor de Licitações</td></tr><tr><td style="padding:32px 28px;"><h1 style="color:#1A1A1C;font-size:26px;">R$ 2,8M monitorado</h1><p style="color:#4a4a4d;">Panorama semanal: 42 editais encontrados.</p></td></tr></table></td></tr></table></body></html>`
-      },
-      'urgencia': {
-        name: 'Urgência (Dia 6)',
-        html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#FAF6F0;"><table width="100%" style="background:#FAF6F0;padding:40px 20px;"><tr><td align="center"><table style="max-width:560px;background:white;border-radius:20px;border:1px solid #E8E4DC;"><tr><td style="background:#6B0F1A;padding:24px 28px;color:white;">Monitor de Licitações</td></tr><tr><td style="padding:32px 28px;"><h1 style="color:#1A1A1C;">Amanhã os alertas serão interrompidos</h1><p style="color:#4a4a4d;">67 licitações encontradas · 143 alertas · R$ 4,5M volume</p><a href="https://monitordelicitacoes.com.br/assinar" style="display:inline-block;background:#6B0F1A;color:white;padding:15px 40px;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px;">Continuar recebendo →</a></td></tr></table></td></tr></table></body></html>`
-      },
-      'pos-dia1': { name: 'Dia 1 Pós-Assinatura', html: `<html><body><p>Plano ativo. Cadastre suas palavras-chave.</p></body></html>` },
-      'pos-dia7': { name: 'Dia 7', html: `<html><body><p>Primeira semana: 156 alertas, 38 licitações, R$ 1,8M monitorado.</p></body></html>` },
-      'pos-dia30': { name: 'Dia 30', html: `<html><body><p>30 dias: 618 alertas, 142 licitações, R$ 6,4M monitorado.</p></body></html>` },
-      'confirmacao': { name: 'Confirmação Assinatura', html: `<html><body><p>Assinatura confirmada. Bem-vindo ao plano Profissional!</p></body></html>` },
-      'reconversao': { name: 'Reconversão', html: `<html><body><p>Trial expirado há 3 dias. Reative agora.</p></body></html>` },
-      'keywords': { name: 'Sugestões Keywords', html: `<html><body><p>Sugestões de palavras-chave para ampliar monitoramento.</p></body></html>` },
-      'fornecedor': { name: 'Guia Fornecedor', html: `<html><body><p>Guia completo de habilitação como fornecedor.</p></body></html>` },
-      'afiliado': { name: 'Convite Afiliado', html: `<html><body><p>Convite para programa de parceiros. Link expira em 7 dias.</p></body></html>` }
-    };
-    
-    function showEmail(id) {
-      const email = emails[id];
-      if (!email) return;
-      document.querySelectorAll('.email-item').forEach(el => el.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById('email-name').textContent = email.name;
-      document.getElementById('preview-iframe').srcdoc = email.html;
-    }
-    
-    showEmail('boas-vindas');
-  </script>
+
+<script>
+const BASE = 'https://monitordelicitacoes.com.br';
+
+function wrap(conteudo, email) {
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+  <tr><td style="background:#6B0F1A;padding:24px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+        <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+      </td>
+      <td style="padding-left:12px;"><span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+  ${conteudo}
+  <tr><td style="padding:20px 28px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
+      <a href="${BASE}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
+    </p>
+  </td></tr>
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+const EMAILS = {
+
+'boas-vindas': {
+  name: 'Boas-vindas (Dia 0)',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Conta ativada · 7 dias grátis</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      O governo publica contratos todos os dias.<br>
+      <span style="color:#6B0F1A;font-style:italic;">Agora você vai saber quais são para você.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Prefeituras, estados, hospitais públicos e órgãos federais compram o que sua empresa vende — e publicam os editais toda semana. O Monitor rastreia tudo isso automaticamente e envia os alertas direto para você.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">O que empresas encontram no primeiro mês</div>
+      </td></tr>
+      <tr><td style="padding:0 24px 14px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:8px;height:8px;background:#92400e;border-radius:50%;vertical-align:top;padding-top:5px;"></td>
+          <td style="padding-left:10px;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;">Construção &amp; Obras</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Reformas prediais, pavimentação, instalações — R$ 80k a R$ 4M</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 24px 14px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:8px;height:8px;background:#166534;border-radius:50%;vertical-align:top;padding-top:5px;"></td>
+          <td style="padding-left:10px;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;">Limpeza &amp; Conservação</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Contratos de 24 a 36 meses com prefeituras e hospitais</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 24px 14px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:8px;height:8px;background:#1e40af;border-radius:50%;vertical-align:top;padding-top:5px;"></td>
+          <td style="padding-left:10px;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;">TI &amp; Software</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Pregões de suporte, sistemas, infraestrutura — prazos de 5 dias</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 24px 18px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:8px;height:8px;background:#6b21a8;border-radius:50%;vertical-align:top;padding-top:5px;"></td>
+          <td style="padding-left:10px;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;">Qualquer segmento</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Mais de 18.000 editais publicados por semana no Brasil</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Para o primeiro alerta chegar</div>
+      </td></tr>
+      <tr><td style="padding:0 24px 16px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">1</td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">Cadastre suas palavras-chave</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">O que sua empresa vende — "reforma elétrica", "limpeza hospitalar", "suporte TI". O sistema busca os editais que correspondem.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 24px 16px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">2</td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">O sistema faz uma busca completa</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Assim que você configurar, rastreamos todos os editais abertos no Brasil. Em breve seu banco de dados estará completo.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 24px 16px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">3</td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">Receba alertas por e-mail e WhatsApp</div>
+            <div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Cada edital novo chega direto para você. Também temos canal no WhatsApp para oportunidades em tempo real.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/palavras-chave" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
+      Configurar e receber alertas →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;text-align:center;">Leva menos de 2 minutos · 7 dias grátis · sem cartão de crédito</p>
+  </td></tr>
+  `)
+},
+
+'dia3': {
+  name: 'Engajamento (Dia 3)',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Atualização do seu monitoramento</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      <span style="color:#6B0F1A;font-style:italic;">R$ 1,8M</span><br>em oportunidades rastreadas nos seus primeiros 3 dias.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      24 editais publicados nos últimos dias correspondem ao que sua empresa vende. Acesse o painel para ver os detalhes, valores e prazos de cada um.
+    </p>
+    <div style="margin-bottom:24px;line-height:2.2;">
+      <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">reforma elétrica</span>
+      <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">limpeza hospitalar</span>
+      <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">suporte TI</span>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Maior oportunidade encontrada</div>
+        <div style="color:#1A1A1C;font-size:14px;line-height:1.5;margin-bottom:8px;">Contratação de serviços de manutenção elétrica predial para a Prefeitura Municipal — 12 meses</div>
+        <span style="display:inline-block;background:#6B0F1A;color:#C9A65A;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px;">R$ 420k</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
+      <tr>
+        <td style="padding:24px;text-align:center;width:33%;">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">346+</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Fontes monitoradas</div>
+        </td>
+        <td style="padding:24px;text-align:center;width:33%;border-left:1px solid rgba(255,255,255,0.1);border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">Diário</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Coleta automática</div>
+        </td>
+        <td style="padding:24px;text-align:center;width:33%;">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">5.500+</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">Municípios cobertos</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/dashboard" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Ver oportunidades no painel →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;text-align:center;">
+      Seu trial termina em 4 dias. <a href="${BASE}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar agora →</a>
+    </p>
+  </td></tr>
+  `)
+},
+
+'segunda': {
+  name: 'Panorama Semanal',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Panorama da semana</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      <span style="color:#6B0F1A;font-style:italic;">R$ 2,8M</span><br>em oportunidades monitoradas nesta semana.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      São editais publicados em todo o território nacional que correspondem ao que sua empresa vende. Alguns fecham esta semana — acesse o painel para ver prazos e valores.
+    </p>
+    <div style="margin-bottom:24px;line-height:2.2;">
+      <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">reforma elétrica</span>
+      <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">limpeza hospitalar</span>
+      <span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">suporte TI</span>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Maior oportunidade da semana</div>
+        <div style="color:#1A1A1C;font-size:14px;line-height:1.5;margin-bottom:6px;">Prestação de serviços de limpeza e conservação para hospital estadual — contrato 36 meses</div>
+        <div style="color:#9AA0A6;font-size:12px;margin-bottom:8px;">Hospital Estadual Regional — MG</div>
+        <span style="display:inline-block;background:#6B0F1A;color:#C9A65A;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px;">R$ 1,2M</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
+      <tr>
+        <td style="padding:28px;text-align:center;">
+          <div style="color:#C9A65A;font-size:40px;font-weight:700;line-height:1;">R$ 2,8M</div>
+          <div style="color:rgba(255,255,255,0.7);font-size:14px;margin-top:8px;">em licitações abertas no Brasil com suas palavras-chave</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:4px;">42 editais · alguns com prazo esta semana</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/dashboard" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Ver oportunidades no painel →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;text-align:center;">
+      Ainda no período de teste. <a href="${BASE}/assinar" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Assinar e continuar recebendo alertas →</a>
+    </p>
+  </td></tr>
+  `)
+},
+
+'urgencia': {
+  name: 'Urgência (Dia 6)',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Aviso importante</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Amanhã os alertas<br>
+      <span style="color:#6B0F1A;font-style:italic;">serão interrompidos.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      A partir de amanhã, novos editais deixarão de chegar automaticamente para você. Cada edital não recebido é uma oportunidade que vai para o concorrente — sem que você saiba que ela existiu.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:16px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">O que o monitor encontrou nos seus 7 dias</div>
+      </td></tr>
+      <tr><td style="padding:0 24px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:8px 0;border-bottom:1px solid #E8E4DC;"><span style="color:#4a4a4d;font-size:14px;">Licitações encontradas para você</span></td>
+            <td align="right" style="padding:8px 0;border-bottom:1px solid #E8E4DC;"><span style="color:#1A1A1C;font-size:14px;font-weight:700;">67</span></td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;border-bottom:1px solid #E8E4DC;"><span style="color:#4a4a4d;font-size:14px;">Alertas enviados durante o trial</span></td>
+            <td align="right" style="padding:8px 0;border-bottom:1px solid #E8E4DC;"><span style="color:#1A1A1C;font-size:14px;font-weight:700;">143</span></td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;"><span style="color:#4a4a4d;font-size:14px;">Volume financeiro monitorado</span></td>
+            <td align="right" style="padding:8px 0;"><span style="color:#6B0F1A;font-size:15px;font-weight:700;">R$ 4,5M</span></td>
+          </tr>
+        </table>
+        <p style="color:#9AA0A6;font-size:12px;margin:12px 0 0;line-height:1.6;">Amanhã esses alertas param. A partir de então, novos editais publicados não chegarão até você.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #6B0F1A;border-radius:14px;overflow:hidden;">
+      <tr><td style="background:#6B0F1A;padding:16px 24px;">
+        <span style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Plano recomendado</span>
+      </td></tr>
+      <tr><td style="padding:24px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td>
+              <div style="color:#1A1A1C;font-size:20px;font-weight:700;">Profissional</div>
+              <div style="color:#9AA0A6;font-size:13px;margin-top:4px;">Palavras-chave ilimitadas · 1 usuário</div>
+            </td>
+            <td align="right">
+              <div style="color:#6B0F1A;font-size:28px;font-weight:700;">R$97,90</div>
+              <div style="color:#9AA0A6;font-size:12px;text-align:right;">por mês · R$3,26/dia</div>
+            </td>
+          </tr>
+        </table>
+        <hr style="border:none;border-top:1px solid #E8E4DC;margin:16px 0;">
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Palavras-chave ilimitadas</td></tr></table>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Alertas por e-mail, Telegram e WhatsApp</td></tr></table>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Municípios, estados e órgãos federais</td></tr></table>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Painel completo com busca, filtros e histórico</td></tr></table>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Busca de preços ilimitada</td></tr></table>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Resumo semanal de oportunidades</td></tr></table>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;width:100%;"><tr><td style="width:22px;color:#6B0F1A;font-weight:700;font-size:16px;vertical-align:top;padding-top:1px;">✓</td><td style="color:#4a4a4d;font-size:14px;line-height:1.5;">Cancele quando quiser</td></tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/assinar" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;margin-bottom:12px;">
+      Continuar recebendo alertas →
+    </a><br>
+    <a href="${BASE}/assinar" style="color:#6B0F1A;text-decoration:none;font-size:13px;font-weight:600;">Ver todos os planos a partir de R$ 49,90/mês</a>
+  </td></tr>
+  `)
+},
+
+'pos-dia1': {
+  name: 'Pós-Assinatura: Dia 1',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Plano Profissional · Ativo</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Seu plano está ativo.<br>
+      <span style="color:#6B0F1A;font-style:italic;">O que falta agora é dizer o que monitorar.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Assim que você cadastrar suas palavras-chave, o monitor começa a rastrear editais e envia o primeiro alerta assim que aparecer algo relevante. Todo o sistema já está pronto — falta só a sua instrução.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Exemplos do que você pode monitorar</div>
+      </td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Construção &amp; Obras</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">reforma predial, pavimentação, elétrica, hidráulica, alvenaria</div></td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Limpeza &amp; Conservação</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">limpeza predial, zeladoria, jardinagem, dedetização</div></td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Tecnologia &amp; Software</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">suporte técnico, licença software, infraestrutura TI, cabeamento</div></td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Vigilância &amp; Segurança</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">vigilância armada, monitoramento eletrônico, controle de acesso</div></td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Saúde &amp; Hospitalar</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">material hospitalar, medicamentos, equipamentos médicos, EPIs</div></td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Transporte &amp; Logística</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">frete, transporte escolar, locação veículos, manutenção frota</div></td></tr>
+      <tr><td style="padding:0 24px 14px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Alimentação</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">merenda escolar, refeição coletiva, gêneros alimentícios, copa</div></td></tr>
+      <tr><td style="padding:0 24px 18px;">
+        <p style="color:#4a4a4d;font-size:13px;margin:0;line-height:1.6;border-top:1px solid #E8E4DC;padding-top:14px;">
+          Use os termos exatos que os órgãos usam nos editais — não nomes de produtos ou marcas. Você pode adicionar, editar ou remover palavras-chave a qualquer momento.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/palavras-chave" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Cadastrar palavras-chave →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;text-align:center;">Leva menos de 2 minutos · Pode editar quando quiser</p>
+  </td></tr>
+  `)
+},
+
+'pos-dia7': {
+  name: 'Pós-Assinatura: Dia 7',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Resumo da primeira semana</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      <span style="color:#6B0F1A;font-style:italic;">R$ 1,8M</span><br>rastreados enquanto você cuidava da empresa.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Esses 38 editais foram publicados por municípios, estados e órgãos federais em todo o país. Você recebeu 156 alertas com as oportunidades mais relevantes para o seu perfil — sem precisar abrir nenhum portal manualmente.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
+      <tr>
+        <td style="padding:24px;text-align:center;width:50%;border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:30px;font-weight:700;">156</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:6px;">alertas enviados<br>na primeira semana</div>
+        </td>
+        <td style="padding:24px;text-align:center;width:50%;">
+          <div style="color:#C9A65A;font-size:30px;font-weight:700;">38</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:6px;">licitações<br>monitoradas para você</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:16px 24px 20px;text-align:center;border-top:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:26px;font-weight:700;">R$ 1,8M</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">volume financeiro total monitorado</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:18px 24px;">
+        <div style="color:#9AA0A6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Maior oportunidade da semana</div>
+        <div style="color:#1A1A1C;font-size:14px;line-height:1.5;margin-bottom:6px;">Contratação de empresa para serviços de manutenção predial e elétrica — Hospital Municipal</div>
+        <div style="color:#9AA0A6;font-size:12px;margin-bottom:8px;">Prefeitura Municipal de São Paulo — SP</div>
+        <span style="display:inline-block;background:#6B0F1A;color:#C9A65A;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px;">R$ 380k</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px;text-align:center;">
+        <div style="color:#1A1A1C;font-size:14px;font-weight:700;margin-bottom:8px;">Receba alertas em tempo real no Telegram</div>
+        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 14px;text-align:center;">
+          Além do e-mail, você pode ativar o canal de alertas no Telegram e receber oportunidades assim que são publicadas — direto no celular, sem precisar abrir o painel.
+        </p>
+        <a href="${BASE}/alertas" style="display:inline-block;background:white;border:1.5px solid #6B0F1A;color:#6B0F1A;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:700;font-size:13px;">
+          Ativar alertas Telegram →
+        </a>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/alertas" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Ver todos os alertas →
+    </a>
+  </td></tr>
+  `)
+},
+
+'pos-dia30': {
+  name: 'Pós-Assinatura: Dia 30',
+  html: wrap(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">30 dias · Plano Profissional</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Um mês de monitoramento.<br>
+      <span style="color:#6B0F1A;font-style:italic;">Veja o que foi feito por você.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Enquanto você tocava a empresa, o Monitor rastreou 142 editais publicados em portais de compras públicas em todo o Brasil. Você recebeu 618 alertas com as oportunidades mais relevantes para o seu perfil — sem abrir nenhum portal manualmente.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;">
+      <tr>
+        <td style="padding:20px 16px;text-align:center;width:33%;border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">618</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:4px;">alertas<br>enviados</div>
+        </td>
+        <td style="padding:20px 16px;text-align:center;width:33%;border-right:1px solid rgba(255,255,255,0.1);">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">142</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:4px;">licitações<br>monitoradas</div>
+        </td>
+        <td style="padding:20px 16px;text-align:center;width:33%;">
+          <div style="color:#C9A65A;font-size:22px;font-weight:700;">R$ 6,4M</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:4px;">volume<br>monitorado</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:18px 24px 12px;">
+        <div style="color:#1A1A1C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">O que rodou por baixo dos panos</div>
+      </td></tr>
+      <tr><td style="padding:0 24px 14px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:8px;height:8px;background:#C9A65A;border-radius:50%;vertical-align:top;padding-top:5px;"></td><td style="padding-left:10px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">346+ portais monitorados</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">Prefeituras, estados, hospitais, autarquias e órgãos federais — sem precisar checar um por um</div></td></tr></table></td></tr>
+      <tr><td style="padding:0 24px 14px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:8px;height:8px;background:#C9A65A;border-radius:50%;vertical-align:top;padding-top:5px;"></td><td style="padding-left:10px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Coleta automática diária</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">O sistema busca novos editais todo dia, de segunda a sábado, automaticamente</div></td></tr></table></td></tr>
+      <tr><td style="padding:0 24px 14px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:8px;height:8px;background:#C9A65A;border-radius:50%;vertical-align:top;padding-top:5px;"></td><td style="padding-left:10px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Matching com suas palavras</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">Cada edital encontrado é comparado ao que você definiu — só os relevantes chegam até você</div></td></tr></table></td></tr>
+      <tr><td style="padding:0 24px 18px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:8px;height:8px;background:#C9A65A;border-radius:50%;vertical-align:top;padding-top:5px;"></td><td style="padding-left:10px;"><div style="color:#1A1A1C;font-size:13px;font-weight:600;margin-bottom:2px;">Alertas com contexto</div><div style="color:#9AA0A6;font-size:12px;line-height:1.5;">Objeto, órgão, valor estimado, prazo e link direto para o edital — tudo em um só lugar</div></td></tr></table></td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;text-align:center;" align="center">
+    <a href="${BASE}/dashboard" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Acessar o painel →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:14px 0 0;text-align:center;">
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Fale no WhatsApp</a>
+    </p>
+  </td></tr>
+  `)
+},
+
+'confirmacao': {
+  name: 'Confirmação de Assinatura',
+  html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+  <tr><td style="background:#6B0F1A;padding:24px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+        <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+      </td>
+      <td style="padding-left:12px;"><span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span></td>
+      <td align="right"><span style="background:rgba(201,166,90,0.15);border:1px solid rgba(201,166,90,0.3);border-radius:99px;padding:4px 12px;color:#C9A65A;font-size:11px;font-weight:700;">✓ ATIVA</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Assinatura confirmada</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      João, seu plano <span style="color:#6B0F1A;font-style:italic;">Profissional</span><br>está ativo agora!
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Obrigado por assinar o Monitor de Licitações. Seu acesso está liberado e você já pode monitorar licitações em todo o Brasil.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:16px 24px 0;"><div style="color:#9AA0A6;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Resumo da assinatura</div></td></tr>
+      <tr><td style="padding:10px 24px;border-bottom:1px solid #E8E4DC;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="color:#9AA0A6;font-size:13px;">Plano</td><td align="right" style="color:#1A1A1C;font-size:13px;font-weight:600;">Profissional</td></tr></table></td></tr>
+      <tr><td style="padding:10px 24px;border-bottom:1px solid #E8E4DC;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="color:#9AA0A6;font-size:13px;">Cobrança mensal</td><td align="right" style="color:#1A1A1C;font-size:13px;font-weight:600;">R$ 97,90/mês</td></tr></table></td></tr>
+      <tr><td style="padding:10px 24px;border-bottom:1px solid #E8E4DC;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="color:#9AA0A6;font-size:13px;">Status</td><td align="right" style="color:#1A1A1C;font-size:13px;font-weight:600;">✓ Ativo</td></tr></table></td></tr>
+      <tr><td style="height:8px;"></td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;overflow:hidden;">
+      <tr><td style="padding:20px 24px 12px;"><div style="color:#1A1A1C;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">Primeiros passos</div></td></tr>
+      <tr><td style="padding:0 24px 16px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">1</td><td style="padding-left:14px;vertical-align:top;"><div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">Configure suas palavras-chave</div><div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Quanto mais específicas, melhores os alertas para o seu negócio.</div></td></tr></table></td></tr>
+      <tr><td style="padding:0 24px 16px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">2</td><td style="padding-left:14px;vertical-align:top;"><div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">Ative o Telegram</div><div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Receba notificações instantâneas no celular, além do e-mail.</div></td></tr></table></td></tr>
+      <tr><td style="padding:0 24px 16px;"><table cellpadding="0" cellspacing="0"><tr><td style="width:28px;height:28px;background:#6B0F1A;border-radius:50%;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:700;font-size:13px;" valign="middle">3</td><td style="padding-left:14px;vertical-align:top;"><div style="color:#1A1A1C;font-size:14px;font-weight:600;margin-bottom:2px;">Explore o painel</div><div style="color:#9AA0A6;font-size:13px;line-height:1.5;">Busque editais, veja o histórico e personalize seus filtros.</div></td></tr></table></td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 28px 40px;" align="center">
+    <a href="${BASE}/dashboard" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">Acessar meu painel →</a>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">Fale pelo WhatsApp</a></p>
+  </td></tr>
+  <tr><td style="padding:20px 28px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a><br>
+      <a href="${BASE}/perfil" style="color:#9AA0A6;text-decoration:underline;font-size:11px;">Gerenciar preferências de e-mail</a>
+    </p>
+  </td></tr>
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`
+},
+
+'reconversao': {
+  name: 'Reconversão (Trial Expirado)',
+  html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+        <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+      </td>
+      <td style="padding-left:12px;"><span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span></td>
+      <td align="right"><span style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:99px;padding:4px 12px;color:#fca5a5;font-size:11px;font-weight:700;">⚠ TRIAL EXPIRADO HÁ 3 DIAS</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+  <tr><td style="padding:40px 40px 0;">
+    <h1 style="color:#1A1A1C;font-size:22px;font-weight:700;margin:0 0 20px;line-height:1.3;">João, seu acesso expirou — mas os editais não param</h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Durante seus 7 dias de trial, você viu como funciona: palavras-chave definidas, alertas chegando em tempo real, editais encontrados antes que qualquer concorrente.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 40px 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f8;border:1px solid rgba(239,68,68,0.2);border-left:4px solid #ef4444;border-radius:0 10px 10px 0;">
+      <tr><td style="padding:16px 20px;">
+        <p style="color:#7f1d1d;font-size:14px;margin:0;line-height:1.65;">
+          📊 <strong style="color:#7f1d1d;">Desde que seu acesso expirou, centenas de novos editais foram publicados no Brasil.</strong>
+          Alguns deles eram exatamente o perfil da sua empresa — e foram para outro fornecedor.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 40px 20px;">
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 16px;">
+      A pergunta não é se haverá licitações para você. A pergunta é: <strong style="color:#1A1A1C;">quem vai chegar primeiro?</strong>
+    </p>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0;">
+      Você já fez a parte difícil — aprendeu o sistema, configurou suas palavras-chave. Agora é só <strong style="color:#6B0F1A;">reativar com um clique</strong> e voltar a receber alertas.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 40px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:16px 20px 8px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr><td style="width:20px;color:#10b981;font-weight:700;font-size:14px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:14px;color:#1A1A1C;padding-left:8px;"><strong>Plano Basic a partir de R$ 49,90/mês</strong> — menos que uma hora de consultoria</td></tr></table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr><td style="width:20px;color:#10b981;font-weight:700;font-size:14px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:14px;color:#1A1A1C;padding-left:8px;"><strong>Monitoramento 24/7</strong> — de mais de 346 fontes nacionais</td></tr></table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr><td style="width:20px;color:#10b981;font-weight:700;font-size:14px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:14px;color:#1A1A1C;padding-left:8px;"><strong>Alertas por e-mail + Telegram</strong> — no instante que o edital sai</td></tr></table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr><td style="width:20px;color:#10b981;font-weight:700;font-size:14px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:14px;color:#1A1A1C;padding-left:8px;"><strong>Cancele quando quiser</strong> — sem multa, sem burocracia</td></tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 40px 32px;" align="center">
+    <a href="${BASE}/assinar?utm_source=reconversao" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:18px 44px;border-radius:50px;font-size:16px;font-weight:800;letter-spacing:0.02em;">
+      Reativar meu acesso agora →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:10px 0 0;">Ativação imediata · Cancele quando quiser · Sem contrato</p>
+  </td></tr>
+  <tr><td style="padding:0 40px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-left:3px solid #C9A65A;">
+      <tr><td style="padding:12px 16px;">
+        <p style="color:#78350f;font-size:13px;line-height:1.6;margin:0;font-style:italic;">
+          P.S.: Empresas que monitoram licitações ativamente ganham em média <strong style="color:#78350f;">3× mais contratos</strong> do que as que buscam manualmente. Cada dia sem monitoramento é um edital que pode ir para o concorrente.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a>
+    </p>
+  </td></tr>
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`
+},
+
+'keywords': {
+  name: 'Sugestões de Keywords',
+  html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+        <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+      </td>
+      <td style="padding-left:12px;"><span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+  <tr><td style="padding:40px 40px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Sugestões personalizadas</div>
+    <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Ampliar o monitoramento<br>
+      <span style="color:#6B0F1A;font-style:italic;">aumenta suas chances de ganhar editais.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 28px;">
+      Olá, João! Você configurou 3 palavras-chave. Baseado no seu perfil, identificamos mais termos que empresas do seu setor usam para capturar editais no governo.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 40px 24px;">
+    <div style="background:#FAF6F0;border-radius:14px;padding:20px 24px;">
+      <div style="font-size:12px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">✓ Suas palavras-chave atuais</div>
+      <div>
+        <span style="display:inline-block;background:rgba(107,15,26,0.07);border:1px solid rgba(107,15,26,0.2);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin:3px 4px 3px 0;">reforma elétrica</span>
+        <span style="display:inline-block;background:rgba(107,15,26,0.07);border:1px solid rgba(107,15,26,0.2);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin:3px 4px 3px 0;">limpeza predial</span>
+        <span style="display:inline-block;background:rgba(107,15,26,0.07);border:1px solid rgba(107,15,26,0.2);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin:3px 4px 3px 0;">suporte TI</span>
+      </div>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 40px 28px;">
+    <div style="border:1.5px dashed #C9A65A;border-radius:14px;padding:20px 24px;">
+      <div style="font-size:12px;font-weight:700;color:#C9A65A;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">💡 Sugestões para você adicionar</div>
+      <p style="color:#9AA0A6;font-size:12px;margin:0 0 12px;">Clique em qualquer palavra para ir direto à tela de gerenciamento.</p>
+      <div>
+        <a href="${BASE}/palavras-chave" style="display:inline-block;background:#FAF6F0;border:1px solid #E8E4DC;border-radius:99px;padding:4px 12px;font-size:13px;color:#4a4a4d;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;">+ instalação elétrica</a>
+        <a href="${BASE}/palavras-chave" style="display:inline-block;background:#FAF6F0;border:1px solid #E8E4DC;border-radius:99px;padding:4px 12px;font-size:13px;color:#4a4a4d;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;">+ manutenção predial</a>
+        <a href="${BASE}/palavras-chave" style="display:inline-block;background:#FAF6F0;border:1px solid #E8E4DC;border-radius:99px;padding:4px 12px;font-size:13px;color:#4a4a4d;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;">+ limpeza hospitalar</a>
+        <a href="${BASE}/palavras-chave" style="display:inline-block;background:#FAF6F0;border:1px solid #E8E4DC;border-radius:99px;padding:4px 12px;font-size:13px;color:#4a4a4d;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;">+ cabeamento estruturado</a>
+        <a href="${BASE}/palavras-chave" style="display:inline-block;background:#FAF6F0;border:1px solid #E8E4DC;border-radius:99px;padding:4px 12px;font-size:13px;color:#4a4a4d;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;">+ zeladoria</a>
+      </div>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 40px 36px;">
+    <a href="${BASE}/palavras-chave" style="display:block;text-align:center;background:#6B0F1A;color:white;text-decoration:none;font-weight:700;font-size:15px;padding:15px 28px;border-radius:12px;">
+      Adicionar palavras-chave →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;text-align:center;margin:12px 0 0;">
+      Quanto mais palavras, mais editais você encontra. Você pode adicionar a qualquer momento.
+    </p>
+  </td></tr>
+  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a>
+    </p>
+  </td></tr>
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`
+},
+
+'fornecedor': {
+  name: 'Guia do Fornecedor',
+  html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+        <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+      </td>
+      <td style="padding-left:12px;"><span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br><span style="color:rgba(255,255,255,0.45);font-size:12px;">Guia do Fornecedor Público</span></td>
+      <td align="right"><span style="background:rgba(201,166,90,0.15);border:1px solid rgba(201,166,90,0.3);border-radius:99px;padding:4px 12px;color:#C9A65A;font-size:11px;font-weight:700;">📋 GUIA</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+  <tr><td style="padding:40px 40px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Habilitação como fornecedor</div>
+    <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 16px;font-family:Georgia,serif;line-height:1.3;">
+      Olá, <strong style="color:#6B0F1A;">João</strong> — você já monitora.<br>Agora vamos habilitar para participar.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">Parabéns por assinar o Monitor de Licitações. Agora você vai receber alertas de editais antes da concorrência.</p>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">Mas monitorar é só a metade do caminho. <strong style="color:#1A1A1C;">Para participar de licitações e enviar propostas, sua empresa precisa estar habilitada como fornecedora do governo.</strong></p>
+  </td></tr>
+  <tr><td style="padding:0 40px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e8;border:1px solid #e8d9b0;border-left:4px solid #C9A65A;border-radius:0 12px 12px 0;">
+      <tr><td style="padding:16px 20px;">
+        <p style="color:#78350f;font-size:14px;margin:0;line-height:1.6;">💡 <strong style="color:#78350f;">Por que isso importa:</strong> de nada adianta receber o alerta de um edital se, na hora de enviar a proposta, a empresa não tem habilitação. O cadastro é feito uma única vez e abre todas as portas — federal, estadual e municipal.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 40px 8px;"><div style="color:#6B0F1A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:2px solid #E8E4DC;padding-bottom:8px;">Passo 1 — Cadastro no SICAF (obrigatório para órgãos federais)</div></td></tr>
+  <tr><td style="padding:16px 40px 8px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="width:36px;height:36px;background:#6B0F1A;border-radius:8px;text-align:center;vertical-align:middle;color:#C9A65A;font-weight:900;font-size:13px;" valign="middle">1</td>
+      <td style="padding-left:14px;vertical-align:top;">
+        <div style="font-size:14px;font-weight:700;color:#1A1A1C;margin-bottom:4px;">Acesse o portal ComprasGov.br</div>
+        <div style="font-size:13px;color:#555;line-height:1.6;">O SICAF é o registro federal obrigatório para licitações da União. Gratuito e feito online.</div>
+        <a href="https://www.gov.br/compras/pt-br/fornecedor/fornecedores/sicaf" style="display:inline-block;margin-top:6px;font-size:12px;color:#6B0F1A;font-weight:700;text-decoration:none;">→ Acessar portal do SICAF</a>
+      </td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="padding:0 40px 24px;">
+    <p style="font-size:14px;font-weight:700;color:#333;margin:12px 0 8px;">Documentos necessários para o SICAF:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:10px;"><tr><td style="padding:12px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">CNPJ ativo na Receita Federal (situação regular)</td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">Certidão Negativa de Débitos Federais (CND ou CPEND)</td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">Certidão de regularidade do FGTS (CRF)</td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">Certidão Negativa de Débitos Trabalhistas (CNDT)</td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">Certidão Negativa Estadual e Municipal</td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">Balanço patrimonial ou declaração ME/EPP</td></tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:16px;color:#059669;font-weight:900;font-size:13px;vertical-align:top;padding-top:2px;">✓</td><td style="font-size:13px;color:#444;padding-left:8px;line-height:1.5;">Ato constitutivo (contrato social ou estatuto atualizado)</td></tr></table>
+    </td></tr></table>
+  </td></tr>
+  <tr><td style="padding:0 40px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;"><tr><td style="padding:16px 20px;">
+      <div style="font-size:11px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">💡 Dica para ME e EPP</div>
+      <p style="color:#0c4a6e;font-size:13px;margin:0;line-height:1.6;">Microempresas e empresas de pequeno porte têm tratamento diferenciado: podem apresentar certidões com restrição e regularizá-las em até 5 dias úteis após a declaração de vencedor. <strong style="color:#0c4a6e;">Não deixe de participar por causa de uma certidão pendente.</strong></p>
+    </td></tr></table>
+  </td></tr>
+  <tr><td style="padding:0 40px 40px;" align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#6B0F1A;border-radius:14px;overflow:hidden;"><tr><td style="padding:24px 32px;" align="center">
+      <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0 0 16px;">Com a habilitação em dia, cada alerta do Monitor vira uma oportunidade real de proposta.</p>
+      <a href="${BASE}/dashboard" style="display:inline-block;background:#C9A65A;color:#6B0F1A;text-decoration:none;padding:15px 40px;border-radius:50px;font-size:15px;font-weight:900;letter-spacing:0.02em;">Acessar meu painel de licitações →</a>
+    </td></tr></table>
+  </td></tr>
+  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a>
+    </p>
+  </td></tr>
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`
+},
+
+'afiliado': {
+  name: 'Convite de Afiliado',
+  html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#FAF6F0;font-family:system-ui,-apple-system,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:20px;overflow:hidden;border:1px solid #E8E4DC;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+  <tr><td style="background:#6B0F1A;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,166,90,0.3);border-radius:10px;width:38px;height:38px;text-align:center;vertical-align:middle;">
+        <span style="color:#C9A65A;font-weight:700;font-size:12px;font-family:system-ui;">ML</span>
+      </td>
+      <td style="padding-left:12px;"><span style="color:white;font-weight:600;font-size:15px;">Monitor de Licitações</span><br><span style="color:rgba(255,255,255,0.45);font-size:12px;">Programa de Parceiros</span></td>
+    </tr></table>
+  </td></tr>
+  <tr><td style="height:2px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,#FAF6F0);"></td></tr>
+  <tr><td style="padding:40px 40px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Convite de parceiro</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Olá, João! Você foi convidado para o programa de parceiros.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Você receberá comissão por cada cliente que assinar o Monitor de Licitações pelo seu link exclusivo. Acesse seu painel para ver seu link, métricas e histórico de pagamentos.
+    </p>
+  </td></tr>
+  <tr><td style="padding:0 40px 28px;" align="center">
+    <a href="${BASE}/afiliados/ativar/TOKEN-EXEMPLO" style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.02em;">
+      Ativar minha conta de parceiro →
+    </a>
+  </td></tr>
+  <tr><td style="padding:0 40px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC;"><tr><td style="padding:16px 20px;">
+      <p style="font-size:13px;color:#9AA0A6;margin:0;line-height:1.6;">⏰ Este link expira em <strong style="color:#1A1A1C;">7 dias</strong>. Se você não esperava este convite, ignore este e-mail.</p>
+    </td></tr></table>
+  </td></tr>
+  <tr><td style="padding:24px 40px;border-top:1px solid #E8E4DC;">
+    <p style="color:#9AA0A6;font-size:12px;margin:0;text-align:center;line-height:1.8;">
+      Monitor de Licitações<br>
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;text-decoration:none;font-weight:600;">WhatsApp +55 31 99831-7066</a>
+    </p>
+  </td></tr>
+  <tr><td style="height:3px;background:linear-gradient(90deg,#6B0F1A,#C9A65A,transparent);"></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`
+}
+
+};
+
+// ── Captação wrapper ──────────────────────────────────────────────────────────
+function wrapCap(assunto, conteudo) {
+  const nome = 'Construtora Exemplo Ltda';
+  const cidade = 'Belo Horizonte/MG';
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${assunto}</title></head>
+<body style="margin:0;padding:0;background:#f2ede8;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede8;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:6px;border:1px solid #d9d4cd;overflow:hidden;max-width:560px;">
+  <tr><td style="padding:22px 36px 14px;border-bottom:1px solid #eeebe6;">
+    <p style="margin:0 0 3px;font-size:12px;color:#aaa;font-family:Arial,sans-serif;">De: <strong style="color:#555;">Monitor de Licitações</strong></p>
+    <p style="margin:0;font-size:12px;color:#aaa;font-family:Arial,sans-serif;">Para: <strong style="color:#555;">${nome} — ${cidade}</strong></p>
+  </td></tr>
+  <tr><td style="padding:20px 36px 4px;">
+    <p style="margin:0;font-size:19px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;line-height:1.3;">${assunto}</p>
+  </td></tr>
+  <tr><td style="padding:18px 36px 28px;">
+    ${conteudo}
+  </td></tr>
+  <tr><td style="padding:14px 36px;border-top:1px solid #eeebe6;background:#faf8f5;">
+    <p style="margin:0;font-size:11px;color:#bbb;line-height:1.8;font-family:Arial,sans-serif;">
+      Você recebe este e-mail porque <strong>${nome}</strong> consta como fornecedora em contratos públicos no PNCP.<br>
+      <a href="${BASE}/descadastrar?token=UNSUB" style="color:#bbb;text-decoration:underline;">Descadastrar</a>
+    </p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+const P  = 'font-size:15px;color:#2c2c2c;line-height:1.85;margin:0 0 18px;font-family:Georgia,serif;text-align:justify;';
+const PS = 'font-size:13px;color:#888;line-height:1.7;margin:0;font-style:italic;font-family:Georgia,serif;';
+const cta = t => `<p style="${P}"><a href="${BASE}/cadastro?ref=captacao-email" style="color:#6B0F1A;font-weight:600;text-decoration:none;">${t}</a></p>`;
+const ps  = t => `<p style="${PS}">P.S.: ${t}</p>`;
+
+Object.assign(EMAILS, {
+
+'cap1': {
+  name: 'E1 · D+0 — Vi no PNCP (Construção)',
+  html: wrapCap('vi a Construtora Exemplo no PNCP', [
+    `<p style="${P}">Vi o CNPJ de vocês vinculado a um contrato de obra pública no PNCP. Reforma, construção — esse tipo.</p>`,
+    `<p style="${P}">Uma pergunta: quando o próximo edital de obra aparecer em prefeituras da região, vocês vão receber o alerta?</p>`,
+    `<p style="${P}">Não é crítica — é uma questão real. Prefeituras, estados e órgãos federais publicam mais de 3.200 contratos de construção por mês no Brasil, em portais diferentes, com prazo médio de 15 dias corridos. Quem monitora chega com tempo de elaborar proposta. Quem não monitora descobre quando o prazo já fechou — ou não descobre.</p>`,
+    `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td>
+      <div style="font-size:11px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;font-family:Arial,sans-serif;">Exemplos de licitações abertas no seu setor</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;border-collapse:collapse;">
+        <tr><td style="padding:12px 14px;background:#fafafa;border-bottom:1px solid #eee;vertical-align:top;">
+          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;font-family:Arial,sans-serif;">Contratação de empresa para reforma e manutenção de prédios públicos municipais</div>
+          <div style="font-size:12px;color:#666;margin-bottom:4px;font-family:Arial,sans-serif;">Prefeitura Municipal de Contagem · MG</div>
+          <span style="display:inline-block;font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:700;margin-right:8px;font-family:Arial,sans-serif;">R$ 1,2M</span>
+          <span style="font-size:11px;color:#888;font-family:Arial,sans-serif;">Abertura: 28/06/2026</span>
+        </td></tr>
+        <tr><td style="padding:12px 14px;background:#fff;border-bottom:1px solid #eee;vertical-align:top;">
+          <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;font-family:Arial,sans-serif;">Pavimentação asfáltica de vias urbanas — lote 3</div>
+          <div style="font-size:12px;color:#666;margin-bottom:4px;font-family:Arial,sans-serif;">Prefeitura Municipal de Nova Lima · MG</div>
+          <span style="display:inline-block;font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:700;margin-right:8px;font-family:Arial,sans-serif;">R$ 840k</span>
+          <span style="font-size:11px;color:#888;font-family:Arial,sans-serif;">Abertura: 02/07/2026</span>
+        </td></tr>
+        <tr><td style="padding:10px 14px;background:#f5f0ea;text-align:center;">
+          <a href="${BASE}/cadastro?ref=captacao-email" style="font-size:12px;color:#6B0F1A;font-weight:700;text-decoration:none;font-family:Arial,sans-serif;">Ver todas as licitações do seu setor →</a>
+        </td></tr>
+      </table>
+    </td></tr></table>`,
+    cta('→ ver editais de obra do meu estado'),
+    ps('Esta semana foram publicados mais de 3.200 contratos de obras e reformas no Brasil. A maioria fechou sem que a empresa certa recebesse um alerta.'),
+  ].join(''))
+},
+
+'cap2': {
+  name: 'E2 · D+4 — Concorrente monitorando (Construção)',
+  html: wrapCap('Construtora Exemplo, tem uma construtora no seu estado monitorando agora', [
+    `<p style="${P}">Uma construtora de porte similar ao da Construtora Exemplo — obras, reformas, mesmo segmento — configurou monitoramento de editais no seu estado. Esta semana recebeu 7 alertas. Avaliou os 7. Decidiu participar de 3. Para os outros 4, não valia — e ela soube isso em 10 minutos, sem abrir portal nenhum.</p>`,
+    `<p style="${P}">Você ficou sabendo de quantos desses 7 editais?</p>`,
+    `<p style="${P}">Empresas de construção que monitoram participam, em média, de 5 a 10 vezes mais processos do que as que dependem de busca manual. A taxa de vitória é parecida — o que muda é o número de oportunidades que chegam a tempo.</p>`,
+    cta('→ ver editais do meu setor (trial gratuito 7 dias)'),
+    ps('Editais de obras têm prazo médio de 15 dias corridos. Cada semana sem monitoramento é uma semana de oportunidades que abriram, correram e fecharam sem que você soubesse que existiam.'),
+  ].join(''))
+},
+
+'cap3': {
+  name: 'E3 · D+8 — Caso real (Construção)',
+  html: wrapCap('Construtora Exemplo, de 3 obras para 19 em um ano — o que mudou', [
+    `<p style="${P}">Até agora falei sobre o que está sendo licitado no seu setor. Hoje quero mostrar um caso concreto.</p>`,
+    `<p style="${P}"><strong>Antes:</strong> Uma construtora de médio porte no interior de Minas fechava 3 ou 4 contratos públicos por ano. A estratégia era a mesma de sempre: alguém da equipe olhava o ComprasNet uma ou duas vezes por semana. Às vezes chegava dica de um despachante. Parecia o teto natural.</p>`,
+    `<p style="${P}"><strong>O que mudou:</strong> Ao configurar alertas para "reforma predial", "pavimentação" e "construção" em todos os portais, chegaram 9 alertas na primeira semana — editais que a empresa nunca teria descoberto na busca manual. Alguns valiam proposta. Outros não. Mas agora a empresa escolhia, em vez de perder por padrão.</p>`,
+    `<p style="${P}"><strong>Resultado:</strong> Em 12 meses: 19 licitações participadas (contra 4 no ano anterior). 4 contratos vencidos — R$ 3,1M em volume total. Faturamento de contratos públicos cresceu 280%. A equipe não mudou. O produto não mudou. Mudou o que eles conseguiam ver.</p>`,
+    cta('→ quero ver o que está sendo licitado no meu setor'),
+    ps('4 contratos em 12 meses, R$ 3,1M — sem mudar equipe, sem mudar produto, sem mudar preço. O que mudou foi o número de licitações que chegavam a tempo de participar.'),
+  ].join(''))
+},
+
+'cap4': {
+  name: 'E4 · D+17 — Quebra de objeções',
+  html: wrapCap('Construtora Exemplo, três razões que travam — e minha resposta para cada uma', [
+    `<p style="${P}">Enviei alguns e-mails nos últimos dias. Você ainda não ativou o trial. Isso costuma acontecer por uma dessas três razões:</p>`,
+    `<p style="${P}"><strong>1. "Não tenho equipe para acompanhar mais licitações"</strong><br>O alerta chega com objeto, valor estimado, órgão, prazo e link para o edital. Você avalia em 2 minutos se vale participar ou não — sem abrir portal, sem busca manual. Só investe tempo nos editais que fazem sentido. O sistema faz a triagem; você faz a decisão.</p>`,
+    `<p style="${P}"><strong>2. "Já tentei licitação uma vez e não deu certo"</strong><br>A taxa de sucesso em licitações está diretamente ligada ao volume. Empresas que participam de 3 por ano têm resultado muito diferente das que participam de 30 — pela lei dos grandes números. O Monitor coloca você em 5 a 10 vezes mais processos no mesmo período, sem aumentar o esforço por processo.</p>`,
+    `<p style="${P}"><strong>3. "7 dias não são suficientes para ver resultado"</strong><br>Na primeira semana, você vai receber alertas de editais compatíveis com o que sua empresa já faz. Vai ver exatamente o que está saindo no mercado — em tempo real. Isso já muda a percepção do que você estava perdendo. E se depois de 7 dias não fizer sentido, você cancela. Sem cobranças, sem burocracia.</p>`,
+    `<p style="${P}">Se não foi nenhuma dessas três, responda este e-mail e me diz o que está segurando — vejo o que consigo resolver.</p>`,
+    cta('→ ativar trial gratuito de 7 dias'),
+    ps('Trial de 7 dias gratuito, sem cartão de crédito, sem compromisso. Se depois de uma semana os alertas não fizerem sentido para o seu caso, você cancela. O risco é zero.'),
+  ].join(''))
+},
+
+'cap5': {
+  name: 'E5 · D+32 — Nova prova social (Construção)',
+  html: wrapCap('Construtora Exemplo, empresa elétrica do Paraná: 2 contratos em 2 meses', [
+    `<p style="${P}">Tem um caso novo que quero compartilhar.</p>`,
+    `<p style="${P}">Uma empresa de instalações elétricas do Paraná — 8 funcionários, clientes principalmente na iniciativa privada — configurou alertas para "instalações elétricas", "sistema fotovoltaico" e "reforma elétrica". Em 2 meses, recebeu 31 alertas. Participou de 6 licitações. Venceu 2: um contrato federal de R$ 340k e um municipal de R$ 180k.<br><br>A empresa existia há 11 anos e nunca tinha ganhado uma licitação federal. Não por falta de capacidade — por falta de visibilidade no momento certo.</p>`,
+    `<p style="${P}">O ponto não é que todo mundo vai ter o mesmo resultado. O ponto é que, sem monitoramento, você nem chega a participar dos processos que fazem sentido.</p>`,
+    cta('→ ver editais do meu setor (trial gratuito 7 dias)'),
+    ps('11 anos de empresa, nunca tinha ganhado um contrato federal. Em 2 meses com monitoramento: R$ 520k em contratos. Não foi sorte — foi aparecer nos editais certos no momento certo.'),
+  ].join(''))
+},
+
+'cap6': {
+  name: 'E6 · D+62 — Urgência',
+  html: wrapCap('Construtora Exemplo, contratos que fecharam este mês sem você participar', [
+    `<p style="${P}">Faz dois meses que enviei o primeiro e-mail sobre o mercado público no seu setor.</p>`,
+    `<p style="${P}">Nesse período, centenas de editais compatíveis com o perfil da sua empresa abriram e fecharam. Alguns valiam proposta. Outros não. Mas você não teve como escolher — porque não recebeu os alertas.</p>`,
+    `<p style="${P}">O trial de 7 dias não custa nada e não pede cartão. Em uma semana, você vê em tempo real o que está sendo licitado no seu setor — e decide se vale continuar.</p>`,
+    cta('→ ativar trial gratuito agora'),
+    ps('Os próximos editais estão sendo publicados agora. Os prazos já começaram a correr.'),
+  ].join(''))
+},
+
+'cap7': {
+  name: 'E7 · D+92 — Pergunta direta',
+  html: wrapCap('Construtora Exemplo, uma pergunta direta', [
+    `<p style="${P}">Enviamos alguns e-mails sobre monitoramento de licitações nos últimos meses. Você nunca respondeu.</p>`,
+    `<p style="${P}">Uma pergunta direta: sua empresa ainda participa de licitações públicas?</p>`,
+    `<p style="${P}">Pode ser que o mercado público não faça mais sentido para o seu modelo de negócio. Pode ser que você já tenha uma solução de monitoramento. Pode ser que esteja em outro momento.</p>`,
+    `<p style="${P}">Responda este e-mail com uma linha — vou entender a resposta, seja ela qual for. Se não responder, vou assumir que não faz mais sentido e encerro a sequência por aqui.</p>`,
+    cta('→ ou ative o trial de 7 dias agora'),
+    ps('Se a resposta for "ainda participo, mas não tenho tempo para configurar", podemos fazer isso juntos em 10 minutos por videochamada — sem custo. Só responder este e-mail.'),
+  ].join(''))
+},
+
+'cap8': {
+  name: 'E8 · D+152 — Sunset (último e-mail)',
+  html: wrapCap('Construtora Exemplo, último e-mail', [
+    `<p style="${P}">Este é o último e-mail que vou enviar.</p>`,
+    `<p style="${P}">Ao longo de vários meses, compartilhei dados sobre o mercado público no seu setor, casos de empresas similares à sua e como o monitoramento muda o volume de contratos que uma empresa consegue participar.</p>`,
+    `<p style="${P}">Não vou mais enviar e-mails automaticamente — mas a porta continua aberta. Se em algum momento a situação mudar e o mercado público se tornar uma prioridade, o Monitor de Licitações vai estar aqui.</p>`,
+    cta('→ ativar trial gratuito de 7 dias'),
+    `<p style="${P}">E se quiser conversar diretamente, é só responder este e-mail.</p>`,
+    `<p style="${P}">Obrigado pela atenção ao longo desse tempo.</p>`,
+    ps('O link abaixo vai continuar funcionando. Quando a hora for certa, a oportunidade vai estar aqui.'),
+  ].join(''))
+}
+
+});
+
+function show(id, el) {
+  const email = EMAILS[id];
+  if (!email) return;
+  document.querySelectorAll('.email-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('email-name').textContent = email.name;
+  document.getElementById('preview-iframe').srcdoc = email.html;
+}
+
+// Carrega o primeiro e-mail ao abrir
+show('boas-vindas', document.querySelector('.email-item'));
+</script>
 </body>
 </html>
