@@ -74,7 +74,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   { label: 'Busca manual de editais no painel', trial: true,      basic: true,             profissional: true,             gestao: true,             empresarial: true             },
   { label: '🎯 Radar de Inteligência (contratos vencendo)', trial: false,   basic: false,            profissional: true,             gestao: true,             empresarial: true             },
   { label: '🤝 Diretório de Parceiros',  trial: false,            basic: false,            profissional: true,             gestao: true,             empresarial: true             },
-  { label: '💰 Análise de Preços Vencedores', trial: '5 buscas de preços/mês', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
+  { label: '💰 Análise de Preços Vencedores', trial: '5 buscas de preços', basic: '20 buscas de preços/mês', profissional: 'Buscas de preços ilimitadas', gestao: 'Buscas de preços ilimitadas', empresarial: 'Buscas de preços ilimitadas' },
   { label: '📊 Relatório semanal',       trial: true,             basic: true,             profissional: true,             gestao: true,             empresarial: true             },
 ]
 
@@ -605,7 +605,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="text-[11px] text-[#9AA0A6] border-t border-[#D5D2C8] pt-4">
-                Basic e Trial: 20 buscas/mês · Profissional e acima: ilimitado.
+                Trial: 5 buscas · Basic: 20 buscas/mês · Profissional e acima: ilimitado.
               </div>
             </div>
 

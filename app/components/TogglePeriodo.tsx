@@ -40,15 +40,15 @@ export default function TogglePeriodo({ planos, featureRows }: { planos: Plano[]
           </button>
           <button
             onClick={() => setPeriodo('anual')}
-            className="px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all"
+            className="px-5 py-2 rounded-lg text-sm font-semibold flex flex-col items-center gap-1 transition-all"
             style={{
               background: periodo === 'anual' ? '#1A1A1C' : 'transparent',
               color: periodo === 'anual' ? 'white' : '#9AA0A6',
               border: 'none', cursor: 'pointer',
             }}>
             Anual
-            <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: '#C9A65A', color: '#1A1A1C' }}>
-              2 meses grátis
+            <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full" style={{ background: '#C9A65A', color: '#1A1A1C' }}>
+              2 MESES GRÁTIS
             </span>
           </button>
         </div>
