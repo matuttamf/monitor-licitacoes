@@ -54,16 +54,32 @@ export async function GET(request: Request) {
   `
 
   // 1. Pendentes (nunca enviados via e-mail)
+  const LIMITE_NOVOS = 2000
   const { data: novos, error } = await supabase
     .from('alertas')
     .select(SELECT_ALERTAS)
     .eq('canais', '{}')
     .order('criado_em', { ascending: false })
-    .limit(2000)
+    .limit(LIMITE_NOVOS)
 
   if (error) {
     console.error('Erro ao buscar alertas:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Detectar truncamento — se a query bateu o limite há alertas presos na fila
+  if ((novos?.length ?? 0) >= LIMITE_NOVOS) {
+    const { count: totalPendentes } = await supabase
+      .from('alertas')
+      .select('id', { count: 'exact', head: true })
+      .eq('canais', '{}')
+
+    console.warn(`[alertar] FILA TRUNCADA: retornados ${LIMITE_NOVOS} alertas mas há ${totalPendentes ?? '?'} pendentes na tabela`)
+    await registrarCronLog({
+      job:      'alertar',
+      status:   'aviso',
+      mensagem: `Fila truncada: ${totalPendentes ?? '?'} alertas pendentes, limite de busca ${LIMITE_NOVOS}`,
+    })
   }
 
   // 2. Reenvios já enviados — usados como reciclagem quando não há novos
