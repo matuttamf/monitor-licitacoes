@@ -147,7 +147,7 @@ function wrapCaptacao(opts: {
 <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:6px;border:1px solid #d9d4cd;overflow:hidden;max-width:560px;">
 
   <tr><td style="padding:22px 36px 14px;border-bottom:1px solid #eeebe6;">
-    <p style="margin:0 0 3px;font-size:12px;color:#aaa;font-family:Arial,sans-serif;">De: <strong style="color:#555;">Matutta — Monitor de Licitações</strong></p>
+    <p style="margin:0 0 3px;font-size:12px;color:#aaa;font-family:Arial,sans-serif;">De: <strong style="color:#555;">Monitor de Licitações</strong></p>
     <p style="margin:0;font-size:12px;color:#aaa;font-family:Arial,sans-serif;">Para: <strong style="color:#555;">${opts.nome}${cidadeStr}</strong></p>
   </td></tr>
 
@@ -520,8 +520,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
   const sub = (s: string) => s.replace(/\{\{NOME\}\}/g, nome)
   const cta = (text: string) =>
     `<p style="${P}"><a href="${ctaHref}" style="color:#6B0F1A;font-weight:600;text-decoration:none;">${text}</a></p>`
-  const sig = () =>
-    `<p style="${P}">Matutta</p>`
+  const sig = () => ``
   const ps = (text: string) =>
     `<p style="${PS}">P.S.: ${text}</p>`
   const wrap = (assunto: string, conteudo: string) =>
@@ -541,7 +540,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       sig(),
       ps(t.ps),
     ].join('')
-    const text = `${t.p1}\n\n${t.p2}\n\n${t.p3}${buildLicitacoesTxt(lics)}\n\n${t.ctaText}:\n${ctaDest}\n\nMatutta\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `${t.p1}\n\n${t.p2}\n\n${t.p3}${buildLicitacoesTxt(lics)}\n\n${t.ctaText}:\n${ctaDest}\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -558,7 +557,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       sig(),
       ps(t.ps),
     ].join('')
-    const text = `${sub(t.p1)}\n\n${t.p2}\n\n${t.p3}${buildLicitacoesTxt(lics)}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nMatutta\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `${sub(t.p1)}\n\n${t.p2}\n\n${t.p3}${buildLicitacoesTxt(lics)}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -575,7 +574,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       sig(),
       ps(t.ps),
     ].join('')
-    const text = `Até agora falei sobre o que está sendo licitado no seu setor. Hoje quero mostrar um caso concreto.\n\nAntes: ${t.antes}\n\nO que mudou: ${t.virada}\n\nResultado: ${t.depois}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nMatutta\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `Até agora falei sobre o que está sendo licitado no seu setor. Hoje quero mostrar um caso concreto.\n\nAntes: ${t.antes}\n\nO que mudou: ${t.virada}\n\nResultado: ${t.depois}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -593,7 +592,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       ps(E4.ps),
     ].join('')
     const objecoesTxt = E4.objecoes.map((o, i) => `${i + 1}. ${o.q}\n${o.r}`).join('\n\n')
-    const text = `${E4.p0}\n\n${objecoesTxt}\n\n${E4.p1}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nMatutta\n\nP.S.: ${E4.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `${E4.p0}\n\n${objecoesTxt}\n\n${E4.p1}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nP.S.: ${E4.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -609,7 +608,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       sig(),
       ps(t.ps),
     ].join('')
-    const text = `Tem um caso novo que quero compartilhar.\n\n${t.historia}\n\nO ponto não é que todo mundo vai ter o mesmo resultado. O ponto é que, sem monitoramento, você nem chega a participar dos processos que fazem sentido.\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nMatutta\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `Tem um caso novo que quero compartilhar.\n\n${t.historia}\n\nO ponto não é que todo mundo vai ter o mesmo resultado. O ponto é que, sem monitoramento, você nem chega a participar dos processos que fazem sentido.\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nP.S.: ${t.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -624,7 +623,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       sig(),
       ps(E6.ps),
     ].join('')
-    const text = `${E6.p1}\n\n${E6.p2}\n\n${E6.p3}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nMatutta\n\nP.S.: ${E6.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `${E6.p1}\n\n${E6.p2}\n\n${E6.p3}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\nP.S.: ${E6.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -640,7 +639,7 @@ export function emailCaptacao(p: ParamsCaptacao) {
       sig(),
       ps(E7.ps),
     ].join('')
-    const text = `${E7.p1}\n\n${E7.p2}\n\n${E7.p3}\n\n${E7.p4}\n\nOu ative o trial de 7 dias (sem cartão):\n${ctaDest}\n\nMatutta\n\nP.S.: ${E7.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+    const text = `${E7.p1}\n\n${E7.p2}\n\n${E7.p3}\n\n${E7.p4}\n\nOu ative o trial de 7 dias (sem cartão):\n${ctaDest}\n\nP.S.: ${E7.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
     return { subject, html: wrap(subject, conteudo), text }
   }
 
@@ -656,6 +655,6 @@ export function emailCaptacao(p: ParamsCaptacao) {
     sig(),
     ps(E8.ps),
   ].join('')
-  const text = `${E8.p1}\n\n${E8.p2}\n\n${E8.p3}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\n${E8.p4}\n\n${E8.p5}\n\nMatutta\n\nP.S.: ${E8.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
+  const text = `${E8.p1}\n\n${E8.p2}\n\n${E8.p3}\n\nTrial gratuito 7 dias:\n${ctaDest}\n\n${E8.p4}\n\n${E8.p5}\n\nP.S.: ${E8.ps}\n\n--\nMonitor de Licitações\nDescadastrar: ${url}/descadastrar?token=${UNSUB}`
   return { subject, html: wrap(subject, conteudo), text }
 }
