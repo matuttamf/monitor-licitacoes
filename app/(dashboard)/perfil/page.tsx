@@ -919,14 +919,16 @@ export default function PerfilPage() {
                   )}
                 </div>
                 {!pausado && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {OPCOES_PAUSA.map(op => (
                       <button
                         key={op.ms}
                         onClick={() => pausarCanal(canal, op.ms)}
                         disabled={pausandoCanal === canal}
-                        className="h-9 px-4 rounded-xl text-sm font-semibold transition-all"
+                        className="h-8 rounded-xl font-semibold transition-all"
                         style={{
+                          padding: op.label === 'Até reativar' ? '0 12px' : '0 10px',
+                          fontSize: op.label === 'Até reativar' ? '12px' : '13px',
                           background: 'var(--surface-2)', color: 'var(--cinza)',
                           border: '1.5px solid var(--cinza-light)', cursor: 'pointer',
                           opacity: pausandoCanal === canal ? 0.5 : 1,
