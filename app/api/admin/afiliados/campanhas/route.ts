@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { gerarCodigoUnico, slugCodigo } from '@/lib/afiliados'
+import { gerarCodigoUnico, slugCodigo, sufixoAleatorio } from '@/lib/afiliados'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
@@ -54,15 +54,16 @@ export async function POST(request: NextRequest) {
   const admin = adminClient()
 
   const [{ data: af }, { data: camp }] = await Promise.all([
-    admin.from('afiliados').select('nome').eq('id', afiliado_id).maybeSingle(),
+    admin.from('afiliados').select('id').eq('id', afiliado_id).maybeSingle(),
     admin.from('campanhas').select('codigo').eq('id', campanha_id).maybeSingle(),
   ])
   if (!af || !camp) return NextResponse.json({ error: 'Afiliado ou campanha não encontrados' }, { status: 404 })
 
-  // Código: informado (slug + garante unicidade) ou auto-gerado a partir de campanha+nome
+  // Código: informado (slug + garante unicidade) ou auto-gerado como campanha + sufixo
+  // aleatório — NÃO inclui o nome do afiliado para não expô-lo na URL pública.
   const codigoFinal = codigo?.trim()
     ? await gerarCodigoUnico(admin, slugCodigo(codigo))
-    : await gerarCodigoUnico(admin, `${camp.codigo}-${af.nome}`)
+    : await gerarCodigoUnico(admin, `${camp.codigo}-${sufixoAleatorio()}`)
 
   const { data, error } = await admin.from('afiliado_campanhas').insert({
     afiliado_id, campanha_id, codigo: codigoFinal,

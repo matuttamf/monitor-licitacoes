@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { enviarConviteAfiliado } from '@/lib/emails/afiliado-convite'
-import { gerarCodigoUnico, slugCodigo } from '@/lib/afiliados'
+import { gerarCodigoUnico, slugCodigo, sufixoAleatorio } from '@/lib/afiliados'
 import crypto from 'crypto'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (!l.campanha_id) continue
     const base = l.codigo?.trim()
       ? slugCodigo(l.codigo)
-      : `${await codigoBaseDaCampanha(admin, l.campanha_id)}-${nome}`
+      : `${await codigoBaseDaCampanha(admin, l.campanha_id)}-${sufixoAleatorio()}`
     const codigo = await gerarCodigoUnico(admin, base)
     const { error: errV } = await admin.from('afiliado_campanhas').insert({
       afiliado_id: afiliado.id,

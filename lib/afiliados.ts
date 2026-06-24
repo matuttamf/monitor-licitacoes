@@ -1,5 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+// Sufixo aleatório curto (a-z0-9) para compor códigos de afiliado sem expor o nome.
+export function sufixoAleatorio(n = 5): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let s = ''
+  for (let i = 0; i < n; i++) s += chars[Math.floor(Math.random() * chars.length)]
+  return s
+}
+
 // Normaliza um texto para uso como código de link.
 export function slugCodigo(s: string): string {
   return s
