@@ -21,6 +21,7 @@ CREATE INDEX IF NOT EXISTS afiliado_campanhas_codigo_idx   ON afiliado_campanhas
 
 -- RLS: afiliado lê só os seus vínculos; service_role ignora RLS (sem policy USING(true)).
 ALTER TABLE afiliado_campanhas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "afiliado_le_seus_vinculos" ON afiliado_campanhas;
 CREATE POLICY "afiliado_le_seus_vinculos" ON afiliado_campanhas
   FOR SELECT USING (afiliado_id IN (SELECT id FROM afiliados WHERE user_id = auth.uid()));
 
