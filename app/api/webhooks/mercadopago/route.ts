@@ -15,14 +15,6 @@ const PRECOS_PLANO: Record<string, number> = {
   empresarial:  497.00,
 }
 
-const PLANOS_MP: Record<string, number> = {
-  basic:        49.90,
-  profissional: 97.90,
-  gestao:       197.90,
-  pro:          197.90,  // retrocompatibilidade
-  empresarial:  497.00,
-}
-
 const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
   ? process.env.MP_ACCESS_TOKEN_PROD!
   : process.env.MP_ACCESS_TOKEN_TEST!
@@ -225,7 +217,7 @@ export async function POST(request: Request) {
     if (subscription.status === 'authorized') {
       const limites = getLimites(planoId)
       // Usa o valor real cobrado (pode ser com desconto)
-      const valorMensalidade = (subscription.auto_recurring?.transaction_amount as number | null) ?? PLANOS_MP[planoId] ?? null
+      const valorMensalidade = (subscription.auto_recurring?.transaction_amount as number | null) ?? PRECOS_PLANO[planoId] ?? null
 
       // Registra assinatura_inicio apenas na primeira ativação (não sobrescreve renovações)
       // Também verifica bloqueio administrativo — se bloqueado_admin=true, não reativa o acesso
@@ -273,13 +265,17 @@ export async function POST(request: Request) {
       // Auto-registrar comissão de afiliado na primeira ativação (one-time)
       if (!perfilAtual?.assinatura_inicio && perfilAtual?.campanha_id) {
         try {
-          const { data: afiliado } = await supabase
+          // limit(1) em vez de maybeSingle: se 2+ afiliados compartilham a campanha,
+          // maybeSingle lançaria erro e a comissão seria silenciosamente pulada.
+          const { data: afiliadosLista } = await supabase
             .from('afiliados')
             .select('id, campanha:campanhas(comissao_tipo, comissao_valor)')
             .eq('campanha_id', perfilAtual.campanha_id)
             .eq('status', 'ativo')
-            .maybeSingle()
+            .order('criado_em', { ascending: true })
+            .limit(1)
 
+          const afiliado = afiliadosLista?.[0]
           if (afiliado) {
             const camp = (afiliado.campanha as unknown) as { comissao_tipo: string; comissao_valor: number } | null
             if (camp && camp.comissao_tipo !== 'nenhum') {

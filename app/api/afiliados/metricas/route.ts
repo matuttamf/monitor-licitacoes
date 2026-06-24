@@ -29,16 +29,18 @@ export async function GET() {
 
   const camp = (afiliado.campanha as unknown) as { id: string; codigo: string; cliques: number; comissao_tipo: string; comissao_valor: number } | null
 
-  const { data: pagamentos } = await admin
+  // Busca todas as linhas para somar corretamente; exibe apenas as 50 mais recentes.
+  const { data: todos } = await admin
     .from('afiliado_pagamentos')
     .select('valor, status, mes_ref, pago_em, tipo_gatilho, profile_id')
     .eq('afiliado_id', afiliado.id)
     .order('criado_em', { ascending: false })
-    .limit(50)
 
-  const conversoes     = new Set((pagamentos ?? []).map(p => p.profile_id).filter(Boolean)).size
-  const totalPendente  = (pagamentos ?? []).filter(p => p.status === 'pendente').reduce((s, p) => s + p.valor, 0)
-  const totalPago      = (pagamentos ?? []).filter(p => p.status === 'pago').reduce((s, p) => s + p.valor, 0)
+  const linhas         = todos ?? []
+  const conversoes     = new Set(linhas.map(p => p.profile_id).filter(Boolean)).size
+  const totalPendente  = linhas.filter(p => p.status === 'pendente').reduce((s, p) => s + p.valor, 0)
+  const totalPago      = linhas.filter(p => p.status === 'pago').reduce((s, p) => s + p.valor, 0)
+  const pagamentos     = linhas.slice(0, 50)
 
   const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br').replace(/\/$/, '')
 

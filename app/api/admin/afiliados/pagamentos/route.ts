@@ -29,70 +29,36 @@ export async function GET(request: NextRequest) {
     .from('afiliado_pagamentos')
     .select('*')
     .eq('afiliado_id', afiliado_id)
-    .order('mes_ref', { ascending: false })
+    .order('criado_em', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ pagamentos: data })
 }
 
-// POST /api/admin/afiliados/pagamentos — registrar pagamento de comissão
-// Body: { afiliado_id, mes_ref, valor, observacao? }
+// POST /api/admin/afiliados/pagamentos — marcar uma comissão como paga (por id da linha)
+// Body: { id, numero_nf?, observacao? }
+// As linhas de comissão são criadas pelo webhook (1 por assinante). Aqui só marcamos pago.
 export async function POST(request: NextRequest) {
   if (!await verificarAdmin()) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { afiliado_id, mes_ref, valor, observacao, numero_nf } = await request.json()
+  const { id, numero_nf, observacao } = await request.json()
+  if (!id) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 })
 
-  if (!afiliado_id || !mes_ref || valor == null) {
-    return NextResponse.json({ error: 'afiliado_id, mes_ref e valor são obrigatórios' }, { status: 400 })
+  const update: Record<string, unknown> = {
+    status:  'pago',
+    pago_em: new Date().toISOString(),
   }
-
-  if (!/^\d{4}-\d{2}$/.test(mes_ref)) {
-    return NextResponse.json({ error: 'mes_ref deve estar no formato YYYY-MM' }, { status: 400 })
-  }
+  if (numero_nf  !== undefined) update.numero_nf  = numero_nf || null
+  if (observacao !== undefined) update.observacao = observacao || null
 
   const admin = adminClient()
-
-  // Upsert: se já existe registro para o mês, atualiza para pago
   const { data, error } = await admin
     .from('afiliado_pagamentos')
-    .upsert({
-      afiliado_id,
-      mes_ref,
-      valor,
-      status:     'pago',
-      pago_em:    new Date().toISOString(),
-      observacao: observacao ?? null,
-      numero_nf:  numero_nf ?? null,
-    }, { onConflict: 'afiliado_id,mes_ref' })
+    .update(update)
+    .eq('id', id)
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true, pagamento: data })
-}
-
-// PATCH /api/admin/afiliados/pagamentos — criar registro pendente para o mês
-// Body: { afiliado_id, mes_ref, valor }
-export async function PATCH(request: NextRequest) {
-  if (!await verificarAdmin()) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-
-  const { afiliado_id, mes_ref, valor } = await request.json()
-
-  if (!afiliado_id || !mes_ref || valor == null) {
-    return NextResponse.json({ error: 'afiliado_id, mes_ref e valor são obrigatórios' }, { status: 400 })
-  }
-
-  const admin = adminClient()
-
-  const { data, error } = await admin
-    .from('afiliado_pagamentos')
-    .insert({ afiliado_id, mes_ref, valor, status: 'pendente' })
-    .select()
-    .single()
-
-  if (error) {
-    if (error.code === '23505') return NextResponse.json({ error: 'Já existe registro para esse mês' }, { status: 409 })
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
   return NextResponse.json({ ok: true, pagamento: data })
 }

@@ -56,7 +56,7 @@ export default function AdminAfiliados() {
   const [pagamentosAberto, setPagamentosAberto] = useState<string | null>(null)
   const [pagamentos, setPagamentos]             = useState<Record<string, Pagamento[]>>({})
   const [marcandoPago, setMarcandoPago]         = useState<string | null>(null)
-  const [nfModal, setNfModal]                   = useState<{ afiliadoId: string; mesRef: string; valor: number } | null>(null)
+  const [nfModal, setNfModal]                   = useState<{ id: string; afiliadoId: string; mesRef: string; valor: number } | null>(null)
   const [nfNumero, setNfNumero]                 = useState('')
 
   async function carregar() {
@@ -122,15 +122,22 @@ export default function AdminAfiliados() {
 
   async function confirmarPagamento() {
     if (!nfModal) return
-    const { afiliadoId, mesRef, valor } = nfModal
-    const chave = `${afiliadoId}-${mesRef}`
+    const { id, afiliadoId } = nfModal
+    const chave = `${afiliadoId}-${id}`
     setMarcandoPago(chave)
     setNfModal(null)
-    await fetch('/api/admin/afiliados/pagamentos', {
+    const res = await fetch('/api/admin/afiliados/pagamentos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ afiliado_id: afiliadoId, mes_ref: mesRef, valor, numero_nf: nfNumero || null }),
+      body: JSON.stringify({ id, numero_nf: nfNumero || null }),
     })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      alert(d.error ?? 'Erro ao marcar pagamento como pago')
+      setMarcandoPago(null)
+      setNfNumero('')
+      return
+    }
     const [resPag, resAfil] = await Promise.all([
       fetch(`/api/admin/afiliados/pagamentos?afiliado_id=${afiliadoId}`),
       fetch('/api/admin/afiliados'),
@@ -350,9 +357,9 @@ export default function AdminAfiliados() {
                                 </thead>
                                 <tbody>
                                   {pagamentos[a.id].map(p => {
-                                    const chave = `${a.id}-${p.mes_ref}`
+                                    const chave = `${a.id}-${p.id}`
                                     return (
-                                      <tr key={p.mes_ref} style={{ borderTop: '1px solid var(--cinza-light)' }}>
+                                      <tr key={p.id} style={{ borderTop: '1px solid var(--cinza-light)' }}>
                                         <td style={{ padding: '10px 14px', fontWeight: 600 }}>{p.mes_ref}</td>
                                         <td style={{ padding: '10px 14px', color: 'var(--cinza)' }}>{p.tipo_gatilho ?? '—'}</td>
                                         <td style={{ padding: '10px 14px' }}>{fmtMoeda(p.valor)}</td>
@@ -370,7 +377,7 @@ export default function AdminAfiliados() {
                                         <td style={{ padding: '10px 14px' }}>
                                           {p.status === 'pendente' && (
                                             <button
-                                              onClick={() => { setNfModal({ afiliadoId: a.id, mesRef: p.mes_ref, valor: p.valor }); setNfNumero('') }}
+                                              onClick={() => { setNfModal({ id: p.id, afiliadoId: a.id, mesRef: p.mes_ref, valor: p.valor }); setNfNumero('') }}
                                               disabled={marcandoPago === chave}
                                               style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#059669', color: 'white', fontWeight: 700, cursor: marcandoPago === chave ? 'not-allowed' : 'pointer', opacity: marcandoPago === chave ? 0.7 : 1 }}
                                             >

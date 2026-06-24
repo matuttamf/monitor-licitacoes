@@ -10,6 +10,20 @@ function adminClient() {
   )
 }
 
+// Busca um usuário do Auth por e-mail paginando (listUsers não filtra por e-mail).
+// Evita o bug de só olhar os primeiros 1000 usuários.
+async function findUserByEmail(admin: ReturnType<typeof adminClient>, email: string) {
+  const alvo = email.toLowerCase().trim()
+  for (let page = 1; page <= 50; page++) { // teto de segurança: 50 * 200 = 10k
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+    if (error || !data?.users?.length) return null
+    const found = data.users.find(u => u.email?.toLowerCase() === alvo)
+    if (found) return found
+    if (data.users.length < 200) return null
+  }
+  return null
+}
+
 // GET — verifica token e retorna nome/email
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token')
@@ -29,8 +43,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Verifica se o e-mail já tem conta Supabase (para adaptar o formulário no frontend)
-  const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
-  const temConta = users.some(u => u.email === afiliado.email)
+  const temConta = !!(await findUserByEmail(admin, afiliado.email))
 
   return NextResponse.json({ nome: afiliado.nome, email: afiliado.email, temConta })
 }
@@ -70,8 +83,7 @@ export async function POST(request: NextRequest) {
     if (!jaExiste) return NextResponse.json({ error: authError.message }, { status: 500 })
 
     // E-mail já tem conta — localiza o user_id existente e vincula ao afiliado
-    const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
-    const existing = users.find(u => u.email === afiliado.email)
+    const existing = await findUserByEmail(admin, afiliado.email)
     if (!existing) return NextResponse.json({ error: 'Conta existente não encontrada.' }, { status: 500 })
     userId = existing.id
   } else {
