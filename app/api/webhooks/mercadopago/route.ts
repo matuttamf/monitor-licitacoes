@@ -386,7 +386,11 @@ export async function POST(request: Request) {
         ?? null
 
       const updateCancelado: Record<string, unknown> = {
-        mp_subscription_id: null,
+        mp_subscription_id:         null,
+        // Expira desconto imediatamente ao cancelar — impede reassinar com desconto ainda ativo
+        voucher_desconto_percentual: null,
+        voucher_desconto_meses:      null,
+        voucher_desconto_ate:        null,
       }
 
       if (proximaCobranca) {
