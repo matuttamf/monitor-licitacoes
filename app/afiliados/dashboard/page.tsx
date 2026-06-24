@@ -12,16 +12,24 @@ type Pagamento = {
   tipo_gatilho: string | null
 }
 
-type Metricas = {
-  nome: string
+type LinkAfiliado = {
+  campanha_nome: string
   codigo: string
   link: string
   cliques: number
   conversoes: number
   comissao_pendente: number
-  total_pago: number
   comissao_tipo: string
   comissao_valor: number
+}
+
+type Metricas = {
+  nome: string
+  links: LinkAfiliado[]
+  cliques: number
+  conversoes: number
+  comissao_pendente: number
+  total_pago: number
   pagamentos: Pagamento[]
 }
 
@@ -39,7 +47,7 @@ export default function AfiliadorDashboard() {
   const router = useRouter()
   const [dados, setDados] = useState<Metricas | null>(null)
   const [carregando, setCarregando] = useState(true)
-  const [copiado, setCopiado] = useState(false)
+  const [copiado, setCopiado] = useState<string | null>(null)
   const [isCliente, setIsCliente] = useState(false)
 
   useEffect(() => {
@@ -62,11 +70,10 @@ export default function AfiliadorDashboard() {
     carregar()
   }, [router])
 
-  function copiarLink() {
-    if (!dados?.link) return
-    navigator.clipboard.writeText(dados.link)
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
+  function copiarLink(link: string, codigo: string) {
+    navigator.clipboard.writeText(link)
+    setCopiado(codigo)
+    setTimeout(() => setCopiado(null), 2000)
   }
 
   async function sair() {
@@ -112,10 +119,10 @@ export default function AfiliadorDashboard() {
     empresarial: 'Empresarial', pro: 'Gestão', outros: 'Outros',
   }
 
-  const descricaoComissao = dados.comissao_tipo === 'percentual'
-    ? `${dados.comissao_valor}% do primeiro pagamento`
-    : dados.comissao_tipo === 'fixo'
-      ? `${fmtMoeda(dados.comissao_valor)} por assinatura`
+  const descricaoComissao = (l: LinkAfiliado) => l.comissao_tipo === 'percentual'
+    ? `${l.comissao_valor}% do primeiro pagamento`
+    : l.comissao_tipo === 'fixo'
+      ? `${fmtMoeda(l.comissao_valor)} por assinatura`
       : 'Sem comissão configurada'
 
   return (
@@ -147,30 +154,42 @@ export default function AfiliadorDashboard() {
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '32px 20px' }}>
 
-        {/* Link de afiliado */}
+        {/* Links de afiliado (um por campanha) */}
         <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E8E4DC', padding: '24px', marginBottom: 24 }}>
-          <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Seu link de parceiro</div>
-          {dados.link ? (
-            <>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 0, background: '#FAF6F0', border: '1.5px solid #E8E4DC', borderRadius: 10, padding: '11px 16px', fontSize: 14, color: '#1A1A1C', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {dados.link}
+          <div style={{ color: '#C9A65A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>
+            {dados.links.length > 1 ? 'Seus links de parceiro' : 'Seu link de parceiro'}
+          </div>
+          {dados.links.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {dados.links.map(l => (
+                <div key={l.codigo}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1C' }}>{l.campanha_nome}</span>
+                    <span style={{ fontSize: 11, color: '#9AA0A6' }}>
+                      {l.cliques} cliques · {l.conversoes} conversões · {descricaoComissao(l)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 0, background: '#FAF6F0', border: '1.5px solid #E8E4DC', borderRadius: 10, padding: '11px 16px', fontSize: 14, color: '#1A1A1C', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {l.link}
+                    </div>
+                    <button onClick={() => copiarLink(l.link, l.codigo)} style={{
+                      background: copiado === l.codigo ? '#059669' : '#6B0F1A', color: 'white', border: 'none',
+                      borderRadius: 10, padding: '11px 22px', fontWeight: 700, fontSize: 14,
+                      cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s',
+                    }}>
+                      {copiado === l.codigo ? '✓ Copiado!' : 'Copiar link'}
+                    </button>
+                  </div>
                 </div>
-                <button onClick={copiarLink} style={{
-                  background: copiado ? '#059669' : '#6B0F1A', color: 'white', border: 'none',
-                  borderRadius: 10, padding: '11px 22px', fontWeight: 700, fontSize: 14,
-                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s',
-                }}>
-                  {copiado ? '✓ Copiado!' : 'Copiar link'}
-                </button>
-              </div>
-              <p style={{ fontSize: 12, color: '#9AA0A6', margin: '10px 0 0' }}>
-                Compartilhe este link. Cada visitante que assinar pelo seu link gera comissão para você.
+              ))}
+              <p style={{ fontSize: 12, color: '#9AA0A6', margin: '4px 0 0' }}>
+                Compartilhe seus links. Cada visitante que assinar pelo seu link gera comissão para você.
               </p>
-            </>
+            </div>
           ) : (
             <p style={{ fontSize: 14, color: '#9AA0A6', margin: 0 }}>
-              Seu link de parceiro será gerado em breve. Entre em contato pelo WhatsApp caso precise de ajuda.
+              Seus links de parceiro serão gerados em breve. Entre em contato pelo WhatsApp caso precise de ajuda.
             </p>
           )}
         </div>
@@ -193,7 +212,7 @@ export default function AfiliadorDashboard() {
         {/* Cards de métricas — linha 2: financeiro */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 24 }}>
           {[
-            { label: 'Comissão a receber', valor: fmtMoeda(dados.comissao_pendente), sub: descricaoComissao, destaque: dados.comissao_pendente > 0 },
+            { label: 'Comissão a receber', valor: fmtMoeda(dados.comissao_pendente), sub: 'soma de todas as suas campanhas', destaque: dados.comissao_pendente > 0 },
             { label: 'Total recebido', valor: fmtMoeda(dados.total_pago), sub: 'comissões já pagas' },
           ].map(c => (
             <div key={c.label} style={{ background: 'white', borderRadius: 14, border: `1px solid ${c.destaque ? 'rgba(107,15,26,0.2)' : '#E8E4DC'}`, padding: '18px 20px' }}>
