@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import {
   criarCheckoutAssinatura,
   PLANOS,
@@ -7,6 +7,7 @@ import {
   criarPreferenciaUpgrade,
 } from '@/lib/mercadopago'
 import { getLimites } from '@/lib/planos'
+import { resolverCupom } from '@/lib/cupons'
 import { NextResponse } from 'next/server'
 import { rateLimitGuard, getIp } from '@/lib/rate-limit'
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
   }
 
-  const { plano, periodo = 'mensal' } = await request.json()
+  const { plano, periodo = 'mensal', cupom } = await request.json()
 
   if (!plano || !(plano in PLANOS)) {
     return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
@@ -43,13 +44,29 @@ export async function POST(request: Request) {
   const periodoValido: 'mensal' | 'anual' = periodo === 'anual' ? 'anual' : 'mensal'
   const planoData = PLANOS[plano as keyof typeof PLANOS]
 
-  // ── Desconto de campanha ──────────────────────────────────────────────────────
+  // ── Desconto: cupom digitado › atribuição por link ────────────────────────────
+  // campanhas tem RLS sem acesso público → leituras usam service-role (admin).
   let descontoPercentual = 0
-  let descontoMeses      = 0
+  let descontoMeses      = 0   // 0 = permanente
   let precoFinal = periodoValido === 'anual' ? planoData.preco_anual : planoData.preco
+  let campanhaCupom: string | null = null
 
-  if (profile?.campanha_id) {
-    const { data: campanha } = await supabase
+  const adminDb = createAdminClient()
+
+  // 1) Cupom digitado no checkout tem precedência
+  if (cupom) {
+    const r = await resolverCupom(adminDb, String(cupom), plano, periodoValido)
+    if (r.valido) {
+      descontoPercentual = r.percentual
+      descontoMeses      = r.meses
+      precoFinal         = r.precoFinal
+      campanhaCupom      = r.campanhaId ?? null
+    }
+  }
+
+  // 2) Fallback: desconto global por atribuição de link (campanha_id)
+  if (descontoPercentual === 0 && profile?.campanha_id) {
+    const { data: campanha } = await adminDb
       .from('campanhas')
       .select('desconto_percentual, desconto_meses')
       .eq('id', profile.campanha_id)
@@ -61,6 +78,11 @@ export async function POST(request: Request) {
       descontoMeses      = campanha.desconto_meses
       precoFinal         = Math.round(precoFinal * (1 - descontoPercentual / 100) * 100) / 100
     }
+  }
+
+  // Atribui a campanha do cupom ao perfil se ainda não houver atribuição (métricas)
+  if (campanhaCupom && !profile?.campanha_id) {
+    await adminDb.from('profiles').update({ campanha_id: campanhaCupom }).eq('id', user.id)
   }
 
   // ── Upgrade / downgrade in-place (assinante ativo, mesmo período) ─────────────
