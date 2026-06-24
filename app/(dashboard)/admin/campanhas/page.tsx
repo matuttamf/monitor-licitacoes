@@ -121,7 +121,7 @@ export default function CampanhasPage() {
         plano:   novaRegra.plano   || null,
         periodo: novaRegra.periodo || null,
         desconto_percentual: Number(novaRegra.desconto_percentual),
-        desconto_meses:      Number(novaRegra.desconto_meses) || 0,
+        desconto_meses: novaRegra.periodo === 'anual' ? 12 : (Number(novaRegra.desconto_meses) || 0),
       }),
     })
     const d = await res.json()
@@ -708,7 +708,7 @@ export default function CampanhasPage() {
                     Desconto de parceria (opcional)
                   </label>
                   <p style={{ fontSize: '11px', color: 'var(--cinza)', marginBottom: '10px' }}>
-                    Usuários vindos desta campanha recebem X% de desconto nos primeiros N meses. Após o período, o sistema reajusta automaticamente para o valor integral via MercadoPago.
+                    Usuários vindos desta campanha recebem X% de desconto. Para assinantes mensais, aplica-se pelos N meses informados. Para assinantes anuais, aplica-se no 1º ciclo (12 meses) e o sistema reajusta automaticamente no próximo aniversário.
                   </p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <div>
@@ -719,16 +719,18 @@ export default function CampanhasPage() {
                         style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '4px' }}>Meses com desconto</label>
+                      <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: 'var(--cinza)', marginBottom: '4px' }}>Meses com desconto <span style={{ color: 'var(--cinza)', fontWeight: 400 }}>(plano mensal)</span></label>
                       <input type="number" min="0" step="1" value={form.desconto_meses}
                         onChange={e => setForm(f => ({ ...f, desconto_meses: e.target.value }))}
                         placeholder="Ex: 3"
                         style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none' }} />
                     </div>
                   </div>
-                  {Number(form.desconto_percentual) > 0 && Number(form.desconto_meses) > 0 && (
+                  {Number(form.desconto_percentual) > 0 && (
                     <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginTop: '6px' }}>
-                      ✓ {form.desconto_percentual}% off nos primeiros {form.desconto_meses} meses → após, preço integral
+                      {Number(form.desconto_meses) > 0
+                        ? `✓ Mensal: ${form.desconto_percentual}% off nos primeiros ${form.desconto_meses} meses → após, preço integral · Anual: ${form.desconto_percentual}% off no 1º ano → após, preço integral`
+                        : `✓ ${form.desconto_percentual}% off permanente (mensal e anual)`}
                     </p>
                   )}
               </div>
@@ -764,7 +766,7 @@ export default function CampanhasPage() {
                               <strong style={{ color: 'var(--vinho)' }}>{r.desconto_percentual}%</strong>
                               {' · '}{r.plano ? PLANOS_LABEL[r.plano] ?? r.plano : 'Todos os planos'}
                               {' · '}{r.periodo === 'mensal' ? 'Mensal' : r.periodo === 'anual' ? 'Anual' : 'Todos os ciclos'}
-                              {' · '}{r.desconto_meses > 0 ? `${r.desconto_meses} ${r.desconto_meses === 1 ? 'mês' : 'meses'}` : 'permanente'}
+                              {' · '}{r.periodo === 'anual' ? '1º ciclo anual' : r.desconto_meses > 0 ? `${r.desconto_meses} ${r.desconto_meses === 1 ? 'mês' : 'meses'}` : 'permanente'}
                             </span>
                             <button onClick={() => removerRegra(r.id)}
                               style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer', fontWeight: 600 }}>remover</button>
@@ -799,11 +801,18 @@ export default function CampanhasPage() {
                             <input type="number" min="1" max="100" placeholder="20" value={novaRegra.desconto_percentual}
                               onChange={e => setNovaRegra(r => ({ ...r, desconto_percentual: e.target.value }))} style={campo} />
                           </div>
-                          <div>
-                            <label style={lbl}>Meses</label>
-                            <input type="number" min="0" placeholder="0" title="0 = permanente" value={novaRegra.desconto_meses}
-                              onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))} style={campo} />
-                          </div>
+                          {novaRegra.periodo === 'anual' ? (
+                            <div>
+                              <label style={lbl}>Período</label>
+                              <div style={{ ...campo, display: 'flex', alignItems: 'center', background: 'var(--surface-2)', color: 'var(--cinza)', fontStyle: 'italic' }}>1º ciclo anual</div>
+                            </div>
+                          ) : (
+                            <div>
+                              <label style={lbl}>Meses</label>
+                              <input type="number" min="0" placeholder="0" title="0 = permanente" value={novaRegra.desconto_meses}
+                                onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))} style={campo} />
+                            </div>
+                          )}
                           <button onClick={addRegra} disabled={!novaRegra.desconto_percentual}
                             style={{ height: '38px', padding: '0 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: novaRegra.desconto_percentual ? 'var(--vinho)' : 'var(--cinza-light)', color: 'white', border: 'none', cursor: novaRegra.desconto_percentual ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}>+ Add</button>
                         </div>

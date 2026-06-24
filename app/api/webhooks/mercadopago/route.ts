@@ -249,12 +249,14 @@ export async function POST(request: Request) {
       if (!perfilAtual?.assinatura_inicio) {
         updateData.assinatura_inicio = new Date().toISOString()
       }
-      // Salva dados do desconto (apenas na primeira ativação, para não sobrescrever renovações)
-      if (descontoPercentual > 0 && descontoMeses > 0 && !perfilAtual?.assinatura_inicio) {
+      // Salva dados do desconto (apenas na primeira ativação, para não sobrescrever renovações).
+      // Anual com desconto: trata como 12 meses (1 ciclo), mesmo que descontoMeses não venha no external_reference.
+      const mesesEfetivos = periodo === 'anual' && descontoPercentual > 0 ? 12 : descontoMeses
+      if (descontoPercentual > 0 && mesesEfetivos > 0 && !perfilAtual?.assinatura_inicio) {
         const descAte = new Date()
-        descAte.setMonth(descAte.getMonth() + descontoMeses)
+        descAte.setMonth(descAte.getMonth() + mesesEfetivos)
         updateData.voucher_desconto_percentual = descontoPercentual
-        updateData.voucher_desconto_meses      = descontoMeses
+        updateData.voucher_desconto_meses      = mesesEfetivos
         updateData.voucher_desconto_ate        = descAte.toISOString()
       }
 
