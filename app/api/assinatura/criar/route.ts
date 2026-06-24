@@ -54,14 +54,14 @@ export async function POST(request: Request) {
   const adminDb = createAdminClient()
 
   // 1) Cupom digitado no checkout tem precedência
+  let cupomCampanhaId: string | null = null
   if (cupom) {
-    const r = await resolverCupom(adminDb, String(cupom), plano, periodoValido)
+    const r = await resolverCupom(adminDb, String(cupom), plano, periodoValido, user.id)
     if (r.valido) {
       descontoPercentual = r.percentual
       descontoMeses      = r.meses
       precoFinal         = r.precoFinal
-      // Só atribui o cupom como origem se NÃO for campanha de afiliado —
-      // senão um código público digitado creditaria comissão sem o afiliado ter trazido o lead.
+      cupomCampanhaId    = r.campanhaId ?? null
       if (r.comissaoTipo === 'nenhum') campanhaCupom = r.campanhaId ?? null
     }
   }
@@ -169,6 +169,12 @@ export async function POST(request: Request) {
       await adminSupabase.from('profiles').update({ mp_subscription_id: preapprovalId }).eq('id', user.id)
       console.log(`[assinatura/criar] preapproval salvo user=${user.id} sub=${preapprovalId}`)
     }
+    // Registra uso do cupom para bloquear reutilização
+    if (cupomCampanhaId) {
+      await adminDb.from('cupom_usos').insert({ profile_id: user.id, campanha_id: cupomCampanhaId }).throwOnError()
+        .catch(() => {}) // ignora conflito de unique (duplo clique)
+    }
+
     return NextResponse.json({ url: checkoutUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

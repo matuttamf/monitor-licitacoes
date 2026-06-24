@@ -48,12 +48,14 @@ function aplicar(preco: number, percentual: number): number {
 /**
  * Resolve um código de cupom digitado no checkout para um desconto concreto.
  * Usa um client com service_role (campanhas tem RLS sem acesso público).
+ * Se userId for informado, bloqueia reutilização do mesmo cupom pelo mesmo usuário.
  */
 export async function resolverCupom(
   admin: SupabaseClient,
   codigo: string,
   plano: string,
   periodo: Periodo,
+  userId?: string,
 ): Promise<ResultadoCupom> {
   const precoOriginal = precoBase(plano, periodo)
   const semDesconto = (motivo: string, campanhaId?: string): ResultadoCupom =>
@@ -70,6 +72,17 @@ export async function resolverCupom(
 
   if (!campanha || !campanha.ativo) return semDesconto('Cupom inválido ou expirado')
   if (!campanha.permite_cupom)      return semDesconto('Este código não é um cupom de desconto')
+
+  // Bloqueia reutilização: cada usuário pode usar cada cupom apenas uma vez
+  if (userId) {
+    const { data: usoAnterior } = await admin
+      .from('cupom_usos')
+      .select('id')
+      .eq('profile_id', userId)
+      .eq('campanha_id', campanha.id)
+      .maybeSingle()
+    if (usoAnterior) return semDesconto('Este cupom já foi utilizado por esta conta', campanha.id)
+  }
 
   const { data: regras } = await admin
     .from('campanha_descontos')

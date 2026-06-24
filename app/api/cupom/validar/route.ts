@@ -29,6 +29,6 @@ export async function POST(request: Request) {
 
   const periodoValido: 'mensal' | 'anual' = periodo === 'anual' ? 'anual' : 'mensal'
 
-  const resultado = await resolverCupom(createAdminClient(), String(codigo), plano, periodoValido)
+  const resultado = await resolverCupom(createAdminClient(), String(codigo), plano, periodoValido, user.id)
   return NextResponse.json(resultado)
 }
