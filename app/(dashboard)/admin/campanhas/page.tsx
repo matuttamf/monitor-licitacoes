@@ -629,7 +629,7 @@ export default function CampanhasPage() {
       {/* ══ Modal criar/editar campanha ══ */}
       {criando && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}>
-          <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '520px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '640px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--preto)', margin: '0 0 4px' }}>
               {editando ? 'Editar campanha' : 'Nova campanha'}
             </h2>
@@ -700,9 +700,10 @@ export default function CampanhasPage() {
                       style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', outline: 'none', boxSizing: 'border-box' }} />
                   </div>
                 )}
+              </div>
 
-                {/* Desconto por período (parcerias) */}
-                <div style={{ borderTop: '1px solid var(--cinza-light)', paddingTop: '14px' }}>
+              {/* Desconto por período (parcerias) — seção própria, largura cheia */}
+              <div style={{ borderTop: '1px solid var(--cinza-light)', paddingTop: '14px' }}>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '8px' }}>
                     Desconto de parceria (opcional)
                   </label>
@@ -730,7 +731,6 @@ export default function CampanhasPage() {
                       ✓ {form.desconto_percentual}% off nos primeiros {form.desconto_meses} meses → após, preço integral
                     </p>
                   )}
-                </div>
               </div>
 
               {/* ── Cupom digitável (regras por plano/ciclo) ───────────────────────── */}
@@ -773,43 +773,39 @@ export default function CampanhasPage() {
                       </div>
                     )}
 
-                    {/* Nova regra — 2 linhas para os campos caberem */}
+                    {/* Nova regra — uma linha só */}
                     {(() => {
                       const lbl: React.CSSProperties = { display: 'block', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--cinza)', marginBottom: '3px' }
-                      const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none', boxSizing: 'border-box', height: '36px' }
+                      const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none', boxSizing: 'border-box', height: '38px' }
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                            <div>
-                              <label style={lbl}>Plano</label>
-                              <select value={novaRegra.plano} onChange={e => setNovaRegra(r => ({ ...r, plano: e.target.value }))} style={campo}>
-                                <option value="">Todos os planos</option>
-                                {Object.entries(PLANOS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label style={lbl}>Ciclo</label>
-                              <select value={novaRegra.periodo} onChange={e => setNovaRegra(r => ({ ...r, periodo: e.target.value }))} style={campo}>
-                                <option value="">Todos os ciclos</option>
-                                <option value="mensal">Mensal</option>
-                                <option value="anual">Anual</option>
-                              </select>
-                            </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1.1fr 0.85fr 0.85fr auto', gap: '8px', alignItems: 'end', padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+                          <div>
+                            <label style={lbl}>Plano</label>
+                            <select value={novaRegra.plano} onChange={e => setNovaRegra(r => ({ ...r, plano: e.target.value }))} style={campo}>
+                              <option value="">Todos os planos</option>
+                              {Object.entries(PLANOS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                            </select>
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
-                            <div>
-                              <label style={lbl}>Desconto (%)</label>
-                              <input type="number" min="1" max="100" placeholder="ex: 20" value={novaRegra.desconto_percentual}
-                                onChange={e => setNovaRegra(r => ({ ...r, desconto_percentual: e.target.value }))} style={campo} />
-                            </div>
-                            <div>
-                              <label style={lbl}>Meses <span style={{ textTransform: 'none', fontWeight: 400 }}>(0 = sempre)</span></label>
-                              <input type="number" min="0" placeholder="ex: 3" value={novaRegra.desconto_meses}
-                                onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))} style={campo} />
-                            </div>
-                            <button onClick={addRegra} disabled={!novaRegra.desconto_percentual}
-                              style={{ height: '36px', padding: '0 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: novaRegra.desconto_percentual ? 'var(--vinho)' : 'var(--cinza-light)', color: 'white', border: 'none', cursor: novaRegra.desconto_percentual ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}>+ Adicionar</button>
+                          <div>
+                            <label style={lbl}>Ciclo</label>
+                            <select value={novaRegra.periodo} onChange={e => setNovaRegra(r => ({ ...r, periodo: e.target.value }))} style={campo}>
+                              <option value="">Todos</option>
+                              <option value="mensal">Mensal</option>
+                              <option value="anual">Anual</option>
+                            </select>
                           </div>
+                          <div>
+                            <label style={lbl}>Desc. %</label>
+                            <input type="number" min="1" max="100" placeholder="20" value={novaRegra.desconto_percentual}
+                              onChange={e => setNovaRegra(r => ({ ...r, desconto_percentual: e.target.value }))} style={campo} />
+                          </div>
+                          <div>
+                            <label style={lbl}>Meses</label>
+                            <input type="number" min="0" placeholder="0" title="0 = permanente" value={novaRegra.desconto_meses}
+                              onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))} style={campo} />
+                          </div>
+                          <button onClick={addRegra} disabled={!novaRegra.desconto_percentual}
+                            style={{ height: '38px', padding: '0 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: novaRegra.desconto_percentual ? 'var(--vinho)' : 'var(--cinza-light)', color: 'white', border: 'none', cursor: novaRegra.desconto_percentual ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}>+ Add</button>
                         </div>
                       )
                     })()}
