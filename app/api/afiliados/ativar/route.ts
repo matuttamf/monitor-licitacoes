@@ -48,17 +48,19 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ nome: afiliado.nome, email: afiliado.email, temConta })
 }
 
-// POST — cria conta Supabase e ativa o afiliado
+// POST — ativa o afiliado.
+//  • Se o e-mail JÁ tem conta: vincula sem exigir senha (registra o aceite) → o
+//    afiliado faz login na conta existente para acessar o painel.
+//  • Se NÃO tem conta: exige senha, cria a conta e vincula.
 export async function POST(request: NextRequest) {
   const { token, senha } = await request.json()
-  if (!token || !senha) return NextResponse.json({ error: 'Token e senha são obrigatórios' }, { status: 400 })
-  if (senha.length < 8) return NextResponse.json({ error: 'Senha deve ter pelo menos 8 caracteres' }, { status: 400 })
+  if (!token) return NextResponse.json({ error: 'Token obrigatório' }, { status: 400 })
 
   const admin = adminClient()
 
   const { data: afiliado } = await admin
     .from('afiliados')
-    .select('id, nome, email, status, token_expira_em, user_id, campanha_id')
+    .select('id, nome, email, status, token_expira_em, user_id')
     .eq('token_convite', token)
     .maybeSingle()
 
@@ -68,42 +70,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Link expirado.' }, { status: 410 })
   }
 
-  // Cria usuário no Supabase Auth
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
-    email:          afiliado.email,
-    password:       senha,
-    email_confirm:  true,
-    user_metadata:  { nome: afiliado.nome, tipo: 'afiliado' },
-  })
-
   let userId: string
+  let contaExistente: boolean
 
-  if (authError) {
-    const jaExiste = authError.message.includes('already been registered')
-    if (!jaExiste) return NextResponse.json({ error: authError.message }, { status: 500 })
-
-    // E-mail já tem conta — localiza o user_id existente e vincula ao afiliado
-    const existing = await findUserByEmail(admin, afiliado.email)
-    if (!existing) return NextResponse.json({ error: 'Conta existente não encontrada.' }, { status: 500 })
-    userId = existing.id
+  const existente = await findUserByEmail(admin, afiliado.email)
+  if (existente) {
+    // Conta já existe → registra o aceite vinculando, sem mexer na senha.
+    userId = existente.id
+    contaExistente = true
   } else {
-    userId = authData.user.id
+    // Conta nova → senha obrigatória.
+    if (!senha || String(senha).length < 8) {
+      return NextResponse.json({ error: 'Defina uma senha de pelo menos 8 caracteres.' }, { status: 400 })
+    }
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+      email:         afiliado.email,
+      password:      senha,
+      email_confirm: true,
+      user_metadata: { nome: afiliado.nome, tipo: 'afiliado' },
+    })
+    if (authError) {
+      // Corrida: a conta passou a existir nesse meio-tempo — localiza e vincula.
+      const e2 = await findUserByEmail(admin, afiliado.email)
+      if (!e2) return NextResponse.json({ error: authError.message }, { status: 500 })
+      userId = e2.id
+      contaExistente = true
+    } else {
+      userId = authData.user.id
+      contaExistente = false
+    }
   }
 
-  // Vincula user_id ao afiliado e ativa
   const { error: updateError } = await admin
     .from('afiliados')
-    .update({
-      user_id:         userId,
-      status:          'ativo',
-      token_convite:   null,
-      token_expira_em: null,
-    })
+    .update({ user_id: userId, status: 'ativo', token_convite: null, token_expira_em: null })
     .eq('id', afiliado.id)
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 
-  // Indica se era conta já existente (frontend não tenta login com senha nova)
-  const contaExistente = !!authError
   return NextResponse.json({ ok: true, contaExistente })
 }

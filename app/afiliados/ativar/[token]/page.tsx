@@ -50,8 +50,8 @@ export default function AtivarAfiliado() {
     setEtapa('sucesso')
 
     if (data.contaExistente) {
-      // Usuário já tinha conta — só redireciona para login (senha não foi alterada)
-      setTimeout(() => router.push('/login'), 2000)
+      // Usuário já tinha conta — vínculo registrado; loga na conta existente e vai ao painel
+      setTimeout(() => router.push('/login?redirect=/afiliados/dashboard'), 2000)
     } else {
       // Nova conta criada — faz login automático com a senha definida
       const supabase = createClient()
