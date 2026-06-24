@@ -25,9 +25,22 @@ type Campanha = {
   comissao_valor: number
   desconto_percentual: number
   desconto_meses: number
+  permite_cupom: boolean
   ativo: boolean
   criado_em: string
   metricas: Metricas
+}
+
+type RegraDesconto = {
+  id: string
+  plano: string | null
+  periodo: string | null
+  desconto_percentual: number
+  desconto_meses: number
+}
+
+const PLANOS_LABEL: Record<string, string> = {
+  basic: 'Basic', profissional: 'Profissional', gestao: 'Gestão', empresarial: 'Empresarial',
 }
 
 type Totais = { total: number; comAtribuicao: number; semAtribuicao: number }
@@ -88,8 +101,38 @@ export default function CampanhasPage() {
   const [form, setForm] = useState({
     nome: '', tipo: 'influenciador', codigo: '', descricao: '',
     url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '',
-    desconto_percentual: '0', desconto_meses: '0',
+    desconto_percentual: '0', desconto_meses: '0', permite_cupom: false,
   })
+
+  // Regras de desconto por plano/ciclo (cupom) — carregadas ao editar
+  const [regras, setRegras]     = useState<RegraDesconto[]>([])
+  const [novaRegra, setNovaRegra] = useState({ plano: '', periodo: '', desconto_percentual: '', desconto_meses: '0' })
+
+  async function carregarRegras(campanhaId: string) {
+    const r = await fetch(`/api/admin/campanhas/descontos?campanha_id=${campanhaId}`)
+    if (r.ok) setRegras((await r.json()).regras ?? [])
+  }
+  async function addRegra() {
+    if (!editando) return
+    const res = await fetch('/api/admin/campanhas/descontos', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        campanha_id: editando.id,
+        plano:   novaRegra.plano   || null,
+        periodo: novaRegra.periodo || null,
+        desconto_percentual: Number(novaRegra.desconto_percentual),
+        desconto_meses:      Number(novaRegra.desconto_meses) || 0,
+      }),
+    })
+    const d = await res.json()
+    if (!res.ok) { alert(d.error); return }
+    setNovaRegra({ plano: '', periodo: '', desconto_percentual: '', desconto_meses: '0' })
+    carregarRegras(editando.id)
+  }
+  async function removerRegra(id: string) {
+    await fetch(`/api/admin/campanhas/descontos?id=${id}`, { method: 'DELETE' })
+    if (editando) carregarRegras(editando.id)
+  }
 
   async function carregar() {
     setCarregando(true)
@@ -137,12 +180,14 @@ export default function CampanhasPage() {
           comissao_valor: form.comissao_valor ? Number(form.comissao_valor) : 0,
           desconto_percentual: Number(form.desconto_percentual) || 0,
           desconto_meses: Number(form.desconto_meses) || 0,
+          permite_cupom: form.permite_cupom,
           ativo: editando.ativo }
       : { nome: form.nome, tipo: form.tipo, codigo: form.codigo, descricao: form.descricao || null,
           url_destino: form.url_destino || null, comissao_tipo: form.comissao_tipo,
           comissao_valor: form.comissao_valor ? Number(form.comissao_valor) : 0,
           desconto_percentual: Number(form.desconto_percentual) || 0,
-          desconto_meses: Number(form.desconto_meses) || 0 }
+          desconto_meses: Number(form.desconto_meses) || 0,
+          permite_cupom: form.permite_cupom }
 
     const res = await fetch('/api/admin/campanhas', {
       method: editando ? 'PATCH' : 'POST',
@@ -152,8 +197,8 @@ export default function CampanhasPage() {
     const d = await res.json()
     setSalvando(false)
     if (!res.ok) { alert(d.error); return }
-    setCriando(false); setEditando(null)
-    setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '', desconto_percentual: '0', desconto_meses: '0' })
+    setCriando(false); setEditando(null); setRegras([])
+    setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '', desconto_percentual: '0', desconto_meses: '0', permite_cupom: false })
     carregar()
   }
 
@@ -256,7 +301,10 @@ export default function CampanhasPage() {
       url_destino: c.url_destino ?? '', comissao_tipo: c.comissao_tipo,
       comissao_valor: c.comissao_valor > 0 ? String(c.comissao_valor) : '',
       desconto_percentual: String(c.desconto_percentual ?? 0),
-      desconto_meses: String(c.desconto_meses ?? 0) })
+      desconto_meses: String(c.desconto_meses ?? 0),
+      permite_cupom: !!c.permite_cupom })
+    setRegras([])
+    carregarRegras(c.id)
     setCriando(true)
   }
 
@@ -300,7 +348,7 @@ export default function CampanhasPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {aba === 'campanhas' && (
-            <button onClick={() => { setCriando(true); setEditando(null); setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '', desconto_percentual: '0', desconto_meses: '0' }) }}
+            <button onClick={() => { setCriando(true); setEditando(null); setRegras([]); setForm({ nome: '', tipo: 'influenciador', codigo: '', descricao: '', url_destino: '', comissao_tipo: 'nenhum', comissao_valor: '', desconto_percentual: '0', desconto_meses: '0', permite_cupom: false }) }}
               style={{ padding: '9px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer' }}>
               + Nova campanha
             </button>
@@ -683,6 +731,76 @@ export default function CampanhasPage() {
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* ── Cupom digitável (regras por plano/ciclo) ───────────────────────── */}
+              <div style={{ borderTop: '1px solid var(--cinza-light)', paddingTop: '14px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.permite_cupom}
+                    onChange={e => setForm(f => ({ ...f, permite_cupom: e.target.checked }))}
+                    style={{ width: '16px', height: '16px', accentColor: 'var(--vinho)', cursor: 'pointer' }} />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--preto)' }}>Usar como cupom de desconto (digitável no checkout)</span>
+                </label>
+                <p style={{ fontSize: '11px', color: 'var(--cinza)', margin: '6px 0 0 24px' }}>
+                  O cliente digita <strong>{form.codigo || 'o código'}</strong> no checkout e recebe o desconto da regra que casar com o plano/ciclo escolhido.
+                </p>
+
+                {form.permite_cupom && !editando && (
+                  <p style={{ fontSize: '11px', color: '#f97316', fontWeight: 600, margin: '10px 0 0 24px' }}>
+                    Crie a campanha primeiro; depois reabra em "Editar" para adicionar as regras de desconto.
+                  </p>
+                )}
+
+                {form.permite_cupom && editando && (
+                  <div style={{ marginTop: '12px', marginLeft: '24px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '8px' }}>Regras de desconto</div>
+
+                    {/* Regras existentes */}
+                    {regras.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
+                        {regras.map(r => (
+                          <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '8px 10px', borderRadius: '9px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--preto)' }}>
+                              <strong style={{ color: 'var(--vinho)' }}>{r.desconto_percentual}%</strong>
+                              {' · '}{r.plano ? PLANOS_LABEL[r.plano] ?? r.plano : 'Todos os planos'}
+                              {' · '}{r.periodo === 'mensal' ? 'Mensal' : r.periodo === 'anual' ? 'Anual' : 'Todos os ciclos'}
+                              {' · '}{r.desconto_meses > 0 ? `${r.desconto_meses} ${r.desconto_meses === 1 ? 'mês' : 'meses'}` : 'permanente'}
+                            </span>
+                            <button onClick={() => removerRegra(r.id)}
+                              style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: 'none', cursor: 'pointer', fontWeight: 600 }}>remover</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Nova regra */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.8fr 0.8fr auto', gap: '6px', alignItems: 'end' }}>
+                      <select value={novaRegra.plano} onChange={e => setNovaRegra(r => ({ ...r, plano: e.target.value }))}
+                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                        <option value="">Todos os planos</option>
+                        {Object.entries(PLANOS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                      </select>
+                      <select value={novaRegra.periodo} onChange={e => setNovaRegra(r => ({ ...r, periodo: e.target.value }))}
+                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
+                        <option value="">Todos os ciclos</option>
+                        <option value="mensal">Mensal</option>
+                        <option value="anual">Anual</option>
+                      </select>
+                      <input type="number" min="1" max="100" placeholder="%" value={novaRegra.desconto_percentual}
+                        onChange={e => setNovaRegra(r => ({ ...r, desconto_percentual: e.target.value }))}
+                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+                      <input type="number" min="0" placeholder="meses" value={novaRegra.desconto_meses}
+                        onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))}
+                        title="0 = permanente"
+                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+                      <button onClick={addRegra} disabled={!novaRegra.desconto_percentual}
+                        style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+                    </div>
+                    <p style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '6px' }}>
+                      Meses: <strong>0 = permanente</strong>. A regra mais específica (plano+ciclo) tem prioridade sobre a geral.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>
