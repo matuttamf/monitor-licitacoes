@@ -15,6 +15,7 @@ export type ResultadoCupom = {
   motivo?: string
   campanhaId?: string
   nome?: string
+  comissaoTipo?: string  // 'nenhum' | 'percentual' | 'fixo' — usado para evitar vazar comissão
   percentual: number
   meses: number          // 0 = permanente
   precoOriginal: number
@@ -63,7 +64,7 @@ export async function resolverCupom(
 
   const { data: campanha } = await admin
     .from('campanhas')
-    .select('id, nome, ativo, permite_cupom')
+    .select('id, nome, ativo, permite_cupom, comissao_tipo')
     .eq('codigo', codigoNorm)
     .maybeSingle()
 
@@ -82,6 +83,7 @@ export async function resolverCupom(
     valido: true,
     campanhaId: campanha.id,
     nome: campanha.nome,
+    comissaoTipo: campanha.comissao_tipo ?? 'nenhum',
     percentual: regra.desconto_percentual,
     meses: regra.desconto_meses,
     precoOriginal,

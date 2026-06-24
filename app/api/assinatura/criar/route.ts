@@ -60,7 +60,9 @@ export async function POST(request: Request) {
       descontoPercentual = r.percentual
       descontoMeses      = r.meses
       precoFinal         = r.precoFinal
-      campanhaCupom      = r.campanhaId ?? null
+      // Só atribui o cupom como origem se NÃO for campanha de afiliado —
+      // senão um código público digitado creditaria comissão sem o afiliado ter trazido o lead.
+      if (r.comissaoTipo === 'nenhum') campanhaCupom = r.campanhaId ?? null
     }
   }
 
