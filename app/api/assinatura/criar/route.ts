@@ -171,8 +171,8 @@ export async function POST(request: Request) {
     }
     // Registra uso do cupom para bloquear reutilização
     if (cupomCampanhaId) {
-      await adminDb.from('cupom_usos').insert({ profile_id: user.id, campanha_id: cupomCampanhaId }).throwOnError()
-        .catch(() => {}) // ignora conflito de unique (duplo clique)
+      await adminDb.from('cupom_usos').insert({ profile_id: user.id, campanha_id: cupomCampanhaId })
+        .then(() => {}, () => {}) // ignora conflito de unique (duplo clique)
     }
 
     return NextResponse.json({ url: checkoutUrl })
