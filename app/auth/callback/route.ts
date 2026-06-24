@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { enviarEmailBoasVindas } from '@/lib/emails/trial'
 import { notificarAdminNovoCadastro } from '@/lib/alerts/whatsapp'
 import { notificarAdminNovoCadastro as notificarAdminEmail } from '@/lib/emails/admin'
+import { resolverRef } from '@/lib/afiliados'
 
 export async function GET(request: NextRequest) {
   const qs         = new URL(request.url).searchParams
@@ -82,16 +83,15 @@ export async function GET(request: NextRequest) {
             if (utmCampaign) atribUpdate.utm_campaign = utmCampaign
             if (utmContent)  atribUpdate.utm_content  = utmContent
 
-            // Se veio ?ref=CODIGO, tenta vincular à campanha correspondente
+            // Se veio ?ref=CODIGO: resolve para campanha (e afiliado, se for link de afiliado)
             if (ref) {
-              const { data: campanha } = await adminClient
-                .from('campanhas')
-                .select('id')
-                .eq('codigo', ref)
-                .eq('ativo', true)
-                .maybeSingle()
-              if (campanha?.id) atribUpdate.campanha_id = campanha.id
-              else atribUpdate.utm_source = atribUpdate.utm_source ?? ref // fallback: guarda como source
+              const resolvido = await resolverRef(adminClient, ref)
+              if (resolvido) {
+                atribUpdate.campanha_id = resolvido.campanhaId
+                if (resolvido.tipo === 'afiliado') atribUpdate.afiliado_id = resolvido.afiliadoId
+              } else {
+                atribUpdate.utm_source = atribUpdate.utm_source ?? ref // fallback: guarda como source
+              }
             }
 
             if (Object.keys(atribUpdate).length) {

@@ -223,7 +223,7 @@ export async function POST(request: Request) {
       // Também verifica bloqueio administrativo — se bloqueado_admin=true, não reativa o acesso
       const { data: perfilAtual } = await supabase
         .from('profiles')
-        .select('assinatura_inicio, bloqueado_admin, campanha_id')
+        .select('assinatura_inicio, bloqueado_admin, campanha_id, afiliado_id')
         .eq('id', userId)
         .maybeSingle()
 
@@ -262,41 +262,37 @@ export async function POST(request: Request) {
       await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: planoId, mensagem: `ativado ${periodo}` })
       console.log(`[webhook/mp] Assinatura ativada: user=${userId} plano=${planoId} keywords=${limites.maxKeywords}`)
 
-      // Auto-registrar comissão de afiliado na primeira ativação (one-time)
-      if (!perfilAtual?.assinatura_inicio && perfilAtual?.campanha_id) {
+      // Auto-registrar comissão de afiliado na primeira ativação (one-time).
+      // Comissão vem do vínculo afiliado↔campanha (taxa individual por afiliado).
+      if (!perfilAtual?.assinatura_inicio && perfilAtual?.afiliado_id && perfilAtual?.campanha_id) {
         try {
-          // limit(1) em vez de maybeSingle: se 2+ afiliados compartilham a campanha,
-          // maybeSingle lançaria erro e a comissão seria silenciosamente pulada.
-          const { data: afiliadosLista } = await supabase
-            .from('afiliados')
-            .select('id, campanha:campanhas(comissao_tipo, comissao_valor)')
+          const { data: vinculo } = await supabase
+            .from('afiliado_campanhas')
+            .select('comissao_tipo, comissao_valor, afiliado:afiliados(status)')
+            .eq('afiliado_id', perfilAtual.afiliado_id)
             .eq('campanha_id', perfilAtual.campanha_id)
-            .eq('status', 'ativo')
-            .order('criado_em', { ascending: true })
-            .limit(1)
+            .maybeSingle()
 
-          const afiliado = afiliadosLista?.[0]
-          if (afiliado) {
-            const camp = (afiliado.campanha as unknown) as { comissao_tipo: string; comissao_valor: number } | null
-            if (camp && camp.comissao_tipo !== 'nenhum') {
-              const valorComissao = camp.comissao_tipo === 'percentual'
-                ? Math.round((valorMensalidade ?? 0) * camp.comissao_valor / 100 * 100) / 100
-                : camp.comissao_valor
-              if (valorComissao > 0) {
-                const mesRef = new Date().toISOString().slice(0, 7)
-                const { error: errC } = await supabase.from('afiliado_pagamentos').insert({
-                  afiliado_id:   afiliado.id,
-                  profile_id:    userId,
-                  mes_ref:       mesRef,
-                  valor:         valorComissao,
-                  status:        'pendente',
-                  tipo_gatilho:  `${planoId}_${periodo}`,
-                })
-                if (errC && errC.code !== '23505') {
-                  console.error('[webhook/mp] Erro ao registrar comissão:', errC)
-                } else if (!errC) {
-                  console.log(`[webhook/mp] Comissão registrada: afiliado=${afiliado.id} valor=${valorComissao}`)
-                }
+          const afStatus = ((vinculo?.afiliado as unknown) as { status: string } | null)?.status
+          if (vinculo && afStatus === 'ativo' && vinculo.comissao_tipo !== 'nenhum') {
+            const valorComissao = vinculo.comissao_tipo === 'percentual'
+              ? Math.round((valorMensalidade ?? 0) * vinculo.comissao_valor / 100 * 100) / 100
+              : vinculo.comissao_valor
+            if (valorComissao > 0) {
+              const mesRef = new Date().toISOString().slice(0, 7)
+              const { error: errC } = await supabase.from('afiliado_pagamentos').insert({
+                afiliado_id:  perfilAtual.afiliado_id,
+                campanha_id:  perfilAtual.campanha_id,
+                profile_id:   userId,
+                mes_ref:      mesRef,
+                valor:        valorComissao,
+                status:       'pendente',
+                tipo_gatilho: `${planoId}_${periodo}`,
+              })
+              if (errC && errC.code !== '23505') {
+                console.error('[webhook/mp] Erro ao registrar comissão:', errC)
+              } else if (!errC) {
+                console.log(`[webhook/mp] Comissão registrada: afiliado=${perfilAtual.afiliado_id} valor=${valorComissao}`)
               }
             }
           }
