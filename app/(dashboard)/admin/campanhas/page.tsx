@@ -773,31 +773,48 @@ export default function CampanhasPage() {
                       </div>
                     )}
 
-                    {/* Nova regra */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.8fr 0.8fr auto', gap: '6px', alignItems: 'end' }}>
-                      <select value={novaRegra.plano} onChange={e => setNovaRegra(r => ({ ...r, plano: e.target.value }))}
-                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                        <option value="">Todos os planos</option>
-                        {Object.entries(PLANOS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
-                      <select value={novaRegra.periodo} onChange={e => setNovaRegra(r => ({ ...r, periodo: e.target.value }))}
-                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', background: 'white', outline: 'none' }}>
-                        <option value="">Todos os ciclos</option>
-                        <option value="mensal">Mensal</option>
-                        <option value="anual">Anual</option>
-                      </select>
-                      <input type="number" min="1" max="100" placeholder="%" value={novaRegra.desconto_percentual}
-                        onChange={e => setNovaRegra(r => ({ ...r, desconto_percentual: e.target.value }))}
-                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
-                      <input type="number" min="0" placeholder="meses" value={novaRegra.desconto_meses}
-                        onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))}
-                        title="0 = permanente"
-                        style={{ padding: '8px 8px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '12px', color: 'var(--preto)', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
-                      <button onClick={addRegra} disabled={!novaRegra.desconto_percentual}
-                        style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, background: 'var(--vinho)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
-                    </div>
-                    <p style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '6px' }}>
-                      Meses: <strong>0 = permanente</strong>. A regra mais específica (plano+ciclo) tem prioridade sobre a geral.
+                    {/* Nova regra — 2 linhas para os campos caberem */}
+                    {(() => {
+                      const lbl: React.CSSProperties = { display: 'block', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--cinza)', marginBottom: '3px' }
+                      const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--cinza-light)', fontSize: '13px', color: 'var(--preto)', background: 'white', outline: 'none', boxSizing: 'border-box', height: '36px' }
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--cinza-light)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <div>
+                              <label style={lbl}>Plano</label>
+                              <select value={novaRegra.plano} onChange={e => setNovaRegra(r => ({ ...r, plano: e.target.value }))} style={campo}>
+                                <option value="">Todos os planos</option>
+                                {Object.entries(PLANOS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={lbl}>Ciclo</label>
+                              <select value={novaRegra.periodo} onChange={e => setNovaRegra(r => ({ ...r, periodo: e.target.value }))} style={campo}>
+                                <option value="">Todos os ciclos</option>
+                                <option value="mensal">Mensal</option>
+                                <option value="anual">Anual</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
+                            <div>
+                              <label style={lbl}>Desconto (%)</label>
+                              <input type="number" min="1" max="100" placeholder="ex: 20" value={novaRegra.desconto_percentual}
+                                onChange={e => setNovaRegra(r => ({ ...r, desconto_percentual: e.target.value }))} style={campo} />
+                            </div>
+                            <div>
+                              <label style={lbl}>Meses <span style={{ textTransform: 'none', fontWeight: 400 }}>(0 = sempre)</span></label>
+                              <input type="number" min="0" placeholder="ex: 3" value={novaRegra.desconto_meses}
+                                onChange={e => setNovaRegra(r => ({ ...r, desconto_meses: e.target.value }))} style={campo} />
+                            </div>
+                            <button onClick={addRegra} disabled={!novaRegra.desconto_percentual}
+                              style={{ height: '36px', padding: '0 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: novaRegra.desconto_percentual ? 'var(--vinho)' : 'var(--cinza-light)', color: 'white', border: 'none', cursor: novaRegra.desconto_percentual ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}>+ Adicionar</button>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                    <p style={{ fontSize: '11px', color: 'var(--cinza)', marginTop: '8px' }}>
+                      <strong>Meses 0 = desconto permanente.</strong> A regra mais específica (plano + ciclo) tem prioridade sobre a geral.
                     </p>
                   </div>
                 )}
