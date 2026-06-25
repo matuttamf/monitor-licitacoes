@@ -4,6 +4,27 @@ import { LicitacaoRaw } from './types'
 
 const LOTE = 500
 
+/**
+ * Chave de deduplicação estável por edital.
+ *
+ * Muitos scrapers usam `Math.random()` como fallback de id quando a fonte não
+ * traz um identificador estável (`String(x ?? Math.random())`). Isso produz um
+ * id diferente a cada coleta — e como (fonte, numero_edital) é a chave única,
+ * o MESMO edital vira uma linha nova toda vez, repetindo no dashboard.
+ *
+ * Aqui detectamos esses ids "aleatórios" (float do Math.random, ou ausência de
+ * id) e derivamos uma chave determinística a partir do conteúdo
+ * (fonte + órgão + objeto + data), garantindo que o mesmo edital sempre colapse
+ * na mesma linha. Ids realmente estáveis (ex.: numeroControlePNCP) são mantidos.
+ */
+function chaveDedup(l: LicitacaoRaw): string {
+  const id = String(l.numero_edital ?? l.external_id ?? '')
+  const pareceAleatorio = !id || /0\.\d{4,}/.test(id)  // "...-0.8342913..." => Math.random()
+  if (!pareceAleatorio) return id
+  const raw = `${l.fonte}|${(l.orgao ?? '').slice(0, 80)}|${(l.objeto ?? '').slice(0, 120)}|${l.data_abertura ?? ''}`
+  return 'c-' + createHash('sha1').update(raw).digest('hex').slice(0, 24)
+}
+
 export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<number> {
   if (licitacoes.length === 0) return 0
 
@@ -11,10 +32,7 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
 
   const normalizadas = licitacoes.map(l => ({
     fonte:          l.fonte,
-    numero_edital:  l.numero_edital ?? l.external_id ?? (() => {
-      const raw = `${l.fonte}|${(l.orgao ?? '').slice(0, 60)}|${(l.objeto ?? '').slice(0, 80)}`
-      return 'auto-' + createHash('sha1').update(raw).digest('hex').slice(0, 20)
-    })(),
+    numero_edital:  chaveDedup(l),
     orgao:          l.orgao,
     objeto:         l.objeto,
     valor_estimado: l.valor_estimado ?? null,
@@ -24,6 +42,13 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
     cidade:         l.cidade ?? l.municipio ?? null,
   }))
 
+  // Dedup dentro do próprio batch: duas linhas com a mesma (fonte, numero_edital)
+  // fariam o upsert do Postgres falhar ("cannot affect row a second time").
+  // Mantém a última ocorrência de cada chave.
+  const vistas = new Map<string, (typeof normalizadas)[number]>()
+  for (const n of normalizadas) vistas.set(`${n.fonte}|${n.numero_edital}`, n)
+  const unicas = [...vistas.values()]
+
   // Conta total antes do upsert para calcular novas inserções
   const { count: antes } = await supabase
     .from('licitacoes')
@@ -32,8 +57,8 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
   // Upsert em lotes de 500 para evitar limite de payload do Supabase
   let erros = 0
   let primeiroErro: string | null = null
-  for (let i = 0; i < normalizadas.length; i += LOTE) {
-    const lote = normalizadas.slice(i, i + LOTE)
+  for (let i = 0; i < unicas.length; i += LOTE) {
+    const lote = unicas.slice(i, i + LOTE)
     const { error } = await supabase
       .from('licitacoes')
       .upsert(lote, { onConflict: 'fonte,numero_edital', ignoreDuplicates: false })
@@ -44,7 +69,7 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
     }
   }
 
-  if (erros === Math.ceil(normalizadas.length / LOTE)) {
+  if (unicas.length > 0 && erros === Math.ceil(unicas.length / LOTE)) {
     throw new Error(`Todos os lotes falharam: ${primeiroErro}`)
   }
 
@@ -53,6 +78,6 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
     .select('id', { count: 'exact', head: true })
 
   const novas = Math.max(0, (depois ?? 0) - (antes ?? 0))
-  console.log(`salvarLicitacoes: ${normalizadas.length} processadas, ${novas} novas (${erros} lotes com erro)`)
+  console.log(`salvarLicitacoes: ${licitacoes.length} recebidas, ${unicas.length} únicas, ${novas} novas (${erros} lotes com erro)`)
   return novas
 }
