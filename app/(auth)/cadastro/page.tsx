@@ -25,6 +25,8 @@ function CadastroConteudo() {
   const utmCampaign = searchParams.get('utm_campaign') ?? ''
   const utmContent  = searchParams.get('utm_content')  ?? ''
 
+  const [nome, setNome]                             = useState('')
+  const [telefone, setTelefone]                     = useState('')
   const [email, setEmail]                           = useState('')
   const [senha, setSenha]                           = useState('')
   const [confirmarSenha, setConfirmarSenha]         = useState('')
@@ -49,6 +51,12 @@ function CadastroConteudo() {
       .finally(() => setCarregandoConvite(false))
   }, [conviteToken])
 
+  function mascaraTelefone(v: string) {
+    const d = v.replace(/\D/g, '').slice(0, 11)
+    if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+    return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+  }
+
   function mascaraCPF(v: string) {
     return v.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4').slice(0, 14)
   }
@@ -61,6 +69,7 @@ function CadastroConteudo() {
     e.preventDefault()
     setErro('')
     if (emailJaCadastrado)         { setErro('Este e-mail já está cadastrado. Use "Entrar" para acessar sua conta.'); return }
+    if (!nome.trim())             { setErro('Informe seu nome.'); return }
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
     if (senha.length < 8)         { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     if (conviteToken) {
@@ -90,6 +99,8 @@ function CadastroConteudo() {
     // Monta metadados de atribuição (passados para auth.users.user_metadata,
     // lidos depois em /auth/callback para gravar no profile)
     const atribuicao: Record<string, string> = {}
+    if (nome.trim())  atribuicao.nome      = nome.trim()
+    if (telefone)     atribuicao.telefone  = telefone.replace(/\D/g, '')
     if (utmRef)      atribuicao.ref          = utmRef
     if (utmSource)   atribuicao.utm_source   = utmSource
     if (utmMedium)   atribuicao.utm_medium   = utmMedium
@@ -101,7 +112,7 @@ function CadastroConteudo() {
       password: senha,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback?next=/onboarding`,
-        data: Object.keys(atribuicao).length ? atribuicao : undefined,
+        data: atribuicao,
       },
     })
 
@@ -297,6 +308,15 @@ function CadastroConteudo() {
           ) : (
             <form onSubmit={handleCadastro} className="flex flex-col gap-3.5">
               <div>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">Nome</label>
+                <input
+                  type="text" value={nome} onChange={e => setNome(e.target.value)}
+                  placeholder="Seu nome completo" required maxLength={100}
+                  className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                />
+              </div>
+
+              <div>
                 <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">E-mail</label>
                 <input
                   type="email" value={email}
@@ -320,6 +340,17 @@ function CadastroConteudo() {
                     <a href="/login" className="font-semibold underline">Entrar →</a>
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
+                  Telefone <span className="text-[#9AA0A6] font-normal normal-case tracking-normal">(opcional)</span>
+                </label>
+                <input
+                  type="tel" value={telefone} onChange={e => setTelefone(mascaraTelefone(e.target.value))}
+                  placeholder="(00) 00000-0000" maxLength={15}
+                  className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
+                />
               </div>
 
               <div>
