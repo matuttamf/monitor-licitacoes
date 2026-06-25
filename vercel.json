@@ -36,6 +36,7 @@
     { "path": "/api/cron/reverter-descontos",       "schedule": "0 4 * * *"          },
     { "path": "/api/cron/aviso-renovacao-anual",  "schedule": "0 12 * * *"         },
     { "path": "/api/cron/onboarding-followup",   "schedule": "0 12,0 * * *"        },
+    { "path": "/api/cron/emails-feedback",       "schedule": "30 12 * * *"         },
     { "path": "/api/cron/indicacoes-elegibilidade", "schedule": "0 13 * * *"      },
     { "path": "/api/cron/indicacoes-liberar",       "schedule": "30 13 * * *"     },
     { "path": "/api/cron/indicacoes-aplicar-creditos", "schedule": "0 14 * * *"   },

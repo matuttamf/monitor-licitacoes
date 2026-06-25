@@ -69,14 +69,10 @@ export function htmlIndicaApto(nome: string | null, codigo: string): string {
     <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
       ${saudacao(nome)} Agora você pode ganhar meses grátis.
     </h1>
-    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
       Você tem um <strong>link exclusivo</strong>. Cada amigo que assinar um plano pago
       pelo seu link garante <strong>+30 dias grátis</strong> para você — e o seu amigo
       ainda entra com <strong>20% de desconto</strong> na primeira assinatura.
-    </p>
-    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      O benefício é <strong>acumulativo e sem limite</strong>: indicando o suficiente,
-      você mantém sua assinatura ativa sem pagar.
     </p>
     <div style="background:#FAF6F0;border:1px solid #E8E4DC;border-radius:12px;padding:16px;margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;color:#9AA0A6;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Seu link de convite</div>

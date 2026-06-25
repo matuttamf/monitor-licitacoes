@@ -12,41 +12,39 @@ type Dados = {
   economiaTotal?: number
   convertidos?: number
   aguardando?: number
+  pendentes?: number
 }
 
 const moeda = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
-export function IndicaWidget() {
-  const [d, setD] = useState<Dados | null>(null)
+/**
+ * Apresentação pura do widget de indicações (sem fetch) — usada pelo widget real
+ * e por previews. Recebe os dados já resolvidos.
+ */
+export function IndicaWidgetView({
+  link, economiaTotal = 0, convertidos = 0, aguardando = 0, creditosDias = 0,
+}: {
+  link: string
+  economiaTotal?: number
+  convertidos?: number
+  aguardando?: number
+  creditosDias?: number
+}) {
   const [copiado, setCopiado] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/indicacoes/me')
-      .then(r => (r.ok ? r.json() : null))
-      .then(setD)
-      .catch(() => {})
-  }, [])
-
-  if (!d || !d.ativa || !d.apto || !d.link) return null
-
-  const economia = d.economiaTotal ?? 0
-  const convertidos = d.convertidos ?? 0
-  const aguardando = d.aguardando ?? 0
-
   async function copiar() {
-    if (!d?.link) return
-    await navigator.clipboard.writeText(d.link)
+    await navigator.clipboard.writeText(link)
     setCopiado(true)
     setTimeout(() => setCopiado(false), 2000)
   }
 
   function compartilhar(canal: 'whatsapp' | 'telegram' | 'email') {
-    const msg = `Uso o Monitor de Licitações para acompanhar editais. Assine pelo meu link e ganhe 20% de desconto: ${d?.link}`
+    const msg = `Uso o Monitor de Licitações para acompanhar editais. Assine pelo meu link e ganhe 20% de desconto: ${link}`
     const enc = encodeURIComponent(msg)
     const urls = {
       whatsapp: `https://wa.me/?text=${enc}`,
-      telegram: `https://t.me/share/url?url=${encodeURIComponent(d?.link ?? '')}&text=${encodeURIComponent('Assine o Monitor de Licitações com 20% de desconto:')}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Assine o Monitor de Licitações com 20% de desconto:')}`,
       email: `mailto:?subject=${encodeURIComponent('Monitor de Licitações — 20% de desconto')}&body=${enc}`,
     }
     window.open(urls[canal], '_blank', 'noopener')
@@ -69,9 +67,9 @@ export function IndicaWidget() {
       <div style={{ position: 'relative' }}>
         <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>🚀 Convide amigos</div>
 
-        {economia > 0 ? (
+        {economiaTotal > 0 ? (
           <p style={{ fontSize: 14, lineHeight: 1.6, margin: '0 0 4px', color: 'rgba(255,255,255,0.92)' }}>
-            Você já economizou <strong style={{ color: '#C9A65A' }}>{moeda(economia)}</strong> com indicações.
+            Você já economizou <strong style={{ color: '#C9A65A' }}>{moeda(economiaTotal)}</strong> com indicações.
           </p>
         ) : (
           <p style={{ fontSize: 14, lineHeight: 1.6, margin: '0 0 4px', color: 'rgba(255,255,255,0.92)' }}>
@@ -85,9 +83,9 @@ export function IndicaWidget() {
           )}
         </p>
 
-        {(d.creditosDias ?? 0) > 0 && (
+        {creditosDias > 0 && (
           <div style={{ display: 'inline-block', background: 'rgba(201,166,90,0.18)', border: '1px solid rgba(201,166,90,0.4)', borderRadius: 8, padding: '6px 12px', marginBottom: 14 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#C9A65A' }}>🎁 {d.creditosDias} dias de prêmio</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#C9A65A' }}>🎁 {creditosDias} dias de prêmio</span>
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}> a aplicar na próxima cobrança</span>
           </div>
         )}
@@ -96,7 +94,7 @@ export function IndicaWidget() {
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <input
             readOnly
-            value={d.link}
+            value={link}
             onClick={e => (e.target as HTMLInputElement).select()}
             style={{
               flex: 1, minWidth: 200, fontSize: 13, padding: '10px 12px', borderRadius: 10,
@@ -140,5 +138,29 @@ export function IndicaWidget() {
         </div>
       </div>
     </div>
+  )
+}
+
+/** Widget real: busca os dados e renderiza a View quando o usuário está apto. */
+export function IndicaWidget() {
+  const [d, setD] = useState<Dados | null>(null)
+
+  useEffect(() => {
+    fetch('/api/indicacoes/me')
+      .then(r => (r.ok ? r.json() : null))
+      .then(setD)
+      .catch(() => {})
+  }, [])
+
+  if (!d || !d.ativa || !d.apto || !d.link) return null
+
+  return (
+    <IndicaWidgetView
+      link={d.link}
+      economiaTotal={d.economiaTotal}
+      convertidos={d.convertidos}
+      aguardando={d.aguardando}
+      creditosDias={d.creditosDias}
+    />
   )
 }

@@ -171,7 +171,10 @@ export async function POST(request: Request) {
               acesso_ate:        null,
             }
             if (subscriptionId) updateData.mp_subscription_id = subscriptionId
-            if (!perfil.assinatura_inicio) updateData.assinatura_inicio = new Date().toISOString()
+            if (!perfil.assinatura_inicio) {
+              updateData.assinatura_inicio = new Date().toISOString()
+              updateData.pagamento_confirmado_em = new Date().toISOString()
+            }
 
             await supabase.from('profiles').update(updateData).eq('id', userId)
 
@@ -248,6 +251,7 @@ export async function POST(request: Request) {
       }
       if (!perfilAtual?.assinatura_inicio) {
         updateData.assinatura_inicio = new Date().toISOString()
+        updateData.pagamento_confirmado_em = new Date().toISOString()
       }
       // Salva dados do desconto (apenas na primeira ativação, para não sobrescrever renovações).
       // Anual com desconto: trata como 12 meses (1 ciclo), mesmo que descontoMeses não venha no external_reference.

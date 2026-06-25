@@ -352,7 +352,7 @@ export async function enviarWAIndicaApto(telefone: string, nome: string | null, 
     `🚀 ${nome ? `*${nome}*, novidade!` : 'Novidade!'}\n\n` +
     `Agora você pode *convidar amigos e ganhar meses grátis*.\n\n` +
     `A cada amigo que assina um plano pago pelo seu link:\n` +
-    `🎁 *+30 dias grátis* para você (acumulativo, sem limite)\n` +
+    `🎁 *+30 dias grátis* para você\n` +
     `💸 *20% de desconto* na primeira assinatura do seu amigo\n\n` +
     `Seu link de convite:\n🔗 ${appUrl}/r/${codigo}\n\n` +
     `Regras: amigo assina → permanece 10 dias → seus 30 dias são liberados.\n` +

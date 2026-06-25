@@ -37,8 +37,8 @@ export async function GET(request: Request) {
     .eq('status', 'active')
     .is('owner_id', null)              // somente titulares (não sub-usuários)
     .is('indica_codigo', null)
-    .not('assinatura_inicio', 'is', null)
-    .lte('assinatura_inicio', corte)
+    .not('pagamento_confirmado_em', 'is', null)
+    .lte('pagamento_confirmado_em', corte)   // +10 dias da CONFIRMAÇÃO do pagamento
     .limit(500)
 
   let gerados = 0
