@@ -57,12 +57,14 @@ CREATE TABLE IF NOT EXISTS indicacoes (
 );
 
 ALTER TABLE indicacoes ENABLE ROW LEVEL SECURITY;
--- O indicador enxerga as próprias indicações (somente leitura).
+-- O indicador enxerga as próprias indicações — SOMENTE leitura, somente as suas.
+-- Nenhuma policy de INSERT/UPDATE/DELETE para usuários: RLS nega por padrão, então
+-- ninguém grava direto via PostgREST com a chave anon. Os crons/webhook/admin usam
+-- service_role, que IGNORA RLS — por isso não há (nem deve haver) policy permissiva
+-- `FOR ALL USING(true)`, que abriria escrita a qualquer usuário autenticado e
+-- permitiria forjar indicações 'assinou' para ganhar crédito indevido.
 CREATE POLICY "indicador_le_proprias" ON indicacoes
-  FOR SELECT USING (auth.uid() = indicador_id);
--- Service role faz tudo (crons, webhook, admin).
-CREATE POLICY "service_full_indicacoes" ON indicacoes
-  FOR ALL USING (true) WITH CHECK (true);
+  FOR SELECT TO authenticated USING (auth.uid() = indicador_id);
 
 CREATE INDEX IF NOT EXISTS indicacoes_indicador_idx ON indicacoes(indicador_id);
 CREATE INDEX IF NOT EXISTS indicacoes_status_idx    ON indicacoes(status);

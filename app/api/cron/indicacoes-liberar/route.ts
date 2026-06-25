@@ -79,19 +79,33 @@ export async function GET(request: Request) {
         continue
       }
 
+      // Vira o status PRIMEIRO, com guarda de estado: só uma execução consegue
+      // transicionar 'assinou' → 'liberada'. Evita crédito em dobro se o cron
+      // sobrepuser. Só credita se esta chamada realmente fez a transição.
+      const { data: transicao } = await supabase
+        .from('indicacoes')
+        .update({
+          status: 'liberada',
+          recompensa_liberada_em: new Date().toISOString(),
+          recompensa_dias: RECOMPENSA_DIAS,
+        })
+        .eq('id', ind.id)
+        .eq('status', 'assinou')
+        .select('id')
+      if (!transicao || transicao.length === 0) continue // já processada por outra execução
+
       // Crédito atômico ao indicador (+30 dias, + economia).
       const { error: errCred } = await supabase.rpc('creditar_indicacao', {
         p_indicador: ind.indicador_id,
         p_dias:      RECOMPENSA_DIAS,
         p_economia:  ind.valor_economia ?? 0,
       })
-      if (errCred) { console.error('[indicacoes-liberar] erro ao creditar:', errCred); continue }
-
-      await supabase.from('indicacoes').update({
-        status: 'liberada',
-        recompensa_liberada_em: new Date().toISOString(),
-        recompensa_dias: RECOMPENSA_DIAS,
-      }).eq('id', ind.id)
+      if (errCred) {
+        // Reverte a transição para nova tentativa no próximo ciclo (não perde a recompensa).
+        console.error('[indicacoes-liberar] erro ao creditar — revertendo status:', errCred)
+        await supabase.from('indicacoes').update({ status: 'assinou', recompensa_liberada_em: null }).eq('id', ind.id)
+        continue
+      }
       liberadas++
       indicadoresAfetados.add(ind.indicador_id)
     } catch (e) {

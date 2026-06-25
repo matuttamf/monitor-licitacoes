@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('cnpj, cpf, campanha_id, status, plano, mp_subscription_id, periodo, indicado_por')
+    .select('cnpj, cpf, campanha_id, status, plano, mp_subscription_id, periodo, indicado_por, assinatura_inicio')
     .eq('id', user.id)
     .single()
 
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   // 3) Fallback de menor prioridade: convite de usuário (20% só na 1ª assinatura).
   //    Cupom/campanha/parceiro sempre sobrepõem — só aplica se nada acima incidiu
   //    e o usuário ainda não tem assinatura ativa (primeira assinatura).
-  if (descontoPercentual === 0 && profile?.indicado_por && profile?.status !== 'active') {
+  if (descontoPercentual === 0 && profile?.indicado_por && !profile?.assinatura_inicio) {
     const { indicacoesAtiva, DESCONTO_AMIGO_PERCENTUAL } = await import('@/lib/indicacoes')
     if (await indicacoesAtiva(adminDb)) {
       descontoPercentual = DESCONTO_AMIGO_PERCENTUAL
