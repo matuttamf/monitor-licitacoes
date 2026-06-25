@@ -24,11 +24,16 @@ export async function sendEmailSes({ from, to, subject, html, text, headers }: S
     ? Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join('\r\n')
     : ''
 
+  // Associa os envios a um conjunto de configurações do SES (eventos de bounce,
+  // reclamação, entrega → CloudWatch). Definido por env: SES_CONFIGURATION_SET.
+  const configSet = process.env.SES_CONFIGURATION_SET?.trim()
+
   const raw = [
     `From: ${from}`,
     `To: ${to}`,
     `Subject: ${subject}`,
     'MIME-Version: 1.0',
+    ...(configSet ? [`X-SES-CONFIGURATION-SET: ${configSet}`] : []),
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     extraHeaders,
     '',

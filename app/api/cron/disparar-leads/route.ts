@@ -95,7 +95,7 @@ export const maxDuration = 300
 // Produção SES: 50k/dia → ~800/exec (60 exec/dia)
 // Troque SES_PRODUCAO=true na Vercel ao receber Production Access
 const EM_PRODUCAO       = process.env.SES_PRODUCAO === 'true'
-const MAX_LOTE_NOVOS    = EM_PRODUCAO ? 800  : 3
+const TETO_NOVOS        = EM_PRODUCAO ? 800  : 3   // teto absoluto por execução (ramp-up afina abaixo disso)
 const MAX_LOTE_FOLLOWUP = EM_PRODUCAO ? 100  : 1
 const CONCORRENCIA_SES  = EM_PRODUCAO ? 50   : 3
 const MAX_EMAILS        = 8    // sunset após 8 e-mails sem abertura
@@ -127,10 +127,20 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const [cfgCaptacao, cfgDisparo] = await Promise.all([
+  const [cfgCaptacao, cfgDisparo, cfgLote] = await Promise.all([
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_ativa').maybeSingle(),
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_disparo_ativo').maybeSingle(),
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_lote_max').maybeSingle(),
   ])
+
+  // Ramp-up: teto de novos por execução, ajustável no painel admin
+  // (configuracoes.captacao_lote_max) SEM novo deploy. Protege a reputação no
+  // início — comece pequeno (ex.: 50) e aumente conforme as métricas de bounce/
+  // reclamação se mantiverem saudáveis. Ausente/0 → usa o teto absoluto.
+  const loteMaxCfg = Number(cfgLote.data?.valor)
+  const MAX_LOTE_NOVOS = Number.isFinite(loteMaxCfg) && loteMaxCfg > 0
+    ? Math.min(TETO_NOVOS, loteMaxCfg)
+    : TETO_NOVOS
   if (cfgCaptacao.data && (cfgCaptacao.data.valor === false || cfgCaptacao.data.valor === 'false')) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'sistema pausado' })
   }
@@ -257,7 +267,7 @@ export async function GET(req: NextRequest) {
       lote.map(async lead => {
         trackSes()
         await sendEmailSes({
-          from:    'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
+          from:    process.env.EMAIL_CAPTACAO_FROM ?? 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
           to:      lead.email,
           subject: lead.subject,
           html:    lead.htmlFinal,
@@ -297,8 +307,8 @@ export async function GET(req: NextRequest) {
     }))
   }
 
-  console.log(`[disparar-leads] enviados=${enviados} followups=${followups} erros=${erros} total=${todos.length}`)
-  const resultado = { ok: true, enviados, followups, erros }
+  console.log(`[disparar-leads] enviados=${enviados} followups=${followups} erros=${erros} total=${todos.length} loteMax=${MAX_LOTE_NOVOS} producao=${EM_PRODUCAO}`)
+  const resultado = { ok: true, enviados, followups, erros, loteMax: MAX_LOTE_NOVOS }
   await registrarCronLog({ job: 'disparar-leads', status: 'ok', mensagem: `${enviados} novos + ${followups} follow-ups`, detalhes: resultado })
   return NextResponse.json(resultado)
 }
