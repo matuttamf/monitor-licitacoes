@@ -10,8 +10,8 @@
  *   npx tsx scripts/enriquecer-bulk-rfb.ts          # todos os arquivos (0-9)
  *   npx tsx scripts/enriquecer-bulk-rfb.ts 0 4      # apenas arquivos 0-4
  *
- * Campos atualizados: razao_social, nome_fantasia, situacao, cnae_codigo, uf, porte, email (só se null)
- * Campos preservados: status, municipio, telefone, id, created_at, disparado_em
+ * Campos atualizados: razao_social, nome_fantasia, situacao, cnae_codigo, uf, municipio (só se null), porte, email (só se null)
+ * Campos preservados: status, telefone, id, created_at, disparado_em
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -49,7 +49,7 @@ const RF_BASE      = 'https://arquivos.receitafederal.gov.br/public.php/dav/file
 const MAX_POR_RUN = MAX_ROWS > 0 ? MAX_ROWS : 200_000
 
 // Colunas dos arquivos Estabelecimentos
-const COL = { BASICO: 0, ORDEM: 1, DV: 2, NOME_FANTASIA: 4, SITUACAO: 5, CNAE: 11, UF: 19, EMAIL: 27 }
+const COL = { BASICO: 0, ORDEM: 1, DV: 2, NOME_FANTASIA: 4, SITUACAO: 5, CNAE: 11, UF: 19, MUNICIPIO: 20, EMAIL: 27 }
 // Colunas dos arquivos Empresas
 const COL_EMP = { BASICO: 0, RAZAO: 1, PORTE: 5 }
 
@@ -266,7 +266,29 @@ async function construirMapaEmpresas(
 type UpdateRecord = {
   cnpj: string
   razao_social?: string; nome_fantasia?: string; situacao?: string
-  cnae_codigo?: string; uf?: string; porte?: string; email?: string
+  cnae_codigo?: string; uf?: string; municipio?: string; porte?: string; email?: string
+}
+
+// ── Fase 0: mapa de municípios (código RFB → nome) ───────────────────────────
+// O arquivo Estabelecimentos traz o município como CÓDIGO (coluna 20). O nome
+// vem do arquivo auxiliar Municipios.zip (codigo;nome). Sem ele, município fica nulo.
+async function construirMapaMunicipios(): Promise<Map<string, string>> {
+  console.log('\n── Fase 0: Municípios (código → nome) ──')
+  const mapa = new Map<string, string>()
+  const tmpPath = join(tmpdir(), 'rfb-municipios.zip')
+  const urls = [`${STORAGE_BASE}/Municipios.zip`, `${RF_BASE}/Municipios.zip`]
+  if (!await downloadComRetry(urls, tmpPath)) {
+    console.warn('  ⚠ Municipios.zip indisponível — município NÃO será preenchido nesta execução.')
+    return mapa
+  }
+  await processarZip(tmpPath, (cols) => {
+    const cod  = cols[0]?.trim()
+    const nome = cols[1]?.trim()
+    if (cod && nome) mapa.set(cod, nome)
+  })
+  if (existsSync(tmpPath)) unlinkSync(tmpPath)
+  console.log(`  Municípios carregados: ${mapa.size.toLocaleString('pt-BR')}`)
+  return mapa
 }
 
 async function enviarBatch(batch: UpdateRecord[]): Promise<number> {
@@ -280,6 +302,7 @@ async function processarEstabelecimentos(
   cnpjsBase: Set<string>,
   basicosBase: Set<string>,
   mapaEmpresas: Map<string, { razao_social: string; porte: string | null }>,
+  mapaMunicipios: Map<string, string>,
 ): Promise<void> {
   console.log('\n── Fase 3: Estabelecimentos → enriquecimento bulk ──')
 
@@ -307,6 +330,8 @@ async function processarEstabelecimentos(
       const situacao     = SITUACAO_MAP[cols[COL.SITUACAO]?.trim()] ?? null
       const cnae         = cols[COL.CNAE]?.trim().replace(/\D/g, '') || null
       const uf           = cols[COL.UF]?.trim() || null
+      const codMunicipio = cols[COL.MUNICIPIO]?.trim() || null
+      const municipio    = codMunicipio ? (mapaMunicipios.get(codMunicipio) ?? null) : null
       const nomeFantasia = cols[COL.NOME_FANTASIA]?.trim() || null
       const email        = validarEmail(cols[COL.EMAIL] ?? null)
 
@@ -316,6 +341,7 @@ async function processarEstabelecimentos(
       if (situacao)              update.situacao      = situacao
       if (cnae)                  update.cnae_codigo   = cnae
       if (uf)                    update.uf            = uf
+      if (municipio)             update.municipio     = municipio
       if (nomeFantasia)          update.nome_fantasia = nomeFantasia
       if (email)                 update.email         = email
 
@@ -357,9 +383,10 @@ async function main() {
   const { cnpjsBase, basicosBase } = await carregarCnpjsBase()
   if (!cnpjsBase.size) { console.error('Nenhum CNPJ na base.'); process.exit(1) }
 
-  const mapaEmpresas = await construirMapaEmpresas(basicosBase)
+  const mapaMunicipios = await construirMapaMunicipios()
+  const mapaEmpresas   = await construirMapaEmpresas(basicosBase)
 
-  await processarEstabelecimentos(cnpjsBase, basicosBase, mapaEmpresas)
+  await processarEstabelecimentos(cnpjsBase, basicosBase, mapaEmpresas, mapaMunicipios)
 
   console.log(`\n✓ Concluído em ${((Date.now() - t0) / 60000).toFixed(1)} minutos`)
 }

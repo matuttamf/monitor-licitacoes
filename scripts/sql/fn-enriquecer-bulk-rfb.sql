@@ -3,7 +3,8 @@
 --
 -- Atualiza até 1000 leads por chamada via RPC.
 -- Preserva valores existentes quando o RFB não tem dado melhor.
--- Não altera: status, municipio, telefone, id, created_at.
+-- municipio: preenchido apenas quando está nulo (não sobrescreve o da API).
+-- Não altera: status, telefone, id, created_at.
 
 CREATE OR REPLACE FUNCTION enriquecer_bulk_rfb(batch JSONB)
 RETURNS INTEGER
@@ -24,6 +25,11 @@ AS $$
       situacao      = COALESCE(NULLIF(u->>'situacao', ''), l.situacao),
       cnae_codigo   = COALESCE(NULLIF(u->>'cnae_codigo', ''), l.cnae_codigo),
       uf            = COALESCE(NULLIF(u->>'uf', ''), l.uf),
+      municipio     = CASE
+                        WHEN l.municipio IS NULL AND u->>'municipio' IS NOT NULL AND u->>'municipio' != ''
+                        THEN u->>'municipio'
+                        ELSE l.municipio
+                      END,
       porte         = COALESCE(NULLIF(u->>'porte', ''), l.porte),
       email         = CASE
                         WHEN l.email IS NULL AND u->>'email' IS NOT NULL AND u->>'email' != ''

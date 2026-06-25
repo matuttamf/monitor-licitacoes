@@ -63,6 +63,17 @@ export async function GET(req: NextRequest) {
     .eq('status', 'pendente')
     .is('email', null)
 
+  // Auto-recuperação (batched): promove a 'pendente' empresas ATIVAS, com e-mail
+  // e cadastro completo que ficaram presas em 'invalido'. Drena ~5k por execução
+  // (resolve os milhões recuperáveis ao longo das execuções, sem UPDATE gigante).
+  let promovidos = 0
+  try {
+    const { data: promoData } = await supabase.rpc('promover_leads_aptos', { p_limite: 5000 })
+    promovidos = (promoData as number) ?? 0
+  } catch (e) {
+    console.error('[enriquecer-receita] erro ao promover leads aptos:', e)
+  }
+
   // Processa: (a) leads sem verificação de Receita (situacao=null)
   //           (b) leads CNAE com razao_social = cnpj (placeholder da Edge Function)
   //               detectado via regex ^\d{14}$ — só dígitos, 14 chars
@@ -87,9 +98,11 @@ export async function GET(req: NextRequest) {
   }).slice(0, 550)
 
   if (!semReceita?.length) {
+    await registrarCronLog({ job: 'enriquecer-receita', status: 'ok', mensagem: `0 verificados, ${promovidos} promovidos (fila Receita vazia)`, detalhes: { promovidos } })
     return NextResponse.json({
       ok: true,
       verificados: 0,
+      promovidos,
       limpeza_sem_email: limpezaCount ?? 0,
       motivo: 'todos os leads já foram verificados na Receita Federal',
     })
@@ -156,8 +169,8 @@ export async function GET(req: NextRequest) {
     await sleep(200)
   }
 
-  const resultado = { ok: true, verificados, ativos, inativas }
-  await registrarCronLog({ job: 'enriquecer-receita', status: 'ok', mensagem: `${verificados} verificados, ${ativos} ativos`, detalhes: resultado })
+  const resultado = { ok: true, verificados, ativos, inativas, promovidos }
+  await registrarCronLog({ job: 'enriquecer-receita', status: 'ok', mensagem: `${verificados} verificados, ${ativos} ativos, ${promovidos} promovidos`, detalhes: resultado })
   await salvarResultadoCron(supabase, 'enriquecer-receita', resultado)
   return NextResponse.json(resultado)
 }
