@@ -69,7 +69,8 @@ function CadastroConteudo() {
     e.preventDefault()
     setErro('')
     if (emailJaCadastrado)         { setErro('Este e-mail já está cadastrado. Use "Entrar" para acessar sua conta.'); return }
-    if (!nome.trim())             { setErro('Informe seu nome.'); return }
+    if (!nome.trim())             { setErro('Informe seu nome e sobrenome.'); return }
+    if (!telefone.trim())         { setErro('Informe seu telefone.'); return }
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return }
     if (senha.length < 8)         { setErro('A senha deve ter pelo menos 8 caracteres.'); return }
     if (conviteToken) {
@@ -308,10 +309,10 @@ function CadastroConteudo() {
           ) : (
             <form onSubmit={handleCadastro} className="flex flex-col gap-3.5">
               <div>
-                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">Nome</label>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">Nome e Sobrenome</label>
                 <input
                   type="text" value={nome} onChange={e => setNome(e.target.value)}
-                  placeholder="Seu nome completo" required maxLength={100}
+                  placeholder="Ex: João Silva" required maxLength={100}
                   className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
                 />
               </div>
@@ -343,12 +344,10 @@ function CadastroConteudo() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">
-                  Telefone <span className="text-[#9AA0A6] font-normal normal-case tracking-normal">(opcional)</span>
-                </label>
+                <label className="block text-[11px] font-bold tracking-[0.08em] uppercase text-[#4a4a4d] mb-1.5">Telefone</label>
                 <input
                   type="tel" value={telefone} onChange={e => setTelefone(mascaraTelefone(e.target.value))}
-                  placeholder="(00) 00000-0000" maxLength={15}
+                  placeholder="(00) 00000-0000" required maxLength={15}
                   className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#D5D2C8] bg-white text-sm text-[#1A1A1C] outline-none focus:border-[#6B0F1A] focus:ring-2 focus:ring-[rgba(107,15,26,0.1)]"
                 />
               </div>
