@@ -179,6 +179,169 @@ export async function enviarSegundaWhatsApp(
   return enviarMensagemZApi(numero, texto)
 }
 
+// ── Onboarding ────────────────────────────────────────────────────────────────
+
+const saudar = (nome: string | null): string =>
+  nome ? `Olá, *${nome}!*` : 'Olá!'
+
+export async function enviarWAPerfilIncompleto(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `${saudar(nome)} 👋\n\n` +
+    `Uma coisa rápida: seu perfil ainda está incompleto.\n\n` +
+    `Perfis completos recebem alertas mais certeiros e aparecem no Diretório de Fornecedores — ` +
+    `onde outras empresas que precisam dos seus serviços e produtos podem te encontrar.\n\n` +
+    `Leva 2 minutinhos:\n🔗 ${appUrl}/perfil`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+export async function enviarWASemKeywords(
+  telefone: string,
+  nome: string | null,
+  intervaloHoras: 12 | 24 | 48 | 72 | 96 | 120,
+): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const numero = formatarNumero(telefone)
+  const url = `${appUrl}/palavras-chave`
+
+  let texto: string
+  if (intervaloHoras === 12) {
+    texto =
+      `${nome ? `Oi, *${nome}!*` : 'Oi!'} 🔔\n\n` +
+      `Sua conta está ativa, mas você ainda não configurou nenhuma palavra-chave.\n\n` +
+      `Sem elas, o Monitor não consegue buscar licitações para você.\n\n` +
+      `⚙️ Configure agora: ${url}`
+  } else if (intervaloHoras === 24) {
+    texto =
+      `${nome ? `*${nome}*, 1 dia sem alertas` : '1 dia sem alertas'} 📭\n\n` +
+      `Configure suas palavras-chave e começa a receber em breve.\n\n` +
+      `⚙️ ${url}`
+  } else if (intervaloHoras === 48) {
+    texto =
+      `${nome ? `*${nome}* 👋` : 'Uma pergunta rápida 👋'}\n\n` +
+      `Que tipo de licitação sua empresa buscaria?\n\n` +
+      `🛒 Equipamentos? 🏗️ Obras? 💻 Serviços de TI?\n\n` +
+      `Configure em 1 minuto: ${url}`
+  } else if (intervaloHoras === 72) {
+    texto =
+      `${nome ? `*${nome}*, 3 dias sem alertas` : '3 dias sem alertas'} ⏳\n\n` +
+      `O Monitor já tem licitações para diferentes tipos de empresas. Configure agora para começar a receber.\n\n` +
+      `⚙️ ${url}`
+  } else if (intervaloHoras === 96) {
+    texto =
+      `${nome ? `*${nome}* 🤔` : '4 dias sem alertas 🤔'}\n\n` +
+      `Quatro dias sem licitações. Ainda dá tempo.\n\n` +
+      `Se sua empresa participa de licitações, o Monitor vai encontrar oportunidades para você — é só configurar.\n\n` +
+      `⚙️ ${url}`
+  } else {
+    texto =
+      `${nome ? `*${nome}*, este é meu último lembrete` : 'Este é meu último lembrete'} 🙋\n\n` +
+      `Se tiver interesse, configure suas palavras-chave agora:\n` +
+      `⚙️ ${url}\n\n` +
+      `_O Monitor continuará disponível na sua conta._`
+  }
+
+  return enviarMensagemZApi(numero, texto)
+}
+
+export async function enviarWAFornecedorD3(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `${nome ? `Olá, *${nome}!*` : 'Atenção!'} 📋\n\n` +
+    `Você sabia que outras empresas usam o Monitor para encontrar fornecedores e parceiros?\n\n` +
+    `Empresas com perfil no Diretório são encontradas por quem precisa de subcontratados, ` +
+    `parceiros ou fornecedores do seu segmento.\n\n` +
+    `Crie o seu agora:\n🔗 ${appUrl}/fornecedor`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+export async function enviarWATelegramD5(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `${nome ? `Olá, *${nome}!*` : 'Uma dica rápida'} 📲\n\n` +
+    `Ative os alertas no Telegram — sem custo extra, já incluído no seu plano.\n\n` +
+    `*Como ativar em 3 passos:*\n` +
+    `1. Abra o Telegram e busque *@MonitorLicitacoesBot*\n` +
+    `2. Envie /start\n` +
+    `3. Cole o código que aparece no seu painel\n\n` +
+    `_Painel: ${appUrl}/perfil_`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+// ── Trial ─────────────────────────────────────────────────────────────────────
+
+export async function enviarWATrialDia3(
+  telefone: string,
+  nome: string | null,
+  count: number,
+  termos: string[],
+): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const numero = formatarNumero(telefone)
+
+  const abertura = nome ? `*${nome}*, 3 dias de Monitor 📊` : '3 dias de Monitor 📊'
+  const contagem = count > 0 && termos.length > 0
+    ? `Já encontramos *${count.toLocaleString('pt-BR')} licitaç${count !== 1 ? 'ões' : 'ão'}* para "${termos.slice(0, 2).join('", "')}".`
+    : 'O Monitor rastreia oportunidades em tempo real — sem você precisar vasculhar portais.'
+
+  const texto =
+    `${abertura}\n\n` +
+    `${contagem}\n\n` +
+    `Continue tendo esse acesso por apenas *a partir de R$ 49,90/mês*.\n\n` +
+    `🔗 ${appUrl}/assinar`
+  return enviarMensagemZApi(numero, texto)
+}
+
+export async function enviarWATrialExpirando(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `⏰ ${nome ? `*${nome}*, seu trial termina amanhã.` : 'Seu trial termina amanhã.'}\n\n` +
+    `Não perca o acesso às licitações monitoradas até aqui.\n\n` +
+    `Assine agora por *a partir de R$ 49,90/mês*:\n🔗 ${appUrl}/assinar`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+// ── Pós-assinatura ────────────────────────────────────────────────────────────
+
+export async function enviarWAPosAssinaturaDia1(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `${nome ? `*${nome}*, seu plano está ativo!` : 'Seu plano está ativo!'} ✅\n\n` +
+    `Configure suas palavras-chave para começar a receber alertas de licitações.\n\n` +
+    `⚙️ ${appUrl}/palavras-chave`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+export async function enviarWAPosAssinaturaDia7(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `${nome ? `*${nome}*, primeira semana completa` : 'Primeira semana completa'} 📈\n\n` +
+    `Dica: ative os alertas no Telegram para receber avisos em tempo real, mesmo fora do painel.\n\n` +
+    `Busque *@MonitorLicitacoesBot* no Telegram para ativar.\n\n` +
+    `_Painel: ${appUrl}/perfil_`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+// ── Reconversão ───────────────────────────────────────────────────────────────
+
+export async function enviarWAReconversao(telefone: string, nome: string | null): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `${nome ? `*${nome}* 👋` : 'Olá! 👋'}\n\n` +
+    `Seu trial encerrou, mas as licitações continuam saindo.\n\n` +
+    `Assine agora e retome o monitoramento por *a partir de R$ 49,90/mês*:\n🔗 ${appUrl}/assinar`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
 /** Notifica o admin sobre novo cadastro */
 export async function notificarAdminNovoCadastro(
   emailUsuario: string,

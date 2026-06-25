@@ -7,6 +7,7 @@ import {
   enviarEmailPosAssinaturaDia7,
   enviarEmailPosAssinaturaDia30,
 } from '@/lib/emails/assinatura'
+import { enviarWAPosAssinaturaDia1, enviarWAPosAssinaturaDia7 } from '@/lib/alerts/whatsapp'
 
 export const maxDuration = 300
 
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, plano, status, email_pausado_ate, assinatura_inicio')
+    .select('id, plano, status, email_pausado_ate, assinatura_inicio, nome, whatsapp')
     .eq('status', 'active')
     .not('assinatura_inicio', 'is', null)
     .or([
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
     try {
       if (tipo === 'dia1') {
         await enviarEmailPosAssinaturaDia1(email, profile.plano ?? 'basic')
+        if (profile.whatsapp) await enviarWAPosAssinaturaDia1(profile.whatsapp, profile.nome ?? null)
 
       } else if (tipo === 'dia7') {
         const kIds = await keywordIds(supabase, profile.id)
@@ -102,6 +104,7 @@ export async function GET(request: Request) {
           totalAlertas ?? 0,
           totalLicitacoes ?? 0,
         )
+        if (profile.whatsapp) await enviarWAPosAssinaturaDia7(profile.whatsapp, profile.nome ?? null)
 
       } else if (tipo === 'dia30') {
         const kIds = await keywordIds(supabase, profile.id)

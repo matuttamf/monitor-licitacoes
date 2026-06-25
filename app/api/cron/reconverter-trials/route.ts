@@ -16,6 +16,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { emailReconversao } from '@/lib/emails/reconversao'
 import { trackResend } from '@/lib/uso-apis'
+import { enviarWAReconversao } from '@/lib/alerts/whatsapp'
 
 export const maxDuration = 60
 
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
   // Primeiro: expirados há 1-3 dias (prioridade máxima — janela quente)
   const { data: prioritarios } = await supabase
     .from('profiles')
-    .select('id, email, nome, trial_fim, reconversao_email_em')
+    .select('id, email, nome, whatsapp, trial_fim, reconversao_email_em')
     .in('status', ['trial', 'expired'])
     .lt('trial_fim', limite1dia.toISOString())
     .gte('trial_fim', limite30dias.toISOString())
@@ -107,6 +108,8 @@ export async function GET(req: NextRequest) {
         .from('profiles')
         .update({ reconversao_email_em: new Date().toISOString() })
         .eq('id', perfil.id)
+
+      if (perfil.whatsapp) await enviarWAReconversao(perfil.whatsapp, perfil.nome ?? null)
 
       enviados++
     } catch (e: unknown) {

@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { enviarEmailDia3, enviarEmailUrgencia } from '@/lib/emails/trial'
+import { enviarWATrialDia3, enviarWATrialExpirando } from '@/lib/alerts/whatsapp'
 
 export const maxDuration = 300
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   // Buscar usuários em trial
   const { data: usuarios } = await supabase
     .from('profiles')
-    .select('id, trial_inicio, trial_fim, status')
+    .select('id, trial_inicio, trial_fim, status, nome, whatsapp')
     .eq('status', 'trial')
 
   if (!usuarios?.length) return NextResponse.json({ ok: true, enviados: 0 })
@@ -69,12 +70,14 @@ export async function GET(request: Request) {
         }
 
         await enviarEmailDia3(email, count, termos)
+        if (usuario.whatsapp) await enviarWATrialDia3(usuario.whatsapp, usuario.nome ?? null, count, termos)
         enviados++
       }
 
       // Expira amanhã: e-mail de urgência (baseado em trial_fim, cobre trials de duração variável)
       if (expiraAmanha) {
         await enviarEmailUrgencia(email)
+        if (usuario.whatsapp) await enviarWATrialExpirando(usuario.whatsapp, usuario.nome ?? null)
         enviados++
       }
     } catch (error) {
