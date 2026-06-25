@@ -49,3 +49,5 @@ next-env.d.ts
 .claude/launch.json
 *.png
 !public/*.png
+
+.preview/

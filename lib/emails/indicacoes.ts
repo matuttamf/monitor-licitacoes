@@ -60,15 +60,10 @@ const moeda = (v: number) =>
 
 // ── Usuário ficou apto a indicar ────────────────────────────────────────────
 
-export async function enviarEmailIndicaApto(email: string, nome: string | null, codigo: string): Promise<void> {
-  const resend = getResend()
-  trackResend()
+/** HTML do e-mail de aptidão (exposto para preview/testes — idêntico ao enviado). */
+export function htmlIndicaApto(nome: string | null, codigo: string): string {
   const link = `${APP_URL}/r/${codigo}`
-  await resend.emails.send({
-    from: FROM,
-    to: email,
-    subject: '🚀 Convide amigos e ganhe meses grátis',
-    html: baseEmail(`
+  return baseEmail(`
   <tr><td style="padding:32px 28px 0;">
     <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Novidade · Convide amigos</div>
     <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
@@ -98,7 +93,17 @@ export async function enviarEmailIndicaApto(email: string, nome: string | null, 
     </p>
   </td></tr>
   <tr><td style="padding:0 28px 32px;"></td></tr>
-    `),
+    `)
+}
+
+export async function enviarEmailIndicaApto(email: string, nome: string | null, codigo: string): Promise<void> {
+  const resend = getResend()
+  trackResend()
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: '🚀 Convide amigos e ganhe meses grátis',
+    html: htmlIndicaApto(nome, codigo),
   })
 }
 
