@@ -78,12 +78,19 @@ export function IndicaWidget() {
             Cada amigo que assinar pelo seu link vale <strong style={{ color: '#C9A65A' }}>+30 dias grátis</strong>.
           </p>
         )}
-        <p style={{ fontSize: 13, margin: '0 0 16px', color: 'rgba(255,255,255,0.7)' }}>
+        <p style={{ fontSize: 13, margin: '0 0 12px', color: 'rgba(255,255,255,0.7)' }}>
           Continue economizando e ganhando <strong>+30 dias grátis</strong> a cada indicação.
           {(convertidos > 0 || aguardando > 0) && (
             <> {' · '}{convertidos} convertido{convertidos !== 1 ? 's' : ''}{aguardando > 0 ? `, ${aguardando} em carência` : ''}.</>
           )}
         </p>
+
+        {(d.creditosDias ?? 0) > 0 && (
+          <div style={{ display: 'inline-block', background: 'rgba(201,166,90,0.18)', border: '1px solid rgba(201,166,90,0.4)', borderRadius: 8, padding: '6px 12px', marginBottom: 14 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#C9A65A' }}>🎁 {d.creditosDias} dias de prêmio</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}> a aplicar na próxima cobrança</span>
+          </div>
+        )}
 
         {/* Link + copiar */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>

@@ -88,6 +88,27 @@ export async function atualizarValorAssinatura(
   return res.ok
 }
 
+/**
+ * Altera o status de uma assinatura no MercadoPago.
+ * 'paused' pausa a cobrança recorrente; 'authorized' retoma.
+ * Usado para entregar os dias de prêmio de indicação (pausa a cobrança enquanto
+ * o crédito cobre o período, sem perder o cartão tokenizado).
+ */
+export async function alterarStatusAssinatura(
+  subscriptionId: string,
+  status: 'paused' | 'authorized',
+): Promise<boolean> {
+  const res = await fetch(`https://api.mercadopago.com/preapproval/${subscriptionId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ACCESS_TOKEN}`,
+    },
+    body: JSON.stringify({ status }),
+  })
+  return res.ok
+}
+
 /** Busca dados de uma assinatura no MercadoPago (next_payment_date etc.) */
 export async function buscarAssinatura(subscriptionId: string): Promise<Record<string, unknown> | null> {
   const res = await fetch(`https://api.mercadopago.com/preapproval/${subscriptionId}`, {

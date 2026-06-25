@@ -377,13 +377,19 @@ export async function POST(request: Request) {
       // Não limpar mp_subscription_id para que a reativação funcione.
       const { data: perfilPausa } = await supabase
         .from('profiles')
-        .select('status')
+        .select('status, credito_pausa_ate')
         .eq('id', userId)
         .maybeSingle()
 
-      if (perfilPausa?.status === 'paused') {
-        await logWebhook({ tipo: type, dataId, status: 'ignorado', userId, mensagem: 'pausa já gerenciada pelo sistema' })
-        console.log(`[webhook/mp] Pausa ignorada (já gerenciada pelo sistema): user=${userId}`)
+      const emCreditoPausa = perfilPausa?.credito_pausa_ate
+        && new Date(perfilPausa.credito_pausa_ate) > new Date()
+
+      if (perfilPausa?.status === 'paused' || emCreditoPausa) {
+        // Pausa gerenciada pelo sistema: pausa manual (status=paused) OU pausa de
+        // crédito de indicação (status=active + credito_pausa_ate no futuro).
+        // Não tratar como cancelamento — o cron retoma a cobrança no fim da janela.
+        await logWebhook({ tipo: type, dataId, status: 'ignorado', userId, mensagem: emCreditoPausa ? 'pausa de credito de indicacao' : 'pausa já gerenciada pelo sistema' })
+        console.log(`[webhook/mp] Pausa ignorada (gerenciada pelo sistema): user=${userId}`)
       } else {
         // Pausa externa (pelo painel do MP) — tratar como cancelamento
         const proximaCobranca: string | null = subscription.next_payment_date

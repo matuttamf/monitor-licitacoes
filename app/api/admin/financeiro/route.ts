@@ -34,7 +34,7 @@ export async function GET() {
       id, status, plano, periodo, trial_inicio, trial_fim, criado_em,
       nome, empresa, telefone, whatsapp,
       mp_subscription_id, assinatura_inicio, valor_mensalidade, acesso_ate,
-      campanha_id,
+      campanha_id, credito_pausa_ate,
       cnpj, cpf, tipo_pessoa, razao_social, nome_fantasia, ie,
       cep, logradouro, numero, complemento, bairro, cidade, estado_uf,
       status_nf
@@ -140,6 +140,13 @@ export async function GET() {
   const expirados        = assinantes.filter(a => a.status === 'expired' || a.status === 'bloqueado')
   const trialsNaoConvert = expirados.filter(a => !a.mp_subscription_id && !a.assinatura_inicio)
 
+  // Assinantes ativos cuja cobrança está pausada por crédito de indicação
+  // (mês grátis em andamento) — não geram receita neste ciclo, mas voltam a cobrar.
+  const emCreditoPausa = profilesSemAdmin.filter(p =>
+    p.status === 'active' && (p as { credito_pausa_ate?: string | null }).credito_pausa_ate
+    && new Date((p as { credito_pausa_ate?: string | null }).credito_pausa_ate!) > hoje
+  ).length
+
   const mrr = pagantes.reduce((acc, a) => acc + (a.valor_mensalidade ?? 0), 0)
 
   // Churn: assinaturas pagas que encerraram nos últimos 30 dias
@@ -175,6 +182,7 @@ export async function GET() {
     totalExpirados:       expirados.length,
     ticketMedio:          pagantes.length ? mrr / pagantes.length : 0,
     churnMensal,
+    emCreditoPausa,       // assinantes em mês grátis por indicação (não cobram neste ciclo)
     taxaConversao:        totalTrials ? Math.round((totalConvertidos / totalTrials) * 100) : 0,
     novas7d:              novas7d.length,
     receita7d,
