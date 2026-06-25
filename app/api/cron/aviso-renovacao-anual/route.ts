@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, plano, periodo, valor_mensalidade, assinatura_inicio, email_pausado_ate')
+    .select('id, plano, periodo, valor_mensalidade, assinatura_inicio')
     .eq('status', 'active')
     .eq('periodo', 'anual')
     .not('assinatura_inicio', 'is', null)
@@ -63,7 +63,6 @@ export async function GET(request: Request) {
   for (const profile of naJanela) {
     const email = emailMap[profile.id]
     if (!email) continue
-    if (profile.email_pausado_ate && new Date(profile.email_pausado_ate) > agora) continue
 
     const inicio = new Date(profile.assinatura_inicio!)
     const proximoAniversario = new Date(inicio)
