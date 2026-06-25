@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { FilaAlertasCard } from './FilaAlertasCard'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -292,6 +293,9 @@ export default function AdminPage() {
           ))}
         </div>
       )}
+
+      {/* ── Fila de alertas por canal (tempo real) ── */}
+      <FilaAlertasCard />
 
       {/* ── Funil de Leads ── */}
       {stats && stats.leadsTotal > 0 && (() => {
