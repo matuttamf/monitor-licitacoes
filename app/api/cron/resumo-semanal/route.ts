@@ -15,7 +15,6 @@ import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { enviarTextoTelegram } from '@/lib/alerts/telegram'
 import { enviarResumoSemanalWhatsApp } from '@/lib/alerts/whatsapp'
-import { temWhatsApp } from '@/lib/planos'
 
 export const maxDuration = 300
 

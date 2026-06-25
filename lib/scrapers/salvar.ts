@@ -25,6 +25,20 @@ function chaveDedup(l: LicitacaoRaw): string {
   return 'c-' + createHash('sha1').update(raw).digest('hex').slice(0, 24)
 }
 
+/**
+ * Sanitiza o valor estimado. O PNCP (e outras fontes) às vezes traz valores
+ * digitados com erro pelo próprio órgão — ex.: R$ 10.000.000.000.000 (10 trilhões),
+ * o que infla o card e o "volume total" do painel. Nenhuma licitação pública real
+ * passa de ~R$ 100 bilhões; acima disso tratamos como "valor não informado" (null).
+ * Negativos e zero também viram null.
+ */
+const TETO_VALOR = 100_000_000_000 // R$ 100 bilhões
+function sanitizarValor(v: number | null | undefined): number | null {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return null
+  if (v <= 0 || v > TETO_VALOR) return null
+  return v
+}
+
 export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<number> {
   if (licitacoes.length === 0) return 0
 
@@ -35,7 +49,7 @@ export async function salvarLicitacoes(licitacoes: LicitacaoRaw[]): Promise<numb
     numero_edital:  chaveDedup(l),
     orgao:          l.orgao,
     objeto:         l.objeto,
-    valor_estimado: l.valor_estimado ?? null,
+    valor_estimado: sanitizarValor(l.valor_estimado),
     data_abertura:  l.data_abertura ?? null,
     url:            l.url,
     estado:         l.estado ?? null,
