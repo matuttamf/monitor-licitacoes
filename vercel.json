@@ -33,7 +33,8 @@
     { "path": "/api/cron/reconverter-trials",    "schedule": "0 11-21 * * 1-5"   },
     { "path": "/api/cron/emails-pos-assinatura",  "schedule": "0 13 * * *"         },
     { "path": "/api/cron/sync-assinaturas",      "schedule": "*/2 * * * *"        },
-    { "path": "/api/cron/reverter-descontos",    "schedule": "0 4 * * *"          },
+    { "path": "/api/cron/reverter-descontos",       "schedule": "0 4 * * *"          },
+    { "path": "/api/cron/aviso-renovacao-anual",  "schedule": "0 12 * * *"         },
     { "path": "/api/cron/backup-db",             "schedule": "0 3 * * 0"          },
     { "path": "/api/cron/coletar-resultados",                "schedule": "0 4,8,12,16,20 * * *" },
     { "path": "/api/cron/coletar-resultados-transparencia", "schedule": "0 4,8,12,16,20 * * *" }

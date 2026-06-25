@@ -207,9 +207,23 @@ function CheckoutConteudo() {
           : 'Continuar para pagamento →'}
       </button>
 
-      <p className="text-xs text-[#9AA0A6] mt-4 text-center">
-        Conforme o Código de Defesa do Consumidor, você tem <strong>7 dias</strong> para cancelar sem custo.
-      </p>
+      <div className="mt-4 space-y-2">
+        {periodo === 'anual' && (
+          <p className="text-xs text-[#4a4a4d] text-center bg-[#FBF9F4] border border-[#E6E2D8] rounded-xl px-4 py-3 leading-relaxed">
+            🔄 <strong>Renovação automática:</strong> este plano renova por mais 12 meses no aniversário da assinatura. Você receberá um aviso por e-mail 30 dias antes.{' '}
+            <Link href="/perfil" className="text-[#6B0F1A] font-semibold no-underline">Cancele quando quiser</Link> pelo painel.
+          </p>
+        )}
+        {periodo === 'mensal' && (
+          <p className="text-xs text-[#4a4a4d] text-center bg-[#FBF9F4] border border-[#E6E2D8] rounded-xl px-4 py-3 leading-relaxed">
+            🔄 <strong>Renovação automática mensal.</strong>{' '}
+            <Link href="/perfil" className="text-[#6B0F1A] font-semibold no-underline">Cancele quando quiser</Link> pelo painel.
+          </p>
+        )}
+        <p className="text-xs text-[#9AA0A6] text-center">
+          Conforme o Código de Defesa do Consumidor, você tem <strong>7 dias</strong> para cancelar sem custo.
+        </p>
+      </div>
     </Casca>
   )
 }

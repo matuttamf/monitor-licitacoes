@@ -367,3 +367,94 @@ export async function enviarEmailPosAssinaturaDia30(
     `),
   })
 }
+
+// ── Aviso de renovação anual (30 dias antes) ──────────────────────────────────
+export async function enviarAvisoRenovacaoAnual(
+  email: string,
+  plano: string,
+  valorAnual: number,
+  dataRenovacao: Date,
+): Promise<void> {
+  const resend = getResend()
+  trackResend()
+
+  const nomePlano = plano === 'basic' ? 'Basic'
+    : plano === 'profissional' ? 'Profissional'
+    : plano === 'gestao' ? 'Gestão'
+    : plano === 'empresarial' ? 'Empresarial'
+    : plano
+
+  const valorFmt = valorAnual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const dataFmt  = dataRenovacao.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Seu plano anual renova em 30 dias — ${valorFmt} em ${dataFmt}`,
+    html: baseEmail(`
+  <!-- Hero -->
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Aviso de renovação · Plano ${nomePlano}</div>
+    <h1 style="color:#1A1A1C;font-size:26px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      Seu plano anual renova<br>
+      <span style="color:#6B0F1A;font-style:italic;">em 30 dias.</span>
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Conforme os Termos de Uso e o Código de Defesa do Consumidor, estamos avisando com antecedência: sua assinatura do Plano ${nomePlano} será renovada automaticamente em <strong>${dataFmt}</strong> pelo valor de <strong>${valorFmt}</strong>.
+    </p>
+  </td></tr>
+
+  <!-- Caixa de renovação -->
+  <tr><td style="padding:0 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF6F0;border-radius:14px;border:1px solid #E8E4DC;">
+      <tr><td style="padding:24px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="color:#9AA0A6;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Plano</td>
+            <td style="color:#1A1A1C;font-size:14px;font-weight:700;text-align:right;">Monitor de Licitações ${nomePlano}</td>
+          </tr>
+          <tr><td colspan="2" style="height:10px;"></td></tr>
+          <tr>
+            <td style="color:#9AA0A6;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Data de renovação</td>
+            <td style="color:#1A1A1C;font-size:14px;font-weight:700;text-align:right;">${dataFmt}</td>
+          </tr>
+          <tr><td colspan="2" style="height:10px;"></td></tr>
+          <tr>
+            <td style="color:#9AA0A6;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Valor</td>
+            <td style="color:#6B0F1A;font-size:20px;font-weight:700;text-align:right;">${valorFmt}<span style="color:#9AA0A6;font-size:12px;font-weight:400;">/ano</span></td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Não quer renovar -->
+  <tr><td style="padding:0 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8F8;border-radius:14px;border:1px solid #F0DADA;">
+      <tr><td style="padding:20px 24px;">
+        <div style="color:#6B0F1A;font-size:13px;font-weight:700;margin-bottom:6px;">Não quer renovar?</div>
+        <p style="color:#4a4a4d;font-size:13px;line-height:1.6;margin:0 0 14px;">
+          Cancele a qualquer momento pelo painel, sem burocracia. Se cancelar antes de <strong>${dataFmt}</strong>, a cobrança não ocorre.
+        </p>
+        <a href="${APP_URL}/perfil"
+           style="display:inline-block;background:white;border:1.5px solid #6B0F1A;color:#6B0F1A;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:700;font-size:13px;">
+          Cancelar assinatura →
+        </a>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Quer continuar -->
+  <tr><td style="padding:0 28px 40px;text-align:center;">
+    <p style="color:#4a4a4d;font-size:14px;margin:0 0 16px;">Não precisa fazer nada — a renovação é automática.</p>
+    <a href="${APP_URL}/dashboard"
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;padding:15px 40px;border-radius:12px;font-weight:700;font-size:15px;">
+      Continuar acessando o painel →
+    </a>
+    <p style="color:#9AA0A6;font-size:12px;margin:16px 0 0;">
+      Dúvidas? <a href="https://wa.me/5531998317066" style="color:#6B0F1A;font-weight:600;text-decoration:none;">Fale no WhatsApp</a>
+    </p>
+  </td></tr>
+    `),
+  })
+}
