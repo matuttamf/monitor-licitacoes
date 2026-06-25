@@ -342,6 +342,58 @@ export async function enviarWAReconversao(telefone: string, nome: string | null)
   return enviarMensagemZApi(formatarNumero(telefone), texto)
 }
 
+// ── Indicações ────────────────────────────────────────────────────────────────
+
+/** Avisa o usuário que ele está apto a indicar amigos (envia o link próprio). */
+export async function enviarWAIndicaApto(telefone: string, nome: string | null, codigo: string): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `🚀 ${nome ? `*${nome}*, novidade!` : 'Novidade!'}\n\n` +
+    `Agora você pode *convidar amigos e ganhar meses grátis*.\n\n` +
+    `A cada amigo que assina um plano pago pelo seu link:\n` +
+    `🎁 *+30 dias grátis* para você (acumulativo, sem limite)\n` +
+    `💸 *20% de desconto* na primeira assinatura do seu amigo\n\n` +
+    `Seu link de convite:\n🔗 ${appUrl}/r/${codigo}\n\n` +
+    `Regras: amigo assina → permanece 10 dias → seus 30 dias são liberados.\n` +
+    `📄 Regulamento: ${appUrl}/regulamento-indicacoes`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+/** Avisa o usuário que a recompensa foi liberada. */
+export async function enviarWAIndicaRecompensa(
+  telefone: string,
+  nome: string | null,
+  economiaTotal: number,
+): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const econ = economiaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+  const texto =
+    `🎉 ${nome ? `*${nome}*, seu amigo assinou!` : 'Seu amigo assinou!'}\n\n` +
+    `Você ganhou *+30 dias grátis* — já creditados na sua conta. ✅\n\n` +
+    `Você já economizou *${econ}* com indicações.\n\n` +
+    `Continue convidando e ganhando:\n🔗 ${appUrl}/dashboard`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
+/** Notifica o admin que um usuário virou candidato a afiliado (10+ indicações). */
+export async function notificarAdminCandidatoAfiliado(
+  emailUsuario: string,
+  nomeUsuario: string | null,
+  totalIndicacoes: number,
+): Promise<void> {
+  const adminPhone = process.env.ADMIN_WHATSAPP
+  if (!process.env.ZAPI_INSTANCE_ID || !adminPhone) return
+  const texto =
+    `🤝 *Candidato a afiliado — Monitor de Licitações*\n\n` +
+    `👤 ${nomeUsuario ? `*${nomeUsuario}*` : 'Usuário'}\n` +
+    `📧 ${emailUsuario}\n` +
+    `📈 ${totalIndicacoes} indicações convertidas\n\n` +
+    `Avalie convidá-lo para o programa de afiliados (comissão financeira).`
+  await enviarMensagemZApi(formatarNumero(adminPhone), texto).catch(() => {})
+}
+
 /** Notifica o admin sobre novo cadastro */
 export async function notificarAdminNovoCadastro(
   emailUsuario: string,

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('cnpj, cpf, campanha_id, status, plano, mp_subscription_id, periodo')
+    .select('cnpj, cpf, campanha_id, status, plano, mp_subscription_id, periodo, indicado_por')
     .eq('id', user.id)
     .single()
 
@@ -78,6 +78,18 @@ export async function POST(request: Request) {
     if (campanha && campanha.desconto_percentual > 0 && campanha.desconto_meses > 0) {
       descontoPercentual = campanha.desconto_percentual
       descontoMeses      = campanha.desconto_meses
+      precoFinal         = Math.round(precoFinal * (1 - descontoPercentual / 100) * 100) / 100
+    }
+  }
+
+  // 3) Fallback de menor prioridade: convite de usuário (20% só na 1ª assinatura).
+  //    Cupom/campanha/parceiro sempre sobrepõem — só aplica se nada acima incidiu
+  //    e o usuário ainda não tem assinatura ativa (primeira assinatura).
+  if (descontoPercentual === 0 && profile?.indicado_por && profile?.status !== 'active') {
+    const { indicacoesAtiva, DESCONTO_AMIGO_PERCENTUAL } = await import('@/lib/indicacoes')
+    if (await indicacoesAtiva(adminDb)) {
+      descontoPercentual = DESCONTO_AMIGO_PERCENTUAL
+      descontoMeses      = periodoValido === 'anual' ? 12 : 1 // 1º ciclo apenas
       precoFinal         = Math.round(precoFinal * (1 - descontoPercentual / 100) * 100) / 100
     }
   }

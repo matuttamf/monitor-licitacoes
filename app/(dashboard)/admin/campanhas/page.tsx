@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { IndicacoesAdmin } from './IndicacoesAdmin'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ export default function CampanhasPage() {
   const [totais, setTotais]         = useState<Totais | null>(null)
   const [mpConfig, setMpConfig]     = useState<MpConfig | null>(null)
   const [carregando, setCarregando] = useState(true)
-  const [aba, setAba]               = useState<'campanhas' | 'configuracoes'>('campanhas')
+  const [aba, setAba]               = useState<'campanhas' | 'indicacoes' | 'configuracoes'>('campanhas')
   const [criando, setCriando]       = useState(false)
   const [editando, setEditando]     = useState<Campanha | null>(null)
   const [salvando, setSalvando]     = useState(false)
@@ -359,7 +360,7 @@ export default function CampanhasPage() {
 
       {/* Abas */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
-        {([['campanhas','📣 Campanhas'], ['configuracoes','⚙ Configurações de Pagamento']] as const).map(([id, label]) => (
+        {([['campanhas','📣 Campanhas'], ['indicacoes','🚀 Indicações'], ['configuracoes','⚙ Configurações de Pagamento']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setAba(id)}
             style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
               background: aba === id ? 'var(--vinho)' : 'white', color: aba === id ? 'white' : 'var(--cinza)',
@@ -531,6 +532,9 @@ export default function CampanhasPage() {
           )}
         </>
       )}
+
+      {/* ══ ABA INDICAÇÕES ══ */}
+      {aba === 'indicacoes' && <IndicacoesAdmin />}
 
       {/* ══ ABA CONFIGURAÇÕES MP ══ */}
       {aba === 'configuracoes' && (

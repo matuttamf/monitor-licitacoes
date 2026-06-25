@@ -6,6 +6,7 @@ import { enviarEmailBoasVindas } from '@/lib/emails/trial'
 import { notificarAdminNovoCadastro } from '@/lib/alerts/whatsapp'
 import { notificarAdminNovoCadastro as notificarAdminEmail } from '@/lib/emails/admin'
 import { resolverRef } from '@/lib/afiliados'
+import { resolverIndicaCodigo, indicacoesAtiva } from '@/lib/indicacoes'
 
 export async function GET(request: NextRequest) {
   const qs         = new URL(request.url).searchParams
@@ -90,7 +91,15 @@ export async function GET(request: NextRequest) {
                 atribUpdate.campanha_id = resolvido.campanhaId
                 if (resolvido.tipo === 'afiliado') atribUpdate.afiliado_id = resolvido.afiliadoId
               } else {
-                atribUpdate.utm_source = atribUpdate.utm_source ?? ref // fallback: guarda como source
+                // Pode ser um código pessoal de indicação (convite usuário→amigo)
+                const indica = await indicacoesAtiva(adminClient)
+                  ? await resolverIndicaCodigo(adminClient, ref)
+                  : null
+                if (indica && indica.indicadorId !== userId) {
+                  atribUpdate.indicado_por = indica.indicadorId
+                } else {
+                  atribUpdate.utm_source = atribUpdate.utm_source ?? ref // fallback: guarda como source
+                }
               }
             }
 

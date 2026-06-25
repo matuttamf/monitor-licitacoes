@@ -223,7 +223,7 @@ export async function POST(request: Request) {
       // Também verifica bloqueio administrativo — se bloqueado_admin=true, não reativa o acesso
       const { data: perfilAtual } = await supabase
         .from('profiles')
-        .select('assinatura_inicio, bloqueado_admin, campanha_id, afiliado_id')
+        .select('assinatura_inicio, bloqueado_admin, campanha_id, afiliado_id, indicado_por')
         .eq('id', userId)
         .maybeSingle()
 
@@ -300,6 +300,27 @@ export async function POST(request: Request) {
           }
         } catch (e) {
           console.error('[webhook/mp] Erro ao processar comissão de afiliado:', e)
+        }
+      }
+
+      // Registrar indicação na primeira ativação: amigo pagou → status 'assinou'.
+      // A recompensa só é liberada após 10 dias sem cancelamento (cron indicacoes-liberar).
+      // Afiliado não gera recompensa de +30 dias (benefícios nunca acumulam).
+      if (!perfilAtual?.assinatura_inicio && perfilAtual?.indicado_por && !perfilAtual?.afiliado_id) {
+        try {
+          const valorEcon = valorMensalidade ?? PRECOS_PLANO[planoId] ?? 0
+          const { error: errInd } = await supabase.from('indicacoes').upsert({
+            indicador_id:             perfilAtual.indicado_por,
+            indicado_id:              userId,
+            codigo:                   '',
+            status:                   'assinou',
+            assinatura_confirmada_em: new Date().toISOString(),
+            valor_economia:           valorEcon,
+          }, { onConflict: 'indicado_id' })
+          if (errInd) console.error('[webhook/mp] Erro ao registrar indicação:', errInd)
+          else console.log(`[webhook/mp] Indicação registrada: indicador=${perfilAtual.indicado_por} amigo=${userId}`)
+        } catch (e) {
+          console.error('[webhook/mp] Erro ao processar indicação:', e)
         }
       }
 
@@ -393,11 +414,34 @@ export async function POST(request: Request) {
         voucher_desconto_ate:        null,
       }
 
-      if (proximaCobranca) {
-        updateCancelado.acesso_ate = new Date(proximaCobranca).toISOString()
+      // Crédito de indicação: ao cancelar, o usuário mantém acesso apenas até
+      // expirar o prêmio acumulado (hoje + dias de crédito). Consome os créditos.
+      const { data: perfilCancel } = await supabase
+        .from('profiles')
+        .select('indica_creditos_dias')
+        .eq('id', userId)
+        .maybeSingle()
+      const creditos = perfilCancel?.indica_creditos_dias ?? 0
+
+      let acessoBase = proximaCobranca ? new Date(proximaCobranca) : new Date()
+      if (creditos > 0) {
+        const porPremio = new Date(Date.now() + creditos * 24 * 60 * 60 * 1000)
+        if (porPremio > acessoBase) acessoBase = porPremio
+        updateCancelado.indica_creditos_dias = 0 // consumidos ao virar acesso fixo
+      }
+
+      if (proximaCobranca || creditos > 0) {
+        updateCancelado.acesso_ate = acessoBase.toISOString()
       } else {
         updateCancelado.status = 'expired'
       }
+
+      // Se o cancelante é um amigo ainda na carência, a indicação não conta.
+      await supabase
+        .from('indicacoes')
+        .update({ status: 'cancelada' })
+        .eq('indicado_id', userId)
+        .eq('status', 'assinou')
 
       await supabase.from('profiles').update(updateCancelado).eq('id', userId)
       await logWebhook({ tipo: type, dataId, status: 'ok', userId, mensagem: `cancelado${proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado imediatamente'}` })

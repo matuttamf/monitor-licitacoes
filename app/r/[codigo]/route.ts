@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolverRef } from '@/lib/afiliados'
+import { resolverIndicaCodigo, indicacoesAtiva, COOKIE_INDICA_MAX_AGE } from '@/lib/indicacoes'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,22 @@ export async function GET(
 
   const ref = await resolverRef(admin, codigo)
   if (!ref) {
+    // Pode ser um código pessoal de indicação (8 chars). Cookie de 24h apenas.
+    if (await indicacoesAtiva(admin)) {
+      const indica = await resolverIndicaCodigo(admin, codigo)
+      if (indica) {
+        const destino = new URL(APP_URL)
+        destino.searchParams.set('ref', codigo.toLowerCase())
+        const resp = NextResponse.redirect(destino)
+        resp.cookies.set('affiliate_ref', codigo.toLowerCase(), {
+          maxAge: COOKIE_INDICA_MAX_AGE, // 24h — convites de usuário expiram rápido
+          path: '/',
+          httpOnly: false,
+          sameSite: 'lax',
+        })
+        return resp
+      }
+    }
     return NextResponse.redirect(new URL('/', request.url))
   }
 

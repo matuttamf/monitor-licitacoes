@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import LogoutButton from './components/LogoutButton'
 import { NavItem } from './components/NavItem'
 import { MobileMenuDrawer } from './components/MobileMenuDrawer'
+import { IndicaWidget } from './components/IndicaWidget'
 import { temMultiUsuario, temRadar, temFornecedores, temPrecosFiltros } from '@/lib/planos'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
@@ -172,6 +173,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Conteúdo */}
       <main className="flex-1 min-w-0 p-4 md:p-8 overflow-auto pt-[60px] md:pt-8 pb-4 md:pb-8">
         {children}
+        {/* Widget de indicações — aparece no rodapé apenas quando a campanha está
+            ativa, o usuário está apto e não é afiliado (auto-oculta caso contrário) */}
+        {!profile?.owner_id && !isAfiliado && <IndicaWidget />}
       </main>
 
       {/* Mobile menu drawer (hamburger top-right) */}
