@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   // Buscar usuários em trial
   const { data: usuarios } = await supabase
     .from('profiles')
-    .select('id, trial_inicio, trial_fim, status, nome, whatsapp')
+    .select('id, trial_inicio, trial_fim, status, nome, whatsapp, whatsapp_pausado_ate')
     .eq('status', 'trial')
 
   if (!usuarios?.length) return NextResponse.json({ ok: true, enviados: 0 })

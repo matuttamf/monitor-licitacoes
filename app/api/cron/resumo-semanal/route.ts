@@ -228,13 +228,14 @@ export async function GET(request: Request) {
   // Buscar perfis
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, status, plano, telegram_chat_id, whatsapp')
+    .select('id, nome, status, plano, telegram_chat_id, whatsapp, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
   let totalUsuarios = 0
   const resultados: Record<string, { ok: boolean; canais: string[] }> = {}
 
+  const agora = new Date()
   for (const [userId, dados] of dadosPorUsuario.entries()) {
     const email   = emailMap[userId]
     const perfil  = profileMap[userId]
@@ -248,20 +249,22 @@ export async function GET(request: Request) {
     const nomeUsuario = perfil?.nome ?? ''
 
     // E-mail — todos os planos
-    try {
-      await getResend().emails.send({
-        from:    FROM_EMAIL,
-        to:      email,
-        subject: `📊 Seu resumo semanal — ${dados.totalAlertas} licitaç${dados.totalAlertas !== 1 ? 'ões' : 'ão'} encontrada${dados.totalAlertas !== 1 ? 's' : ''}`,
-        html:    gerarHtmlResumo({ nomeUsuario, total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl }),
-      })
-      canaisEnviados.push('email')
-    } catch (e) {
-      console.error('Resumo semanal — erro email:', email, e)
+    if (!perfil?.email_pausado_ate || new Date(perfil.email_pausado_ate) <= agora) {
+      try {
+        await getResend().emails.send({
+          from:    FROM_EMAIL,
+          to:      email,
+          subject: `📊 Seu resumo semanal — ${dados.totalAlertas} licitaç${dados.totalAlertas !== 1 ? 'ões' : 'ão'} encontrada${dados.totalAlertas !== 1 ? 's' : ''}`,
+          html:    gerarHtmlResumo({ nomeUsuario, total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl }),
+        })
+        canaisEnviados.push('email')
+      } catch (e) {
+        console.error('Resumo semanal — erro email:', email, e)
+      }
     }
 
     // Telegram — todos os planos (se configurado)
-    if (perfil?.telegram_chat_id) {
+    if (perfil?.telegram_chat_id && (!perfil.telegram_pausado_ate || new Date(perfil.telegram_pausado_ate) <= agora)) {
       try {
         const texto = gerarTextoTelegramResumo({ total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl })
         const ok = await enviarTextoTelegram(perfil.telegram_chat_id, texto)
@@ -272,7 +275,7 @@ export async function GET(request: Request) {
     }
 
     // WhatsApp — todos os planos
-    if (perfil?.whatsapp) {
+    if (perfil?.whatsapp && (!perfil.whatsapp_pausado_ate || new Date(perfil.whatsapp_pausado_ate) <= agora)) {
       const ok = await enviarResumoSemanalWhatsApp(
         perfil.whatsapp,
         dados.totalAlertas,

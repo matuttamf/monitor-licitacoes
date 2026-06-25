@@ -147,7 +147,7 @@ export async function GET(request: Request) {
   // Buscar usuários elegíveis (Pro e Empresarial ativos)
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, plano, status, owner_id, telegram_chat_id, whatsapp')
+    .select('id, nome, plano, status, owner_id, telegram_chat_id, whatsapp, email_pausado_ate, telegram_pausado_ate')
     .in('status', ['active', 'trial'])
     .is('owner_id', null)
 
@@ -233,6 +233,7 @@ export async function GET(request: Request) {
 
   let enviados = 0
   const resultados: Record<string, unknown> = {}
+  const agora = new Date()
 
   for (const p of elegíveis) {
     const email = emailMap[p.id]
@@ -259,20 +260,22 @@ export async function GET(request: Request) {
     const canais: string[] = []
 
     // E-mail
-    try {
-      await getResend().emails.send({
-        from:    FROM,
-        to:      email,
-        subject: `🎯 Radar: ${total} contrato${total !== 1 ? 's' : ''} vencendo nos próximos 180 dias`,
-        html:    gerarHtml({ nome: p.nome ?? '', em30, em60, em90, em180, appUrl }),
-      })
-      canais.push('email')
-    } catch (e) {
-      console.error('radar-alertas email erro:', email, e)
+    if (!p.email_pausado_ate || new Date(p.email_pausado_ate) <= agora) {
+      try {
+        await getResend().emails.send({
+          from:    FROM,
+          to:      email,
+          subject: `🎯 Radar: ${total} contrato${total !== 1 ? 's' : ''} vencendo nos próximos 180 dias`,
+          html:    gerarHtml({ nome: p.nome ?? '', em30, em60, em90, em180, appUrl }),
+        })
+        canais.push('email')
+      } catch (e) {
+        console.error('radar-alertas email erro:', email, e)
+      }
     }
 
     // Telegram
-    if (p.telegram_chat_id) {
+    if (p.telegram_chat_id && (!p.telegram_pausado_ate || new Date(p.telegram_pausado_ate) <= agora)) {
       try {
         const ok = await enviarTextoTelegram(p.telegram_chat_id, gerarTelegram(em30, em60, em90, em180, appUrl))
         if (ok) canais.push('telegram')

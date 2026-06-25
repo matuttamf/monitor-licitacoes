@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { verificarCronAuth } from '@/lib/cron-auth'
+import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import {
   enviarEmailPosAssinaturaDia1,
@@ -29,6 +29,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
+  if (await sistemaPausado()) {
+    return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
+  }
+
   const supabase = await createServiceClient()
   const detalhes: Record<string, unknown>[] = []
   let enviados = 0
@@ -39,7 +43,7 @@ export async function GET(request: Request) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, plano, status, email_pausado_ate, assinatura_inicio, nome, whatsapp')
+    .select('id, plano, status, email_pausado_ate, assinatura_inicio, nome, whatsapp, whatsapp_pausado_ate')
     .eq('status', 'active')
     .not('assinatura_inicio', 'is', null)
     .or([
