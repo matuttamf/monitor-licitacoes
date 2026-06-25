@@ -883,7 +883,7 @@ export default function PerfilPage() {
             </div>
           </div>
           <div className="mt-4 rounded-xl px-4 py-3" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
-            <p className="text-xs leading-relaxed m-0" style={{ color: '#78350f' }}>
+            <p className="text-xs leading-relaxed m-0 text-justify" style={{ color: '#78350f' }}>
               <strong>Atenção:</strong> pausar notificações afeta <strong>exclusivamente o recebimento de avisos por e-mail, Telegram ou WhatsApp</strong>. O monitoramento de licitações, a coleta de editais e todos os recursos da plataforma continuam funcionando normalmente durante a pausa, independentemente do canal silenciado. A pausa de notificações não implica suspensão, interrupção ou cancelamento da assinatura ou dos serviços contratados. Para cancelar ou suspender a assinatura, utilize a opção específica de cancelamento disponível nesta página.
             </p>
           </div>
