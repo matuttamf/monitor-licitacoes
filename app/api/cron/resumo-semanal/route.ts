@@ -172,34 +172,29 @@ export async function GET(request: Request) {
   const inicioTs = inicio + 'T00:00:00.000Z'
   const fimTs    = fim    + 'T23:59:59.999Z'
 
-  // ── Passo 1: descobrir user_ids distintos com alertas na semana ──────────
-  // Query leve — só IDs, sem joins pesados. Escala independente do volume.
-  const { data: keywordsComAlertas, error: errKw } = await supabase
-    .from('alertas')
-    .select('keywords!inner(user_id)')
-    .gte('criado_em', inicioTs)
-    .lte('criado_em', fimTs)
-    .limit(200000)
-
-  if (errKw) {
-    console.error('Resumo semanal — erro ao buscar user_ids:', errKw.message)
-    return NextResponse.json({ error: errKw.message }, { status: 500 })
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userIdSet = new Set<string>((keywordsComAlertas ?? []).map((r: any) => r.keywords?.user_id).filter(Boolean))
-  const userIds   = [...userIdSet]
-
-  if (!userIds.length) {
-    await registrarCronLog({ job: 'resumo-semanal', status: 'ok', mensagem: 'Sem alertas na semana' })
-    return NextResponse.json({ ok: true, usuarios: 0, motivo: 'sem alertas na semana' })
-  }
-
-  // ── Passo 2: carregar perfis e e-mails dos usuários ─────────────────────
-  const { data: profiles } = await supabase
+  // ── Passo 1: carregar todos os assinantes e perfis ──────────────────────
+  // Abordagem correta para 50k+: query profiles diretamente, sem passar por alertas.
+  // Alertas têm N linhas por usuário — qualquer limit() truncaria usuários silenciosamente.
+  // Profiles são 1 linha por usuário → escala linearmente.
+  const { data: profiles, error: errProfiles } = await supabase
     .from('profiles')
     .select('id, nome, status, plano, telegram_chat_id, whatsapp, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
-    .in('id', userIds)
+    .in('status', ['trial', 'active'])
+    .limit(100000)
+
+  if (errProfiles) {
+    console.error('Resumo semanal — erro ao buscar profiles:', errProfiles.message)
+    return NextResponse.json({ error: errProfiles.message }, { status: 500 })
+  }
+
+  const userIds = (profiles ?? []).map(p => p.id)
+
+  if (!userIds.length) {
+    await registrarCronLog({ job: 'resumo-semanal', status: 'ok', mensagem: 'Sem usuários ativos' })
+    return NextResponse.json({ ok: true, usuarios: 0, motivo: 'sem usuários ativos' })
+  }
+
+  // ── Passo 2: e-mails dos usuários ────────────────────────────────────────
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
   const allAuthUsers: { id: string; email?: string }[] = []

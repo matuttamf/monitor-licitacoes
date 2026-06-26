@@ -18,13 +18,26 @@ export async function GET(request: Request) {
 
   const supabase = await createServiceClient()
 
-  // Buscar usuários em trial
+  // Buscar usuários em trial — limit garante escala (em 50k usuários ~10% em trial = 5k)
   const { data: usuarios } = await supabase
     .from('profiles')
     .select('id, trial_inicio, trial_fim, status, nome, whatsapp, whatsapp_pausado_ate')
     .eq('status', 'trial')
+    .limit(10000)
 
   if (!usuarios?.length) return NextResponse.json({ ok: true, enviados: 0 })
+
+  // Busca e-mails em lote via listUsers paginado — evita N chamadas getUserById sequenciais.
+  // Com 5k trials: 5 páginas de 1000, ~5 chamadas vs 5000 individuais.
+  const uids = new Set(usuarios.map(u => u.id))
+  const allAuthUsers: { id: string; email?: string }[] = []
+  for (let page = 1; ; page++) {
+    const { data: pg } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+    const users = pg?.users ?? []
+    allAuthUsers.push(...users.filter(u => uids.has(u.id)))
+    if (users.length < 1000) break
+  }
+  const emailMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u.email ?? '']))
 
   let enviados = 0
   let erros = 0
@@ -34,9 +47,7 @@ export async function GET(request: Request) {
     const inicio = new Date(usuario.trial_inicio)
     const diasDeTrial = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24))
 
-    // Buscar email do usuário
-    const { data: authUser } = await supabase.auth.admin.getUserById(usuario.id)
-    const email = authUser?.user?.email
+    const email = emailMap[usuario.id]
     if (!email) continue
 
     // Verifica se trial expira amanhã (usa trial_fim — mais preciso que contar dias)
