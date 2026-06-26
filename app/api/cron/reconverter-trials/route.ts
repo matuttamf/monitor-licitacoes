@@ -1,6 +1,6 @@
 ﻿/**
  * Cron: reconverter-trials
- * Horário: Ter/Qua/Qui às 10h BRT (13h UTC)
+ * Horário: seg-sex a cada hora 11-21 UTC (8-18h BRT) → "0 11-21 * * 1-5"
  *
  * Busca usuários com trial expirado que ainda não receberam
  * o e-mail de reconversão e envia campanha persuasiva.
@@ -59,15 +59,14 @@ export async function GET(req: NextRequest) {
   // - não é admin
   const adminEmail = process.env.ADMIN_EMAIL ?? 'matuttamaquinaseferramentas@gmail.com'
 
-  // Primeiro: expirados há 1-3 dias (prioridade máxima — janela quente)
+  // Perfis expirados — email está em auth.users, não em profiles
   const { data: prioritarios } = await supabase
     .from('profiles')
-    .select('id, email, nome, whatsapp, trial_fim, reconversao_email_em')
+    .select('id, nome, whatsapp, trial_fim, reconversao_email_em')
     .in('status', ['trial', 'expired'])
     .lt('trial_fim', limite1dia.toISOString())
     .gte('trial_fim', limite30dias.toISOString())
     .is('reconversao_email_em', null)
-    .neq('email', adminEmail)
     .order('trial_fim', { ascending: false })
     .limit(MAX_LOTE)
 
@@ -77,19 +76,31 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, enviados: 0, mensagem: 'Nenhum trial expirado pendente' })
   }
 
+  // Busca e-mails via auth.admin.listUsers (paginado)
+  const uids = leads.map(l => l.id)
+  const allAuthUsers: { id: string; email?: string }[] = []
+  for (let page = 1; ; page++) {
+    const { data: pg } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+    const users = pg?.users ?? []
+    allAuthUsers.push(...users.filter(u => uids.includes(u.id)))
+    if (users.length < 1000) break
+  }
+  const emailMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u.email ?? '']))
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   let enviados = 0
   let erros = 0
 
   for (const perfil of leads) {
-    if (!perfil.email) continue
+    const email = emailMap[perfil.id]
+    if (!email || email === adminEmail) continue
 
     const trialFim = new Date(perfil.trial_fim)
     const diasExpirado = Math.max(1, Math.floor((agora.getTime() - trialFim.getTime()) / 86400000))
 
     const { subject, html, text } = emailReconversao({
       nome:         perfil.nome ?? undefined,
-      email:        perfil.email,
+      email,
       diasExpirado,
     })
 
@@ -97,7 +108,7 @@ export async function GET(req: NextRequest) {
       trackResend()
       const { error: sendError } = await resend.emails.send({
         from: 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
-        to:   perfil.email,
+        to:   email,
         subject,
         html,
         text,
