@@ -18,7 +18,7 @@ export function emailReconversao(p: ParamsReconversao) {
     : `${nome}, você sabia que perdeu centenas de editais nos últimos ${dias} dias?`
 
   const subject = dias <= 3
-    ? `Seu acesso expirou — reative agora com desconto`
+    ? `Seu acesso expirou — retome o monitoramento agora`
     : `${nome ?? 'Olá'}, você está perdendo licitações enquanto não está no Monitor`
 
   const html = `<!DOCTYPE html>

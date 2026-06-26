@@ -99,7 +99,7 @@ async function getTargetCnaes(supabase: any): Promise<Set<string>> {
 
 interface LeadRow {
   cnpj:         string
-  razao_social: string
+  razao_social: string | null
   email:        string | null
   uf:           string | null
   municipio:    string | null
