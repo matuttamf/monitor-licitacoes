@@ -191,7 +191,7 @@ export async function GET(req: NextRequest) {
     const c = cnpjMap.get(cnpj)!
     return {
       cnpj,
-      razao_social:  c.nomeRazaoSocialFornecedor ?? cnpj,
+      razao_social:  c.nomeRazaoSocialFornecedor ?? null,
       municipio:     c.unidadeOrgao?.municipioNome ?? null,
       uf:            c.unidadeOrgao?.ufSigla ?? null,
       modalidade:    c.modalidadeContratacao?.nome ?? c.modalidadeContratacao?.descricao ?? c.tipoContrato?.nome ?? null,

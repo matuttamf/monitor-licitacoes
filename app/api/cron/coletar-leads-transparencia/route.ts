@@ -232,7 +232,7 @@ export async function GET(req: NextRequest) {
     const contrato = cnpjMap.get(cnpj)!
     const { error } = await supabase.from('leads').upsert({
       cnpj,
-      razao_social:  contrato.fornecedor?.nome ?? cnpj,
+      razao_social:  contrato.fornecedor?.nome ?? null,
       modalidade:    contrato.modalidadeCompra?.descricao ?? null,
       objeto:        (contrato.objeto ?? '').slice(0, 200) || null,
       valor:         contrato.valorInicial ?? null,

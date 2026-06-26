@@ -173,7 +173,7 @@ async function processarArquivoRF(
       const emailRaw = cols[COL.EMAIL]?.trim() || null
       leads.push({
         cnpj,
-        razao_social: cnpj,                                  // Receita preencherá depois
+        razao_social: null,                                  // Receita preencherá depois
         email:        emailRaw,
         uf:           cols[COL.UF]?.trim()        || null,
         municipio:    cols[COL.MUNICIPIO]?.trim() || null,

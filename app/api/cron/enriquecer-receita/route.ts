@@ -75,23 +75,23 @@ export async function GET(req: NextRequest) {
   }
 
   // Processa: (a) leads sem verificação de Receita (situacao=null)
-  //           (b) leads CNAE com razao_social = cnpj (placeholder da Edge Function)
-  //               detectado via regex ^\d{14}$ — só dígitos, 14 chars
-  const [{ data: semSituacao }, { data: placeholderCnae }] = await Promise.all([
+  //           (b) leads com razao_social nula ou igual ao CNPJ (placeholder de coleta)
+  //               coletar-leads-cnae define situacao='ATIVA' antes de ter o nome,
+  //               por isso precisa de grupo separado além do filtro situacao=null
+  const [{ data: semSituacao }, { data: semNome }] = await Promise.all([
     supabase.from('leads').select('id, cnpj, email')
       .is('situacao', null)
       .in('status', ['invalido', 'pendente'])
       .limit(500),
     supabase.from('leads').select('id, cnpj, email')
-      .eq('origem', 'cnae')
-      .filter('razao_social', 'match', '^[0-9]{14}$')
+      .or('razao_social.is.null,razao_social.match.^[0-9]{14}$')
       .in('status', ['invalido', 'pendente'])
       .limit(50),
   ])
 
   // Deduplica por id — um lead pode estar nos dois grupos
   const visto = new Set<string>()
-  const semReceita = [...(semSituacao ?? []), ...(placeholderCnae ?? [])].filter(l => {
+  const semReceita = [...(semSituacao ?? []), ...(semNome ?? [])].filter(l => {
     if (visto.has(l.id)) return false
     visto.add(l.id)
     return true

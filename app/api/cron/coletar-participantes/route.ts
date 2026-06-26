@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
     // Busca o nome no Set via Map auxiliar (montado durante coleta)
     const { error } = await supabase.from('leads').upsert({
       cnpj,
-      razao_social: cnpj,   // placeholder — Receita irá sobrescrever
+      razao_social: null,   // Receita irá preencher via enriquecer-receita
       status:   'invalido',
       situacao: null,        // null = aguardando check Receita Federal
       fonte:    'pncp_proposta',
