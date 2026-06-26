@@ -18,15 +18,24 @@ import {
   enviarEmailSemKeywords,
   enviarEmailFornecedorD3,
   enviarEmailTelegramD5,
+  enviarEmailPoucasKeywords,
 } from '@/lib/emails/onboarding'
 import {
   enviarWAPerfilIncompleto,
   enviarWASemKeywords,
   enviarWAFornecedorD3,
   enviarWATelegramD5,
+  enviarWAPoucasKeywords,
 } from '@/lib/alerts/whatsapp'
+import { getLimites } from '@/lib/planos'
+import { sugerirKeywordsSimilares } from '@/lib/matching/gemini'
+import { enviarTextoTelegram } from '@/lib/alerts/telegram'
 
 export const maxDuration = 300
+
+// Usuários com menos que este número de keywords recebem sugestão (D+2).
+// Deve ser <= limite do trial (7) para não impactar todos os trials.
+const MIN_KEYWORDS_RECOMENDADO = 5
 
 const HORAS_KEYWORDS = [12, 24, 48, 72, 96, 120] as const
 type HorasKw = typeof HORAS_KEYWORDS[number]
@@ -61,9 +70,10 @@ export async function GET(req: NextRequest) {
   const agora = new Date()
 
   // Janelas de tempo pré-calculadas
-  const jPerfilIncompleto = janela(24)
-  const jFornecedor       = janela(72)
-  const jTelegram         = janela(120)
+  const jPerfilIncompleto  = janela(24)
+  const jPoucasKeywords    = janela(48)
+  const jFornecedor        = janela(72)
+  const jTelegram          = janela(120)
   const jKeywords         = new Map<HorasKw, { inicio: Date; fim: Date }>(
     HORAS_KEYWORDS.map(h => [h, janela(h)])
   )
@@ -94,13 +104,22 @@ export async function GET(req: NextRequest) {
   }
   const emailMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u.email ?? '']))
 
-  // Usuários com pelo menos 1 keyword ativa
+  // Keywords ativas por usuário (termos + contagem)
   const { data: kwRows } = await supabase
     .from('keywords')
-    .select('user_id')
+    .select('user_id, termo')
     .in('user_id', uids)
     .eq('ativo', true)
+
   const usersComKeywords = new Set((kwRows ?? []).map(k => k.user_id as string))
+
+  // Agrupa termos por usuário para o flow de poucas keywords
+  const keywordsPorUsuario = new Map<string, string[]>()
+  for (const kw of kwRows ?? []) {
+    const uid = kw.user_id as string
+    if (!keywordsPorUsuario.has(uid)) keywordsPorUsuario.set(uid, [])
+    keywordsPorUsuario.get(uid)!.push(kw.termo as string)
+  }
 
   // Usuários em janela D+3 com fornecedor cadastrado
   const usersEmD3 = profiles
@@ -151,7 +170,44 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // 3. Fornecedor D+3
+      // 3. Poucas palavras-chave — D+2 (só para quem já tem keywords mas poucas)
+      if (
+        emJanela(criado, jPoucasKeywords) &&
+        usersComKeywords.has(p.id)
+      ) {
+        const termos = keywordsPorUsuario.get(p.id) ?? []
+        const limiteDoPlano = getLimites(p.plano ?? 'trial').maxKeywords
+        const minRecomendado = Math.min(MIN_KEYWORDS_RECOMENDADO, limiteDoPlano)
+
+        if (termos.length < minRecomendado) {
+          try {
+            const sugestoes = await sugerirKeywordsSimilares(termos, Math.min(8, limiteDoPlano - termos.length))
+
+            if (email && !emailPausado) {
+              await enviarEmailPoucasKeywords(email, p.nome, termos, sugestoes, limiteDoPlano)
+            }
+            if (p.whatsapp && !waPausado) {
+              await enviarWAPoucasKeywords(p.whatsapp, p.nome, termos, sugestoes, limiteDoPlano)
+            }
+            if (p.telegram_chat_id && (!p.telegram_pausado_ate || new Date(p.telegram_pausado_ate) > agora)) {
+              const qtd = termos.length
+              const sugestoesTexto = sugestoes.slice(0, 5).map(s => `• ${s}`).join('\n')
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+              const msgTelegram =
+                `💡 *Mais oportunidades com mais palavras-chave*\n\n` +
+                `Você monitora ${qtd} termo${qtd !== 1 ? 's' : ''}, mas seu plano permite até ${limiteDoPlano}.\n\n` +
+                (sugestoesTexto ? `*Sugestões para adicionar:*\n${sugestoesTexto}\n\n` : '') +
+                `[Adicionar palavras-chave →](${appUrl}/palavras-chave)`
+              await enviarTextoTelegram(p.telegram_chat_id, msgTelegram)
+            }
+            if (email || p.whatsapp || p.telegram_chat_id) disparouNesteTick = true
+          } catch (e) {
+            console.error(`[onboarding-followup] erro poucas-keywords user=${p.id}:`, e)
+          }
+        }
+      }
+
+      // 5. Fornecedor D+3
       if (emJanela(criado, jFornecedor) && !usersComFornecedor.has(p.id)) {
         if (email && !emailPausado) await enviarEmailFornecedorD3(email, p.nome)
         if (p.whatsapp && !waPausado) await enviarWAFornecedorD3(p.whatsapp, p.nome)

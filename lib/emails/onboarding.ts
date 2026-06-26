@@ -219,6 +219,68 @@ export async function enviarEmailSemKeywords(
   })
 }
 
+// ── Poucas palavras-chave (D+2) ───────────────────────────────────────────────
+
+export async function enviarEmailPoucasKeywords(
+  email: string,
+  nome: string | null,
+  keywordsAtuais: string[],
+  sugestoes: string[],
+  limiteDoPlano: number,
+): Promise<void> {
+  const resend = getResend()
+  const listaAtual = keywordsAtuais
+    .map(t => `<span style="display:inline-block;background:#E8E4DC;border-radius:6px;padding:4px 10px;font-size:12px;color:#4a4a4d;margin:2px 4px 2px 0;">${t}</span>`)
+    .join('')
+  const listaSugestoes = sugestoes
+    .map(t => `<span style="display:inline-block;background:#FFF7ED;border:1px solid #FDDCAA;border-radius:6px;padding:4px 10px;font-size:12px;color:#92400E;margin:2px 4px 2px 0;">+ ${t}</span>`)
+    .join('')
+
+  trackResend()
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Você tem ${keywordsAtuais.length} palavra${keywordsAtuais.length !== 1 ? 's' : ''}-chave — veja o que está perdendo`,
+    html: baseEmail(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Palavras-chave · Mais oportunidades</div>
+    <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      ${saudacao(nome)} Você pode estar perdendo licitações.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Com ${keywordsAtuais.length} palavra${keywordsAtuais.length !== 1 ? 's' : ''}-chave, o Monitor já trabalha por você.
+      Mas quanto mais termos você monitorar, mais oportunidades aparecem — e seu plano permite até <strong>${limiteDoPlano}</strong>.
+    </p>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Você monitora hoje:</div>
+      <div>${listaAtual}</div>
+    </div>
+    ${sugestoes.length > 0 ? `
+    <div style="margin-bottom:28px;">
+      <div style="font-size:12px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Termos relacionados que você pode adicionar:</div>
+      <div>${listaSugestoes}</div>
+    </div>` : ''}
+    <a href="${APP_URL}/palavras-chave"
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:12px;">
+      Adicionar palavras-chave →
+    </a>
+  </td></tr>
+  <tr><td style="padding:24px 28px 32px;">
+    <table width="100%" cellpadding="16" cellspacing="0" style="background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC;">
+      <tr><td>
+        <div style="font-size:13px;font-weight:700;color:#1A1A1C;margin-bottom:8px;">Por que mais palavras-chave ajudam?</div>
+        <div style="font-size:13px;color:#6B7280;line-height:1.9;">
+          ✅ Licitações aparecem com nomenclaturas diferentes em cada órgão<br>
+          ✅ Órgãos diferentes descrevem o mesmo serviço de formas variadas<br>
+          ✅ Cobrir variações aumenta muito o volume de oportunidades encontradas
+        </div>
+      </td></tr>
+    </table>
+  </td></tr>
+    `),
+  })
+}
+
 // ── Fornecedor D+3 ────────────────────────────────────────────────────────────
 
 export async function enviarEmailFornecedorD3(email: string, nome: string | null): Promise<void> {

@@ -271,6 +271,27 @@ export async function enviarWASemKeywords(
   return enviarMensagemZApi(numero, texto)
 }
 
+export async function enviarWAPoucasKeywords(
+  telefone: string,
+  nome: string | null,
+  keywordsAtuais: string[],
+  sugestoes: string[],
+  limiteDoPlano: number,
+): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const qtd = keywordsAtuais.length
+  const sugestoesTexto = sugestoes.slice(0, 5).map(s => `• ${s}`).join('\n')
+  const texto =
+    `${nome ? `Olá, *${nome}!*` : 'Olá!'} 💡\n\n` +
+    `Você já monitorou *${qtd} palavra${qtd !== 1 ? 's' : ''}-chave* — ótimo começo!\n\n` +
+    `Mas licitações aparecem com nomenclaturas bem variadas em cada órgão. Quanto mais termos você cobrir, mais oportunidades aparecem.\n\n` +
+    `Seu plano permite até *${limiteDoPlano} palavras-chave*. Que tal aproveitar melhor?\n\n` +
+    (sugestoesTexto ? `*Sugestões para adicionar:*\n${sugestoesTexto}\n\n` : '') +
+    `➕ Adicionar agora: ${appUrl}/palavras-chave`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
 export async function enviarWAFornecedorD3(telefone: string, nome: string | null): Promise<boolean> {
   if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'

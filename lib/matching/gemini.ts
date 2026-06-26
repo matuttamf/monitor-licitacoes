@@ -121,6 +121,52 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
   return { resultados, erros, lotes, lotesComErro: erros.length }
 }
 
+/** Sugere keywords adicionais com base nos termos que o usuário já tem configurados. */
+export async function sugerirKeywordsSimilares(termos: string[], quantidade = 8): Promise<string[]> {
+  if (!termos.length) return []
+
+  const prompt = `Você é especialista em licitações públicas brasileiras.
+
+Um usuário do sistema de monitoramento de licitações já configurou estas palavras-chave:
+${termos.map(t => `- ${t}`).join('\n')}
+
+Sugira exatamente ${quantidade} palavras-chave ADICIONAIS que esse usuário deveria monitorar para encontrar mais oportunidades relacionadas ao mesmo segmento de negócio.
+
+Regras:
+- Não repita nenhuma das palavras já listadas
+- Cada sugestão deve ser um termo específico que aparece em editais (2 a 4 palavras no máximo)
+- Priorize termos que aparecem com frequência em licitações públicas brasileiras
+- Mantenha coerência com o segmento indicado pelas palavras existentes
+
+Responda APENAS com JSON válido (sem markdown, sem explicações):
+["termo 1", "termo 2", ...]`
+
+  try {
+    trackGemini()
+    const resultado = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 512,
+        // @ts-expect-error - thinkingConfig é suportado no gemini-2.5-flash mas não está nos tipos ainda
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    })
+    const texto = resultado.response.text()
+    const limpo = texto.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+    const match = limpo.match(/\[[\s\S]*\]/)
+    if (!match) return []
+    const sugestoes: unknown = JSON.parse(match[0])
+    if (!Array.isArray(sugestoes)) return []
+    return (sugestoes as unknown[])
+      .filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+      .slice(0, quantidade)
+  } catch (err) {
+    console.error('sugerirKeywordsSimilares erro:', err instanceof Error ? err.message : err)
+    return []
+  }
+}
+
 // Alias para compatibilidade
 export const encontrarMatches = async (
   licitacoes: { id: string; objeto: string }[],
