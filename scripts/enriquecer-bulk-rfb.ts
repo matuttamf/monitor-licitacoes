@@ -207,10 +207,16 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
   console.log('\n── Fase 1: Carregando CNPJs da base ──')
   const cnpjsBase   = new Set<string>()
   const basicosBase = new Set<string>()
+  // BULK_FILTRO=sem_municipio → pagina só leads SEM município (backfill que avança
+  // de fato pela base). Sem a env → paginação geral (comportamento original).
+  const RPC_PAGINACAO = process.env.BULK_FILTRO === 'sem_municipio'
+    ? 'get_cnpjs_sem_municipio_page'
+    : 'get_cnpjs_page'
+  console.log(`  Paginação: ${RPC_PAGINACAO}`)
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
   while (cnpjsBase.size < MAX_POR_RUN) {
-    const { data, error } = await supabase.rpc('get_cnpjs_page', { last_id: lastId, page_size: 1000 })
+    const { data, error } = await supabase.rpc(RPC_PAGINACAO, { last_id: lastId, page_size: 1000 })
     if (error) {
       errosConsecutivos++
       console.error(`Erro (tentativa ${errosConsecutivos}): ${error.message}`)
