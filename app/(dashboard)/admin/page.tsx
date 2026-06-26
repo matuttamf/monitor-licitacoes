@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { FilaAlertasCard } from './FilaAlertasCard'
+import { DisparosWhatsAppCard } from './DisparosWhatsAppCard'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -296,6 +297,9 @@ export default function AdminPage() {
 
       {/* ── Fila de alertas por canal (tempo real) ── */}
       <FilaAlertasCard />
+
+      {/* ── Disparos de WhatsApp (auditoria 24h) ── */}
+      <DisparosWhatsAppCard />
 
       {/* ── Funil de Leads ── */}
       {stats && stats.leadsTotal > 0 && (() => {

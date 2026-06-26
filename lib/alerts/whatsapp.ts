@@ -65,6 +65,27 @@ function montarMensagemIndividual(l: LicitacaoAlerta, appUrl: string): string {
 
 // ─── Envio via Z-API ──────────────────────────────────────────────────────
 
+// Cliente de log (lazy) — registra cada disparo em disparos_log para auditoria
+// no painel admin. Não bloqueia nem derruba o envio se falhar.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _logSb: any = null
+async function logDisparo(destino: string, texto: string, status: 'ok' | 'erro', erro?: string) {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
+    if (!_logSb) {
+      const { createClient } = await import('@supabase/supabase-js')
+      _logSb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+    }
+    await _logSb.from('disparos_log').insert({
+      canal:   'whatsapp',
+      destino,
+      preview: texto.slice(0, 120),
+      status,
+      erro:    erro?.slice(0, 200) ?? null,
+    })
+  } catch { /* log nunca quebra o disparo */ }
+}
+
 async function enviarMensagemZApi(numero: string, texto: string): Promise<boolean> {
   const instanceId    = process.env.ZAPI_INSTANCE_ID
   const instanceToken = process.env.ZAPI_INSTANCE_TOKEN
@@ -88,11 +109,15 @@ async function enviarMensagemZApi(numero: string, texto: string): Promise<boolea
     if (!res.ok) {
       const body = await res.text().catch(() => '')
       console.error(`Z-API erro ${res.status} para ${numero}:`, body)
+      await logDisparo(numero, texto, 'erro', `HTTP ${res.status}: ${body}`)
       return false
     }
+    await logDisparo(numero, texto, 'ok')
     return true
   } catch (err) {
-    console.error('Z-API exceção:', err instanceof Error ? err.message : err)
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('Z-API exceção:', msg)
+    await logDisparo(numero, texto, 'erro', msg)
     return false
   }
 }
