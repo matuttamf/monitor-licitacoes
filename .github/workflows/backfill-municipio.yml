@@ -16,7 +16,7 @@ on:
         default: '9'
       max_rows:
         description: 'Máx. de leads por execução'
-        default: '8000000'
+        default: '500000'
 
 jobs:
   backfill:
