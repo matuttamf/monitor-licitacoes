@@ -38,8 +38,17 @@ export async function PATCH(request: Request) {
 
   const limites = getLimites(perfil?.plano ?? 'basic')
 
+  // Salva apenas dígitos — facilita comparações e o Z-API já formata internamente
+  const normFone = (v: unknown) => {
+    if (!v || typeof v !== 'string') return v ?? null
+    const d = v.replace(/\D/g, '')
+    return d || null
+  }
+
   const update: Record<string, unknown> = {
-    nome, telefone, whatsapp, empresa, telegram_chat_id,
+    nome, empresa, telegram_chat_id,
+    telefone: normFone(telefone),
+    whatsapp: normFone(whatsapp),
     min_valor_interesse: min_valor_interesse ?? 0,
     max_valor_interesse: max_valor_interesse ?? 0,
   }

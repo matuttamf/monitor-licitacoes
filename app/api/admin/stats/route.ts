@@ -11,9 +11,8 @@ export async function GET() {
 
   const service = createAdminClient()
 
-  const { data: adminAuth } = await service.auth.admin.listUsers()
-  const adminUser = adminAuth?.users?.find(u => u.email === ADMIN_EMAIL)
-  const adminId = adminUser?.id ?? 'none'
+  const { data: adminProfile } = await service.from('profiles').select('id').eq('email', ADMIN_EMAIL).single()
+  const adminId = adminProfile?.id ?? 'none'
 
   const cnt = (p: Promise<{ count: number | null }>) =>
     p.then(r => r.count ?? 0).catch(() => 0)

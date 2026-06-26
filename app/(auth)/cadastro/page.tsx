@@ -101,7 +101,7 @@ function CadastroConteudo() {
     // lidos depois em /auth/callback para gravar no profile)
     const atribuicao: Record<string, string> = {}
     if (nome.trim())  atribuicao.nome      = nome.trim()
-    if (telefone)     atribuicao.telefone  = telefone.replace(/\D/g, '')
+    if (telefone)   { atribuicao.telefone  = telefone.replace(/\D/g, ''); atribuicao.whatsapp = telefone.replace(/\D/g, '') }
     if (utmRef)      atribuicao.ref          = utmRef
     if (utmSource)   atribuicao.utm_source   = utmSource
     if (utmMedium)   atribuicao.utm_medium   = utmMedium

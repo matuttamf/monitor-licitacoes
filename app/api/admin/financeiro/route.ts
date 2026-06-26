@@ -60,8 +60,8 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const { data: authData } = await supabase.auth.admin.listUsers()
-  const emailMap = Object.fromEntries((authData?.users ?? []).map(u => [u.id, u.email ?? '']))
+  const { data: authData } = await supabase.from('profiles').select('id, email')
+  const emailMap = Object.fromEntries((authData ?? []).map((u: { id: string; email: string | null }) => [u.id, u.email ?? '']))
 
   const hoje = new Date()
 

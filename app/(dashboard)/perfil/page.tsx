@@ -104,8 +104,8 @@ export default function PerfilPage() {
         email:               prof.email ?? '',
         empresa:             prof.empresa ?? '',
         cnpj:                prof.cnpj ?? '',
-        telefone:            prof.telefone ?? '',
-        whatsapp:            prof.whatsapp ?? '',
+        telefone:            prof.telefone ? mascaraTelefone(prof.telefone) : '',
+        whatsapp:            prof.whatsapp ? mascaraTelefone(prof.whatsapp) : '',
         telegram_chat_id:    prof.telegram_chat_id ?? '',
         min_valor_interesse: prof.min_valor_interesse ?? 0,
         max_valor_interesse: prof.max_valor_interesse ?? 0,
@@ -416,7 +416,12 @@ export default function PerfilPage() {
                 onChange={e => {
                   if (readOnly) return
                   const val = tel ? mascaraTelefone(e.target.value) : e.target.value
-                  setPerfil(prev => ({ ...prev, [key]: val }))
+                  setPerfil(prev => {
+                    const next = { ...prev, [key]: val }
+                    // Auto-preenche WhatsApp com o telefone se ainda estiver vazio
+                    if (key === 'telefone' && !prev.whatsapp) next.whatsapp = val
+                    return next
+                  })
                 }}
                 placeholder={placeholder}
                 readOnly={readOnly}

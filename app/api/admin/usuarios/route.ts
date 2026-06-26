@@ -43,7 +43,7 @@ export async function GET() {
       .from('profiles')
       .select('id, status, trial_inicio, trial_fim, criado_em, nome, telefone, whatsapp, empresa, plano, periodo, owner_id, bloqueado_admin, utm_source, utm_medium, utm_campaign, campanha_id')
       .order('criado_em', { ascending: false }),
-    supabase.auth.admin.listUsers(),
+    supabase.from('profiles').select('id, email'),
     supabase.from('keywords').select('id, user_id, ativo'),
     // Agrega no banco: ativas (data_abertura >= hoje), total e último envio por usuário
     supabase.rpc('admin_alertas_por_usuario'),
@@ -69,7 +69,7 @@ export async function GET() {
   }
 
   const emailMap = Object.fromEntries(
-    (authData?.users ?? []).map(u => [u.id, u.email])
+    (authData ?? []).map((u: { id: string; email: string | null }) => [u.id, u.email ?? ''])
   )
 
   const campanhaMap = Object.fromEntries(

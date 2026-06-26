@@ -44,10 +44,9 @@ export async function GET(
   // Buscar emails dos sub-usuários
   let subComEmail: { id: string; nome: string | null; email: string }[] = []
   if (subUsuarios && subUsuarios.length > 0) {
-    const { data: authData } = await service.auth.admin.listUsers()
-    const emailMap = Object.fromEntries(
-      (authData?.users ?? []).map(u => [u.id, u.email ?? ''])
-    )
+    const subIds = subUsuarios.map(s => s.id)
+    const { data: emailRows } = await service.from('profiles').select('id, email').in('id', subIds)
+    const emailMap = Object.fromEntries((emailRows ?? []).map(u => [u.id, u.email ?? '']))
     subComEmail = subUsuarios.map(s => ({
       id: s.id,
       nome: s.nome,
