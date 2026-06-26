@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
     const { subject, html, text } = emailCaptacao({
       id:           lead.id,
       razaoSocial:  limparNome(lead.razao_social) ?? lead.razao_social,
-      nomeFantasia: limparNome(lead.nome_fantasia),
+      nomeFantasia: limparNome(lead.nome_fantasia) ?? undefined,
       municipio:    lead.municipio,
       uf:           lead.uf,
       cnae:         lead.cnae,
