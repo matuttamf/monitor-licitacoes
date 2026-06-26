@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-type Disparo = { destino: string; preview: string; status: 'ok' | 'erro'; erro: string | null; criado_em: string }
+type Disparo = { destino: string; preview: string; status: 'ok' | 'erro'; erro: string | null; criado_em: string; nome: string | null }
 type Dados = { ok24: number; erro24: number; recentes: Disparo[] }
 
 const hora = (d: string) => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -43,6 +43,7 @@ export function DisparosWhatsAppCard() {
               <span title={m.status} style={{ fontSize: 12, color: m.status === 'ok' ? '#25D366' : '#ef4444' }}>{m.status === 'ok' ? '✓' : '✕'}</span>
               <span style={{ fontSize: 11, color: 'var(--cinza)', whiteSpace: 'nowrap' }}>{hora(m.criado_em)}</span>
               <span style={{ fontSize: 11, color: 'var(--cinza)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{mascararFone(m.destino)}</span>
+              {m.nome && <span style={{ fontSize: 11, color: '#6B0F1A', fontWeight: 600, whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.nome}</span>}
               <span style={{ fontSize: 12, color: 'var(--preto)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                 {m.preview}{m.erro ? <span style={{ color: '#ef4444' }}> · {m.erro.slice(0, 60)}</span> : ''}
               </span>

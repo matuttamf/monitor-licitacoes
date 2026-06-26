@@ -16,7 +16,7 @@ export async function GET() {
   const service = createAdminClient()
   const h24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-  const [{ data: recentes }, { count: ok24 }, { count: erro24 }] = await Promise.all([
+  const [{ data: recentes }, { count: ok24 }, { count: erro24 }, { data: profiles }] = await Promise.all([
     service.from('disparos_log')
       .select('destino, preview, status, erro, criado_em')
       .eq('canal', 'whatsapp')
@@ -26,11 +26,23 @@ export async function GET() {
       .eq('canal', 'whatsapp').eq('status', 'ok').gte('criado_em', h24),
     service.from('disparos_log').select('*', { count: 'exact', head: true })
       .eq('canal', 'whatsapp').eq('status', 'erro').gte('criado_em', h24),
+    service.from('profiles').select('nome, whatsapp').not('whatsapp', 'is', null),
   ])
+
+  // Normaliza número para apenas dígitos → busca nome pelo telefone
+  const norm = (s: string) => s.replace(/\D/g, '')
+  const nomeMap = Object.fromEntries(
+    (profiles ?? []).filter(p => p.whatsapp).map(p => [norm(p.whatsapp), p.nome ?? ''])
+  )
+
+  const recentesComNome = (recentes ?? []).map(d => ({
+    ...d,
+    nome: nomeMap[norm(d.destino)] ?? null,
+  }))
 
   return NextResponse.json({
     ok24:   ok24 ?? 0,
     erro24: erro24 ?? 0,
-    recentes: recentes ?? [],
+    recentes: recentesComNome,
   })
 }
