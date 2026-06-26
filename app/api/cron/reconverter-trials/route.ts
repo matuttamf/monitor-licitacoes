@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
 
       enviados++
     } catch (e: unknown) {
-      console.error(`[reconverter-trials] erro ${perfil.email}:`, e instanceof Error ? e.message : e)
+      console.error(`[reconverter-trials] erro ${email}:`, e instanceof Error ? e.message : e)
       erros++
     }
 
