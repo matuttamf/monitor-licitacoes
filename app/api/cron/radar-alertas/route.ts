@@ -225,11 +225,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, cache: todos.length, emails: 0 })
   }
 
-  // Buscar emails dos usuários via auth.admin
-  const { data: authData } = await supabase.auth.admin.listUsers()
-  const emailMap = Object.fromEntries(
-    (authData?.users ?? []).map(u => [u.id, u.email!])
-  )
+  // Buscar emails dos usuários via auth.admin paginado (sem paginação retorna só 1000)
+  const allAuthUsers: { id: string; email?: string }[] = []
+  for (let page = 1; ; page++) {
+    const { data: pg } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+    const users = pg?.users ?? []
+    allAuthUsers.push(...users)
+    if (users.length < 1000) break
+  }
+  const emailMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u.email!]))
 
   let enviados = 0
   const resultados: Record<string, unknown> = {}
