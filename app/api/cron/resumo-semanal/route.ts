@@ -207,7 +207,7 @@ export async function GET(request: Request) {
     authPage++
   }
   const emailMap = Object.fromEntries(
-    allAuthUsers.filter(u => userIdSet.has(u.id)).map(u => [u.id, u.email!])
+    allAuthUsers.filter(u => profileMap[u.id]).map(u => [u.id, u.email!])
   )
 
   // ── Passo 3: processar em lotes de LOTE_USUARIOS ────────────────────────
