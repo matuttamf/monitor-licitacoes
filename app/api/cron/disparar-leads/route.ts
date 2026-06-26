@@ -193,15 +193,9 @@ export async function GET(req: NextRequest) {
       .limit(MAX_LOTE_FOLLOWUP),
   ])
 
-  // Remove leads com razão social = CNPJ puro (placeholder sem nome real)
-  // MEI com prefixo "14.304.386 NOME" são limpos em limparNome(), não bloqueados
-  function eNomePlaceholder(razaoSocial: string | null): boolean {
-    if (!razaoSocial) return false
-    const s = razaoSocial.trim()
-    return /^\d{14}$/.test(s) || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(s)
-  }
-
   // Remove prefixo numérico de nomes MEI: "14.304.386 REGELIA RODRIGUES" → "REGELIA RODRIGUES"
+  // Leads com razão social = CNPJ puro já são marcados como inválidos pela migration
+  // 20260626_leads_cnpj_placeholder.sql e nunca chegam aqui.
   function limparNome(nome: string | null | undefined): string | null {
     if (!nome) return nome ?? null
     const limpo = nome.replace(/^\d{2}[\.\d\/\-]{0,14}\s+/, '').trim()
@@ -211,7 +205,6 @@ export async function GET(req: NextRequest) {
   // Query já ordenada pelo banco (prioridade_disparo → cnae_rank → created_at)
   // Sort JS é fallback de segurança para casos sem coluna prioridade_disparo
   const leadsPendentes = (leadsPendentesRaw ?? [])
-    .filter(l => !eNomePlaceholder(l.razao_social))
     .sort((a, b) => {
       const pa = prioridadeLead(a), pb = prioridadeLead(b)
       if (pa !== pb) return pa - pb
