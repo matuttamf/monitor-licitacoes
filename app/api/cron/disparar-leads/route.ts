@@ -239,7 +239,20 @@ export async function GET(req: NextRequest) {
     textFinal: string
   }
 
-  const leadsPreparados: LeadPreparado[] = todos.map(lead => {
+  // Leads cujo nome após limpeza ainda é só dígitos não têm nome utilizável — invalida antes de enviar
+  const soDigitos = (s: string | null | undefined) => !!s && /^\d+$/.test(s.replace(/[\s.\-\/]/g, ''))
+  const invalidos = todos.filter(lead => {
+    const nome = limparNome(lead.razao_social)
+    return soDigitos(nome)
+  })
+  if (invalidos.length > 0) {
+    await supabase.from('leads')
+      .update({ status: 'invalido', erro_msg: 'cnpj_como_razao_social' })
+      .in('id', invalidos.map(l => l.id))
+  }
+  const todosValidos = todos.filter(lead => !invalidos.find(i => i.id === lead.id))
+
+  const leadsPreparados: LeadPreparado[] = todosValidos.map(lead => {
     const chave = `${lead.segmento ?? 'outros'}|${lead.uf ?? ''}`
     const licitacoes = cacheLicitacoes.get(chave) ?? []
     const numeroEmail = (lead.emails_enviados ?? 0) + 1
