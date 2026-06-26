@@ -83,9 +83,9 @@ export async function GET(req: NextRequest) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, created_at, status')
+    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, criado_em, status')
     .in('status', ['trial', 'active'])
-    .gte('created_at', janelaMaisLarga)
+    .gte('criado_em', janelaMaisLarga)
 
   if (!profiles?.length) {
     await registrarCronLog({ job: 'onboarding-followup', status: 'ok', mensagem: '0 usuários no período' })
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
 
   // Usuários em janela D+3 com fornecedor cadastrado
   const usersEmD3 = profiles
-    .filter(p => emJanela(new Date(p.created_at), jFornecedor))
+    .filter(p => emJanela(new Date(p.criado_em), jFornecedor))
     .map(p => p.id)
 
   const usersComFornecedor = new Set<string>()
@@ -144,7 +144,7 @@ export async function GET(req: NextRequest) {
     const email = emailMap[p.id]
     if (email === adminEmail) continue
 
-    const criado      = new Date(p.created_at)
+    const criado      = new Date(p.criado_em)
     const emailPausado = p.email_pausado_ate && new Date(p.email_pausado_ate) > agora
     const waPausado    = p.whatsapp_pausado_ate && new Date(p.whatsapp_pausado_ate) > agora
 
