@@ -68,6 +68,7 @@ export async function POST(request: Request) {
     'disparar-leads':              `${baseUrl}/api/cron/disparar-leads`,
     'reconverter-trials':          `${baseUrl}/api/cron/reconverter-trials`,
     'radar-alertas':               `${baseUrl}/api/cron/radar-alertas`,
+    'resumo-semanal':              `${baseUrl}/api/cron/resumo-semanal`,
   }
 
   const url = rotas[acao]

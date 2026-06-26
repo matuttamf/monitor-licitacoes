@@ -623,6 +623,7 @@ export default function AdminPage() {
             { acao: 'matching',        label: '🤖 Matching',        desc: 'Gera candidatos' },
             { acao: 'alertar',         label: '📧 Alertar',         desc: 'Envia alertas' },
             { acao: 'emails',          label: '📩 E-mails trial',   desc: 'Sequência trial' },
+            { acao: 'resumo-semanal',  label: '📊 Resumo semanal',  desc: 'Envia digest da semana' },
           ]},
         ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).map(({ grupo, itens }) => (
           <div key={grupo} style={{ marginBottom: '10px' }}>
