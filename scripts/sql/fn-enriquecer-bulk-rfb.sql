@@ -24,6 +24,16 @@ AS $$
       nome_fantasia = COALESCE(NULLIF(u->>'nome_fantasia', ''), l.nome_fantasia),
       situacao      = COALESCE(NULLIF(u->>'situacao', ''), l.situacao),
       cnae_codigo   = COALESCE(NULLIF(u->>'cnae_codigo', ''), l.cnae_codigo),
+      cnae          = CASE
+                        WHEN l.cnae IS NULL AND u->>'cnae' IS NOT NULL AND u->>'cnae' != ''
+                        THEN u->>'cnae'
+                        ELSE l.cnae
+                      END,
+      segmento      = CASE
+                        WHEN l.segmento IS NULL AND u->>'segmento' IS NOT NULL AND u->>'segmento' != ''
+                        THEN u->>'segmento'
+                        ELSE l.segmento
+                      END,
       uf            = COALESCE(NULLIF(u->>'uf', ''), l.uf),
       municipio     = CASE
                         WHEN l.municipio IS NULL AND u->>'municipio' IS NOT NULL AND u->>'municipio' != ''

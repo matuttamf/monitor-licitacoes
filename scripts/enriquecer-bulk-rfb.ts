@@ -23,6 +23,7 @@ import { tmpdir } from 'node:os'
 import { createInterface } from 'node:readline'
 import { Readable } from 'node:stream'
 import { config } from 'dotenv'
+import { mapearSegmento } from '@/lib/leads/segmento'
 config({ path: '.env.local' })
 config()
 
@@ -272,14 +273,15 @@ async function construirMapaEmpresas(
 type UpdateRecord = {
   cnpj: string
   razao_social?: string; nome_fantasia?: string; situacao?: string
-  cnae_codigo?: string; uf?: string; municipio?: string; porte?: string; email?: string
+  cnae_codigo?: string; cnae?: string; segmento?: string
+  uf?: string; municipio?: string; porte?: string; email?: string
 }
 
-// ── Fase 0: mapa de municípios (código RFB → nome) ───────────────────────────
+// ── Fase 0a: mapa de municípios (código RFB → nome) ──────────────────────────
 // O arquivo Estabelecimentos traz o município como CÓDIGO (coluna 20). O nome
 // vem do arquivo auxiliar Municipios.zip (codigo;nome). Sem ele, município fica nulo.
 async function construirMapaMunicipios(): Promise<Map<string, string>> {
-  console.log('\n── Fase 0: Municípios (código → nome) ──')
+  console.log('\n── Fase 0a: Municípios (código → nome) ──')
   const mapa = new Map<string, string>()
   const tmpPath = join(tmpdir(), 'rfb-municipios.zip')
   const urls = [`${STORAGE_BASE}/Municipios.zip`, `${RF_BASE}/Municipios.zip`]
@@ -297,6 +299,26 @@ async function construirMapaMunicipios(): Promise<Map<string, string>> {
   return mapa
 }
 
+// ── Fase 0b: mapa de CNAEs (código → descrição) ──────────────────────────────
+async function construirMapaCnaes(): Promise<Map<string, string>> {
+  console.log('\n── Fase 0b: CNAEs (código → descrição) ──')
+  const mapa = new Map<string, string>()
+  const tmpPath = join(tmpdir(), 'rfb-cnaes.zip')
+  const urls = [`${STORAGE_BASE}/Cnaes.zip`, `${RF_BASE}/Cnaes.zip`]
+  if (!await downloadComRetry(urls, tmpPath)) {
+    console.warn('  ⚠ Cnaes.zip indisponível — cnae/segmento NÃO será preenchido nesta execução.')
+    return mapa
+  }
+  await processarZip(tmpPath, (cols) => {
+    const cod  = cols[0]?.trim().replace(/\D/g, '')
+    const desc = cols[1]?.trim()
+    if (cod && desc) mapa.set(cod, desc)
+  })
+  if (existsSync(tmpPath)) unlinkSync(tmpPath)
+  console.log(`  CNAEs carregados: ${mapa.size.toLocaleString('pt-BR')}`)
+  return mapa
+}
+
 async function enviarBatch(batch: UpdateRecord[]): Promise<number> {
   if (!batch.length) return 0
   const { data, error } = await supabase.rpc('enriquecer_bulk_rfb', { batch })
@@ -309,6 +331,7 @@ async function processarEstabelecimentos(
   basicosBase: Set<string>,
   mapaEmpresas: Map<string, { razao_social: string; porte: string | null }>,
   mapaMunicipios: Map<string, string>,
+  mapaCnaes: Map<string, string>,
 ): Promise<void> {
   console.log('\n── Fase 3: Estabelecimentos → enriquecimento bulk ──')
 
@@ -351,6 +374,14 @@ async function processarEstabelecimentos(
       if (nomeFantasia)          update.nome_fantasia = nomeFantasia
       if (email)                 update.email         = email
 
+      if (cnae && mapaCnaes.size > 0) {
+        const cnaeDesc = mapaCnaes.get(cnae)
+        if (cnaeDesc) {
+          update.cnae    = cnaeDesc
+          update.segmento = mapearSegmento(cnaeDesc)
+        }
+      }
+
       lote.push(update)
       encontrados++
     })
@@ -389,10 +420,13 @@ async function main() {
   const { cnpjsBase, basicosBase } = await carregarCnpjsBase()
   if (!cnpjsBase.size) { console.error('Nenhum CNPJ na base.'); process.exit(1) }
 
-  const mapaMunicipios = await construirMapaMunicipios()
-  const mapaEmpresas   = await construirMapaEmpresas(basicosBase)
+  const [mapaMunicipios, mapaCnaes] = await Promise.all([
+    construirMapaMunicipios(),
+    construirMapaCnaes(),
+  ])
+  const mapaEmpresas = await construirMapaEmpresas(basicosBase)
 
-  await processarEstabelecimentos(cnpjsBase, basicosBase, mapaEmpresas, mapaMunicipios)
+  await processarEstabelecimentos(cnpjsBase, basicosBase, mapaEmpresas, mapaMunicipios, mapaCnaes)
 
   console.log(`\n✓ Concluído em ${((Date.now() - t0) / 60000).toFixed(1)} minutos`)
 }

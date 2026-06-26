@@ -193,9 +193,25 @@ export async function GET(req: NextRequest) {
       .limit(MAX_LOTE_FOLLOWUP),
   ])
 
+  // Remove leads com razão social = CNPJ puro (placeholder sem nome real)
+  // MEI com prefixo "14.304.386 NOME" são limpos em limparNome(), não bloqueados
+  function eNomePlaceholder(razaoSocial: string | null): boolean {
+    if (!razaoSocial) return false
+    const s = razaoSocial.trim()
+    return /^\d{14}$/.test(s) || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(s)
+  }
+
+  // Remove prefixo numérico de nomes MEI: "14.304.386 REGELIA RODRIGUES" → "REGELIA RODRIGUES"
+  function limparNome(nome: string | null | undefined): string | null {
+    if (!nome) return nome ?? null
+    const limpo = nome.replace(/^\d{2}[\.\d\/\-]{0,14}\s+/, '').trim()
+    return limpo || nome
+  }
+
   // Query já ordenada pelo banco (prioridade_disparo → cnae_rank → created_at)
   // Sort JS é fallback de segurança para casos sem coluna prioridade_disparo
   const leadsPendentes = (leadsPendentesRaw ?? [])
+    .filter(l => !eNomePlaceholder(l.razao_social))
     .sort((a, b) => {
       const pa = prioridadeLead(a), pb = prioridadeLead(b)
       if (pa !== pb) return pa - pb
@@ -236,8 +252,8 @@ export async function GET(req: NextRequest) {
     const numeroEmail = (lead.emails_enviados ?? 0) + 1
     const { subject, html, text } = emailCaptacao({
       id:           lead.id,
-      razaoSocial:  lead.razao_social,
-      nomeFantasia: lead.nome_fantasia,
+      razaoSocial:  limparNome(lead.razao_social) ?? lead.razao_social,
+      nomeFantasia: limparNome(lead.nome_fantasia),
       municipio:    lead.municipio,
       uf:           lead.uf,
       cnae:         lead.cnae,
