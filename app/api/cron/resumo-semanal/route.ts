@@ -174,6 +174,7 @@ export async function GET(request: Request) {
     `)
     .gte('criado_em', inicio + 'T00:00:00.000Z')
     .lte('criado_em', fim    + 'T23:59:59.999Z')
+    .limit(100000)
 
   if (error) {
     console.error('Resumo semanal — erro ao buscar alertas:', error.message)
