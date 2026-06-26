@@ -625,7 +625,6 @@ export default function AdminPage() {
             { acao: 'alertar-urgente',                  label: '🚨 Alertar urgente',      desc: 'WA/Telegram urgentes' },
             { acao: 'coletar-resultados',               label: '📋 Resultados',           desc: 'Coleta resultados PNCP' },
             { acao: 'coletar-resultados-transparencia', label: '🏛 Result. transp.',      desc: 'Resultados transparência' },
-            { acao: 'limpar-alertas',                   label: '🗑 Limpar alertas',       desc: 'Remove alertas antigos' },
           ]},
           { grupo: 'Usuários & E-mails', itens: [
             { acao: 'emails',                   label: '📩 E-mails trial',        desc: 'Sequência trial' },
@@ -656,7 +655,8 @@ export default function AdminPage() {
             { acao: 'enriquecer-receita',          label: '🧾 Enriquecer RFB (GH)',   desc: 'Via GitHub Actions' },
           ]},
           { grupo: 'Sistema', itens: [
-            { acao: 'backup-db', label: '💾 Backup DB', desc: 'Backup Supabase' },
+            { acao: 'backup-db',     label: '💾 Backup DB',      desc: 'Backup Supabase' },
+            { acao: 'limpar-alertas', label: '🗑 Limpar alertas', desc: 'Remove alertas antigos' },
           ]},
         ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).map(({ grupo, itens }) => (
           <div key={grupo} style={{ marginBottom: '10px' }}>
