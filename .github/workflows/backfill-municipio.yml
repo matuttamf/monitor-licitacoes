@@ -1,0 +1,46 @@
+name: Backfill Município (RFB)
+
+# Disparo manual: preenche o campo `municipio` dos leads que estão sem ele,
+# lendo a coluna 20 dos arquivos Estabelecimentos + o de-para Municipios.zip.
+# Usa BULK_FILTRO=sem_municipio para a paginação avançar de fato pela base.
+# Rode quantas vezes precisar — quando não houver mais leads sem município,
+# o job termina sem fazer nada.
+on:
+  workflow_dispatch:
+    inputs:
+      idx_inicio:
+        description: 'Índice inicial dos arquivos (0-9)'
+        default: '0'
+      idx_fim:
+        description: 'Índice final dos arquivos (0-9)'
+        default: '9'
+      max_rows:
+        description: 'Máx. de leads por execução'
+        default: '8000000'
+
+jobs:
+  backfill:
+    name: Backfill de município
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: 'npm' }
+      - run: npm ci
+      - name: Preencher município (sem_municipio)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+          BULK_FILTRO: sem_municipio
+          MAX_ROWS: ${{ inputs.max_rows }}
+        run: npx tsx scripts/enriquecer-bulk-rfb.ts ${{ inputs.idx_inicio }} ${{ inputs.idx_fim }}
+      - name: Notificar conclusão
+        if: always()
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npx tsx scripts/notificar-cron.ts "backfill-municipio" "${{ job.status }}"
