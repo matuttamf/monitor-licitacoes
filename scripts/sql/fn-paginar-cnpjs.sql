@@ -29,7 +29,7 @@ $$;
 CREATE OR REPLACE FUNCTION get_cnpjs_sem_municipio_page(last_id uuid, page_size int DEFAULT 1000)
 RETURNS TABLE(id uuid, cnpj text)
 LANGUAGE sql SECURITY DEFINER
-SET statement_timeout = '55s'
+SET statement_timeout = '120s'
 AS $$
   SELECT id, cnpj FROM leads
   WHERE id > last_id
@@ -42,7 +42,10 @@ GRANT EXECUTE ON FUNCTION get_cnpjs_page(uuid, int) TO service_role;
 GRANT EXECUTE ON FUNCTION get_cnpjs_sem_email_page(uuid, int) TO service_role;
 GRANT EXECUTE ON FUNCTION get_cnpjs_sem_municipio_page(uuid, int) TO service_role;
 
--- Índice parcial opcional (acelera a paginação acima). Como é grande, rode à
--- parte com CONCURRENTLY se preferir não travar escrita:
---   CREATE INDEX CONCURRENTLY IF NOT EXISTS leads_sem_municipio_idx
---     ON leads (id) WHERE municipio IS NULL;
+-- Índice COVERING (id + cnpj) para a paginação rodar como index-only scan —
+-- sem ir ao heap buscar o cnpj (essencial quando o I/O do disco está limitado).
+-- Recriar assim se o anterior (só id) estiver causando timeout:
+--   DROP INDEX IF EXISTS leads_sem_municipio_idx;
+--   CREATE INDEX CONCURRENTLY leads_sem_municipio_idx
+--     ON leads (id) INCLUDE (cnpj) WHERE municipio IS NULL;
+--   ANALYZE leads;   -- atualiza estatísticas p/ o planner escolher o índice
