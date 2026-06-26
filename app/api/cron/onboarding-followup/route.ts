@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, created_at, status')
+    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, created_at, status')
     .in('status', ['trial', 'active'])
     .gte('created_at', janelaMaisLarga)
 
