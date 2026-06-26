@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cron: Resumo Semanal — executa toda sexta-feira
  *
  * Envia para cada usuário ativo um digest dos alertas recebidos na semana:
@@ -6,6 +6,12 @@
  * - Volume financeiro estimado
  * - Top 5 palavras-chave com mais matches
  * - Canais: e-mail (todos), Telegram (se configurado), WhatsApp (todos os planos)
+ *
+ * Arquitetura escalável (50k+ assinantes):
+ * - Passo 1: busca apenas user_ids distintos com alertas na semana (query leve)
+ * - Passo 2: processa em lotes de LOTE_USUARIOS por vez
+ * - Passo 3: para cada lote, agrega alertas apenas dos usuários do lote
+ * Evita carregar milhões de linhas em memória de uma vez.
  */
 
 import { NextResponse } from 'next/server'
@@ -17,6 +23,8 @@ import { enviarTextoTelegram } from '@/lib/alerts/telegram'
 import { enviarResumoSemanalWhatsApp } from '@/lib/alerts/whatsapp'
 
 export const maxDuration = 300
+
+const LOTE_USUARIOS = 100  // usuários processados por vez
 
 function getResend() { return new Resend(process.env.RESEND_API_KEY!) }
 const FROM_EMAIL = process.env.RESEND_FROM ?? 'Monitor de Licitações <alertas@monitordelicitacoes.com.br>'
@@ -159,57 +167,41 @@ export async function GET(request: Request) {
 
   const supabase = await createServiceClient()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
-
   const inicio = inicioSemana()
   const fim    = new Date().toISOString().substring(0, 10)
+  const inicioTs = inicio + 'T00:00:00.000Z'
+  const fimTs    = fim    + 'T23:59:59.999Z'
 
-  // Buscar todos os alertas da semana com licitação + keyword
-  const { data: alertasSemana, error } = await supabase
+  // ── Passo 1: descobrir user_ids distintos com alertas na semana ──────────
+  // Query leve — só IDs, sem joins pesados. Escala independente do volume.
+  const { data: keywordsComAlertas, error: errKw } = await supabase
     .from('alertas')
-    .select(`
-      id,
-      keyword_id,
-      licitacoes (id, valor_estimado, estado),
-      keywords (id, termo, user_id)
-    `)
-    .gte('criado_em', inicio + 'T00:00:00.000Z')
-    .lte('criado_em', fim    + 'T23:59:59.999Z')
-    .limit(100000)
+    .select('keywords!inner(user_id)')
+    .gte('criado_em', inicioTs)
+    .lte('criado_em', fimTs)
+    .limit(200000)
 
-  if (error) {
-    console.error('Resumo semanal — erro ao buscar alertas:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (errKw) {
+    console.error('Resumo semanal — erro ao buscar user_ids:', errKw.message)
+    return NextResponse.json({ error: errKw.message }, { status: 500 })
   }
 
-  if (!alertasSemana?.length) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userIdSet = new Set<string>((keywordsComAlertas ?? []).map((r: any) => r.keywords?.user_id).filter(Boolean))
+  const userIds   = [...userIdSet]
+
+  if (!userIds.length) {
     await registrarCronLog({ job: 'resumo-semanal', status: 'ok', mensagem: 'Sem alertas na semana' })
     return NextResponse.json({ ok: true, usuarios: 0, motivo: 'sem alertas na semana' })
   }
 
-  // Agrupar por usuário
-  const dadosPorUsuario = new Map<string, {
-    totalAlertas: number
-    volumeTotal: number
-    keywordCount: Map<string, number>
-  }>()
+  // ── Passo 2: carregar perfis e e-mails dos usuários ─────────────────────
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, nome, status, plano, telegram_chat_id, whatsapp, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
+    .in('id', userIds)
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
-  for (const a of alertasSemana) {
-    const userId = (a.keywords as any)?.user_id
-    if (!userId) continue
-    if (!dadosPorUsuario.has(userId)) {
-      dadosPorUsuario.set(userId, { totalAlertas: 0, volumeTotal: 0, keywordCount: new Map() })
-    }
-    const u = dadosPorUsuario.get(userId)!
-    u.totalAlertas++
-    const valor = (a.licitacoes as any)?.valor_estimado
-    if (valor && valor > 0) u.volumeTotal += valor
-    const termo = (a.keywords as any)?.termo ?? ''
-    u.keywordCount.set(termo, (u.keywordCount.get(termo) ?? 0) + 1)
-  }
-
-  const userIds = [...dadosPorUsuario.keys()]
-
-  // Buscar e-mails com paginação (listUsers retorna max 1000 por chamada)
   const allAuthUsers: { id: string; email?: string }[] = []
   let authPage = 1
   while (true) {
@@ -220,81 +212,97 @@ export async function GET(request: Request) {
     authPage++
   }
   const emailMap = Object.fromEntries(
-    allAuthUsers
-      .filter(u => userIds.includes(u.id))
-      .map(u => [u.id, u.email!])
+    allAuthUsers.filter(u => userIdSet.has(u.id)).map(u => [u.id, u.email!])
   )
 
-  // Buscar perfis
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, nome, status, plano, telegram_chat_id, whatsapp, email_pausado_ate, telegram_pausado_ate, whatsapp_pausado_ate')
-    .in('id', userIds)
-  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
-
+  // ── Passo 3: processar em lotes de LOTE_USUARIOS ────────────────────────
   let totalUsuarios = 0
-  const resultados: Record<string, { ok: boolean; canais: string[] }> = {}
-
   const agora = new Date()
-  for (const [userId, dados] of dadosPorUsuario.entries()) {
-    const email   = emailMap[userId]
-    const perfil  = profileMap[userId]
-    if (!email || perfil?.status === 'expired') continue
 
-    const topKeywords = [...dados.keywordCount.entries()]
-      .map(([termo, count]) => ({ termo, count }))
-      .sort((a, b) => b.count - a.count)
+  for (let i = 0; i < userIds.length; i += LOTE_USUARIOS) {
+    const loteIds = userIds.slice(i, i + LOTE_USUARIOS)
 
-    const canaisEnviados: string[] = []
-    const nomeUsuario = perfil?.nome ?? ''
+    // Busca alertas apenas dos usuários deste lote
+    const { data: alertasLote } = await supabase
+      .from('alertas')
+      .select('keyword_id, licitacoes(valor_estimado), keywords!inner(termo, user_id)')
+      .gte('criado_em', inicioTs)
+      .lte('criado_em', fimTs)
+      .in('keywords.user_id', loteIds)
+      .limit(50000)
 
-    // E-mail — todos os planos
-    if (!perfil?.email_pausado_ate || new Date(perfil.email_pausado_ate) <= agora) {
-      try {
-        await getResend().emails.send({
-          from:    FROM_EMAIL,
-          to:      email,
-          subject: `📊 Seu resumo semanal — ${dados.totalAlertas} licitaç${dados.totalAlertas !== 1 ? 'ões' : 'ão'} encontrada${dados.totalAlertas !== 1 ? 's' : ''}`,
-          html:    gerarHtmlResumo({ nomeUsuario, total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl }),
-        })
-        canaisEnviados.push('email')
-      } catch (e) {
-        console.error('Resumo semanal — erro email:', email, e)
+    // Agrupa por usuário dentro do lote
+    const dadosPorUsuario = new Map<string, {
+      totalAlertas: number
+      volumeTotal: number
+      keywordCount: Map<string, number>
+    }>()
+
+    for (const a of alertasLote ?? []) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userId = (a.keywords as any)?.user_id
+      if (!userId) continue
+      if (!dadosPorUsuario.has(userId)) {
+        dadosPorUsuario.set(userId, { totalAlertas: 0, volumeTotal: 0, keywordCount: new Map() })
       }
+      const u = dadosPorUsuario.get(userId)!
+      u.totalAlertas++
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const valor = (a.licitacoes as any)?.valor_estimado
+      if (valor && valor > 0) u.volumeTotal += valor
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const termo = (a.keywords as any)?.termo ?? ''
+      u.keywordCount.set(termo, (u.keywordCount.get(termo) ?? 0) + 1)
     }
 
-    // Telegram — todos os planos (se configurado)
-    if (perfil?.telegram_chat_id && (!perfil.telegram_pausado_ate || new Date(perfil.telegram_pausado_ate) <= agora)) {
-      try {
-        const texto = gerarTextoTelegramResumo({ total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl })
-        const ok = await enviarTextoTelegram(perfil.telegram_chat_id, texto)
-        if (ok) canaisEnviados.push('telegram')
-      } catch (e) {
-        console.error('Resumo semanal — erro telegram:', userId, e)
+    // Envia para cada usuário do lote
+    for (const [userId, dados] of dadosPorUsuario.entries()) {
+      const email  = emailMap[userId]
+      const perfil = profileMap[userId]
+      if (!email || perfil?.status === 'expired') continue
+
+      const topKeywords = [...dados.keywordCount.entries()]
+        .map(([termo, count]) => ({ termo, count }))
+        .sort((a, b) => b.count - a.count)
+
+      const nomeUsuario = perfil?.nome ?? ''
+
+      if (!perfil?.email_pausado_ate || new Date(perfil.email_pausado_ate) <= agora) {
+        try {
+          await getResend().emails.send({
+            from:    FROM_EMAIL,
+            to:      email,
+            subject: `📊 Seu resumo semanal — ${dados.totalAlertas} licitaç${dados.totalAlertas !== 1 ? 'ões' : 'ão'} encontrada${dados.totalAlertas !== 1 ? 's' : ''}`,
+            html:    gerarHtmlResumo({ nomeUsuario, total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl }),
+          })
+        } catch (e) {
+          console.error('Resumo semanal — erro email:', email, e)
+        }
       }
-    }
 
-    // WhatsApp — todos os planos
-    if (perfil?.whatsapp && (!perfil.whatsapp_pausado_ate || new Date(perfil.whatsapp_pausado_ate) <= agora)) {
-      const ok = await enviarResumoSemanalWhatsApp(
-        perfil.whatsapp,
-        dados.totalAlertas,
-        dados.volumeTotal,
-        topKeywords,
-      )
-      if (ok) canaisEnviados.push('whatsapp')
-    }
+      if (perfil?.telegram_chat_id && (!perfil.telegram_pausado_ate || new Date(perfil.telegram_pausado_ate) <= agora)) {
+        try {
+          const texto = gerarTextoTelegramResumo({ total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl })
+          await enviarTextoTelegram(perfil.telegram_chat_id, texto)
+        } catch (e) {
+          console.error('Resumo semanal — erro telegram:', userId, e)
+        }
+      }
 
-    totalUsuarios++
-    resultados[email] = { ok: canaisEnviados.length > 0, canais: canaisEnviados }
+      if (perfil?.whatsapp && (!perfil.whatsapp_pausado_ate || new Date(perfil.whatsapp_pausado_ate) <= agora)) {
+        await enviarResumoSemanalWhatsApp(perfil.whatsapp, dados.totalAlertas, dados.volumeTotal, topKeywords)
+      }
+
+      totalUsuarios++
+    }
   }
 
   await registrarCronLog({
     job:      'resumo-semanal',
     status:   'ok',
     mensagem: `Resumo semanal enviado para ${totalUsuarios} usuário(s)`,
-    detalhes: resultados,
+    detalhes: { totalUsuarios, inicio, fim },
   })
 
-  return NextResponse.json({ ok: true, usuarios: totalUsuarios, detalhes: resultados })
+  return NextResponse.json({ ok: true, usuarios: totalUsuarios })
 }
