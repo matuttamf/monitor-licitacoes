@@ -77,11 +77,12 @@ async function logDisparo(destino: string, texto: string, status: 'ok' | 'erro',
       _logSb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
     }
     await _logSb.from('disparos_log').insert({
-      canal:   'whatsapp',
+      canal:    'whatsapp',
       destino,
-      preview: texto.slice(0, 120),
+      preview:  texto.slice(0, 120),
+      mensagem: texto,
       status,
-      erro:    erro?.slice(0, 200) ?? null,
+      erro:     erro?.slice(0, 200) ?? null,
     })
   } catch { /* log nunca quebra o disparo */ }
 }

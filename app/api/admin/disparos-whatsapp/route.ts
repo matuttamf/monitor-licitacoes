@@ -18,10 +18,11 @@ export async function GET() {
 
   const [{ data: recentes }, { count: ok24 }, { count: erro24 }, { data: profiles }] = await Promise.all([
     service.from('disparos_log')
-      .select('destino, preview, status, erro, criado_em')
+      .select('destino, preview, mensagem, status, erro, criado_em')
       .eq('canal', 'whatsapp')
+      .gte('criado_em', h24)
       .order('criado_em', { ascending: false })
-      .limit(40),
+      .limit(2000),
     service.from('disparos_log').select('*', { count: 'exact', head: true })
       .eq('canal', 'whatsapp').eq('status', 'ok').gte('criado_em', h24),
     service.from('disparos_log').select('*', { count: 'exact', head: true })
@@ -29,15 +30,18 @@ export async function GET() {
     service.from('profiles').select('nome, whatsapp').not('whatsapp', 'is', null),
   ])
 
-  // Normaliza número para apenas dígitos → busca nome pelo telefone
-  const norm = (s: string) => s.replace(/\D/g, '')
+  // Normaliza para os últimos 11 dígitos (sem DDI 55) para bater profiles.whatsapp com destino do log
+  const norm11 = (s: string) => {
+    const d = s.replace(/\D/g, '')
+    return d.length >= 12 && d.startsWith('55') ? d.slice(2) : d
+  }
   const nomeMap = Object.fromEntries(
-    (profiles ?? []).filter(p => p.whatsapp).map(p => [norm(p.whatsapp), p.nome ?? ''])
+    (profiles ?? []).filter(p => p.whatsapp).map(p => [norm11(p.whatsapp), p.nome ?? ''])
   )
 
   const recentesComNome = (recentes ?? []).map(d => ({
     ...d,
-    nome: nomeMap[norm(d.destino)] ?? null,
+    nome: nomeMap[norm11(d.destino)] ?? null,
   }))
 
   return NextResponse.json({
