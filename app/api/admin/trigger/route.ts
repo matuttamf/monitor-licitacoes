@@ -89,16 +89,38 @@ export async function POST(request: Request) {
   const url = rotas[acao]
   if (!url) return NextResponse.json({ error: 'Ação inválida' }, { status: 400 })
 
-  // Ações longas rodam em background — retornam imediatamente sem aguardar
+  // Ações longas (maxDuration > 55s) rodam em background — retornam imediatamente sem aguardar
   const MSGS_BACKGROUND: Record<string, string> = {
-    'radar-alertas':          'Radar disparado em background (~2 min). Verifique o painel /radar em breve.',
-    'enriquecer-emails':      'Busca de e-mails disparada em background. Verifique os leads em ~2min.',
-    'coletar':                'Coleta disparada em background (~5 min). Verifique Licitações em breve.',
-    // 'coletar-abertos' removido do fire-and-forget — roda síncrono (ver timeout abaixo)
-    'coletar-participantes':         'Coleta de participantes disparada em background (~5 min). Verifique os leads em breve.',
-    'coletar-leads-transparencia':  'Coleta Portal Transparência disparada em background. Verifique os leads em breve.',
-    'coletar-leads':                'Coleta de leads PNCP disparada em background (~5 min). Verifique os leads em breve.',
-    'coletar-leads-cnae':           'Coleta CNAE via Storage disparada em background. Verifique os leads em breve.',
+    // Coleta / indexação
+    'coletar':                          'Coleta disparada em background (~5 min).',
+    'coletar-participantes':            'Coleta de participantes disparada em background.',
+    'coletar-leads':                    'Coleta de leads PNCP disparada em background.',
+    'coletar-leads-cnae':               'Coleta CNAE via Storage disparada em background.',
+    'coletar-leads-transparencia':      'Coleta Portal Transparência disparada em background.',
+    'coletar-resultados':               'Coleta de resultados disparada em background.',
+    'coletar-resultados-transparencia': 'Coleta resultados transparência disparada em background.',
+    // Enriquecimento
+    'enriquecer-emails':                'Busca de e-mails disparada em background.',
+    // Alertas
+    'radar-alertas':                    'Radar disparado em background (~2 min).',
+    // E-mails e comunicação
+    'resumo-semanal':                   'Resumo semanal disparado em background.',
+    'onboarding-followup':              'Onboarding follow-up disparado em background.',
+    'email-segunda':                    'E-mail de segunda disparado em background.',
+    'aviso-renovacao-anual':            'Aviso de renovação disparado em background.',
+    'emails-pos-assinatura':            'E-mails pós-assinatura disparados em background.',
+    'emails-feedback':                  'E-mails de feedback disparados em background.',
+    'reconverter-trials':               'Reconversão de trials disparada em background.',
+    'expirar-trials':                   'Expiração de trials disparada em background.',
+    // Indicações
+    'indicacoes-elegibilidade':         'Verificação de elegibilidade disparada em background.',
+    'indicacoes-liberar':               'Liberação de bônus disparada em background.',
+    'indicacoes-aplicar-creditos':      'Aplicação de créditos disparada em background.',
+    'reverter-descontos':               'Reversão de descontos disparada em background.',
+    // Sistema
+    'backup-db':                        'Backup do banco disparado em background.',
+    'limpar-alertas':                   'Limpeza de alertas disparada em background.',
+    'sync-assinaturas':                 'Sincronização de assinaturas disparada em background.',
   }
   const fireAndForget = acao in MSGS_BACKGROUND
 
