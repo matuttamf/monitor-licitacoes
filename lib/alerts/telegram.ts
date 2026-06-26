@@ -11,13 +11,13 @@ interface LicitacaoAlerta {
 
 function formatarMensagemIndividual(l: LicitacaoAlerta, appUrl: string): string {
   const localidade = [l.cidade, l.estado].filter(Boolean).join(' — ')
-  const objeto = l.objeto.substring(0, 350) + (l.objeto.length > 350 ? '...' : '')
+  const objeto = escapeMd(l.objeto.substring(0, 350) + (l.objeto.length > 350 ? '...' : ''))
 
   return (
     `🚨 *OPORTUNIDADE!*\n\n` +
-    `🔹 *${l.keyword.toUpperCase()}*\n` +
-    `📋 ${l.orgao}\n` +
-    (localidade ? `📍 ${localidade}\n` : '') +
+    `🔹 *${escapeMd(l.keyword.toUpperCase())}*\n` +
+    `📋 ${escapeMd(l.orgao)}\n` +
+    (localidade ? `📍 ${escapeMd(localidade)}\n` : '') +
     `📝 ${objeto}\n` +
     (l.valor_estimado ? `💰 R$ ${l.valor_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` : '') +
     (l.data_abertura ? `📅 Abertura: ${l.data_abertura}\n` : '') +
@@ -26,20 +26,40 @@ function formatarMensagemIndividual(l: LicitacaoAlerta, appUrl: string): string 
   )
 }
 
+// Escapa caracteres especiais do modo Markdown legado do Telegram.
+// Órgãos e objetos de licitação frequentemente contêm _ * [ que quebram o parse.
+function escapeMd(s: string): string {
+  return s.replace(/[_*`[\]]/g, '\\$&')
+}
+
 async function enviarMensagemTelegram(token: string, chatId: string, texto: string): Promise<boolean> {
-  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: texto,
-      parse_mode: 'Markdown',
-      disable_web_page_preview: true,
-    }),
-  })
+  let res: Response
+  try {
+    res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id:                  chatId,
+        text:                     texto,
+        parse_mode:               'Markdown',
+        disable_web_page_preview: true,
+      }),
+      signal: AbortSignal.timeout(10000),
+    })
+  } catch (err) {
+    console.error(`Telegram timeout/erro de rede para chat ${chatId}:`, err instanceof Error ? err.message : err)
+    return false
+  }
 
   if (!res.ok) {
     console.error(`Erro ao enviar Telegram para chat ${chatId}:`, await res.text())
+    return false
+  }
+
+  // Telegram retorna HTTP 200 mesmo em falhas lógicas — verificar campo "ok"
+  const body = await res.json().catch(() => ({ ok: true }))
+  if (!body.ok) {
+    console.error(`Telegram recusou mensagem para chat ${chatId}:`, body.description ?? body)
     return false
   }
 
