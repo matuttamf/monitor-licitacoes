@@ -524,35 +524,6 @@ export default function DashboardPage() {
   return (
     <div className="max-w-5xl mx-auto">
 
-      {/* ── Hero: resultado da semana ── */}
-      {resumoSemana && (resumoSemana.total > 0 || resumoSemana.totalHistorico > 0) && (
-        <div className="mb-6 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between"
-          style={{ background: 'linear-gradient(135deg, #6B0F1A 0%, #8B1E2D 100%)', color: 'white' }}>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'rgba(201,166,90,0.9)' }}>
-              Últimos 7 dias
-            </div>
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="text-4xl font-black">{resumoSemana.total}</span>
-              <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                licitaç{resumoSemana.total !== 1 ? 'ões' : 'ão'} encontrada{resumoSemana.total !== 1 ? 's' : ''}
-              </span>
-            </div>
-            {resumoSemana.volumeTotal > 0 && (
-              <div className="mt-1 text-sm font-semibold" style={{ color: '#C9A65A' }}>
-                {fmtMoeda(resumoSemana.volumeTotal)} em volume estimado
-              </div>
-            )}
-          </div>
-          <div className="flex gap-4 sm:text-right">
-            <div>
-              <div className="text-2xl font-black">{resumoSemana.totalHistorico.toLocaleString('pt-BR')}</div>
-              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>alertas no total</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
@@ -700,6 +671,35 @@ export default function DashboardPage() {
           <p className="px-6 pb-4 text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
             * Soma dos valores estimados dos editais — não representa receita garantida
           </p>
+        </div>
+      )}
+
+      {/* ── Hero: resultado da semana ── */}
+      {resumoSemana && (resumoSemana.total > 0 || resumoSemana.totalHistorico > 0) && (
+        <div className="mb-6 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between"
+          style={{ background: 'linear-gradient(135deg, #6B0F1A 0%, #8B1E2D 100%)', color: 'white' }}>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'rgba(201,166,90,0.9)' }}>
+              Últimos 7 dias
+            </div>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <span className="text-4xl font-black">{resumoSemana.total}</span>
+              <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                licitaç{resumoSemana.total !== 1 ? 'ões' : 'ão'} encontrada{resumoSemana.total !== 1 ? 's' : ''}
+              </span>
+            </div>
+            {resumoSemana.volumeTotal > 0 && (
+              <div className="mt-1 text-sm font-semibold" style={{ color: '#C9A65A' }}>
+                {fmtMoeda(resumoSemana.volumeTotal)} em volume estimado
+              </div>
+            )}
+          </div>
+          <div className="flex gap-4 sm:text-right">
+            <div>
+              <div className="text-2xl font-black">{resumoSemana.totalHistorico.toLocaleString('pt-BR')}</div>
+              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>alertas no total</div>
+            </div>
+          </div>
         </div>
       )}
 
