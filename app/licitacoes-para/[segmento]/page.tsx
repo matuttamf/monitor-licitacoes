@@ -27,7 +27,7 @@ async function buscarEditaisSegmento(tiposContrato: { titulo: string }[]): Promi
       .or(termos)
       .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
       .order('coletado_em', { ascending: false })
-      .limit(9)
+      .limit(4)
     return (data ?? []) as Edital[]
   } catch {
     return []

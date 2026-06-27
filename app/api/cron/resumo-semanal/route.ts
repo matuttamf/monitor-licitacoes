@@ -278,7 +278,7 @@ export async function GET(request: Request) {
 
       const nomeUsuario = perfil?.nome ?? ''
       const shareToken = gerarTokenCompartilhamento(userId, inicio)
-      const shareUrl   = `${appUrl}/r/${shareToken}`
+      const shareUrl   = `${appUrl}/relatorio/${shareToken}`
 
       if (!perfil?.email_pausado_ate || new Date(perfil.email_pausado_ate) <= agora) {
         try {
