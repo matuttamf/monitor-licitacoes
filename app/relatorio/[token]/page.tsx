@@ -57,14 +57,16 @@ export default async function RelatorioPage({
     licitacoes: { id: string; orgao: string; objeto: string; valor_estimado: number | null; data_abertura: string | null; estado: string | null } | null
   }
 
-  const itens = ((alertas ?? []) as unknown as AlertaItem[])
+  const alertasTyped = (alertas ?? []) as unknown as AlertaItem[]
+
+  const itens = alertasTyped
     .filter(a => a.licitacoes)
     .sort((a, b) => (b.licitacoes?.valor_estimado ?? 0) - (a.licitacoes?.valor_estimado ?? 0))
     .slice(0, 5)
 
-  const total = (alertas ?? []).length
-  const volumeTotal = (alertas ?? []).reduce((acc, a) => {
-    return acc + ((a as AlertaItem).licitacoes?.valor_estimado ?? 0)
+  const total = alertasTyped.length
+  const volumeTotal = alertasTyped.reduce((acc, a) => {
+    return acc + (a.licitacoes?.valor_estimado ?? 0)
   }, 0)
 
   const nomeDisplay = perfil.empresa || perfil.nome || 'Monitor de Licitações'
