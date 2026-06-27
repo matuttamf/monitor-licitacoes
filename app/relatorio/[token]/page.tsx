@@ -6,17 +6,6 @@ export const revalidate = 3600
 
 const BASE = 'https://monitordelicitacoes.com.br'
 
-function decodeToken(token: string): { userId: string; semanaInicio: string } | null {
-  try {
-    const decoded = Buffer.from(token, 'base64url').toString('utf-8')
-    const [userId, semanaInicio] = decoded.split(':')
-    if (!userId || !semanaInicio) return null
-    return { userId, semanaInicio }
-  } catch {
-    return null
-  }
-}
-
 function formatarMoeda(v: number): string {
   if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1).replace('.', ',')}M`
   if (v >= 1_000) return `R$ ${(v / 1_000).toFixed(0)}k`
@@ -29,13 +18,22 @@ export default async function RelatorioPage({
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
-  const decoded = decodeToken(token)
-  if (!decoded) notFound()
-
-  const { userId, semanaInicio } = decoded
-  const semanaFim = new Date(new Date(semanaInicio).getTime() + 7 * 86400000).toISOString().slice(0, 10)
-
   const supabase = createAdminClient()
+
+  // Lookup seguro por UUID — token gerado aleatoriamente, não contém dados do usuário
+  const { data: tokenRow } = await supabase
+    .from('report_tokens')
+    .select('user_id, semana_inicio')
+    .eq('token', token)
+    .single()
+
+  if (!tokenRow) notFound()
+
+  const userId = tokenRow.user_id as string
+  const semanaInicio = typeof tokenRow.semana_inicio === 'string'
+    ? tokenRow.semana_inicio
+    : (tokenRow.semana_inicio as Date).toISOString().slice(0, 10)
+  const semanaFim = new Date(new Date(semanaInicio).getTime() + 7 * 86400000).toISOString().slice(0, 10)
 
   const { data: perfil } = await supabase
     .from('profiles')
@@ -59,7 +57,7 @@ export default async function RelatorioPage({
     licitacoes: { id: string; orgao: string; objeto: string; valor_estimado: number | null; data_abertura: string | null; estado: string | null } | null
   }
 
-  const itens = ((alertas ?? []) as AlertaItem[])
+  const itens = ((alertas ?? []) as unknown as AlertaItem[])
     .filter(a => a.licitacoes)
     .sort((a, b) => (b.licitacoes?.valor_estimado ?? 0) - (a.licitacoes?.valor_estimado ?? 0))
     .slice(0, 5)

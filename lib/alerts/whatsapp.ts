@@ -424,6 +424,19 @@ export async function enviarWAIndicaRecompensa(
   return enviarMensagemZApi(formatarNumero(telefone), texto)
 }
 
+/** Convite para compartilhar a plataforma (trial D+3, 19h BRT). */
+export async function enviarWAConvite(telefone: string, nome: string | null, codigo: string): Promise<boolean> {
+  if (!process.env.ZAPI_INSTANCE_ID || !telefone) return false
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://monitordelicitacoes.com.br'
+  const texto =
+    `🤝 ${nome ? `*${nome}*, uma ideia rápida!` : 'Uma ideia rápida!'}\n\n` +
+    `Você conhece algum parceiro, fornecedor ou colega que também participa de licitações?\n\n` +
+    `Compartilhe o Monitor com ele e ganhe *+30 dias grátis* quando ele assinar:\n` +
+    `🔗 ${appUrl}/r/${codigo}\n\n` +
+    `Ele testa grátis por 7 dias. Sem compromisso.`
+  return enviarMensagemZApi(formatarNumero(telefone), texto)
+}
+
 /** Notifica o admin que um usuário virou candidato a afiliado (10+ indicações). */
 export async function notificarAdminCandidatoAfiliado(
   emailUsuario: string,

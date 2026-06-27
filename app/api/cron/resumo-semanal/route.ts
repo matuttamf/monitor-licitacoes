@@ -39,8 +39,17 @@ function formatarMoeda(v: number): string {
   return `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
 }
 
-function gerarTokenCompartilhamento(userId: string, semanaInicio: string): string {
-  return Buffer.from(`${userId}:${semanaInicio}`).toString('base64url')
+async function obterOuCriarToken(
+  supabase: Awaited<ReturnType<typeof createServiceClient>>,
+  userId: string,
+  semanaInicio: string,
+): Promise<string> {
+  const { data } = await supabase
+    .from('report_tokens')
+    .upsert({ user_id: userId, semana_inicio: semanaInicio }, { onConflict: 'user_id,semana_inicio' })
+    .select('token')
+    .single()
+  return data?.token ?? ''
 }
 
 function gerarHtmlResumo(params: {
@@ -277,8 +286,8 @@ export async function GET(request: Request) {
         .sort((a, b) => b.count - a.count)
 
       const nomeUsuario = perfil?.nome ?? ''
-      const shareToken = gerarTokenCompartilhamento(userId, inicio)
-      const shareUrl   = `${appUrl}/relatorio/${shareToken}`
+      const shareToken = await obterOuCriarToken(supabase, userId, inicio)
+      const shareUrl   = shareToken ? `${appUrl}/relatorio/${shareToken}` : `${appUrl}/dashboard`
 
       if (!perfil?.email_pausado_ate || new Date(perfil.email_pausado_ate) <= agora) {
         try {

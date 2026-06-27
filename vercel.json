@@ -12,14 +12,14 @@
     { "path": "/api/cron/coletar-abertos",       "schedule": "0 4,8,12,16,20 * * *" },
     { "path": "/api/cron/coletar",               "schedule": "0 4,8,12,16,20 * * *" },
     { "path": "/api/cron/matching",              "schedule": "*/10 * * * *"           },
-    { "path": "/api/cron/emails-trial",          "schedule": "0 12 * * 1,3"      },
-    { "path": "/api/cron/email-segunda",         "schedule": "0 12 * * 1"         },
+    { "path": "/api/cron/emails-trial",          "schedule": "0 14 * * 1,3"      },
+    { "path": "/api/cron/email-segunda",         "schedule": "0 10 * * 1"         },
 
     { "path": "/api/cron/alertar-urgente",       "schedule": "*/20 11-21 * * 1-5" },
 
     { "path": "/api/cron/alertar",               "schedule": "0 11,13,15,17,19 * * 1-5" },
 
-    { "path": "/api/cron/resumo-semanal",        "schedule": "0 16 * * 5"         },
+    { "path": "/api/cron/resumo-semanal",        "schedule": "0 10 * * 5"         },
     { "path": "/api/cron/radar-alertas",         "schedule": "0 11 * * 1"         },
 
     { "path": "/api/cron/coletar-leads",               "schedule": "*/10 * * * *"  },
@@ -34,8 +34,8 @@
     { "path": "/api/cron/emails-pos-assinatura",  "schedule": "0 13 * * *"         },
     { "path": "/api/cron/sync-assinaturas",      "schedule": "*/2 * * * *"        },
     { "path": "/api/cron/reverter-descontos",       "schedule": "0 4 * * *"          },
-    { "path": "/api/cron/aviso-renovacao-anual",  "schedule": "0 12 * * *"         },
-    { "path": "/api/cron/onboarding-followup",   "schedule": "0 12,0 * * *"        },
+    { "path": "/api/cron/aviso-renovacao-anual",  "schedule": "0 17 * * *"         },
+    { "path": "/api/cron/onboarding-followup",   "schedule": "0 12,22 * * *"       },
     { "path": "/api/cron/emails-feedback",       "schedule": "30 12 * * *"         },
     { "path": "/api/cron/indicacoes-elegibilidade", "schedule": "0 13 * * *"      },
     { "path": "/api/cron/indicacoes-liberar",       "schedule": "30 13 * * *"     },

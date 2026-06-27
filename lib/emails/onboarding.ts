@@ -368,6 +368,63 @@ export async function enviarEmailTelegramD5(email: string, nome: string | null):
   })
 }
 
+// ── Convite para compartilhar (trial D+3) ────────────────────────────────────
+
+export async function enviarEmailConvite(
+  email: string,
+  nome: string | null,
+  codigoIndicacao: string,
+): Promise<void> {
+  const resend = getResend()
+  const appUrl = APP_URL
+  const linkConvite = `${appUrl}/r/${codigoIndicacao}`
+
+  trackResend()
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Conhece alguém que também participa de licitações?',
+    html: baseEmail(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Indicações · Ganhe tempo grátis</div>
+    <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 12px;font-family:Georgia,serif;line-height:1.3;">
+      ${saudacao(nome)} Indique e ganhe dias grátis.
+    </h1>
+    <p style="color:#4a4a4d;font-size:15px;line-height:1.7;margin:0 0 20px;">
+      Se você conhece um parceiro, fornecedor ou colega que também fornece para o governo,
+      compartilhe o Monitor com ele — você ganha <strong>+30 dias grátis</strong> a cada indicação convertida.
+    </p>
+    <table width="100%" cellpadding="16" cellspacing="0" style="background:#FFF7ED;border:1px solid #FDDCAA;border-radius:14px;margin-bottom:24px;">
+      <tr><td style="text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Seu link de convite</div>
+        <div style="font-size:14px;color:#6B0F1A;font-weight:600;word-break:break-all;margin-bottom:12px;">${linkConvite}</div>
+        <a href="${linkConvite}"
+           style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;font-weight:700;font-size:14px;padding:11px 24px;border-radius:10px;">
+          Compartilhar agora →
+        </a>
+      </td></tr>
+    </table>
+    <p style="color:#9AA0A6;font-size:13px;margin:0 0 4px;line-height:1.6;">
+      Quem você indicar ganha <strong>7 dias grátis</strong> para testar.
+      Quando assinar um plano pago, seus <strong>+30 dias</strong> são liberados automaticamente.
+    </p>
+  </td></tr>
+  <tr><td style="padding:20px 28px 32px;">
+    <table width="100%" cellpadding="16" cellspacing="0" style="background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC;">
+      <tr><td>
+        <div style="font-size:13px;font-weight:700;color:#1A1A1C;margin-bottom:10px;">Como funciona:</div>
+        <div style="font-size:13px;color:#6B7280;line-height:2.0;">
+          1. Envie seu link para um parceiro de negócios<br>
+          2. Ele se cadastra e testa por 7 dias<br>
+          3. Se assinar um plano → <strong>+30 dias grátis</strong> na sua conta ✅
+        </div>
+      </td></tr>
+    </table>
+  </td></tr>
+    `),
+  })
+}
+
 // ── Proof of value (D+0, 2h) — para quem já tem keywords ────────────────────
 
 export async function enviarEmail2h(

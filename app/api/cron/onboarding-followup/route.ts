@@ -20,6 +20,7 @@ import {
   enviarEmailTelegramD5,
   enviarEmailPoucasKeywords,
   enviarEmail2h,
+  enviarEmailConvite,
 } from '@/lib/emails/onboarding'
 import {
   enviarWAPerfilIncompleto,
@@ -27,6 +28,7 @@ import {
   enviarWAFornecedorD3,
   enviarWATelegramD5,
   enviarWAPoucasKeywords,
+  enviarWAConvite,
 } from '@/lib/alerts/whatsapp'
 import { getLimites } from '@/lib/planos'
 import { sugerirKeywordsSimilares } from '@/lib/matching/gemini'
@@ -75,6 +77,7 @@ export async function GET(req: NextRequest) {
   const j2h                = janela(2, 1)   // 1h-3h após cadastro
   const jPerfilIncompleto  = janela(24)
   const jPoucasKeywords    = janela(48)
+  const jConvite           = janela(72)     // D+3: convite para compartilhar (só run noturno)
   const jFornecedor        = janela(72)
   const jTelegram          = janela(120)
   const jKeywords         = new Map<HorasKw, { inicio: Date; fim: Date }>(
@@ -84,9 +87,12 @@ export async function GET(req: NextRequest) {
   // Janela mais larga para buscar todos os perfis relevantes (120h + 3h tolerância)
   const janelaMaisLarga = new Date(agora.getTime() - 123 * 3_600_000).toISOString()
 
+  const horaUTC = agora.getUTCHours()
+  const isRunNoturno = horaUTC >= 20 // 22h UTC = 19h BRT
+
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, criado_em, status')
+    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, criado_em, status, codigo_indicacao')
     .in('status', ['trial', 'active'])
     .gte('criado_em', janelaMaisLarga)
 
@@ -230,7 +236,23 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // 5. Fornecedor D+3
+      // 5a. Convite compartilhar — D+3, somente run das 19h BRT (22h UTC)
+      if (isRunNoturno && emJanela(criado, jConvite) && p.codigo_indicacao) {
+        try {
+          if (email && !emailPausado) {
+            await enviarEmailConvite(email, p.nome, p.codigo_indicacao)
+            disparouNesteTick = true
+          }
+          if (p.whatsapp && !waPausado) {
+            await enviarWAConvite(p.whatsapp, p.nome, p.codigo_indicacao)
+            disparouNesteTick = true
+          }
+        } catch (eConv) {
+          console.error(`[onboarding-followup] erro convite user=${p.id}:`, eConv)
+        }
+      }
+
+      // 5b. Fornecedor D+3
       if (emJanela(criado, jFornecedor) && !usersComFornecedor.has(p.id)) {
         if (email && !emailPausado) await enviarEmailFornecedorD3(email, p.nome)
         if (p.whatsapp && !waPausado) await enviarWAFornecedorD3(p.whatsapp, p.nome)
