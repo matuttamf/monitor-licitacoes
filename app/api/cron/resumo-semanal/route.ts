@@ -39,6 +39,10 @@ function formatarMoeda(v: number): string {
   return `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
 }
 
+function gerarTokenCompartilhamento(userId: string, semanaInicio: string): string {
+  return Buffer.from(`${userId}:${semanaInicio}`).toString('base64url')
+}
+
 function gerarHtmlResumo(params: {
   nomeUsuario: string
   total: number
@@ -47,8 +51,9 @@ function gerarHtmlResumo(params: {
   inicio: string
   fim: string
   appUrl: string
+  shareUrl: string
 }): string {
-  const { nomeUsuario, total, volumeTotal, topKeywords, inicio, fim, appUrl } = params
+  const { nomeUsuario, total, volumeTotal, topKeywords, inicio, fim, appUrl, shareUrl } = params
 
   const volume = volumeTotal > 0
     ? `<div style="margin-top:6px;font-size:14px;color:#6B0F1A;font-weight:600">${formatarMoeda(volumeTotal)} em volume estimado</div>`
@@ -111,6 +116,15 @@ function gerarHtmlResumo(params: {
        style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:12px">
       Ver todos os alertas →
     </a>
+    <div style="margin-top:20px;padding:16px;background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC">
+      <div style="font-size:12px;font-weight:700;color:#1A1A1C;margin-bottom:8px">📤 Compartilhe este relatório</div>
+      <p style="font-size:12px;color:#6B7280;margin:0 0 10px;line-height:1.6">
+        Mostre para um sócio ou colega as oportunidades que você está monitorando.
+      </p>
+      <a href="${shareUrl}" style="font-size:12px;color:#6B0F1A;font-weight:600;text-decoration:none;word-break:break-all">
+        ${shareUrl}
+      </a>
+    </div>
     <p style="margin-top:16px;font-size:12px;color:#9AA0A6">
       Você recebe este resumo toda sexta-feira.<br>
       Para ajustar suas palavras-chave, <a href="${appUrl}/palavras-chave" style="color:#6B0F1A">clique aqui</a>.
@@ -139,8 +153,9 @@ function gerarTextoTelegramResumo(params: {
   inicio: string
   fim: string
   appUrl: string
+  shareUrl: string
 }): string {
-  const { total, volumeTotal, topKeywords, inicio, fim, appUrl } = params
+  const { total, volumeTotal, topKeywords, inicio, fim, appUrl, shareUrl } = params
   const volume = volumeTotal > 0 ? `\n💰 *Volume estimado:* ${formatarMoeda(volumeTotal)}` : ''
   const topList = topKeywords.slice(0, 5)
     .map((k, i) => `${i + 1}. ${k.termo} — ${k.count} alerta${k.count !== 1 ? 's' : ''}`)
@@ -152,7 +167,8 @@ function gerarTextoTelegramResumo(params: {
     `🔔 *${total} licitaç${total !== 1 ? 'ões' : 'ão'}* encontrada${total !== 1 ? 's' : ''} para você.` +
     volume +
     (topList ? `\n\n🏆 *Top palavras-chave:*\n${topList}` : '') +
-    `\n\n[Ver todos os alertas](${appUrl}/alertas)`
+    `\n\n[Ver todos os alertas](${appUrl}/alertas)` +
+    `\n📤 [Compartilhar relatório](${shareUrl})`
   )
 }
 
@@ -261,6 +277,8 @@ export async function GET(request: Request) {
         .sort((a, b) => b.count - a.count)
 
       const nomeUsuario = perfil?.nome ?? ''
+      const shareToken = gerarTokenCompartilhamento(userId, inicio)
+      const shareUrl   = `${appUrl}/r/${shareToken}`
 
       if (!perfil?.email_pausado_ate || new Date(perfil.email_pausado_ate) <= agora) {
         try {
@@ -268,7 +286,7 @@ export async function GET(request: Request) {
             from:    FROM_EMAIL,
             to:      email,
             subject: `📊 Seu resumo semanal — ${dados.totalAlertas} licitaç${dados.totalAlertas !== 1 ? 'ões' : 'ão'} encontrada${dados.totalAlertas !== 1 ? 's' : ''}`,
-            html:    gerarHtmlResumo({ nomeUsuario, total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl }),
+            html:    gerarHtmlResumo({ nomeUsuario, total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl, shareUrl }),
           })
         } catch (e) {
           console.error('Resumo semanal — erro email:', email, e)
@@ -277,7 +295,7 @@ export async function GET(request: Request) {
 
       if (perfil?.telegram_chat_id && (!perfil.telegram_pausado_ate || new Date(perfil.telegram_pausado_ate) <= agora)) {
         try {
-          const texto = gerarTextoTelegramResumo({ total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl })
+          const texto = gerarTextoTelegramResumo({ total: dados.totalAlertas, volumeTotal: dados.volumeTotal, topKeywords, inicio, fim, appUrl, shareUrl })
           await enviarTextoTelegram(perfil.telegram_chat_id, texto)
         } catch (e) {
           console.error('Resumo semanal — erro telegram:', userId, e)

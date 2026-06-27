@@ -23,7 +23,7 @@ export async function GET(
   // Keywords do usuário
   const { data: keywords } = await service
     .from('keywords')
-    .select('id, termo, ativo, criado_em')
+    .select('id, termo, ativo, regiao, criado_em')
     .eq('user_id', id)
     .order('criado_em', { ascending: false })
 

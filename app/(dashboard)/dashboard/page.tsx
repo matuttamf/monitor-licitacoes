@@ -446,8 +446,11 @@ const nomeEstado: Record<string, string> = {
   SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins',
 }
 
+type ResumoSemana = { total: number; volumeTotal: number; totalHistorico: number }
+
 export default function DashboardPage() {
   const [roi, setRoi] = useState<{ totalAlertas: number; totalLicitacoes: number; volumeMonitorado: number } | null>(null)
+  const [resumoSemana, setResumoSemana] = useState<ResumoSemana | null>(null)
 
   const [resposta, setResposta]       = useState<Resposta | null>(null)
   const [carregando, setCarregando]   = useState(true)
@@ -459,6 +462,12 @@ export default function DashboardPage() {
   const [ordenar,        setOrdenar]        = useState('valor')
   const [statsEstados, setStatsEstados]     = useState<EstadoStat[]>([])
   const [pcaItems, setPcaItems]             = useState<Licitacao[]>([])
+
+  useEffect(() => {
+    fetch('/api/dashboard/resumo')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setResumoSemana(d) })
+  }, [])
 
   useEffect(() => {
     fetch('/api/stats/roi')
@@ -505,8 +514,45 @@ export default function DashboardPage() {
   const semFiltros  = filtroRegioes.length === 0 && !filtroValorMin && !filtroValorMax
   const semResultados = !carregando && !primeiraVez && resposta?.total === 0 && semFiltros
 
+  const fmtMoeda = (v: number) =>
+    v >= 1_000_000
+      ? `R$ ${(v / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+      : v >= 1_000
+        ? `R$ ${(v / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`
+        : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`
+
   return (
     <div className="max-w-5xl mx-auto">
+
+      {/* ── Hero: resultado da semana ── */}
+      {resumoSemana && (resumoSemana.total > 0 || resumoSemana.totalHistorico > 0) && (
+        <div className="mb-6 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between"
+          style={{ background: 'linear-gradient(135deg, #6B0F1A 0%, #8B1E2D 100%)', color: 'white' }}>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'rgba(201,166,90,0.9)' }}>
+              Últimos 7 dias
+            </div>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <span className="text-4xl font-black">{resumoSemana.total}</span>
+              <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                licitaç{resumoSemana.total !== 1 ? 'ões' : 'ão'} encontrada{resumoSemana.total !== 1 ? 's' : ''}
+              </span>
+            </div>
+            {resumoSemana.volumeTotal > 0 && (
+              <div className="mt-1 text-sm font-semibold" style={{ color: '#C9A65A' }}>
+                {fmtMoeda(resumoSemana.volumeTotal)} em volume estimado
+              </div>
+            )}
+          </div>
+          <div className="flex gap-4 sm:text-right">
+            <div>
+              <div className="text-2xl font-black">{resumoSemana.totalHistorico.toLocaleString('pt-BR')}</div>
+              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>alertas no total</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>

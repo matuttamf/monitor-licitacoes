@@ -367,3 +367,63 @@ export async function enviarEmailTelegramD5(email: string, nome: string | null):
     `),
   })
 }
+
+// ── Proof of value (D+0, 2h) — para quem já tem keywords ────────────────────
+
+export async function enviarEmail2h(
+  email: string,
+  nome: string | null,
+  totalLicitacoes: number,
+  termosPrincipais: string[],
+): Promise<void> {
+  const resend = getResend()
+  trackResend()
+
+  const termoLabel = termosPrincipais.length > 0
+    ? termosPrincipais.slice(0, 2).join(' e ')
+    : 'seus setores'
+
+  const destaque = totalLicitacoes > 0
+    ? `<div style="background:#FFF7ED;border:1px solid #FDDCAA;border-radius:14px;padding:24px;text-align:center;margin-bottom:24px;">
+        <div style="font-size:52px;font-weight:900;color:#6B0F1A;line-height:1">${totalLicitacoes}</div>
+        <div style="font-size:15px;color:#92400E;font-weight:600;margin-top:6px">
+          licitaç${totalLicitacoes !== 1 ? 'ões encontradas' : 'ão encontrada'} para <em>${termoLabel}</em>
+        </div>
+      </div>`
+    : `<div style="background:#FAF6F0;border-radius:14px;padding:20px;margin-bottom:24px;font-size:14px;color:#4a4a4d;line-height:1.7;">
+        Estamos coletando os editais mais recentes. Em breve você receberá os primeiros alertas.
+      </div>`
+
+  await resend.emails.send({
+    from: FROM,
+    to:   email,
+    subject: totalLicitacoes > 0
+      ? `${totalLicitacoes} licitaç${totalLicitacoes !== 1 ? 'ões' : 'ão'} encontrada${totalLicitacoes !== 1 ? 's' : ''} para você`
+      : 'Seus alertas já estão configurados',
+    html: baseEmail(`
+  <tr><td style="padding:32px 28px 0;">
+    <div style="color:#C9A65A;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Primeiras oportunidades</div>
+    <h1 style="color:#1A1A1C;font-size:24px;font-weight:400;margin:0 0 16px;font-family:Georgia,serif;line-height:1.3;">
+      ${saudacao(nome)} Encontramos oportunidades para você.
+    </h1>
+    ${destaque}
+    <a href="${APP_URL}/dashboard"
+       style="display:inline-block;background:#6B0F1A;color:white;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:12px;">
+      Ver licitações →
+    </a>
+  </td></tr>
+  <tr><td style="padding:24px 28px 32px;">
+    <table width="100%" cellpadding="16" cellspacing="0" style="background:#FAF6F0;border-radius:12px;border:1px solid #E8E4DC;">
+      <tr><td>
+        <div style="font-size:13px;font-weight:700;color:#1A1A1C;margin-bottom:10px;">O que você receberá agora em diante:</div>
+        <div style="font-size:13px;color:#6B7280;line-height:1.9;">
+          📧 Alertas por e-mail com novos editais<br>
+          📱 WhatsApp quando surgir algo urgente<br>
+          📊 Resumo semanal toda sexta-feira
+        </div>
+      </td></tr>
+    </table>
+  </td></tr>
+    `),
+  })
+}

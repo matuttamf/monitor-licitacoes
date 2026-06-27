@@ -19,6 +19,7 @@ import {
   enviarEmailFornecedorD3,
   enviarEmailTelegramD5,
   enviarEmailPoucasKeywords,
+  enviarEmail2h,
 } from '@/lib/emails/onboarding'
 import {
   enviarWAPerfilIncompleto,
@@ -38,6 +39,7 @@ export const maxDuration = 300
 const MIN_KEYWORDS_RECOMENDADO = 5
 
 const HORAS_KEYWORDS = [12, 24, 48, 72, 96, 120] as const
+// proof-of-value: dispara 2h após cadastro para quem já tem keywords
 type HorasKw = typeof HORAS_KEYWORDS[number]
 
 function janela(horasAtras: number, toleranciaH = 3): { inicio: Date; fim: Date } {
@@ -70,6 +72,7 @@ export async function GET(req: NextRequest) {
   const agora = new Date()
 
   // Janelas de tempo pré-calculadas
+  const j2h                = janela(2, 1)   // 1h-3h após cadastro
   const jPerfilIncompleto  = janela(24)
   const jPoucasKeywords    = janela(48)
   const jFornecedor        = janela(72)
@@ -150,6 +153,26 @@ export async function GET(req: NextRequest) {
 
     try {
       let disparouNesteTick = false
+
+      // 0. Proof of value — 2h após cadastro (só para quem já tem keywords)
+      if (emJanela(criado, j2h) && usersComKeywords.has(p.id)) {
+        const termos = keywordsPorUsuario.get(p.id) ?? []
+        try {
+          // Conta licitações com match em qualquer termo do usuário
+          const orFilter = termos.map(t => `objeto.ilike.%${t}%`).join(',')
+          const { count: totalLic } = await supabase
+            .from('licitacoes')
+            .select('*', { count: 'exact', head: true })
+            .or(orFilter)
+          const total = totalLic ?? 0
+          if (email && !emailPausado) {
+            await enviarEmail2h(email, p.nome, total, termos.slice(0, 2))
+            disparouNesteTick = true
+          }
+        } catch (e2h) {
+          console.error(`[onboarding-followup] erro 2h user=${p.id}:`, e2h)
+        }
+      }
 
       // 1. Perfil incompleto — D+1
       if (emJanela(criado, jPerfilIncompleto) && (!p.nome || !p.telefone)) {

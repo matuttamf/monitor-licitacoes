@@ -30,7 +30,7 @@ type Usuario = {
   bloqueado_admin?: boolean
 }
 
-type Keyword    = { id: string; termo: string; ativo: boolean; criado_em: string }
+type Keyword    = { id: string; termo: string; ativo: boolean; regiao: string[] | null; criado_em: string }
 type Alerta     = {
   id: string; criado_em: string; canais: string[]
   licitacoes: { objeto: string; orgao: string; valor_estimado?: number; data_abertura?: string } | null
@@ -618,45 +618,43 @@ export default function AdminPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--cinza)' }}>Acionar manualmente</h2>
         {([
           { grupo: 'Licitações', itens: [
-            { acao: 'coletar',                          label: '🔍 Coletar',              desc: 'Busca novos editais' },
-            { acao: 'coletar-abertos',                  label: '📂 Abertos (PNCP)',       desc: 'Todos com prazo futuro' },
-            { acao: 'matching',                         label: '🤖 Matching',             desc: 'Gera candidatos' },
-            { acao: 'alertar',                          label: '📧 Alertar',              desc: 'Envia alertas e-mail' },
-            { acao: 'alertar-urgente',                  label: '🚨 Alertar urgente',      desc: 'WA/Telegram urgentes' },
-            { acao: 'coletar-resultados',               label: '📋 Resultados',           desc: 'Coleta resultados PNCP' },
-            { acao: 'coletar-resultados-transparencia', label: '🏛 Result. transp.',      desc: 'Resultados transparência' },
+            { acao: 'coletar',                          label: '🔍 Coletar',           desc: 'Busca novos editais' },
+            { acao: 'coletar-abertos',                  label: '📂 Abertos (PNCP)',    desc: 'Todos com prazo futuro' },
+            { acao: 'matching',                         label: '🤖 Matching',          desc: 'Gera candidatos' },
+            { acao: 'alertar',                          label: '📧 Alertar',           desc: 'Usuário (E-mail)' },
+            { acao: 'alertar-urgente',                  label: '🚨 Alertar urgente',   desc: 'Usuário (WA/Telegram)' },
+            { acao: 'radar-alertas',                    label: '📡 Radar',             desc: 'Usuário (E-mail/Telegram)' },
+            { acao: 'coletar-resultados',               label: '📋 Resultados',        desc: 'Coleta resultados PNCP' },
+            { acao: 'coletar-resultados-transparencia', label: '🏛 Result. transp.',   desc: 'Resultados transparência' },
           ]},
           { grupo: 'Usuários & E-mails', itens: [
-            { acao: 'emails',                   label: '📩 E-mails trial',        desc: 'Sequência trial' },
-            { acao: 'resumo-semanal',           label: '📊 Resumo semanal',       desc: 'Digest da semana' },
-            { acao: 'email-segunda',            label: '📅 E-mail segunda',       desc: 'Boas vindas semana' },
-            { acao: 'onboarding-followup',      label: '🎯 Onboarding',           desc: 'Follow-up onboarding' },
-            { acao: 'aviso-renovacao-anual',    label: '🔔 Aviso renovação',      desc: 'Avisa vencimento anual' },
-            { acao: 'emails-pos-assinatura',    label: '🎉 Pós-assinatura',       desc: 'E-mails após assinar' },
-            { acao: 'emails-feedback',          label: '💬 Feedback',             desc: 'Solicita feedback' },
-            { acao: 'reconverter-trials',       label: '♻️ Reconverter trials',   desc: 'Tenta reativar trials' },
-            { acao: 'expirar-trials',           label: '⏰ Expirar trials',       desc: 'Marca trials vencidos' },
-            { acao: 'sync-assinaturas',         label: '🔄 Sync assinaturas',     desc: 'Sincroniza com MP' },
+            { acao: 'emails',                label: '📩 E-mails trial',     desc: 'Usuário (E-mail/WA)' },
+            { acao: 'resumo-semanal',        label: '📊 Resumo semanal',    desc: 'Usuário (E-mail/WA/Telegram)' },
+            { acao: 'email-segunda',         label: '📅 E-mail segunda',    desc: 'Usuário (E-mail/WA/Telegram)' },
+            { acao: 'onboarding-followup',   label: '🎯 Onboarding',        desc: 'Usuário (E-mail/WA/Telegram)' },
+            { acao: 'aviso-renovacao-anual', label: '🔔 Aviso renovação',   desc: 'Usuário (E-mail)' },
+            { acao: 'emails-pos-assinatura', label: '🎉 Pós-assinatura',    desc: 'Usuário (E-mail/WA)' },
+            { acao: 'emails-feedback',       label: '💬 Feedback',          desc: 'Usuário (E-mail)' },
+            { acao: 'reconverter-trials',    label: '♻️ Reconverter',       desc: 'Usuário (E-mail/WA)' },
+            { acao: 'expirar-trials',        label: '⏰ Expirar trials',    desc: 'Marca trials vencidos' },
+            { acao: 'sync-assinaturas',      label: '🔄 Sync assinaturas',  desc: 'Sincroniza com MP' },
           ]},
-          { grupo: 'Indicações', itens: [
-            { acao: 'indicacoes-elegibilidade',     label: '✅ Elegibilidade',     desc: 'Verifica indicações' },
-            { acao: 'indicacoes-liberar',           label: '🎁 Liberar bônus',    desc: 'Libera 30 dias bônus' },
-            { acao: 'indicacoes-aplicar-creditos',  label: '💰 Aplicar créditos', desc: 'Aplica créditos MP' },
-            { acao: 'reverter-descontos',           label: '↩ Reverter descontos',desc: 'Reverte descontos exp.' },
+          { grupo: 'Indicações & Sistema', itens: [
+            { acao: 'indicacoes-elegibilidade',    label: '✅ Elegibilidade',     desc: 'Usuário (E-mail/WA)' },
+            { acao: 'indicacoes-liberar',          label: '🎁 Liberar bônus',     desc: 'Usuário (E-mail)' },
+            { acao: 'indicacoes-aplicar-creditos', label: '💰 Aplicar créditos',  desc: 'Aplica créditos MP' },
+            { acao: 'reverter-descontos',          label: '↩ Reverter descontos', desc: 'Reverte descontos MP' },
+            { acao: 'backup-db',                   label: '💾 Backup DB',         desc: 'Backup Supabase' },
+            { acao: 'limpar-alertas',              label: '🗑 Limpar alertas',    desc: 'Remove alertas antigos' },
           ]},
           { grupo: 'Leads & Captação', itens: [
-            { acao: 'disparar-leads',              label: '✉️ Disparar leads',         desc: 'Envia e-mails captação' },
-            { acao: 'enriquecer-emails',           label: '🔎 Enriquecer e-mails',    desc: 'Busca e-mails web' },
-            { acao: 'coletar-leads',               label: '📥 Coletar leads',         desc: 'Leads PNCP' },
-            { acao: 'coletar-leads-transparencia', label: '🏛 Leads transp.',         desc: 'Leads transparência' },
-            { acao: 'coletar-participantes',       label: '👥 Participantes',         desc: 'Participantes PNCP' },
-            { acao: 'radar-alertas',               label: '📡 Radar',                 desc: 'Atualiza cache contratos' },
-            { acao: 'coletar-leads-cnae',          label: '🗂 Leads CNAE (GH)',       desc: 'Via GitHub Actions' },
-            { acao: 'enriquecer-receita',          label: '🧾 Enriquecer RFB (GH)',   desc: 'Via GitHub Actions' },
-          ]},
-          { grupo: 'Sistema', itens: [
-            { acao: 'backup-db',     label: '💾 Backup DB',      desc: 'Backup Supabase' },
-            { acao: 'limpar-alertas', label: '🗑 Limpar alertas', desc: 'Remove alertas antigos' },
+            { acao: 'disparar-leads',              label: '✉️ Disparar leads',      desc: 'Lead (E-mail)' },
+            { acao: 'enriquecer-emails',           label: '🔎 Enriquecer e-mails', desc: 'Busca e-mails web' },
+            { acao: 'coletar-leads',               label: '📥 Coletar leads',      desc: 'Leads PNCP' },
+            { acao: 'coletar-leads-transparencia', label: '🏛 Leads transp.',      desc: 'Leads transparência' },
+            { acao: 'coletar-participantes',       label: '👥 Participantes',      desc: 'Participantes PNCP' },
+            { acao: 'coletar-leads-cnae',          label: '🗂 Leads CNAE (GH)',    desc: 'Via GitHub Actions' },
+            { acao: 'enriquecer-receita',          label: '🧾 Enriquecer RFB (GH)',desc: 'Via GitHub Actions' },
           ]},
         ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).map(({ grupo, itens }) => (
           <div key={grupo} style={{ marginBottom: '10px' }}>
@@ -1117,11 +1115,18 @@ export default function AdminPage() {
                       <p style={{ fontSize: '13px', color: 'var(--cinza)' }}>Nenhuma palavra-chave cadastrada.</p>
                     ) : (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {contaDetalhe.keywords.map(kw => (
-                          <span key={kw.id} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '8px', fontWeight: 600, background: kw.ativo ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)', color: kw.ativo ? 'var(--vinho)' : 'var(--cinza)', border: '1px solid', borderColor: kw.ativo ? 'rgba(107,15,26,0.15)' : 'var(--cinza-light)' }}>
-                            {kw.ativo ? '' : '⏸ '}{kw.termo}
-                          </span>
-                        ))}
+                        {contaDetalhe.keywords.map(kw => {
+                          const regioes = kw.regiao ?? ['brasil']
+                          const regiaoLabel = regioes.includes('brasil') ? '🌎 Brasil' : regioes.join(', ')
+                          return (
+                            <div key={kw.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '6px 12px', borderRadius: '8px', background: kw.ativo ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)', border: '1px solid', borderColor: kw.ativo ? 'rgba(107,15,26,0.15)' : 'var(--cinza-light)' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: kw.ativo ? 'var(--vinho)' : 'var(--cinza)' }}>
+                                {kw.ativo ? '' : '⏸ '}{kw.termo}
+                              </span>
+                              <span style={{ fontSize: '10px', color: 'var(--cinza)' }}>{regiaoLabel}</span>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </section>
