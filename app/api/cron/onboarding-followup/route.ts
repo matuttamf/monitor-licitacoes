@@ -171,7 +171,7 @@ export async function GET(req: NextRequest) {
             .select('*', { count: 'exact', head: true })
             .or(orFilter)
           const total = totalLic ?? 0
-          if (email && !emailPausado) {
+          if (total > 0 && email && !emailPausado) {
             await enviarEmail2h(email, p.nome, total, termos.slice(0, 2))
             disparouNesteTick = true
           }
