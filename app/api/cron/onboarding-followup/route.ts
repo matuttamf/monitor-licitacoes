@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, criado_em, status, codigo_indicacao')
+    .select('id, nome, plano, telefone, whatsapp, telegram_chat_id, email_pausado_ate, whatsapp_pausado_ate, telegram_pausado_ate, criado_em, status, indica_codigo')
     .in('status', ['trial', 'active'])
     .gte('criado_em', janelaMaisLarga)
 
@@ -236,15 +236,16 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // 5a. Convite compartilhar — D+3, somente assinantes ativos, run das 21h BRT (0h UTC)
-      if (isRunNoturno && p.status === 'active' && emJanela(criado, jConvite) && p.codigo_indicacao) {
+      // 5a. Convite compartilhar — D+3, somente quem já tem indica_codigo
+      // (indica_codigo só existe após 10 dias de pagamento_confirmado_em — cron indicacoes-elegibilidade)
+      if (isRunNoturno && emJanela(criado, jConvite) && p.indica_codigo) {
         try {
           if (email && !emailPausado) {
-            await enviarEmailConvite(email, p.nome, p.codigo_indicacao)
+            await enviarEmailConvite(email, p.nome, p.indica_codigo)
             disparouNesteTick = true
           }
           if (p.whatsapp && !waPausado) {
-            await enviarWAConvite(p.whatsapp, p.nome, p.codigo_indicacao)
+            await enviarWAConvite(p.whatsapp, p.nome, p.indica_codigo)
             disparouNesteTick = true
           }
         } catch (eConv) {
