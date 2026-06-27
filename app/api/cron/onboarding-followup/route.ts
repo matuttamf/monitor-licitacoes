@@ -154,8 +154,8 @@ export async function GET(req: NextRequest) {
     try {
       let disparouNesteTick = false
 
-      // 0. Proof of value — 2h após cadastro (só para quem já tem keywords)
-      if (emJanela(criado, j2h) && usersComKeywords.has(p.id)) {
+      // 0. Proof of value — 2h após cadastro (só para quem já tem >= 3 keywords)
+      if (emJanela(criado, j2h) && (keywordsPorUsuario.get(p.id)?.length ?? 0) >= 3) {
         const termos = keywordsPorUsuario.get(p.id) ?? []
         try {
           // Conta licitações com match em qualquer termo do usuário
