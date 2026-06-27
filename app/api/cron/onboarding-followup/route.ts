@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   const janelaMaisLarga = new Date(agora.getTime() - 123 * 3_600_000).toISOString()
 
   const horaUTC = agora.getUTCHours()
-  const isRunNoturno = horaUTC >= 20 // 22h UTC = 19h BRT
+  const isRunNoturno = horaUTC <= 1 // 0h UTC = 21h BRT
 
   const { data: profiles } = await supabase
     .from('profiles')
