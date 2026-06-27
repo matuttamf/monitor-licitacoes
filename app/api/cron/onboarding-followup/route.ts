@@ -236,8 +236,8 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // 5a. Convite compartilhar — D+3, somente run das 19h BRT (22h UTC)
-      if (isRunNoturno && emJanela(criado, jConvite) && p.codigo_indicacao) {
+      // 5a. Convite compartilhar — D+3, somente assinantes ativos, run das 21h BRT (0h UTC)
+      if (isRunNoturno && p.status === 'active' && emJanela(criado, jConvite) && p.codigo_indicacao) {
         try {
           if (email && !emailPausado) {
             await enviarEmailConvite(email, p.nome, p.codigo_indicacao)
