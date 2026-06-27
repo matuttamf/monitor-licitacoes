@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
   const agora = new Date()
 
   // Janelas de tempo pré-calculadas
-  const j2h                = janela(2, 1)   // 1h-3h após cadastro
+  const j2h                = janela(3, 3)   // 0h-6h após cadastro
   const jPerfilIncompleto  = janela(24)
   const jPoucasKeywords    = janela(48)
   const jConvite           = janela(72)     // D+3: convite para compartilhar (só run noturno)
