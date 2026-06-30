@@ -8,15 +8,21 @@ export async function GET() {
 
   const inicioSemana = new Date(Date.now() - 7 * 86400000).toISOString()
 
-  // Alertas da semana com valor das licitações associadas
-  const { data: alertas } = await supabase
+  // Contagem real da semana (sem cap de .limit)
+  const { count: total } = await supabase
     .from('alertas')
-    .select('id, criado_em, licitacoes(valor_estimado), keywords!inner(user_id)')
+    .select('id, keywords!inner(user_id)', { count: 'exact', head: true })
     .eq('keywords.user_id', user.id)
     .gte('criado_em', inicioSemana)
-    .limit(500)
 
-  const total = alertas?.length ?? 0
+  // Volume estimado — amostra de até 2000 alertas da semana (suficiente para a soma)
+  const { data: alertas } = await supabase
+    .from('alertas')
+    .select('id, licitacoes(valor_estimado), keywords!inner(user_id)')
+    .eq('keywords.user_id', user.id)
+    .gte('criado_em', inicioSemana)
+    .limit(2000)
+
   const volumeTotal = (alertas ?? []).reduce((acc, a) => {
     const v = (a.licitacoes as { valor_estimado?: number } | null)?.valor_estimado
     return acc + (v ?? 0)
@@ -28,5 +34,5 @@ export async function GET() {
     .select('id, keywords!inner(user_id)', { count: 'exact', head: true })
     .eq('keywords.user_id', user.id)
 
-  return NextResponse.json({ total, volumeTotal, totalHistorico: totalHistorico ?? 0 })
+  return NextResponse.json({ total: total ?? 0, volumeTotal, totalHistorico: totalHistorico ?? 0 })
 }
