@@ -68,7 +68,7 @@ export async function GET(request: Request) {
           .from('licitacoes')
           .select('id', { count: 'exact' })
           .or(termos.map(t => `objeto.ilike.%${t}%`).join(','))
-          .or(`data_abertura.is.null,data_abertura.gte.${hoje}`)
+          .gte('data_abertura', hoje)
         totalNacional = count ?? 0
       }
 
