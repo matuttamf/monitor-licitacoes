@@ -658,27 +658,36 @@ export default function AdminPage() {
             { acao: 'coletar-leads-cnae',          label: '🗂 Leads CNAE (GH)',    desc: 'Via GitHub Actions' },
             { acao: 'enriquecer-receita',          label: '🧾 Enriquecer RFB (GH)',desc: 'Via GitHub Actions' },
           ]},
-        ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).map(({ grupo, itens }) => (
-          <div key={grupo} style={{ marginBottom: '10px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>{grupo}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
-              {itens.map(({ acao, label, desc }) => (
-                <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
-                  style={{
-                    padding: '10px 14px', borderRadius: '12px', textAlign: 'left', width: '100%',
-                    background: disparando === acao ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)',
-                    border: `1px solid ${disparando === acao ? 'rgba(107,15,26,0.25)' : 'var(--cinza-light)'}`,
-                    cursor: disparando ? 'not-allowed' : 'pointer',
-                    opacity: disparando && disparando !== acao ? 0.45 : 1,
-                    transition: 'opacity 0.15s',
-                  }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {disparando === acao ? '⏳ Executando…' : label}
-                  </div>
-                  <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</div>
-                </button>
-              ))}
-            </div>
+        ] as { grupo: string; itens: { acao: string; label: string; desc: string }[] }[]).reduce<{ grupo: string; itens: { acao: string; label: string; desc: string }[] }[][]>((linhas, g) => {
+          // Indicações e Sistema compartilham a mesma linha (poucos itens cada)
+          if (g.grupo === 'Sistema') { linhas[linhas.length - 1].push(g); return linhas }
+          linhas.push([g])
+          return linhas
+        }, []).map((linha, i) => (
+          <div key={i} style={{ display: 'flex', gap: '20px', marginBottom: '10px', flexWrap: 'wrap' }}>
+            {linha.map(({ grupo, itens }) => (
+              <div key={grupo} style={{ flex: linha.length > 1 ? '1 1 280px' : '1 1 100%' }}>
+                <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cinza)', marginBottom: '6px' }}>{grupo}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
+                  {itens.map(({ acao, label, desc }) => (
+                    <button key={acao} onClick={() => dispararAcao(acao)} disabled={disparando !== null}
+                      style={{
+                        padding: '10px 14px', borderRadius: '12px', textAlign: 'left', width: '100%',
+                        background: disparando === acao ? 'rgba(107,15,26,0.08)' : 'var(--surface-2)',
+                        border: `1px solid ${disparando === acao ? 'rgba(107,15,26,0.25)' : 'var(--cinza-light)'}`,
+                        cursor: disparando ? 'not-allowed' : 'pointer',
+                        opacity: disparando && disparando !== acao ? 0.45 : 1,
+                        transition: 'opacity 0.15s',
+                      }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--preto)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {disparando === acao ? '⏳ Executando…' : label}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--cinza)', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ))}
         {resultadoTrigger && (
