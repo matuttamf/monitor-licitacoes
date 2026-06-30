@@ -115,6 +115,19 @@ export async function GET(request: Request) {
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
+  // Pré-computar contagem de envios por canal nas últimas 48h por usuário,
+  // para balancear o split WA/Telegram quando ambos estão ativos.
+  const contagemCanaisPorUsuario = new Map<string, { wa: number; tg: number }>()
+  for (const [uid, lista] of recicladosPorUsuario) {
+    let wa = 0, tg = 0
+    for (const a of lista) {
+      const c = a.canais ?? []
+      if (c.includes('whatsapp')) wa++
+      if (c.includes('telegram')) tg++
+    }
+    contagemCanaisPorUsuario.set(uid, { wa, tg })
+  }
+
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
@@ -146,9 +159,24 @@ export async function GET(request: Request) {
         keyword:        (topAlerta.keywords as any).termo,
       }]
 
+      // Split: quando ambos os canais estão ativos, cada alerta vai para apenas um —
+      // o que tem menos envios nas últimas 48h recebe o próximo (balanceamento automático).
+      // Quando só um canal está ativo, ele recebe todos os alertas.
+      let usarTelegram = temTelegram
+      let usarWhatsApp = temWhatsApp
+      if (temTelegram && temWhatsApp) {
+        const { wa, tg } = contagemCanaisPorUsuario.get(userId) ?? { wa: 0, tg: 0 }
+        if (wa <= tg) { usarWhatsApp = true;  usarTelegram = false }
+        else          { usarTelegram = true;  usarWhatsApp = false }
+        // Atualiza contagem local para próxima iteração (evita que todos batam no mesmo canal)
+        const cnt = contagemCanaisPorUsuario.get(userId) ?? { wa: 0, tg: 0 }
+        if (usarWhatsApp) cnt.wa++; else cnt.tg++
+        contagemCanaisPorUsuario.set(userId, cnt)
+      }
+
       const [telegramOk, whatsappOk] = await Promise.all([
-        temTelegram ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)  : Promise.resolve(false),
-        temWhatsApp ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)          : Promise.resolve(false),
+        usarTelegram ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)  : Promise.resolve(false),
+        usarWhatsApp ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)          : Promise.resolve(false),
       ])
 
       const canaisEnviados: string[] = []
