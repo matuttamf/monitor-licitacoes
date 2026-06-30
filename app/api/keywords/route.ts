@@ -91,6 +91,13 @@ export async function POST(request: Request) {
 
   const termoNormalizado = termo.trim().toLowerCase()
 
+  if (termoNormalizado.includes(',')) {
+    return NextResponse.json(
+      { error: 'Cadastre uma palavra-chave por vez. Para adicionar várias, use o botão "+" para cada uma.' },
+      { status: 400 }
+    )
+  }
+
   // Verificar duplicata
   const { count: duplicatas } = await supabase
     .from('keywords')
@@ -125,6 +132,7 @@ export async function PATCH(request: Request) {
   if (termo !== undefined) {
     const termoLimpo = termo.trim().toLowerCase()
     if (!termoLimpo) return NextResponse.json({ error: 'Termo não pode ser vazio' }, { status: 400 })
+    if (termoLimpo.includes(',')) return NextResponse.json({ error: 'Cadastre uma palavra-chave por vez. Para adicionar várias, use o botão "+" para cada uma.' }, { status: 400 })
 
     const { count: duplicatas } = await supabase
       .from('keywords')
