@@ -174,7 +174,7 @@ export async function enviarEmailDia3(
 
   const termosChips = termos.length > 0
     ? `<div style="margin-bottom:24px;line-height:2.2;">
-        ${termos.slice(0, 6).map(t => `<span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">${t}</span>`).join('')}${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;margin-right:6px;margin-bottom:4px;">+${termos.length - 6} mais</span>` : ''}
+        ${termos.slice(0, 6).map(t => { const label = t.length > 30 ? t.slice(0, 28) + '…' : t; return `<span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">${label}</span>`; }).join('')}${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;margin-right:6px;margin-bottom:4px;">+${termos.length - 6} mais</span>` : ''}
       </div>`
     : ''
 
@@ -282,7 +282,7 @@ export async function enviarEmailSegunda(
 
   const termosChips = termos.length > 0
     ? `<div style="margin-bottom:24px;line-height:2.2;">
-        ${termos.slice(0, 6).map(t => `<span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">${t}</span>`).join('')}${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;margin-right:6px;margin-bottom:4px;">+${termos.length - 6} mais</span>` : ''}
+        ${termos.slice(0, 6).map(t => { const label = t.length > 30 ? t.slice(0, 28) + '…' : t; return `<span style="display:inline-block;background:rgba(107,15,26,0.08);border:1px solid rgba(107,15,26,0.15);border-radius:99px;padding:4px 12px;font-size:13px;color:#6B0F1A;font-weight:600;margin-right:6px;margin-bottom:4px;">${label}</span>`; }).join('')}${termos.length > 6 ? `<span style="display:inline-block;background:#F0ECE8;border-radius:99px;padding:4px 12px;font-size:13px;color:#9AA0A6;margin-right:6px;margin-bottom:4px;">+${termos.length - 6} mais</span>` : ''}
       </div>`
     : ''
 
