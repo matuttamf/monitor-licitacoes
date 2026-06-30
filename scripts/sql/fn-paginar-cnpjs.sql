@@ -26,16 +26,21 @@ $$;
 -- Paginação filtrada: CNPJs SEM município (para o backfill de município).
 -- Conforme o pipeline preenche município, os leads saem deste filtro e o cursor
 -- avança — diferente do get_cnpjs_page (sem filtro), que reprocessaria os mesmos.
+-- enable_seqscan=off força o planner a usar o índice parcial leads_sem_municipio_idx.
 CREATE OR REPLACE FUNCTION get_cnpjs_sem_municipio_page(last_id uuid, page_size int DEFAULT 1000)
 RETURNS TABLE(id uuid, cnpj text)
-LANGUAGE sql SECURITY DEFINER
-SET statement_timeout = '120s'
+LANGUAGE plpgsql SECURITY DEFINER
+SET statement_timeout = '300s'
+SET enable_seqscan = off
 AS $$
-  SELECT id, cnpj FROM leads
-  WHERE id > last_id
-    AND municipio IS NULL
-  ORDER BY id ASC
+BEGIN
+  RETURN QUERY
+  SELECT l.id, l.cnpj FROM leads l
+  WHERE l.id > last_id
+    AND l.municipio IS NULL
+  ORDER BY l.id ASC
   LIMIT page_size;
+END;
 $$;
 
 GRANT EXECUTE ON FUNCTION get_cnpjs_page(uuid, int) TO service_role;

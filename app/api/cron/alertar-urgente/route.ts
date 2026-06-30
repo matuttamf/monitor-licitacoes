@@ -66,11 +66,11 @@ export async function GET(request: Request) {
       .gte('licitacoes.data_abertura', hoje)
       .order('score', { ascending: false }).limit(2000),
     supabase.from('alertas').select(SELECT_URGENTE)
-      .cs('canais', '{"whatsapp"}').lt('enviado_em', h24)
+      .contains('canais', ['whatsapp']).lt('enviado_em', h24)
       .gte('licitacoes.data_abertura', hoje)
       .order('score', { ascending: false }).limit(2000),
     supabase.from('alertas').select(SELECT_URGENTE)
-      .cs('canais', '{"telegram"}').lt('enviado_em', h24)
+      .contains('canais', ['telegram']).lt('enviado_em', h24)
       .gte('licitacoes.data_abertura', hoje)
       .order('score', { ascending: false }).limit(2000),
   ])
