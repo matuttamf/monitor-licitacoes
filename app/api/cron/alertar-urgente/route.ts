@@ -48,94 +48,127 @@ export async function GET(request: Request) {
     keywords (termo, user_id)
   `
 
-  // Alertas novos (nunca enviados via telegram/whatsapp)
-  const { data: pendentes, error } = await supabase
-    .from('alertas')
-    .select(SELECT_URGENTE)
-    .not('canais', 'cs', '{"telegram"}')
-    .not('canais', 'cs', '{"whatsapp"}')
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
-    .order('score', { ascending: false })
-    .limit(2000)
+  // Duas filas independentes: uma por canal.
+  // WA recebe alertas ainda não enviados ao WA; Telegram idem para Telegram.
+  // Quando ambos estão ativos, cada canal avança sua própria fila — nunca o mesmo alerta nos dois.
+  const [
+    { data: pendentesWA,  error: errWA },
+    { data: pendentesTG,  error: errTG },
+    { data: recicladosWA },
+    { data: recicladosTG },
+  ] = await Promise.all([
+    supabase.from('alertas').select(SELECT_URGENTE)
+      .not('canais', 'cs', '{"whatsapp"}')
+      .gte('licitacoes.data_abertura', hoje)
+      .order('score', { ascending: false }).limit(2000),
+    supabase.from('alertas').select(SELECT_URGENTE)
+      .not('canais', 'cs', '{"telegram"}')
+      .gte('licitacoes.data_abertura', hoje)
+      .order('score', { ascending: false }).limit(2000),
+    supabase.from('alertas').select(SELECT_URGENTE)
+      .cs('canais', '{"whatsapp"}').lt('enviado_em', h24)
+      .gte('licitacoes.data_abertura', hoje)
+      .order('score', { ascending: false }).limit(2000),
+    supabase.from('alertas').select(SELECT_URGENTE)
+      .cs('canais', '{"telegram"}').lt('enviado_em', h24)
+      .gte('licitacoes.data_abertura', hoje)
+      .order('score', { ascending: false }).limit(2000),
+  ])
 
-  if (error) {
-    console.error('alertar-urgente erro:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (errWA) {
+    console.error('alertar-urgente erro WA:', errWA.message)
+    return NextResponse.json({ error: errWA.message }, { status: 500 })
+  }
+  if (errTG) {
+    console.error('alertar-urgente erro TG:', errTG.message)
+    return NextResponse.json({ error: errTG.message }, { status: 500 })
   }
 
-  // Alertas já enviados mas com licitação ainda aberta — usados como fila de reenvio
-  // quando o usuário não recebe nada há mais de 24h (sem spam, sem silêncio)
-  const { data: reciclados } = await supabase
-    .from('alertas')
-    .select(SELECT_URGENTE)
-    .or('canais.cs.{"telegram"},canais.cs.{"whatsapp"}')
-    .lt('enviado_em', h24)
-    .or(`data_abertura.is.null,data_abertura.gte.${hoje}`, { referencedTable: 'licitacoes' })
-    .order('score', { ascending: false })
-    .limit(2000)
-
-  // Agrupar por usuário
+  // Agrupar por usuário — fila WA e fila Telegram separadas
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pendentesPorUsuario  = new Map<string, any[]>()
+  const filaWA  = new Map<string, any[]>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recicladosPorUsuario = new Map<string, any[]>()
+  const filaTG  = new Map<string, any[]>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reciWA  = new Map<string, any[]>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reciTG  = new Map<string, any[]>()
 
-  for (const a of (pendentes ?? [])) {
-    const uid = (a.keywords as any)?.user_id
-    if (!uid) continue
-    if (!pendentesPorUsuario.has(uid)) pendentesPorUsuario.set(uid, [])
-    pendentesPorUsuario.get(uid)!.push(a)
+  for (const a of (pendentesWA ?? [])) {
+    const uid = (a.keywords as any)?.user_id; if (!uid) continue
+    if (!filaWA.has(uid)) filaWA.set(uid, [])
+    filaWA.get(uid)!.push(a)
   }
-  for (const a of (reciclados ?? [])) {
-    const uid = (a.keywords as any)?.user_id
-    if (!uid) continue
-    if (!recicladosPorUsuario.has(uid)) recicladosPorUsuario.set(uid, [])
-    recicladosPorUsuario.get(uid)!.push(a)
+  for (const a of (pendentesTG ?? [])) {
+    const uid = (a.keywords as any)?.user_id; if (!uid) continue
+    if (!filaTG.has(uid)) filaTG.set(uid, [])
+    filaTG.get(uid)!.push(a)
+  }
+  for (const a of (recicladosWA ?? [])) {
+    const uid = (a.keywords as any)?.user_id; if (!uid) continue
+    if (!reciWA.has(uid)) reciWA.set(uid, [])
+    reciWA.get(uid)!.push(a)
+  }
+  for (const a of (recicladosTG ?? [])) {
+    const uid = (a.keywords as any)?.user_id; if (!uid) continue
+    if (!reciTG.has(uid)) reciTG.set(uid, [])
+    reciTG.get(uid)!.push(a)
   }
 
-  type EntradaUsuario = { topAlerta: any; todasAsIds: string[]; reciclado: boolean }
-  const porUsuario = new Map<string, EntradaUsuario>()
-
-  // Para cada usuário: prefere novos; só recicla se não houve envio nas últimas 24h
-  const todosUids = new Set([...pendentesPorUsuario.keys(), ...recicladosPorUsuario.keys()])
-  for (const uid of todosUids) {
-    const pend  = pendentesPorUsuario.get(uid)  ?? []
-    const recic = recicladosPorUsuario.get(uid) ?? []
-    const pool  = pend.length ? pend : recic
-    if (!pool.length) continue
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function topDaFila(pend: any[], recic: any[]): { topAlerta: any; todasAsIds: string[]; reciclado: boolean } | null {
+    const pool = pend.length ? pend : recic
+    if (!pool.length) return null
     const top = pool[0]
     const ids = pool.filter(a => a.licitacao_id === top.licitacao_id).map(a => a.id)
-    porUsuario.set(uid, { topAlerta: top, todasAsIds: ids, reciclado: pend.length === 0 })
+    return { topAlerta: top, todasAsIds: ids, reciclado: pend.length === 0 }
   }
 
-  const userIds = [...porUsuario.keys()]
+  // Conjunto de todos os usuários com algo para enviar em qualquer canal
+  const todosUids = new Set([...filaWA.keys(), ...filaTG.keys(), ...reciWA.keys(), ...reciTG.keys()])
+
+  const userIds = [...todosUids]
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, status, telegram_chat_id, whatsapp, telegram_pausado_ate, whatsapp_pausado_ate')
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
-  // Pré-computar contagem de envios por canal nas últimas 48h por usuário,
-  // para balancear o split WA/Telegram quando ambos estão ativos.
-  const contagemCanaisPorUsuario = new Map<string, { wa: number; tg: number }>()
-  for (const [uid, lista] of recicladosPorUsuario) {
-    let wa = 0, tg = 0
-    for (const a of lista) {
-      const c = a.canais ?? []
-      if (c.includes('whatsapp')) wa++
-      if (c.includes('telegram')) tg++
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function montarLicitacao(alerta: any) {
+    return {
+      orgao:          (alerta.licitacoes as any).orgao,
+      objeto:         (alerta.licitacoes as any).objeto,
+      valor_estimado: (alerta.licitacoes as any).valor_estimado,
+      data_abertura:  (alerta.licitacoes as any).data_abertura,
+      url:            (alerta.licitacoes as any).url,
+      estado:         (alerta.licitacoes as any).estado,
+      cidade:         (alerta.licitacoes as any).cidade,
+      keyword:        (alerta.keywords as any).termo,
     }
-    contagemCanaisPorUsuario.set(uid, { wa, tg })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function marcarEnviado(ids: string[], canais: string[]) {
+    const { data: atuais } = await supabase.from('alertas').select('id, canais').in('id', ids)
+    await Promise.all(
+      (atuais ?? []).map(atual => {
+        const canaisNovos = [...new Set([...(atual.canais ?? []), ...canais])]
+        return supabase.from('alertas')
+          .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
+          .eq('id', atual.id)
+      })
+    )
   }
 
   let enviados = 0
   const resultado: Record<string, unknown> = {}
 
-  // Dispatch paralelo — 20 usuários simultâneos para suportar 10K+ usuários sem timeout
+  // Dispatch paralelo — 20 usuários simultâneos
   const CONCORRENCIA = 20
-  const entries = [...porUsuario.entries()]
+  const entries = [...todosUids].map(uid => uid)
   for (let i = 0; i < entries.length; i += CONCORRENCIA) {
-    await Promise.all(entries.slice(i, i + CONCORRENCIA).map(async ([userId, { topAlerta, todasAsIds, reciclado }]) => {
+    await Promise.all(entries.slice(i, i + CONCORRENCIA).map(async (userId) => {
       const perfil = profileMap[userId]
       if (!perfil || perfil.status === 'expired') return
 
@@ -148,68 +181,34 @@ export async function GET(request: Request) {
 
       if (!temTelegram && !temWhatsApp) return
 
-      const licitacoes = [{
-        orgao:          (topAlerta.licitacoes as any).orgao,
-        objeto:         (topAlerta.licitacoes as any).objeto,
-        valor_estimado: (topAlerta.licitacoes as any).valor_estimado,
-        data_abertura:  (topAlerta.licitacoes as any).data_abertura,
-        url:            (topAlerta.licitacoes as any).url,
-        estado:         (topAlerta.licitacoes as any).estado,
-        cidade:         (topAlerta.licitacoes as any).cidade,
-        keyword:        (topAlerta.keywords as any).termo,
-      }]
+      // Fila independente por canal — cada canal avança seus próprios alertas pendentes.
+      // WA e Telegram nunca recebem o mesmo alerta; cada um drena sua fila separada.
+      const entradaWA = temWhatsApp ? topDaFila(filaWA.get(userId) ?? [], reciWA.get(userId) ?? []) : null
+      const entradaTG = temTelegram ? topDaFila(filaTG.get(userId) ?? [], reciTG.get(userId) ?? []) : null
 
-      // Split: quando ambos os canais estão ativos, cada alerta vai para apenas um —
-      // o que tem menos envios nas últimas 48h recebe o próximo (balanceamento automático).
-      // Quando só um canal está ativo, ele recebe todos os alertas.
-      let usarTelegram = temTelegram
-      let usarWhatsApp = temWhatsApp
-      if (temTelegram && temWhatsApp) {
-        const { wa, tg } = contagemCanaisPorUsuario.get(userId) ?? { wa: 0, tg: 0 }
-        if (wa <= tg) { usarWhatsApp = true;  usarTelegram = false }
-        else          { usarTelegram = true;  usarWhatsApp = false }
-        // Atualiza contagem local para próxima iteração (evita que todos batam no mesmo canal)
-        const cnt = contagemCanaisPorUsuario.get(userId) ?? { wa: 0, tg: 0 }
-        if (usarWhatsApp) cnt.wa++; else cnt.tg++
-        contagemCanaisPorUsuario.set(userId, cnt)
-      }
+      if (!entradaWA && !entradaTG) return
 
-      const [telegramOk, whatsappOk] = await Promise.all([
-        usarTelegram ? enviarAlertaTelegram(licitacoes, perfil.telegram_chat_id)  : Promise.resolve(false),
-        usarWhatsApp ? enviarAlertaWhatsApp(licitacoes, perfil.whatsapp)          : Promise.resolve(false),
+      const [whatsappOk, telegramOk] = await Promise.all([
+        entradaWA ? enviarAlertaWhatsApp([montarLicitacao(entradaWA.topAlerta)], perfil.whatsapp) : Promise.resolve(false),
+        entradaTG ? enviarAlertaTelegram([montarLicitacao(entradaTG.topAlerta)], perfil.telegram_chat_id) : Promise.resolve(false),
       ])
 
+      if (whatsappOk && entradaWA) await marcarEnviado(entradaWA.todasAsIds, ['whatsapp'])
+      if (telegramOk && entradaTG) await marcarEnviado(entradaTG.todasAsIds, ['telegram'])
+
       const canaisEnviados: string[] = []
-      if (telegramOk)  canaisEnviados.push('telegram')
-      if (whatsappOk)  canaisEnviados.push('whatsapp')
+      if (whatsappOk) canaisEnviados.push('whatsapp')
+      if (telegramOk) canaisEnviados.push('telegram')
 
       if (canaisEnviados.length === 0) return
 
-      // Marca TODOS os alertas da mesma licitação (todas as keywords) como enviados —
-      // evita reenvio em rodadas futuras por rows duplicadas da mesma licitação.
-      const { data: atuais } = await supabase
-        .from('alertas')
-        .select('id, canais')
-        .in('id', todasAsIds)
-
-      await Promise.all(
-        (atuais ?? []).map(atual => {
-          const canaisNovos = [...new Set([...(atual.canais ?? []), ...canaisEnviados])]
-          return supabase
-            .from('alertas')
-            .update({ canais: canaisNovos, enviado_em: new Date().toISOString() })
-            .eq('id', atual.id)
-        })
-      )
-
       enviados++
       resultado[userId] = {
-        licitacao_id: topAlerta.licitacao_id,
-        ids_marcados: todasAsIds.length,
-        canais:       canaisEnviados,
-        telegram:     telegramOk,
-        whatsapp:     whatsappOk,
-        reciclado,
+        wa_licitacao_id: entradaWA?.topAlerta.licitacao_id,
+        tg_licitacao_id: entradaTG?.topAlerta.licitacao_id,
+        canais: canaisEnviados,
+        whatsapp: whatsappOk,
+        telegram: telegramOk,
       }
     }))
   }
