@@ -637,15 +637,17 @@ export default function AdminPage() {
             { acao: 'emails-feedback',       label: '💬 Feedback',          desc: 'Usuário (E-mail)' },
             { acao: 'reconverter-trials',    label: '♻️ Reconverter',       desc: 'Usuário (E-mail/WA)' },
             { acao: 'expirar-trials',        label: '⏰ Expirar trials',    desc: 'Marca trials vencidos' },
-            { acao: 'sync-assinaturas',      label: '🔄 Sync assinaturas',  desc: 'Sincroniza com MP' },
           ]},
-          { grupo: 'Indicações & Sistema', itens: [
+          { grupo: 'Indicações', itens: [
             { acao: 'indicacoes-elegibilidade',    label: '✅ Elegibilidade',     desc: 'Usuário (E-mail/WA)' },
             { acao: 'indicacoes-liberar',          label: '🎁 Liberar bônus',     desc: 'Usuário (E-mail)' },
             { acao: 'indicacoes-aplicar-creditos', label: '💰 Aplicar créditos',  desc: 'Aplica créditos MP' },
             { acao: 'reverter-descontos',          label: '↩ Reverter descontos', desc: 'Reverte descontos MP' },
+          ]},
+          { grupo: 'Sistema', itens: [
             { acao: 'backup-db',                   label: '💾 Backup DB',         desc: 'Backup Supabase' },
             { acao: 'limpar-alertas',              label: '🗑 Limpar alertas',    desc: 'Remove alertas antigos' },
+            { acao: 'sync-assinaturas',            label: '🔄 Sync assinaturas',  desc: 'Sincroniza com MP' },
           ]},
           { grupo: 'Leads & Captação', itens: [
             { acao: 'disparar-leads',              label: '✉️ Disparar leads',      desc: 'Lead (E-mail)' },
