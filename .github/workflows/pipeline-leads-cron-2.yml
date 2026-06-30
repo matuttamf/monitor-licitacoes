@@ -1,9 +1,10 @@
 ﻿name: Pipeline Leads Cron 2 (arquivos 1-5, 12h)
 
-# Horário BRT (UTC-3): 00h (meia-noite)
+# Horário BRT (UTC-3): 06h sábado — só fins de semana p/ evitar disputa de I/O com o app
 on:
   schedule:
-    - cron: '0 3 2,5,8,11,14,17,20,23,26,29 * *'   # 00h BRT dias 2,5,8... (ciclo 3 dias)
+    - cron: '0 9 * * 6'   # 06h BRT sábado
+
   workflow_dispatch: {}
 
 jobs:
