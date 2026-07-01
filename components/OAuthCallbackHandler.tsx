@@ -4,8 +4,9 @@ import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// Detecta ?code= na URL raiz (quando Supabase redireciona para Site URL em vez de /auth/callback)
-// e processa o OAuth code exchange no lado do cliente.
+// Detecta ?code= na URL raiz (Supabase redireciona para Site URL em vez de /auth/callback).
+// O createBrowserClient já troca o code automaticamente; aqui só esperamos o SIGNED_IN
+// e redirecionamos conforme o perfil do usuário.
 export function OAuthCallbackHandler() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -14,31 +15,35 @@ export function OAuthCallbackHandler() {
   useEffect(() => {
     if (!code) return
 
-    async function handle() {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code!)
-      if (error || !data.session) {
-        router.replace('/login?erro=oauth_falhou')
-        return
-      }
+    const supabase = createClient()
 
-      // Verificar se tem telefone no profile
-      const userId = data.session.user.id
+    async function redirectByProfile(userId: string) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('telefone')
         .eq('id', userId)
         .single()
 
-      if (!profile?.telefone) {
-        router.replace('/dados-contato')
-      } else {
-        router.replace('/dashboard')
-      }
+      router.replace(profile?.telefone ? '/dashboard' : '/dados-contato')
     }
 
-    handle()
-  }, [code, router])
+    // Pode ser que o Supabase já trocou o code antes deste effect rodar
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        redirectByProfile(session.user.id)
+        return
+      }
+
+      // Ainda não trocou — aguarda o evento SIGNED_IN
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          subscription.unsubscribe()
+          redirectByProfile(session.user.id)
+        }
+      })
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code])
 
   return null
 }
