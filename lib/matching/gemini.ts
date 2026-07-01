@@ -108,15 +108,22 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
 
     try {
       const textoLimpo = texto
-        .replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+        .replace(/^```(?:json)?\n?/, ‘’).replace(/\n?```$/, ‘’).trim()
         // Normaliza aspas tipográficas que Gemini às vezes usa
-        .replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, “’”).replace(/[“”]/g, ‘”’)
         // Remove caracteres de controle (exceto tab/newline)
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ‘’)
       const jsonMatch = textoLimpo.match(/\[[\s\S]*\]/)
       if (!jsonMatch) continue
 
-      const matches: { index: number; keywords: string[] }[] = JSON.parse(jsonMatch[0])
+      // Gemini às vezes inclui \n literal dentro de valores string (JSON inválido).
+      // Substitui por espaço e remove trailing commas antes de parsear.
+      const jsonStr = jsonMatch[0]
+        .replace(/\r\n/g, ‘ ‘)
+        .replace(/[\r\n]/g, ‘ ‘)
+        .replace(/,\s*([\]}])/g, ‘$1’)
+
+      const matches: { index: number; keywords: string[] }[] = JSON.parse(jsonStr)
 
       for (const match of matches) {
         const licitacao = lote[match.index]

@@ -384,7 +384,6 @@ export async function GET(req: NextRequest) {
   }
 
   const inicioEtapa1 = Date.now()
-  const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
   const { data: leads, error } = await supabase
     .from('leads')
@@ -393,8 +392,7 @@ export async function GET(req: NextRequest) {
     .eq('status', 'invalido')
     .eq('situacao', 'ATIVA')
     .lt('email_tentativas', 3)
-    .gte('data_contrato', vinteAnosAtras)
-    .order('data_contrato', { ascending: false })
+    .order('data_contrato', { ascending: false, nullsFirst: false })
     .limit(60)
 
   console.log(`[enriquecer-emails] query leads: ${leads?.length ?? 0} encontrados, erro: ${error?.message ?? 'nenhum'}`)
