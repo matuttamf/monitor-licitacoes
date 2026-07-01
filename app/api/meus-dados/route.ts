@@ -7,7 +7,7 @@ import { rateLimitGuard, getIp } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
   const ip = getIp(request)
-  if (!rateLimitGuard(`ip:${ip}:meus-dados-get`, 5, 60_000)) {
+  if (!await rateLimitGuard(`ip:${ip}:meus-dados-get`, 5, 60_000)) {
     return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
   }
 
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
 export async function DELETE(request: Request) {
   const ip = getIp(request)
-  if (!rateLimitGuard(`ip:${ip}:meus-dados-delete`, 3, 300_000)) {
+  if (!await rateLimitGuard(`ip:${ip}:meus-dados-delete`, 3, 300_000)) {
     return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
   }
 

@@ -8,7 +8,7 @@ const ACCESS_TOKEN = process.env.MP_AMBIENTE === 'production'
 
 export async function POST(request: Request) {
   const ip = getIp(request)
-  if (!rateLimitGuard(`ip:${ip}:cancelar`, 5, 60_000)) {
+  if (!await rateLimitGuard(`ip:${ip}:cancelar`, 5, 60_000)) {
     return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
   }
   const supabase = await createClient()

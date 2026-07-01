@@ -11,7 +11,7 @@ const DIAS_CARENCIA = 180  // só pode pausar novamente após 180 dias da últim
 
 export async function POST(request: Request) {
   const ip = getIp(request)
-  if (!rateLimitGuard(`ip:${ip}:pausar`, 5, 60_000)) {
+  if (!await rateLimitGuard(`ip:${ip}:pausar`, 5, 60_000)) {
     return NextResponse.json({ error: 'Muitas tentativas. Aguarde um momento.' }, { status: 429 })
   }
 

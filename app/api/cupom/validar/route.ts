@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server'
 // para evitar enumeração de códigos.
 export async function POST(request: Request) {
   const ip = getIp(request)
-  if (!rateLimitGuard(`ip:${ip}:cupom`, 20, 60_000)) {
+  if (!await rateLimitGuard(`ip:${ip}:cupom`, 20, 60_000)) {
     return NextResponse.json({ valido: false, motivo: 'Muitas tentativas. Aguarde.' }, { status: 429 })
   }
 
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ valido: false, motivo: 'Não autorizado' }, { status: 401 })
 
-  if (!rateLimitGuard(`user:${user.id}:cupom`, 15, 60_000)) {
+  if (!await rateLimitGuard(`user:${user.id}:cupom`, 15, 60_000)) {
     return NextResponse.json({ valido: false, motivo: 'Muitas tentativas. Aguarde.' }, { status: 429 })
   }
 
