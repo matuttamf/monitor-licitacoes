@@ -388,7 +388,7 @@ export async function GET(req: NextRequest) {
   const inicioEtapa1 = Date.now()
 
   type LeadEnriquecer = {
-    id: string; cnpj: string | null; razao_social: string | null
+    id: string; cnpj: string; razao_social: string | null
     nome_fantasia: string | null; municipio: string | null; uf: string | null
     porte: string | null; email_tentativas: number | null
   }
