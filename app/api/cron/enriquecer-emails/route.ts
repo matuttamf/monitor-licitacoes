@@ -370,13 +370,15 @@ export async function GET(req: NextRequest) {
   console.log('[enriquecer-emails] cfg ok, verificando leads disponíveis')
 
   // Verificação rápida com estimated count — evita full scan quando não há leads
+  // NOTA: email_tentativas IS NULL para leads novos (nunca processados); NULL < 3 = FALSE no PG,
+  // então precisamos incluir IS NULL explicitamente para não ignorar leads novos.
   const { count: estimado } = await supabase
     .from('leads')
     .select('*', { count: 'estimated', head: true })
     .is('email', null)
     .eq('status', 'invalido')
     .eq('situacao', 'ATIVA')
-    .lt('email_tentativas', 3)
+    .or('email_tentativas.is.null,email_tentativas.lt.3')
 
   console.log(`[enriquecer-emails] estimated count: ${estimado ?? 0}`)
   if (!estimado || estimado === 0) {
@@ -391,7 +393,7 @@ export async function GET(req: NextRequest) {
     .is('email', null)
     .eq('status', 'invalido')
     .eq('situacao', 'ATIVA')
-    .lt('email_tentativas', 3)
+    .or('email_tentativas.is.null,email_tentativas.lt.3')
     .order('data_contrato', { ascending: false, nullsFirst: false })
     .limit(60)
 
