@@ -367,15 +367,25 @@ export async function GET(req: NextRequest) {
   if (cfg && (cfg.valor === false || cfg.valor === 'false')) {
     return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sistema pausado' })
   }
-  console.log('[enriquecer-emails] cfg ok, buscando leads')
+  console.log('[enriquecer-emails] cfg ok, verificando leads disponíveis')
 
-  // Etapa 0 (Receita Federal) foi movida para enriquecer-receita (*/5 min).
-  // Este cron faz apenas a busca web de e-mail para leads ATIVAS sem e-mail.
+  // Verificação rápida com estimated count — evita full scan quando não há leads
+  const { count: estimado } = await supabase
+    .from('leads')
+    .select('*', { count: 'estimated', head: true })
+    .is('email', null)
+    .eq('status', 'invalido')
+    .eq('situacao', 'ATIVA')
+    .lt('email_tentativas', 3)
+
+  console.log(`[enriquecer-emails] estimated count: ${estimado ?? 0}`)
+  if (!estimado || estimado === 0) {
+    return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis (estimated)' })
+  }
+
   const inicioEtapa1 = Date.now()
   const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-  // Sem .or() em email_buscado_em — causa full scan mesmo com índice.
-  // email_tentativas < 3 já garante no máximo 3 tentativas por lead.
   const { data: leads, error } = await supabase
     .from('leads')
     .select('id, cnpj, razao_social, nome_fantasia, municipio, uf, porte, email_tentativas')
