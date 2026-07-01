@@ -42,11 +42,17 @@ function DadosContatoConteudo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telefone, nome }),
       })
-      const data = await res.json()
-      if (!res.ok) { setErro(data.error ?? 'Erro ao salvar. Tente novamente.'); return }
+      let data: { error?: string } = {}
+      try { data = await res.json() } catch { /* resposta não é JSON */ }
+      if (!res.ok) {
+        console.error('[dados-contato] API erro', res.status, data)
+        setErro(data.error ?? `Erro ${res.status}. Tente novamente.`)
+        return
+      }
       router.push(nextUrl)
-    } catch {
-      setErro('Erro de conexão. Tente novamente.')
+    } catch (err) {
+      console.error('[dados-contato] fetch erro:', err)
+      setErro('Erro de rede. Tente novamente.')
     } finally {
       setSalvando(false)
     }
