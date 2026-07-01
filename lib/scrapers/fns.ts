@@ -9,7 +9,7 @@ const CNPJ_MS = '00394544000143'
 
 export async function coletarFNS(dataInicio: string, dataFim: string): Promise<LicitacaoRaw[]> {
   try {
-    const url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${dataInicio}&dataFinal=${dataFim}&cnpj=${CNPJ_MS}&pagina=1&tamanhoPagina=50`
+    const url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${dataInicio.replace(/-/g,'')}&dataFinal=${dataFim.replace(/-/g,'')}&cnpj=${CNPJ_MS}&pagina=1&tamanhoPagina=50`
     const res = await fetch(url, {
       headers: { Accept: 'application/json', 'User-Agent': 'Monitor-Licitacoes/2.0' },
       signal: AbortSignal.timeout(25000),

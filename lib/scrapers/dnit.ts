@@ -9,7 +9,7 @@ const CNPJ_DNIT = '04892707000100'
 
 export async function coletarDNIT(dataInicio: string, dataFim: string): Promise<LicitacaoRaw[]> {
   try {
-    const url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${dataInicio}&dataFinal=${dataFim}&cnpj=${CNPJ_DNIT}&pagina=1&tamanhoPagina=50`
+    const url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${dataInicio.replace(/-/g,'')}&dataFinal=${dataFim.replace(/-/g,'')}&cnpj=${CNPJ_DNIT}&pagina=1&tamanhoPagina=50`
     const res = await fetch(url, {
       headers: { Accept: 'application/json', 'User-Agent': 'Monitor-Licitacoes/2.0' },
       signal: AbortSignal.timeout(25000),

@@ -20,9 +20,11 @@ export function criarScraperPNCPMunicipio(
 
   return async function (dataInicio: string, dataFim: string): Promise<LicitacaoRaw[]> {
     try {
+      const di = dataInicio.replace(/-/g, '')
+      const df = dataFim.replace(/-/g, '')
       const url =
         `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao` +
-        `?dataInicial=${dataInicio}&dataFinal=${dataFim}` +
+        `?dataInicial=${di}&dataFinal=${df}` +
         `&codigoMunicipio=${codigoIBGE}&uf=${uf}` +
         `&pagina=1&tamanhoPagina=50`
 

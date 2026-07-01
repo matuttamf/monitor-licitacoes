@@ -16,7 +16,9 @@ export function criarScraperPNCPOrgao(cnpj: string, orgaoNome: string, fonte: st
 
   return async function (dataInicio: string, dataFim: string): Promise<LicitacaoRaw[]> {
     try {
-      const url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${dataInicio}&dataFinal=${dataFim}&cnpj=${cnpjLimpo}&pagina=1&tamanhoPagina=50`
+      const di = dataInicio.replace(/-/g, '')
+      const df = dataFim.replace(/-/g, '')
+      const url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${di}&dataFinal=${df}&cnpj=${cnpjLimpo}&pagina=1&tamanhoPagina=50`
       const res = await fetch(url, {
         headers: { Accept: 'application/json', 'User-Agent': 'Monitor-Licitacoes/2.0' },
         signal: AbortSignal.timeout(25000),
