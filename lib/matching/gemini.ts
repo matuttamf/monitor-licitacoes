@@ -36,25 +36,30 @@ export async function encontrarMatchesDetalhado(
 
     const prompt = `Você é um especialista em licitações públicas brasileiras. Analise cada licitação e identifique quais palavras-chave correspondem ao TEMA PRINCIPAL do que está sendo contratado.
 
-REGRA CENTRAL: A palavra-chave deve ser o tema CENTRAL e ESPECÍFICO do objeto — seja um produto sendo comprado OU um serviço sendo contratado diretamente. Quando há dúvida, retorne [].
+REGRA CENTRAL: A palavra-chave deve ser o tema CENTRAL e ESPECÍFICO do objeto. Só inclua se a conexão for DIRETA e ÓBVIA — sem inferências, sem relações indiretas. Na dúvida, retorne [].
 
-✅ INCLUA quando a palavra-chave É o tema central:
-- Compra/aquisição direta: "aquisição de notebooks" → keyword: "notebook"
-- SRP para fornecimento específico: "SRP para fornecimento de bebedouros" → keyword: "bebedouro"
-- Serviço específico sendo contratado: "prestação de serviços de limpeza" → keyword: "limpeza" (válido para empresa de limpeza)
-- Locação do equipamento específico: "locação de geradores" → keyword: "gerador"
+✅ INCLUA apenas quando a keyword É literalmente o produto/serviço contratado:
+- "aquisição de notebooks" → keyword "notebook" ✅
+- "prestação de serviços de limpeza predial" → keyword "limpeza" ✅
+- "contratação de assessoria de imprensa" → keyword "assessoria de imprensa" ✅
+- "produção de vídeo institucional" → keyword "produção audiovisual e multimídia" ✅
+- "serviços de campanha publicitária" → keyword "campanha publicitária" ✅
 
-❌ EXCLUA quando a palavra-chave aparece apenas como ATIVIDADE SECUNDÁRIA ou INSTRUMENTO de outro serviço:
-- A keyword lista atividades genéricas dentro de um serviço amplo: "SRP para prestação de serviços de locação, montagem, desmontagem e operação de tendas" — aqui "locação" e "montagem" são atividades do serviço, não o objeto específico
-- O objeto é genérico demais: "contratação de empresa para prestação de serviços diversos"
-- A keyword aparece como meio para realizar outro fim: "manutenção de sistema que usa câmeras" (câmera não é o objeto)
-- Obras de construção onde materiais são mencionados como insumo
+❌ EXCLUA em todos esses casos — sem exceção:
+- O objeto é de área completamente diferente da keyword: "aquisição de medicamentos" ≠ "produção audiovisual", "fornecimento de fardamentos" ≠ "jornalismo", "construção de escola" ≠ "campanha publicitária"
+- A keyword é citada apenas como instrumento secundário do serviço principal
+- O objeto é genérico demais para confirmar a keyword
+- Qualquer dúvida sobre a relevância → retorne []
 
-DISTINÇÃO CHAVE — mesmo verbo, contexto diferente:
-✅ "Serviços de limpeza predial" → keyword "limpeza" é o tema central → INCLUIR
-❌ "SRP para locação, montagem, desmontagem, operação e manutenção de estruturas" → "locação" e "montagem" são atividades do serviço, não o objeto → EXCLUIR
+TESTE MENTAL antes de incluir: "Uma empresa especializada em [keyword] seria a contratada para executar esse objeto?" Se não for óbvio que sim → [].
 
-Palavras-chave: ${termosTexto}
+Exemplos de erros a evitar:
+❌ "Aquisição de materiais médico-hospitalares" → keyword "monitoramento de mídia" (nenhuma relação)
+❌ "Fornecimento de fardamentos" → keyword "assessoria de imprensa" (nenhuma relação)
+❌ "Construção de escola" → keyword "campanha publicitária" (nenhuma relação)
+❌ "Compra de medicamentos" → keyword "produção audiovisual e multimídia" (nenhuma relação)
+
+Palavras-chave disponíveis: ${termosTexto}
 
 Licitações:
 ${lote.map((l, idx) => `[${idx}] ${l.objeto}`).join('\n')}
