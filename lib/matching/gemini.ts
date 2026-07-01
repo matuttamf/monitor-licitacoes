@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+﻿import { GoogleGenerativeAI } from '@google/generative-ai'
 import { trackGemini } from '@/lib/uso-apis'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -108,9 +108,9 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
 
     try {
       const textoLimpo = texto
-        .replace(/^```(?:json)?\n?/, ‘’).replace(/\n?```$/, ‘’).trim()
-        // Normaliza aspas tipográficas que Gemini às vezes usa
-        .replace(/[‘’]/g, “’”).replace(/[“”]/g, ‘”’)
+        .replace(/^```(?:json)?\s*/u, '').replace(/\s*```$/u, '').trim()
+        // Normaliza aspas tipograficas que Gemini as vezes usa (U+2018/19 e U+201C/D)
+        .replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
         // Remove caracteres de controle (exceto tab/newline)
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ‘’)
       const jsonMatch = textoLimpo.match(/\[[\s\S]*\]/)
