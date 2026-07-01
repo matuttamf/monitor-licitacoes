@@ -6,7 +6,7 @@ import { calcularScore } from '@/lib/scoring'
 import { estadoCompativelComRegioes } from '@/lib/regioes'
 import { registrarCronLog } from '@/lib/cron-log'
 
-export const maxDuration = 300
+export const maxDuration = 900
 
 // ─── Handler ──────────────────────────────────────────────────────────────
 

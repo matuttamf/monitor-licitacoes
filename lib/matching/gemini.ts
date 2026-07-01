@@ -19,11 +19,16 @@ export interface MatchResponse {
 
 export async function encontrarMatchesDetalhado(
   licitacoes: { id: string; objeto: string }[],
-  keywords: { id: string; termo: string }[]
+  keywords: { id: string; termo: string }[],
+  opts?: { timeLimitMs?: number }
 ): Promise<MatchResponse> {
   if (licitacoes.length === 0 || keywords.length === 0) {
     return { resultados: [], erros: [], lotes: 0, lotesComErro: 0 }
   }
+
+  const inicio = Date.now()
+  // Para antes do timeout do Vercel: 840s (14min) por padrão, ou valor customizado
+  const limiteMs = opts?.timeLimitMs ?? 840_000
 
   const resultados: MatchResult[] = []
   const erros: string[] = []
@@ -32,6 +37,10 @@ export async function encontrarMatchesDetalhado(
   const termosTexto  = termosUnicos.map(t => `"${t}"`).join(', ')
 
   for (let i = 0; i < licitacoes.length; i += 50) {
+    if (Date.now() - inicio > limiteMs) {
+      console.warn(`[gemini] tempo limite atingido após ${Math.round((Date.now() - inicio) / 1000)}s — ${i} de ${licitacoes.length} licitações processadas`)
+      break
+    }
     const lote = licitacoes.slice(i, i + 50)
 
     const prompt = `Você é um especialista em licitações públicas brasileiras. Analise cada licitação e identifique quais palavras-chave correspondem ao TEMA PRINCIPAL do que está sendo contratado.
