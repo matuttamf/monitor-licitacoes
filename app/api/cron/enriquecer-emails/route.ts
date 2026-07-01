@@ -388,14 +388,7 @@ export async function GET(req: NextRequest) {
   const inicioEtapa1 = Date.now()
 
   const { data: leads, error } = await supabase
-    .from('leads')
-    .select('id, cnpj, razao_social, nome_fantasia, municipio, uf, porte, email_tentativas')
-    .is('email', null)
-    .eq('status', 'invalido')
-    .eq('situacao', 'ATIVA')
-    .or('email_tentativas.is.null,email_tentativas.lt.3')
-    .order('data_contrato', { ascending: false, nullsFirst: false })
-    .limit(60)
+    .rpc('buscar_leads_para_enriquecer', { lim: 60 })
 
   console.log(`[enriquecer-emails] query leads: ${leads?.length ?? 0} encontrados, erro: ${error?.message ?? 'nenhum'}`)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
