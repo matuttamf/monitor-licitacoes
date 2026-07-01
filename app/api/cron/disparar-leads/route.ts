@@ -127,20 +127,13 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const [cfgCaptacao, cfgDisparo, cfgLote] = await Promise.all([
+  const [cfgCaptacao, cfgDisparo, cfgLote, cfgDiario] = await Promise.all([
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_ativa').maybeSingle(),
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_disparo_ativo').maybeSingle(),
     supabase.from('configuracoes').select('valor').eq('chave', 'captacao_lote_max').maybeSingle(),
+    supabase.from('configuracoes').select('valor').eq('chave', 'captacao_limite_diario').maybeSingle(),
   ])
 
-  // Ramp-up: teto de novos por execução, ajustável no painel admin
-  // (configuracoes.captacao_lote_max) SEM novo deploy. Protege a reputação no
-  // início — comece pequeno (ex.: 50) e aumente conforme as métricas de bounce/
-  // reclamação se mantiverem saudáveis. Ausente/0 → usa o teto absoluto.
-  const loteMaxCfg = Number(cfgLote.data?.valor)
-  const MAX_LOTE_NOVOS = Number.isFinite(loteMaxCfg) && loteMaxCfg > 0
-    ? Math.min(TETO_NOVOS, loteMaxCfg)
-    : TETO_NOVOS
   if (cfgCaptacao.data && (cfgCaptacao.data.valor === false || cfgCaptacao.data.valor === 'false')) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'sistema pausado' })
   }
@@ -148,6 +141,27 @@ export async function GET(req: NextRequest) {
   if (!disparoAtivo) {
     return NextResponse.json({ ok: true, enviados: 0, motivo: 'disparo pausado pelo admin' })
   }
+
+  // Teto diário ajustável via configuracoes.captacao_limite_diario (sem novo deploy).
+  // Conta apenas leads enviados hoje (meia-noite UTC). Ausente/0 → sem teto diário.
+  const limiteDiario = Number(cfgDiario.data?.valor)
+  if (Number.isFinite(limiteDiario) && limiteDiario > 0) {
+    const inicioDia = new Date()
+    inicioDia.setUTCHours(0, 0, 0, 0)
+    const { count: enviadosHoje } = await supabase
+      .from('leads')
+      .select('*', { count: 'exact', head: true })
+      .gte('enviado_em', inicioDia.toISOString())
+    if ((enviadosHoje ?? 0) >= limiteDiario) {
+      return NextResponse.json({ ok: true, enviados: 0, motivo: `limite diário atingido (${enviadosHoje}/${limiteDiario})` })
+    }
+  }
+
+  // Ramp-up: teto de novos por execução, ajustável via captacao_lote_max SEM novo deploy.
+  const loteMaxCfg = Number(cfgLote.data?.valor)
+  const MAX_LOTE_NOVOS = Number.isFinite(loteMaxCfg) && loteMaxCfg > 0
+    ? Math.min(TETO_NOVOS, loteMaxCfg)
+    : TETO_NOVOS
 
   // ── Steps 0a/0b em paralelo ──────────────────────────────────────────────
   const h4ago = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
