@@ -347,6 +347,7 @@ async function buscarEmailPorDominio(razao: string, cnpj?: string): Promise<stri
 
 // ── Handler ──────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
+  console.log('[enriquecer-emails] iniciando')
   if (!verificarCronAuth(req)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
@@ -354,6 +355,7 @@ export async function GET(req: NextRequest) {
   if (await sistemaPausado()) {
     return NextResponse.json({ ok: false, motivo: 'sistema pausado para manutencao' }, { status: 503 })
   }
+  console.log('[enriquecer-emails] auth ok')
 
   const supabase = createSupabase(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -365,6 +367,7 @@ export async function GET(req: NextRequest) {
   if (cfg && (cfg.valor === false || cfg.valor === 'false')) {
     return NextResponse.json({ ok: true, enriquecidos: 0, motivo: 'sistema pausado' })
   }
+  console.log('[enriquecer-emails] cfg ok, buscando leads')
 
   // Etapa 0 (Receita Federal) foi movida para enriquecer-receita (*/5 min).
   // Este cron faz apenas a busca web de e-mail para leads ATIVAS sem e-mail.
@@ -385,6 +388,7 @@ export async function GET(req: NextRequest) {
     .order('data_contrato', { ascending: false })
     .limit(60)
 
+  console.log(`[enriquecer-emails] query leads: ${leads?.length ?? 0} encontrados, erro: ${error?.message ?? 'nenhum'}`)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!leads?.length) return NextResponse.json({
     ok: true, enriquecidos: 0, motivo: 'sem leads elegíveis para e-mail',
