@@ -18,8 +18,8 @@ import { verificarCronAuth, sistemaPausado } from '@/lib/cron-auth'
 import { registrarCronLog } from '@/lib/cron-log'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { emailCaptacao, type LicitacaoResumida } from '@/lib/emails/captacao'
-import { sendEmailSes } from '@/lib/ses'
-import { trackSes } from '@/lib/uso-apis'
+import { Resend } from 'resend'
+import { trackResend } from '@/lib/uso-apis'
 
 // ─── Palavras-chave por segmento ──────────────────────────────────────────────
 const KEYWORDS_SEGMENTO: Record<string, string[]> = {
@@ -91,13 +91,13 @@ async function construirCacheLicitacoes(
 
 export const maxDuration = 300
 
-// Sandbox SES: 200/dia → ~3/exec (60 exec/dia)
-// Produção SES: 50k/dia → ~800/exec (60 exec/dia)
-// Troque SES_PRODUCAO=true na Vercel ao receber Production Access
+// Resend free: 100/dia → ~2/exec (60 exec/dia)
+// Resend Pro: 50k/mês (~1.600/dia) → ~26/exec — ajuste fino via captacao_lote_max no admin
+// Troque SES_PRODUCAO=true ao assinar Resend Pro (ou quando SES Production Access for aprovado)
 const EM_PRODUCAO       = process.env.SES_PRODUCAO === 'true'
-const TETO_NOVOS        = EM_PRODUCAO ? 800  : 3   // teto absoluto por execução (ramp-up afina abaixo disso)
-const MAX_LOTE_FOLLOWUP = EM_PRODUCAO ? 100  : 1
-const CONCORRENCIA_SES  = EM_PRODUCAO ? 50   : 3
+const TETO_NOVOS        = EM_PRODUCAO ? 50   : 2   // teto absoluto por execução (ramp-up afina abaixo disso)
+const MAX_LOTE_FOLLOWUP = EM_PRODUCAO ? 10   : 1
+const CONCORRENCIA_SES  = EM_PRODUCAO ? 5    : 2
 const MAX_EMAILS        = 8    // sunset após 8 e-mails sem abertura
 
 // D+0 → D+4 → D+8 → D+17 → D+32 → D+62 → D+92 → D+152 (sunset)
@@ -283,12 +283,14 @@ export async function GET(req: NextRequest) {
   let followups = 0
   let erros = 0
 
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
   for (let i = 0; i < leadsPreparados.length; i += CONCORRENCIA_SES) {
     const lote = leadsPreparados.slice(i, i + CONCORRENCIA_SES)
     const resultados = await Promise.allSettled(
       lote.map(async lead => {
-        trackSes()
-        await sendEmailSes({
+        trackResend()
+        const { error: resendError } = await resend.emails.send({
           from:    process.env.EMAIL_CAPTACAO_FROM ?? 'Monitor de Licitações <comercial@monitordelicitacoes.com.br>',
           to:      lead.email,
           subject: lead.subject,
@@ -299,6 +301,7 @@ export async function GET(req: NextRequest) {
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
         })
+        if (resendError) throw new Error(resendError.message)
         return lead
       })
     )
