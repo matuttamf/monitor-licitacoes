@@ -119,7 +119,12 @@ export async function GET(req: NextRequest) {
   for (const lote of lotes) {
     await Promise.all(lote.map(async lead => {
       const dados = await enriquecerReceita(lead.cnpj)
-      if (!dados) return
+      if (!dados) {
+        // Marca para não ficar em loop eterno nas próximas execuções
+        await supabase.from('leads').update({ situacao: 'TIMEOUT' }).eq('id', lead.id).is('situacao', null)
+        await supabase.from('leads').update({ razao_social: 'ERRO_API' }).eq('id', lead.id).is('razao_social', null)
+        return
+      }
 
       verificados++
       const emailDaReceita = dados.email?.trim()?.toLowerCase() || null
