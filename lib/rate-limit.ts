@@ -5,11 +5,16 @@
 
 import { Redis } from '@upstash/redis'
 
-const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
-const redis = hasUpstash ? new Redis({
-  url:   process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-}) : null
+// Lazy — não instancia no módulo load (build falha sem as env vars disponíveis)
+let _redis: Redis | null | undefined = undefined
+
+function getRedis(): Redis | null {
+  if (_redis !== undefined) return _redis
+  const url   = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  _redis = url && token ? new Redis({ url, token }) : null
+  return _redis
+}
 
 // ── In-memory fallback ────────────────────────────────────────────────────────
 type Entry = { count: number; resetAt: number }
@@ -30,8 +35,9 @@ function checkInMemory(key: string, limit: number, windowMs: number): boolean {
 // ── Redis distribuído ─────────────────────────────────────────────────────────
 async function checkRedis(key: string, limit: number, windowMs: number): Promise<boolean> {
   const ttl = Math.ceil(windowMs / 1000)
-  const count = await redis!.incr(`rl:${key}`)
-  if (count === 1) await redis!.expire(`rl:${key}`, ttl)
+  const r = getRedis()!
+  const count = await r.incr(`rl:${key}`)
+  if (count === 1) await r.expire(`rl:${key}`, ttl)
   return count <= limit
 }
 
@@ -51,7 +57,7 @@ export function getIp(request: Request): string {
  * Usa Redis distribuído quando disponível, in-memory como fallback.
  */
 export async function checkRateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
-  if (redis) return checkRedis(key, limit, windowMs)
+  if (getRedis()) return checkRedis(key, limit, windowMs)
   return checkInMemory(key, limit, windowMs)
 }
 
