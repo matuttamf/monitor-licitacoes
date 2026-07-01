@@ -22,8 +22,17 @@ export async function POST(request: Request) {
   }
 
   const serviceClient = await createServiceClient()
+
+  // Verifica se whatsapp já está preenchido para não sobrescrever
+  const { data: existing } = await serviceClient
+    .from('profiles')
+    .select('whatsapp')
+    .eq('id', user.id)
+    .single()
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const update: Record<string, any> = { telefone: telLimpo }
+  if (!existing?.whatsapp) update.whatsapp = telLimpo
   if (nome?.trim()) update.nome = nome.trim().slice(0, 100)
 
   const { error } = await serviceClient

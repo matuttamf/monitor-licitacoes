@@ -518,7 +518,9 @@ export async function GET(req: NextRequest) {
       console.log('[enriquecer-emails] tempo limite atingido, saindo antes do fim do lote')
       break
     }
-    await Promise.all(lote.map(lead => processarLead(lead)))
+    await Promise.all(lote.map(lead => processarLead(lead).catch(err => {
+      console.error('[enriquecer-emails] lead crash:', lead.cnpj, err instanceof Error ? err.message : String(err))
+    })))
     await sleep(400)
   }
 
