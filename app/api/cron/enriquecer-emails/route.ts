@@ -387,8 +387,13 @@ export async function GET(req: NextRequest) {
 
   const inicioEtapa1 = Date.now()
 
+  type LeadEnriquecer = {
+    id: string; cnpj: string | null; razao_social: string | null
+    nome_fantasia: string | null; municipio: string | null; uf: string | null
+    porte: string | null; email_tentativas: number | null
+  }
   const { data: leads, error } = await supabase
-    .rpc('buscar_leads_para_enriquecer', { lim: 60 })
+    .rpc('buscar_leads_para_enriquecer', { lim: 60 }) as { data: LeadEnriquecer[] | null; error: { message: string } | null }
 
   console.log(`[enriquecer-emails] query leads: ${leads?.length ?? 0} encontrados, erro: ${error?.message ?? 'nenhum'}`)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
