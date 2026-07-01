@@ -372,18 +372,17 @@ export async function GET(req: NextRequest) {
   // Etapa 0 (Receita Federal) foi movida para enriquecer-receita (*/5 min).
   // Este cron faz apenas a busca web de e-mail para leads ATIVAS sem e-mail.
   const inicioEtapa1 = Date.now()
-  // Retry após 14 dias (era 7) — reduz pressão nas APIs externas
-  const retryApos = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
   const vinteAnosAtras = new Date(Date.now() - 20 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
+  // Sem .or() em email_buscado_em — causa full scan mesmo com índice.
+  // email_tentativas < 3 já garante no máximo 3 tentativas por lead.
   const { data: leads, error } = await supabase
     .from('leads')
     .select('id, cnpj, razao_social, nome_fantasia, municipio, uf, porte, email_tentativas')
     .is('email', null)
     .eq('status', 'invalido')
     .eq('situacao', 'ATIVA')
-    .lt('email_tentativas', 3)           // descarta após 3 tentativas sem achar e-mail
-    .or(`email_buscado_em.is.null,email_buscado_em.lt.${retryApos}`)
+    .lt('email_tentativas', 3)
     .gte('data_contrato', vinteAnosAtras)
     .order('data_contrato', { ascending: false })
     .limit(60)
