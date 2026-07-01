@@ -110,18 +110,18 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
       const textoLimpo = texto
         .replace(/^```(?:json)?\s*/u, '').replace(/\s*```$/u, '').trim()
         // Normaliza aspas tipograficas que Gemini as vezes usa (U+2018/19 e U+201C/D)
-        .replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"')
         // Remove caracteres de controle (exceto tab/newline)
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ‘’)
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
       const jsonMatch = textoLimpo.match(/\[[\s\S]*\]/)
       if (!jsonMatch) continue
 
       // Gemini às vezes inclui \n literal dentro de valores string (JSON inválido).
       // Substitui por espaço e remove trailing commas antes de parsear.
       const jsonStr = jsonMatch[0]
-        .replace(/\r\n/g, ‘ ‘)
-        .replace(/[\r\n]/g, ‘ ‘)
-        .replace(/,\s*([\]}])/g, ‘$1’)
+        .replace(/\r\n/g, ' ')
+        .replace(/[\r\n]/g, ' ')
+        .replace(/,\s*([\]}])/g, '$1')
 
       const matches: { index: number; keywords: string[] }[] = JSON.parse(jsonStr)
 
