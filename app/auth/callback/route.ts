@@ -123,8 +123,49 @@ export async function GET(request: NextRequest) {
 
   // Fluxo code (OAuth, PKCE)
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && sessionData.user) {
+      const user = sessionData.user
+      const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+
+      // Verificar se é novo usuário (criado nos últimos 30s) para disparar boas-vindas
+      const isNew = user.created_at
+        ? Date.now() - new Date(user.created_at).getTime() < 30_000
+        : false
+
+      if (isNew) {
+        const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? ''
+        const userEmail = user.email ?? ''
+        if (userEmail) {
+          enviarEmailBoasVindas(userEmail, userName).catch(err =>
+            console.error('[callback/oauth] Erro ao enviar e-mail boas-vindas:', err)
+          )
+          notificarAdminNovoCadastro(userEmail, userName).catch(() => {})
+          notificarAdminEmail(userEmail, userName).catch(() => {})
+          ;(async () => {
+            await adminClient.from('leads').update({ status: 'usuario' })
+              .eq('email', userEmail)
+              .not('status', 'in', '("descadastrado","invalido")')
+          })()
+        }
+      }
+
+      // Se não tem telefone, pedir antes de entrar no painel
+      const { data: profile } = await adminClient
+        .from('profiles')
+        .select('telefone')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.telefone) {
+        const dadosUrl = new URL('/dados-contato', request.url)
+        if (next !== '/dashboard') dadosUrl.searchParams.set('next', next)
+        return NextResponse.redirect(dadosUrl)
+      }
+
       return NextResponse.redirect(new URL(next, request.url))
     }
   }
