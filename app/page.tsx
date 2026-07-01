@@ -1,9 +1,11 @@
-﻿import Link from 'next/link'
+﻿import { Suspense } from 'react'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import ContadorAoVivo from '@/app/components/ContadorAoVivo'
 import TogglePeriodo from '@/app/components/TogglePeriodo'
 import { NavArticlesDropdown } from '@/components/NavArticlesDropdown'
 import { MobileMenu } from '@/components/MobileMenu'
+import { OAuthCallbackHandler } from '@/components/OAuthCallbackHandler'
 
 // ─── SEO ─────────────────────────────────────────────────────────────────────
 
@@ -226,6 +228,9 @@ const faqLd = {
 export default function LandingPage() {
   return (
     <div className="font-sans bg-[#FAF6F0] text-[#1A1A1C]">
+      <Suspense fallback={null}>
+        <OAuthCallbackHandler />
+      </Suspense>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd) }} />
