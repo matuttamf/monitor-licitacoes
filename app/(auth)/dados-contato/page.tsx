@@ -14,7 +14,7 @@ function mascaraTelefone(v: string) {
 function DadosContatoConteudo() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const nextUrl = searchParams.get('next') ?? '/dashboard'
+  const nextUrl = searchParams.get('next') ?? '/onboarding'
 
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
