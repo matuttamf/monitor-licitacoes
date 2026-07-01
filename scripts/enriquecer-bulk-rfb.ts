@@ -208,12 +208,11 @@ async function carregarCnpjsBase(): Promise<{ cnpjsBase: Set<string>; basicosBas
   console.log('\n── Fase 1: Carregando CNPJs da base ──')
   const cnpjsBase   = new Set<string>()
   const basicosBase = new Set<string>()
-  // BULK_FILTRO=sem_municipio → pagina só leads SEM município (backfill que avança
-  // de fato pela base). Sem a env → paginação geral (comportamento original).
-  const RPC_PAGINACAO = process.env.BULK_FILTRO === 'sem_municipio'
-    ? 'get_cnpjs_sem_municipio_page'
-    : 'get_cnpjs_page'
-  console.log(`  Paginação: ${RPC_PAGINACAO}`)
+  // Sempre usa get_cnpjs_page (sem filtro) — bypassa o timeout do PostgREST que
+  // afeta a versão filtrada (get_cnpjs_sem_municipio_page). A função de update já
+  // tem WHERE municipio IS NULL, então reprocessar leads com município é inócuo.
+  const RPC_PAGINACAO = 'get_cnpjs_page'
+  console.log(`  Paginação: ${RPC_PAGINACAO} (BULK_FILTRO=${process.env.BULK_FILTRO ?? 'não definido'})`)
   let lastId = '00000000-0000-0000-0000-000000000000'
   let errosConsecutivos = 0
   while (cnpjsBase.size < MAX_POR_RUN) {
