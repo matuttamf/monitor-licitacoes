@@ -73,8 +73,6 @@ Responda APENAS com JSON válido (sem markdown, sem explicações):
           generationConfig: {
             temperature: 0.1,
             maxOutputTokens: 4096,
-            // @ts-expect-error - thinkingConfig é suportado no gemini-2.5-flash mas não está nos tipos ainda
-            thinkingConfig: { thinkingBudget: 0 },
           },
         })
         texto = resultado.response.text()
