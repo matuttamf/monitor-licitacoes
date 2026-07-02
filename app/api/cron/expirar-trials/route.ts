@@ -70,7 +70,19 @@ export async function GET(request: Request) {
       }
     }
     await supabase.from('profiles').update({ status: 'active', pausa_ate: null }).eq('id', p.id)
+    await supabase.from('keywords').update({ ativo: true }).eq('user_id', p.id).eq('ativo', false)
     pausasReativadasIds.push(p.id)
+  }
+
+  // Desativa keywords de todos que expiraram nesta rodada.
+  // Cada usuário tem suas próprias linhas na tabela keywords (user_id),
+  // então isso nunca afeta keywords de outros usuários ativos com o mesmo termo.
+  const idsExpirados = [
+    ...(data?.map(r => r.id) ?? []),
+    ...(assinaturasExpiradas?.map(r => r.id) ?? []),
+  ]
+  if (idsExpirados.length > 0) {
+    await supabase.from('keywords').update({ ativo: false }).in('user_id', idsExpirados).eq('ativo', true)
   }
 
   const expirados = data?.length ?? 0

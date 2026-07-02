@@ -130,7 +130,7 @@ export async function GET(request: Request) {
   const userIds = [...todosUids]
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, status, telegram_chat_id, whatsapp, telegram_pausado_ate, whatsapp_pausado_ate')
+    .select('id, status, bloqueado_admin, telegram_chat_id, whatsapp, telegram_pausado_ate, whatsapp_pausado_ate')
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
@@ -170,7 +170,7 @@ export async function GET(request: Request) {
   for (let i = 0; i < entries.length; i += CONCORRENCIA) {
     await Promise.all(entries.slice(i, i + CONCORRENCIA).map(async (userId) => {
       const perfil = profileMap[userId]
-      if (!perfil || perfil.status === 'expired') return
+      if (!perfil || perfil.status === 'expired' || perfil.status === 'bloqueado' || perfil.bloqueado_admin) return
 
       const agora = new Date()
       const telegramPausado = perfil.telegram_pausado_ate && new Date(perfil.telegram_pausado_ate) > agora

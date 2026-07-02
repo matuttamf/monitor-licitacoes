@@ -265,6 +265,8 @@ export async function POST(request: Request) {
       }
 
       await supabase.from('profiles').update(updateData).eq('id', userId)
+      // Reativa keywords desativadas por expiração/bloqueio anterior
+      await supabase.from('keywords').update({ ativo: true }).eq('user_id', userId).eq('ativo', false)
       await logWebhook({ tipo: type, dataId, status: 'ok', userId, plano: planoId, mensagem: `ativado ${periodo}` })
       console.log(`[webhook/mp] Assinatura ativada: user=${userId} plano=${planoId} keywords=${limites.maxKeywords}`)
 
@@ -406,6 +408,9 @@ export async function POST(request: Request) {
           updatePausaExt.status = 'expired'
         }
         await supabase.from('profiles').update(updatePausaExt).eq('id', userId)
+        if (updatePausaExt.status === 'expired') {
+          await supabase.from('keywords').update({ ativo: false }).eq('user_id', userId).eq('ativo', true)
+        }
         await logWebhook({ tipo: type, dataId, status: 'ok', userId, mensagem: `pausa externa${proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado'}` })
         console.log(`[webhook/mp] Pausa externa MP: user=${userId}`)
       }
@@ -454,6 +459,11 @@ export async function POST(request: Request) {
         .eq('status', 'assinou')
 
       await supabase.from('profiles').update(updateCancelado).eq('id', userId)
+      // Cancelamento sem período restante: desativa keywords imediatamente.
+      // Com acesso_ate definido, o cron expirar-trials desativa quando o período vencer.
+      if (updateCancelado.status === 'expired') {
+        await supabase.from('keywords').update({ ativo: false }).eq('user_id', userId).eq('ativo', true)
+      }
       await logWebhook({ tipo: type, dataId, status: 'ok', userId, mensagem: `cancelado${proximaCobranca ? ` acesso_ate=${proximaCobranca}` : ' expirado imediatamente'}` })
       console.log(
         `[webhook/mp] Cancelamento: user=${userId}` +

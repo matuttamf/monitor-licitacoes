@@ -146,7 +146,7 @@ export async function GET(request: Request) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, status, plano, telegram_chat_id, whatsapp, emails_por_dia, itens_por_email, trial_fim, email_pausado_ate')
+    .select('id, status, bloqueado_admin, plano, telegram_chat_id, whatsapp, emails_por_dia, itens_por_email, trial_fim, email_pausado_ate')
     .in('id', userIds)
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
@@ -161,7 +161,7 @@ export async function GET(request: Request) {
     await Promise.all(entries.slice(i, i + CONCORRENCIA).map(async ([userId, alertas]) => {
       const email  = emailMap[userId]
       const perfil = profileMap[userId]
-      if (!email || perfil?.status === 'expired') return
+      if (!email || perfil?.status === 'expired' || perfil?.status === 'bloqueado' || perfil?.bloqueado_admin) return
       // Canal e-mail pausado?
       if (perfil?.email_pausado_ate && new Date(perfil.email_pausado_ate) > new Date()) return
 

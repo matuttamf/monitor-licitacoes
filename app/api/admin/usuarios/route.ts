@@ -132,5 +132,15 @@ export async function PATCH(request: Request) {
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Bloquear/expirar manualmente → desativa keywords do usuário
+  if (atualizacao.status === 'bloqueado' || atualizacao.status === 'expired' || atualizacao.bloqueado_admin === true) {
+    await supabase.from('keywords').update({ ativo: false }).eq('user_id', id).eq('ativo', true)
+  }
+  // Reativar manualmente → reativa keywords
+  if (atualizacao.status === 'active' || atualizacao.status === 'trial' || atualizacao.bloqueado_admin === false) {
+    await supabase.from('keywords').update({ ativo: true }).eq('user_id', id).eq('ativo', false)
+  }
+
   return NextResponse.json({ ok: true })
 }
