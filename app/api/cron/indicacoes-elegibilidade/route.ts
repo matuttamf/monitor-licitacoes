@@ -28,7 +28,13 @@ export async function GET(request: Request) {
   }
 
   const supabase = createAdminClient()
-  const corte = new Date(Date.now() - APTO_APOS_DIAS * 24 * 60 * 60 * 1000).toISOString()
+  // Corte baseado em data calendário BRT (meia-noite), não em milissegundos desde o cron.
+  // Garante que quem pagou em qualquer horário do dia D seja processado no dia D+10,
+  // independente de ter pago antes ou depois do horário de execução do cron.
+  const hoje = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+  hoje.setHours(0, 0, 0, 0) // meia-noite BRT
+  hoje.setDate(hoje.getDate() - APTO_APOS_DIAS)
+  const corte = hoje.toISOString()
 
   // ── 1. Gerar códigos para novos aptos ──────────────────────────────────────
   const { data: novosAptos } = await supabase
