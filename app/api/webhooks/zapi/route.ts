@@ -60,16 +60,6 @@ async function notificarAdmin(assunto: string, corpo: string) {
 }
 
 export async function POST(request: Request) {
-  // Valida Client-Token enviado pela Z-API em cada webhook
-  const clientToken = process.env.ZAPI_CLIENT_TOKEN
-  if (clientToken) {
-    const tokenHeader = request.headers.get('client-token') ?? request.headers.get('Client-Token')
-    if (tokenHeader !== clientToken) {
-      console.warn('[zapi/webhook] Client-Token inválido — requisição rejeitada')
-      return NextResponse.json({ ok: false }, { status: 401 })
-    }
-  }
-
   let body: Record<string, unknown>
   try {
     body = await request.json()
