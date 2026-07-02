@@ -187,7 +187,7 @@ interface E1Template {
 
 const E1: Record<Setor, E1Template> = {
   construcao: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato de obra pública no PNCP. Reforma, construção — esse tipo.',
     p2: 'Uma pergunta: quando o próximo edital de obra aparecer em prefeituras da região, vocês vão receber o alerta?',
     p3: 'Prefeituras, estados e órgãos federais publicam mais de 3.200 contratos de construção por mês no Brasil, com prazo médio de 15 dias corridos. Quem monitora chega com tempo de elaborar proposta — quem não monitora descobre quando o prazo já fechou.',
@@ -195,7 +195,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Esta semana foram publicados mais de 3.200 contratos de obras e reformas no Brasil. A maioria fechou sem que a empresa certa recebesse um alerta.',
   },
   limpeza: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato de limpeza e conservação no sistema federal.',
     p2: 'Uma pergunta: quando o próximo edital de limpeza aparecer — prefeitura, hospital, escola pública — vocês vão receber o alerta?',
     p3: 'Órgãos públicos licitam limpeza o ano inteiro — mais de 4.800 contratos por mês, a maioria com 12 a 36 meses de duração. Cada edital perdido não é uma venda: é até três anos de receita mensal garantida que foi para quem estava monitorando.',
@@ -203,7 +203,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Contratos de limpeza duram de 1 a 3 anos. Um edital perdido não é uma venda — é até 36 meses de receita mensal garantida que foi para o concorrente que estava monitorando.',
   },
   ti: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato público de tecnologia no sistema federal.',
     p2: 'Uma pergunta: quando o próximo pregão de TI aparecer — software, suporte, infraestrutura — vocês vão receber o alerta?',
     p3: 'O setor público compra mais de R$ 40 bilhões em tecnologia por ano — mais de 6.000 pregões por mês, com prazo de 5 a 15 dias úteis. Sem alerta no dia da publicação, você começa a elaborar proposta com metade do prazo já consumido.',
@@ -211,7 +211,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Pregões de TI têm prazo de 5 a 15 dias úteis. Sem monitoramento, você nem tem tempo de elaborar proposta antes do prazo fechar.',
   },
   vigilancia: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato de vigilância patrimonial no sistema federal.',
     p2: 'Uma pergunta: quando o próximo edital de vigilância aparecer — prefeitura, hospital, autarquia — vocês vão receber o alerta?',
     p3: 'O governo contrata vigilância o ano inteiro — mais de 900 contratos por mês, a maioria com 12 a 36 meses de duração. Cada edital que passa sem você saber é até três anos de receita garantida que vai para quem estava monitorando.',
@@ -219,7 +219,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Cada contrato de vigilância dura de 1 a 3 anos. Um edital perdido é até 36 meses de receita mensal garantida que foi para outro.',
   },
   saude: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato público de saúde no sistema federal.',
     p2: 'Uma pergunta: quando o próximo edital de saúde aparecer — equipamento, insumo, serviço para hospital — vocês vão receber o alerta?',
     p3: 'O governo é o maior comprador de produtos de saúde do país — mais de 2.100 licitações por mês, algumas emergenciais com prazo de 24 horas. Sem monitoramento em tempo real, você nem fica sabendo que as emergenciais existiram.',
@@ -227,7 +227,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Algumas licitações de saúde são emergenciais — prazo de 24 a 72 horas. Sem monitoramento em tempo real, você nem fica sabendo que existiram.',
   },
   transporte: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato público de transporte ou logística no sistema federal.',
     p2: 'Uma pergunta: quando o próximo edital de transporte aparecer — frete, frota, logística — vocês vão receber o alerta?',
     p3: 'O governo contrata transporte o ano inteiro — mais de 1.200 contratos por mês, a maioria com 12 a 36 meses e pagamento garantido. Cada edital que fecha sem você participar é até três anos de receita que foi para quem estava monitorando.',
@@ -235,7 +235,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Contratos de transporte têm duração de 1 a 3 anos. Um edital perdido é até 36 meses de receita garantida que foi para quem estava monitorando.',
   },
   alimentacao: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato público de fornecimento de alimentos no sistema federal.',
     p2: 'Uma pergunta: quando o próximo edital de alimentação aparecer — merenda escolar, refeição institucional, gêneros alimentícios — vocês vão receber o alerta?',
     p3: 'Prefeituras licitam alimentação escolar o ano inteiro — mais de 2.400 contratos por mês, a maioria com 12 meses e renovação anual. Chegar a tempo de calcular logística e precificar é o que separa quem participa de quem descobre que perdeu.',
@@ -243,7 +243,7 @@ const E1: Record<Setor, E1Template> = {
     ps: 'Contratos de merenda têm duração de 12 meses com renovação. Um edital perdido é um ano inteiro de receita garantida que foi para o concorrente que estava monitorando.',
   },
   generico: {
-    assunto: 'vi a {{NOME}} no PNCP',
+    assunto: 'Vi a {{NOME}} no PNCP',
     p1: 'Vi o CNPJ de vocês vinculado a um contrato público no sistema federal de contratações.',
     p2: 'Uma pergunta: quando o próximo edital compatível com o que vocês fornecem aparecer, vocês vão receber o alerta?',
     p3: 'O governo federal publicou mais de R$ 240 bilhões em contratos no último ano só no PNCP — estados e municípios somam o mesmo volume. Os editais fecham antes de chegarem ao radar de quem não monitora.',
@@ -264,56 +264,56 @@ interface E2Template {
 
 const E2: Record<Setor, E2Template> = {
   construcao: {
-    assunto: 'tem uma construtora no seu estado recebendo 7 alertas de obra esta semana',
+    assunto: 'Tem uma construtora no seu estado recebendo 7 alertas de obra esta semana',
     p1: 'Uma construtora de porte similar ao da {{NOME}} — obras, reformas, mesmo segmento — configurou monitoramento de editais no seu estado. Esta semana recebeu 7 alertas. Avaliou os 7. Decidiu participar de 3. Para os outros 4, não valia — e ela soube isso em 10 minutos, sem abrir portal nenhum.',
     p2: 'Você ficou sabendo de quantos desses 7 editais?',
     p3: 'Empresas de construção que monitoram participam, em média, de 5 a 10 vezes mais processos do que as que dependem de busca manual. A taxa de vitória é parecida — o que muda é o número de oportunidades que chegam a tempo.',
     ps: 'Editais de obras têm prazo médio de 15 dias corridos. Cada semana sem monitoramento é uma semana de oportunidades que abriram, correram e fecharam sem que você soubesse que existiam.',
   },
   limpeza: {
-    assunto: 'empresa de limpeza da sua região recebeu 14 alertas esta semana',
+    assunto: 'Empresa de limpeza da sua região recebeu 14 alertas esta semana',
     p1: 'Uma empresa de limpeza e conservação predial da sua região — porte similar ao da {{NOME}} — recebeu 14 alertas esta semana: contratos em prefeituras, hospitais e escolas do estado. Avaliou os 14. Decidiu participar de 4. Para os outros 10, não era o perfil — e ela soube isso sem sair do lugar.',
     p2: 'Você ficou sabendo de quantos desses 14 editais?',
     p3: 'Contratos de limpeza têm duração de 12 a 36 meses. Quando você não sabe que o edital existe, não perde uma venda — perde o contrato inteiro. São 1 a 3 anos de receita mensal garantida que vão para quem estava monitorando.',
     ps: 'A empresa que ganhou aquele contrato de hospital não limpa melhor que a sua. Ela ficou sabendo 12 dias antes — e chegou ao processo com tempo de preparar proposta competitiva.',
   },
   ti: {
-    assunto: 'uma software house da sua cidade recebeu 12 pregões de TI esta semana',
+    assunto: 'Uma software house da sua cidade recebeu 12 pregões de TI esta semana',
     p1: 'Uma empresa de TI no mesmo segmento que a {{NOME}} — software, suporte, infraestrutura — configurou alertas para todo pregão compatível com o que ela fornece. Esta semana recebeu 12 notificações. Avaliou as 12 em menos de 2 horas. Participou de 4 processos. Para os outros 8, não valia o esforço — e ela soube isso sem abrir nenhum portal.',
     p2: 'Você ficou sabendo de quantos desses 12 pregões?',
     p3: 'Pregões de TI têm prazo de 5 a 15 dias úteis. Sem alerta no dia da publicação, você começa em desvantagem — quando descobre, já perdeu metade do prazo para montar proposta técnica.',
     ps: 'O concorrente que recebeu aquele alerta de R$ 380k não tem produto melhor que o seu. Ele tem um sistema que avisa na hora que o edital sai — antes que o prazo comece a correr.',
   },
   vigilancia: {
-    assunto: 'empresa de vigilância do seu estado recebeu 8 alertas esta semana',
+    assunto: 'Empresa de vigilância do seu estado recebeu 8 alertas esta semana',
     p1: 'Uma empresa de vigilância patrimonial da sua região — porte similar ao da {{NOME}} — recebeu 8 alertas esta semana: contratos em prefeituras, autarquias e hospitais do estado. Avaliou os 8. Participou de 3 processos. Para os outros 5, não valia o deslocamento ou o porte exigido — e ela soube isso sem gastar tempo de equipe.',
     p2: 'Você ficou sabendo de quantos desses 8 editais?',
     p3: 'Contratos de vigilância têm duração de 12 a 36 meses. Cada edital que você perde por falta de visibilidade é até 3 anos de receita mensal garantida que vai para a concorrência.',
     ps: 'O concorrente que ganhou aquele contrato de autarquia não tem equipe melhor que a sua. Ele ficou sabendo do edital 20 dias antes — e chegou com tempo de elaborar proposta competitiva.',
   },
   saude: {
-    assunto: 'fornecedora de saúde da sua região recebeu 16 alertas esta semana',
+    assunto: 'Fornecedora de saúde da sua região recebeu 16 alertas esta semana',
     p1: 'Uma empresa fornecedora de produtos para o setor de saúde — segmento similar ao da {{NOME}} — recebeu 16 alertas esta semana: licitações em hospitais, UPAs e secretarias de saúde. Avaliou as 16 em menos de 2 horas. Participou de 5. Para as outras 11, não era o produto ou a região não compensava.',
     p2: 'Você ficou sabendo de quantas dessas 16 licitações?',
     p3: 'Em saúde, algumas licitações são emergenciais — prazo de 24 a 72 horas. Sem monitoramento em tempo real, você nem fica sabendo que elas existiram. As emergenciais costumam ter os melhores preços por unidade.',
     ps: 'A empresa que vai ganhar aquela licitação de R$ 780k não tem produto melhor que o seu. Ela ficou sabendo 15 dias antes e chegou com tempo de verificar especificações técnicas.',
   },
   transporte: {
-    assunto: 'uma transportadora da sua região recebeu 11 contratos esta semana',
+    assunto: 'Uma transportadora da sua região recebeu 11 contratos esta semana',
     p1: 'Uma empresa de transporte e logística da sua região — porte similar ao da {{NOME}}, frota compatível — recebeu 11 alertas esta semana: contratos de frete, frota e transporte de órgãos públicos do estado. Avaliou os 11 em menos de 1 hora. Decidiu participar de 3. Para os outros 8, não compensava rota ou porte.',
     p2: 'Você ficou sabendo de quantos desses 11 contratos?',
     p3: 'Contratos de transporte têm duração de 12 a 36 meses. Quando o edital abre e você não sabe, perde o contrato inteiro — não só uma viagem. São 1 a 3 anos de receita garantida que vão para quem estava monitorando.',
     ps: 'A transportadora que ganhou aquele contrato de R$ 1,8M não tem frota melhor que a sua. Ela ficou sabendo 20 dias antes e chegou com tempo de calcular rota e montar proposta.',
   },
   alimentacao: {
-    assunto: 'fornecedora de alimentos da sua região recebeu 18 alertas esta semana',
+    assunto: 'Fornecedora de alimentos da sua região recebeu 18 alertas esta semana',
     p1: 'Uma empresa fornecedora de alimentação da sua região — gêneros, merenda, refeição — recebeu 18 alertas esta semana: contratos em prefeituras, escolas e hospitais do estado. Avaliou os 18 em menos de 2 horas. Decidiu participar de 5. Para os outros 13, não valia volume ou logística.',
     p2: 'Você ficou sabendo de quantos desses 18 contratos?',
     p3: 'Contratos de merenda têm duração de 12 meses com renovação frequente. Cada edital que você perde por não saber que existe é um ano inteiro de receita garantida que vai para o concorrente que estava monitorando.',
     ps: 'A empresa que ganhou aquele contrato de merenda de R$ 1,2M não tem comida melhor que a sua. Ela ficou sabendo 18 dias antes e chegou com tempo de calcular frete e precificar.',
   },
   generico: {
-    assunto: 'um concorrente do seu setor está monitorando editais em tempo real',
+    assunto: 'Um concorrente do seu setor está monitorando editais em tempo real',
     p1: 'Uma empresa no mesmo setor que a {{NOME}} — produto ou serviço similar, porte parecido — configurou monitoramento automático. Esta semana recebeu vários alertas. Avaliou quais valiam proposta. Participou dos que faziam sentido. Para o resto, não desperdiçou tempo de equipe.',
     p2: 'Você ficou sabendo de quantos desses editais?',
     p3: 'Empresas que monitoram sistematicamente participam de 5 a 10 vezes mais processos do que as que dependem de busca manual — e vencem contratos na mesma proporção. A diferença não está na qualidade do produto. Está no número de oportunidades que chegam a tempo.',
@@ -333,56 +333,56 @@ interface E3Template {
 
 const E3: Record<Setor, E3Template> = {
   construcao: {
-    assunto: 'de 3 obras para 19 em um ano — o que uma construtora mudou',
+    assunto: 'De 3 obras para 19 em um ano — o que uma construtora mudou',
     antes: 'Uma construtora de médio porte no interior de Minas fechava 3 ou 4 contratos públicos por ano. A estratégia era a mesma de sempre: alguém da equipe olhava o ComprasNet uma ou duas vezes por semana. Às vezes chegava dica de um despachante. Parecia o teto natural.',
     virada: 'Ao configurar alertas para "reforma predial", "pavimentação" e "construção" em todos os portais, chegaram 9 alertas na primeira semana — editais que a empresa nunca teria descoberto na busca manual. Alguns valiam proposta. Outros não. Mas agora a empresa escolhia, em vez de perder por padrão.',
     depois: 'Em 12 meses: 19 licitações participadas (contra 4 no ano anterior). 4 contratos vencidos — R$ 3,1M em volume total. Faturamento de contratos públicos cresceu 280%. A equipe não mudou. O produto não mudou. Mudou o que eles conseguiam ver.',
     ps: '4 contratos em 12 meses, R$ 3,1M — sem mudar equipe, sem mudar produto, sem mudar preço. O que mudou foi o número de licitações que chegavam a tempo de participar.',
   },
   limpeza: {
-    assunto: 'de 2 para 9 contratos em 6 meses — empresa de limpeza no interior de SP',
+    assunto: 'De 2 para 9 contratos em 6 meses — empresa de limpeza no interior de SP',
     antes: 'Uma empresa de limpeza e conservação predial em São Paulo fechava 2 ou 3 contratos públicos por ano. A estratégia era indicação de clientes antigos e busca manual no ComprasNet uma vez por semana. Parecia o teto do negócio.',
     virada: 'Ao configurar alertas para "limpeza", "conservação predial" e "higienização" em todos os portais, chegaram alertas de editais em cidades próximas que a empresa nunca teria encontrado buscando manualmente. Alguns valiam proposta, outros não — mas agora a empresa tinha controle sobre a decisão.',
     depois: 'Em 6 meses: 21 licitações participadas (contra 6 nos 6 meses anteriores). 9 contratos vencidos. Faturamento de contratos públicos cresceu 340%. A equipe foi ampliada para atender a demanda. "A empresa era boa antes. Só não estava aparecendo nos lugares certos."',
     ps: '2 contratos por ano para 9 em 6 meses. Crescimento de 340% no faturamento público. Sem mudar preço, sem mudar equipe. Com monitoramento.',
   },
   ti: {
-    assunto: 'de 0% para 38% da receita em contratos públicos — em 11 meses',
+    assunto: 'De 0% para 38% da receita em contratos públicos — em 11 meses',
     antes: 'Uma empresa de software de gestão em Goiânia vivia de indicação e prospecção privada. Contratos públicos? "É muito burocrático, muito lento." Participava esporadicamente, quando alguém da rede indicava um edital específico. A receita pública era próxima de zero.',
     virada: 'Ao configurar alertas para "sistema de gestão", "software municipal" e "suporte" em todos os portais, a empresa passou a receber de 8 a 15 alertas por semana. A maioria não valia participar — mas sempre havia 1 ou 2 que faziam sentido. Para esses, elaborava proposta. Para o resto, não desperdiçava tempo.',
     depois: 'Em 11 meses: contratos com 4 prefeituras e 1 autarquia estadual. Receita de contratos públicos foi de 0% para 38% do faturamento total. "O produto sempre foi bom. O que faltava era estar presente no momento certo."',
     ps: 'Zero para 38% da receita em contratos públicos em 11 meses. Sem mudar o produto. Sem aumentar a equipe. Com 15 minutos por semana avaliando os alertas que chegavam.',
   },
   vigilancia: {
-    assunto: 'de 3 para 11 contratos públicos em um ano — empresa de vigilância em SP',
+    assunto: 'De 3 para 11 contratos públicos em um ano — empresa de vigilância em SP',
     antes: 'Uma empresa de vigilância de médio porte em São Paulo fechava 3 contratos públicos por ano — todos por indicação ou busca esporádica em portais. A equipe comercial dedicava 2 dias por semana só para fazer busca manual. Era caro e ineficiente.',
     virada: 'Ao configurar alertas para "vigilância patrimonial", "segurança" e "monitoramento eletrônico" em todos os portais, o tempo da equipe comercial foi liberado: em vez de buscar editais, passaram a avaliar e elaborar propostas apenas para os que chegavam automaticamente.',
     depois: 'Em 12 meses: 11 contratos públicos vencidos (contra 3 no ano anterior). Tempo da equipe comercial caiu de 2 dias para 4 horas por semana. Receita de contratos públicos cresceu 210%.',
     ps: '3 contratos para 11 em um ano, receita pública +210%, equipe fazendo mais em menos tempo. O que mudou foi o número de editais que chegavam em tempo hábil.',
   },
   saude: {
-    assunto: 'de fornecedora regional para contrato federal — 8 meses',
+    assunto: 'De fornecedora regional para contrato federal — 8 meses',
     antes: 'Uma empresa fornecedora de equipamentos médicos de diagnóstico atuava exclusivamente em hospitais privados e clínicas. Participava de licitações "quando aparecia" — principalmente quando alguém indicava um processo específico. Receita pública era esporádica.',
     virada: 'Ao configurar alertas para os equipamentos específicos que fornecia — por produto e por região — passou a receber de 10 a 20 alertas semanais de licitações de hospitais e secretarias de saúde. A maioria não se encaixava. Mas 1 ou 2 por semana faziam sentido — e agora chegava a tempo de elaborar proposta.',
     depois: 'Em 8 meses: contrato com hospital federal, 2 contratos com secretarias estaduais, 4 contratos municipais. Receita pública foi de 5% para 32% do faturamento total. "Sempre soubemos que o mercado público era grande. Agora conseguimos participar dele de verdade."',
     ps: 'De 5% para 32% da receita em contratos públicos de saúde em 8 meses. Sem mudar produto, sem aumentar equipe. Com visibilidade nos editais certos, na hora certa.',
   },
   transporte: {
-    assunto: 'de 2 para 8 contratos em um ano — R$ 4,2M em receita de transporte',
+    assunto: 'De 2 para 8 contratos em um ano — R$ 4,2M em receita de transporte',
     antes: 'Uma empresa de transporte e logística no interior do Brasil fechava 2 contratos públicos por ano — ambos por indicação de clientes antigos. A busca manual em portais era irregular. Parecia o teto possível.',
     virada: 'Ao configurar alertas para "frete", "transporte" e "logística" em todos os portais, a empresa passou a receber de 8 a 15 alertas semanais — contratos em cidades e estados da região que nunca teria buscado manualmente. Alguns não valiam a rota. Outros eram exatamente o perfil da frota.',
     depois: 'Em 12 meses: 8 contratos públicos vencidos (contra 2 no ano anterior). Volume total: R$ 4,2M em receita de contratos. Frota cresceu 40% para atender a demanda. "Sempre existiram esses contratos. A gente simplesmente nunca ficava sabendo."',
     ps: '2 contratos para 8 em um ano, R$ 4,2M em receita de contratos, frota crescendo 40%. O que mudou foi a visibilidade sobre o que estava sendo licitado na região.',
   },
   alimentacao: {
-    assunto: 'de 1 para 9 prefeituras em 8 meses — faturamento público +480%',
+    assunto: 'De 1 para 9 prefeituras em 8 meses — faturamento público +480%',
     antes: 'Uma empresa fornecedora de gêneros alimentícios para escolas municipais atendia apenas a própria cidade. Não por falta de capacidade — porque nunca ficava sabendo dos editais das prefeituras vizinhas. A busca manual era irregular. Participava de 2 ou 3 licitações por ano.',
     virada: 'Ao configurar alertas para "gêneros alimentícios", "merenda escolar" e "alimentação escolar" em todas as prefeituras do estado, a empresa passou a receber alertas de contratos em cidades no raio de 200km que nunca teria encontrado manualmente. Alguns não valiam o frete. Outros sim.',
     depois: 'Em 8 meses: contratos com 9 prefeituras diferentes (estava em 1 antes). Volume de faturamento público cresceu 480%. Equipe de produção cresceu 60% para atender. "Sempre existiram esses contratos. A gente simplesmente não sabia quando os editais das outras prefeituras abriam."',
     ps: 'De 1 para 9 prefeituras em 8 meses, faturamento público +480%. Sem mudar produto, sem mudar qualidade. Com visibilidade sobre quais prefeituras estavam licitando na região.',
   },
   generico: {
-    assunto: 'o que muda quando uma empresa começa a monitorar licitações',
+    assunto: 'O que muda quando uma empresa começa a monitorar licitações',
     antes: 'A maioria das empresas fornecedoras para o governo participa de 2 a 5 licitações por ano. A estratégia é sempre a mesma: busca esporádica em portais, indicação de clientes, às vezes aviso de despachante. Parece o teto natural — mas não é.',
     virada: 'Ao configurar monitoramento automático com as palavras-chave certas, o cenário muda desde a primeira semana: chegam alertas de editais compatíveis que nunca apareceriam na busca manual — em cidades vizinhas, em estados da região, em órgãos que você nunca tinha prospectado. Alguns valem proposta, outros não. Mas agora a empresa escolhe — em vez de perder por padrão.',
     depois: 'O padrão observado em empresas que adotam monitoramento sistemático: participação em 5 a 10 vezes mais processos no primeiro ano. Taxa de vitória similar — o que se traduz em 5 a 10 vezes mais contratos ganhos. Sem mudar produto, sem aumentar equipe, sem reduzir preço.',
@@ -400,37 +400,37 @@ interface E5Template {
 
 const E5: Record<Setor, E5Template> = {
   construcao: {
-    assunto: 'empresa elétrica do Paraná: 2 contratos novos em 2 meses, R$ 520k',
+    assunto: 'Empresa elétrica do Paraná: 2 contratos novos em 2 meses, R$ 520k',
     historia: 'Uma empresa de instalações elétricas do Paraná — 8 funcionários, clientes principalmente na iniciativa privada — configurou alertas para "instalações elétricas", "sistema fotovoltaico" e "reforma elétrica". Em 2 meses, recebeu 31 alertas. Participou de 6 licitações. Venceu 2: um contrato federal de R$ 340k e um municipal de R$ 180k.\n\nA empresa existia há 11 anos e nunca tinha ganhado uma licitação federal. Não por falta de capacidade — por falta de visibilidade no momento certo.',
     ps: '11 anos de empresa, nunca tinha ganhado um contrato federal. Em 2 meses com monitoramento: R$ 520k em contratos. Não foi sorte — foi aparecer nos editais certos no momento certo.',
   },
   limpeza: {
-    assunto: 'empresa de limpeza hospitalar: 4 contratos novos em 4 meses',
+    assunto: 'Empresa de limpeza hospitalar: 4 contratos novos em 4 meses',
     historia: 'Uma empresa de limpeza hospitalar especializada no interior de SP — 22 funcionários — nunca tinha participado de licitações de hospitais fora da própria cidade. Configurou alertas para "limpeza hospitalar", "higienização" e "conservação".\n\nEm 4 meses: 4 contratos novos com prefeituras e uma UPA estadual nas cidades vizinhas. Volume total: R$ 1,4M por ano em contratos de 24 meses. A empresa contratou mais 18 funcionários para atender.',
     ps: '18 funcionários contratados para atender os novos contratos. O crescimento não veio de preço menor — veio de aparecer nas cidades certas, nos momentos certos.',
   },
   ti: {
-    assunto: 'empresa de suporte no Nordeste: R$ 290k no primeiro pregão federal',
+    assunto: 'Empresa de suporte no Nordeste: R$ 290k no primeiro pregão federal',
     historia: 'Uma empresa de suporte técnico e cabeamento estruturado do Nordeste — nunca tinha participado de um processo federal. Configurou alertas para "suporte", "rede", "cabeamento estruturado" e "TI".\n\nEm 60 dias: 41 alertas recebidos, 5 processos participados, 1 contrato federal vencido: R$ 290k. A empresa existia há 9 anos. Nunca tinha ganhado nada do governo federal — não por falta de capacidade técnica, mas porque nunca ficava sabendo dos pregões a tempo.',
     ps: '9 anos de empresa, nunca tinha ganhado um contrato federal. Em 60 dias com monitoramento: R$ 290k. O governo estava comprando o que eles vendiam — eles só não sabiam quando os pregões saíam.',
   },
   vigilancia: {
-    assunto: 'empresa de vigilância no Nordeste: primeiro contrato federal em 15 anos',
+    assunto: 'Empresa de vigilância no Nordeste: primeiro contrato federal em 15 anos',
     historia: 'Uma empresa de vigilância patrimonial com 15 anos de operação no Nordeste — nunca tinha conseguido um contrato federal. Configurou alertas para "vigilância patrimonial", "vigilância armada" e "monitoramento eletrônico".\n\nEm 3 meses: 2 contratos novos — um municipal de R$ 480k por ano e um federal de R$ 920k por ano. "Em 15 anos, nunca me senti tão bem posicionado no mercado público."',
     ps: '15 anos de empresa, nunca tinha ganhado um contrato federal. Em 3 meses com monitoramento: R$ 1,4M em novos contratos anuais. Não foi sorte — foi visibilidade no momento certo.',
   },
   saude: {
-    assunto: 'distribuidora de insumos: R$ 2,1M em novos contratos em 6 meses',
+    assunto: 'Distribuidora de insumos: R$ 2,1M em novos contratos em 6 meses',
     historia: 'Uma distribuidora de insumos hospitalares com 6 funcionários — equipe pequena, atuação regional — configurou alertas para os insumos específicos que distribuía. Em 6 meses, participou de 28 licitações em hospitais e UPAs de todo o estado.\n\nVenceu 7 contratos. Volume total: R$ 2,1M em pedidos novos — contratos de fornecimento contínuo. "Antes, as licitações que a gente ganhava vinham por acaso. Agora a gente escolhe quais vale participar."',
     ps: 'R$ 2,1M em contratos novos em 6 meses para uma empresa de 6 pessoas. Não foi sorte. Foi aparecer no momento certo, com tempo para elaborar proposta.',
   },
   transporte: {
-    assunto: 'transportadora do Centro-Oeste: 3 contratos federais em 5 meses',
+    assunto: 'Transportadora do Centro-Oeste: 3 contratos federais em 5 meses',
     historia: 'Uma empresa de transporte de cargas do Centro-Oeste — operação regional, nunca tinha ganhado um contrato federal. Configurou alertas para "frete", "transporte de cargas" e "logística".\n\nEm 5 meses: 3 contratos federais vencidos — distribuição de materiais para órgãos do governo. Volume total: R$ 2,8M em contratos anuais. Frota cresceu para atender. "Não sabia que o governo federal contratava transporte do nosso tamanho. Agora sei."',
     ps: 'Nunca tinha ganhado um contrato federal. Em 5 meses com monitoramento: R$ 2,8M em contratos anuais. O governo federal contrata transportadoras regionais — a maioria delas só não sabe quando os editais abrem.',
   },
   alimentacao: {
-    assunto: 'fornecedora de merenda no Norte: de 1 para 12 prefeituras em 10 meses',
+    assunto: 'Fornecedora de merenda no Norte: de 1 para 12 prefeituras em 10 meses',
     historia: 'Uma empresa fornecedora de gêneros alimentícios no Norte do Brasil atendia 1 prefeitura — a cidade sede. Configurou alertas para "merenda escolar", "gêneros alimentícios" e "alimentação escolar".\n\nEm 10 meses: contratos com 12 prefeituras — todas dentro do raio de 300km. Volume total: R$ 3,8M em contratos anuais. Equipe e capacidade produtiva foram ampliadas. "Sempre soubemos que éramos bons. Agora temos contratos que provam isso."',
     ps: '1 prefeitura para 12 em 10 meses — R$ 3,8M em contratos anuais novos. O produto era bom antes. O que mudou foi saber quando os editais das outras prefeituras abriam.',
   },
@@ -444,7 +444,7 @@ const E5: Record<Setor, E5Template> = {
 // ─── Templates genéricos — E4, E6, E7, E8 ────────────────────────────────────
 
 const E4 = {
-  assunto: 'três razões que travam a maioria — e minha resposta para cada uma',
+  assunto: 'Três razões que travam a maioria — e minha resposta para cada uma',
   p0: 'Enviei alguns e-mails nos últimos dias. Você ainda não ativou o trial. Isso costuma acontecer por uma dessas três razões:',
   objecoes: [
     {
@@ -465,7 +465,7 @@ const E4 = {
 }
 
 const E6 = {
-  assunto: 'contratos que fecharam este mês sem você participar',
+  assunto: 'Contratos que fecharam este mês sem você participar',
   p1: 'Faz dois meses que enviei o primeiro e-mail sobre o mercado público no seu setor.',
   p2: 'Nesse período, centenas de editais compatíveis com o perfil da sua empresa abriram e fecharam. Alguns valiam proposta. Outros não. Mas você não teve como escolher — porque não recebeu os alertas.',
   p3: 'O trial de 7 dias não custa nada e não pede cartão. Em uma semana, você vê em tempo real o que está sendo licitado no seu setor — e decide se vale continuar.',
@@ -473,7 +473,7 @@ const E6 = {
 }
 
 const E7 = {
-  assunto: 'ainda faz sentido para a {{NOME}}?',
+  assunto: 'Ainda faz sentido para a {{NOME}}?',
   p1: 'Enviamos alguns e-mails sobre monitoramento de licitações nos últimos meses. Você nunca respondeu.',
   p2: 'Uma pergunta direta: sua empresa ainda participa de licitações públicas?',
   p3: 'Pode ser que o mercado público não faça mais sentido para o seu modelo de negócio. Pode ser que você já tenha uma solução de monitoramento. Pode ser que esteja em outro momento.',
@@ -482,7 +482,7 @@ const E7 = {
 }
 
 const E8 = {
-  assunto: 'último e-mail — mas a porta continua aberta',
+  assunto: 'Último e-mail — mas a porta continua aberta',
   p1: 'Este é o último e-mail que vou enviar.',
   p2: 'Ao longo de vários meses, compartilhei dados sobre o mercado público no seu setor, casos de empresas similares à sua e como o monitoramento muda o volume de contratos que uma empresa consegue participar.',
   p3: 'Não vou mais enviar e-mails automaticamente — mas a porta continua aberta. Se em algum momento a situação mudar e o mercado público se tornar uma prioridade, o Monitor de Licitações vai estar aqui.',
