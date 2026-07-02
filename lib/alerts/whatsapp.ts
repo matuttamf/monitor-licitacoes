@@ -402,7 +402,7 @@ export async function enviarWAIndicaApto(telefone: string, nome: string | null, 
     `🎁 *+30 dias grátis* para você\n` +
     `💸 *20% de desconto* na primeira assinatura do seu amigo\n\n` +
     `Seu link de convite:\n🔗 ${appUrl}/r/${codigo}\n\n` +
-    `Regras: amigo assina → permanece 10 dias → seus 30 dias são liberados.\n` +
+    `Regras: amigo assina → em 10 dias após a assinatura seus 30 dias são liberados.\n` +
     `📄 Regulamento: ${appUrl}/regulamento-indicacoes`
   return enviarMensagemZApi(formatarNumero(telefone), texto)
 }

@@ -83,7 +83,7 @@ export function htmlIndicaApto(nome: string | null, codigo: string): string {
       Convidar amigos agora →
     </a>
     <p style="color:#9AA0A6;font-size:13px;margin:22px 0 0;line-height:1.6;">
-      Como funciona: amigo assina → permanece 10 dias → seus 30 dias são liberados.
+      Como funciona: amigo assina → em 10 dias após a assinatura seus 30 dias são liberados.
       Veja todas as regras no
       <a href="${APP_URL}/regulamento-indicacoes" style="color:#6B0F1A;font-weight:600;">regulamento</a>.
     </p>
